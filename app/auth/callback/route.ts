@@ -39,6 +39,18 @@ export async function GET(request: NextRequest) {
                 return NextResponse.redirect(`${origin}/onboarding?role=${role || 'worker'}`)
             }
 
+            // 기존 회원: URL에 role이 있고 DB와 다르면 업데이트
+            const targetRole = (role as 'operator' | 'worker')
+            if (targetRole && targetRole !== existingUser.role) {
+                await supabase
+                    .from('users')
+                    .update({ role: targetRole })
+                    .eq('id', data.user.id)
+
+                // 업데이트된 역할로 리다이렉트
+                return NextResponse.redirect(targetRole === 'operator' ? `${origin}/dashboard` : `${origin}/clean`)
+            }
+
             // 기존 회원: 역할에 따라 라우팅
             if (existingUser.role === 'operator') {
                 return NextResponse.redirect(`${origin}/dashboard`)

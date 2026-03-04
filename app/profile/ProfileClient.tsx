@@ -22,6 +22,7 @@ export default function ProfileClient({ profile, totalCompletedJobs }: Props) {
     const [name, setName] = useState(profile.name)
     const [bio, setBio] = useState(profile.bio || '')
     const [saving, setSaving] = useState(false)
+    const [switching, setSwitching] = useState(false)
 
     const tierInfo = TIER_CONFIG[profile.tier || 'STARTER']
 
@@ -32,6 +33,27 @@ export default function ProfileClient({ profile, totalCompletedJobs }: Props) {
         setSaving(false)
         setEditing(false)
         router.refresh()
+    }
+
+    const handleRoleSwitch = async () => {
+        const nextRole = profile.role === 'worker' ? 'operator' : 'worker'
+        const roleName = nextRole === 'worker' ? '청소 작업자' : '공간 운영자'
+
+        if (!confirm(`${roleName}(으)로 역할을 전환하시겠습니까?`)) return
+
+        setSwitching(true)
+        try {
+            const supabase = createClient()
+            const { error } = await supabase.from('users').update({ role: nextRole }).eq('id', profile.id)
+            if (error) throw error
+
+            // 역할에 맞는 대시보드로 이동
+            router.push(nextRole === 'worker' ? '/clean' : '/dashboard')
+            router.refresh()
+        } catch (e) {
+            alert('역할 전환 중 오류가 발생했습니다.')
+            setSwitching(false)
+        }
     }
 
     const handleLogout = async () => {
@@ -114,6 +136,22 @@ export default function ProfileClient({ profile, totalCompletedJobs }: Props) {
 
                 {/* 메뉴 목록 */}
                 <div className="card" style={{ marginBottom: 'var(--spacing-md)' }}>
+                    <button
+                        onClick={handleRoleSwitch}
+                        disabled={switching}
+                        style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-md)', padding: 'var(--spacing-md)', width: '100%', borderBottom: '1px solid var(--color-border-light)', background: 'none', textAlign: 'left', cursor: 'pointer' }}
+                    >
+                        <span style={{ fontSize: 20 }}>{profile.role === 'worker' ? '🏠' : '🧹'}</span>
+                        <span style={{ flex: 1, fontSize: 'var(--font-md)', fontWeight: 600, color: 'var(--color-primary)' }}>
+                            {profile.role === 'worker' ? '공간 운영자로 전환하기' : '청소 작업자로 전환하기'}
+                        </span>
+                        {switching ? (
+                            <div className="spinner-sm" style={{ width: 14, height: 14, border: '2px solid rgba(0,0,0,0.1)', borderTopColor: 'var(--color-primary)', borderRadius: '50%', animation: 'spin 0.6s linear infinite' }} />
+                        ) : (
+                            <span style={{ color: 'var(--color-text-tertiary)' }}>›</span>
+                        )}
+                    </button>
+
                     {[
                         { icon: '🔔', label: '푸시 알림 설정', href: '#' },
                         { icon: '🏦', label: '정산 계좌 등록', href: '#' },
