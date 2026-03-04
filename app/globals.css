@@ -8,16 +8,21 @@
    CSS 변수 (디자인 토큰)
    ===================== */
 :root {
-  /* 색상 — 프라이머리 */
-  --color-primary: #00C471;
-  /* 클린 그린 */
-  --color-primary-dark: #00A85E;
-  --color-primary-light: #E8FBF2;
-  --color-primary-soft: #B3F0D4;
+  /* 색상 — 프라이머리 (사용자 팔레트 적용) */
+  --color-primary: #769FCD;
+  /* Base Blue */
+  --color-primary-dark: #3F72AF;
+  /* Deep Blue (Text Secondary 참고) */
+  --color-primary-light: #D6E6F2;
+  /* Sky Blue */
+  --color-primary-soft: #F7FBFC;
+  /* White-Grey */
+  --color-accent: #B9D7EA;
+  /* Light Blue-Grey */
 
-  /* 색상 — 보조 */
-  --color-blue: #3B82F6;
-  --color-blue-light: #EFF6FF;
+  /* 색상 — 보조 (일부 유지 및 보완) */
+  --color-blue: #3F72AF;
+  --color-blue-light: #D6E6F2;
   --color-orange: #F59E0B;
   --color-orange-light: #FFFBEB;
   --color-red: #EF4444;
@@ -25,16 +30,16 @@
   --color-purple: #8B5CF6;
   --color-purple-light: #F5F3FF;
 
-  /* 색상 — 중립 */
-  --color-bg: #F8FAFB;
+  /* 색상 — 중립 (사용자 팔레트로 더 부드럽게) */
+  --color-bg: #F7FBFC;
   --color-surface: #FFFFFF;
-  --color-border: #E5E7EB;
-  --color-border-light: #F3F4F6;
+  --color-border: #D6E6F2;
+  --color-border-light: #E1E8EE;
 
-  /* 텍스트 */
-  --color-text-primary: #111827;
-  --color-text-secondary: #4B5563;
-  --color-text-tertiary: #9CA3AF;
+  /* 텍스트 (Deep Blue 톤 적용) */
+  --color-text-primary: #112D4E;
+  --color-text-secondary: #3F72AF;
+  --color-text-tertiary: #9DB2BF;
   --color-text-disabled: #D1D5DB;
 
   /* 그림자 */

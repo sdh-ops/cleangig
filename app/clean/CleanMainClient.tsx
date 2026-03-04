@@ -168,7 +168,7 @@ export default function CleanMainClient({ profile, activeJob, weekEarnings, pend
 
             <style jsx>{`
         .clean-header {
-          background: linear-gradient(135deg, #1A1A2E 0%, #16213E 100%);
+          background: linear-gradient(135deg, #112D4E 0%, #3F72AF 100%);
           padding: var(--spacing-xl) var(--spacing-md) var(--spacing-md);
           padding-top: calc(var(--spacing-xl) + env(safe-area-inset-top, 0));
         }

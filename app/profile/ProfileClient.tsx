@@ -65,7 +65,7 @@ export default function ProfileClient({ profile, totalCompletedJobs }: Props) {
     return (
         <div className="page-container">
             {/* 헤더 프로필 */}
-            <div style={{ background: profile.role === 'worker' ? 'linear-gradient(135deg, #1A1A2E, #16213E)' : 'linear-gradient(135deg, #00C471, #00A85E)', padding: 'var(--spacing-xl) var(--spacing-md)', paddingTop: 'calc(var(--spacing-xl) + env(safe-area-inset-top, 0))' }}>
+            <div style={{ background: 'linear-gradient(135deg, #112D4E, #3F72AF)', padding: 'var(--spacing-xl) var(--spacing-md)', paddingTop: 'calc(var(--spacing-xl) + env(safe-area-inset-top, 0))' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-lg)' }}>
                     <div style={{ width: 72, height: 72, borderRadius: '50%', background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, fontWeight: 800, color: '#fff', flexShrink: 0, overflow: 'hidden', border: '3px solid rgba(255,255,255,0.3)' }}>
                         {profile.profile_image

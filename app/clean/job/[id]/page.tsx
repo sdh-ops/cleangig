@@ -165,9 +165,9 @@ export default function JobDetailPage() {
 
             {/* 상태 진행 표시 */}
             <div className="status-banner" style={{
-                background: job.status === 'IN_PROGRESS' ? 'linear-gradient(135deg,#00C471,#00A85E)' :
+                background: job.status === 'IN_PROGRESS' ? 'linear-gradient(135deg, #769FCD, #3F72AF)' :
                     job.status === 'SUBMITTED' ? '#8B5CF6' :
-                        job.status === 'APPROVED' || job.status === 'PAID_OUT' ? '#15803D' : '#3B82F6'
+                        job.status === 'APPROVED' || job.status === 'PAID_OUT' ? '#3F72AF' : 'var(--color-primary)'
             }}>
                 <div className="status-text">
                     {job.status === 'ASSIGNED' && '🚗 지금 출발하세요!'}

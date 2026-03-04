@@ -161,7 +161,7 @@ export default function DashboardClient({ profile, todayJobs, spaces, recentJobs
 
             <style jsx>{`
         .dash-header {
-          background: linear-gradient(135deg, #00C471 0%, #00A85E 100%);
+          background: linear-gradient(135deg, #769FCD 0%, #3F72AF 100%);
           padding: var(--spacing-xl) var(--spacing-md) var(--spacing-lg);
           padding-top: calc(var(--spacing-xl) + env(safe-area-inset-top, 0));
         }
