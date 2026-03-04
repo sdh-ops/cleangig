@@ -20,13 +20,14 @@ export async function GET(request: NextRequest) {
 
             if (!existingUser) {
                 // 신규 회원: users 테이블에 프로필 생성
+                const userEmail = data.user.email || `${data.user.id}@kakao.user`
                 const kakaoName = data.user.user_metadata?.full_name
                     || data.user.user_metadata?.name
                     || '사용자'
 
                 await supabase.from('users').insert({
                     id: data.user.id,
-                    email: data.user.email,
+                    email: userEmail,
                     name: kakaoName,
                     profile_image: data.user.user_metadata?.avatar_url,
                     role: (role as 'operator' | 'worker') || 'worker',
