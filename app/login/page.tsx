@@ -21,9 +21,9 @@ function LoginContent() {
                     redirectTo: `${window.location.origin}/auth/callback`,
                     queryParams: {
                         role: defaultRole || '',
-                        scope: 'profile_nickname profile_image'
+                        scope: 'profile_nickname profile_image account_email'
                     },
-                    scopes: 'profile_nickname profile_image',
+                    scopes: 'profile_nickname profile_image account_email',
                 },
             })
             if (error) throw error
