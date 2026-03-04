@@ -20,6 +20,7 @@ function LoginContent() {
                 options: {
                     redirectTo: `${window.location.origin}/auth/callback`,
                     queryParams: defaultRole ? { role: defaultRole } : {},
+                    scopes: 'profile_nickname,profile_image',
                 },
             })
             if (error) throw error
