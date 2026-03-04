@@ -1,0 +1,17 @@
+{
+  "name": "CleanGig",
+  "short_name": "CleanGig",
+  "description": "공간 운영자와 청소 작업자를 연결하는 스마트 매칭 플랫폼",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#00C471",
+  "orientation": "portrait",
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ],
+  "categories": ["productivity", "lifestyle"],
+  "lang": "ko-KR",
+  "dir": "ltr"
+}

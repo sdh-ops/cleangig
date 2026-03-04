@@ -1,36 +1,54 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# CleanGig — 공간 청소 매칭 플랫폼
 
-## Getting Started
+AI 기반 공간 청소 매칭 플랫폼. 에어비앤비·파티룸·무인매장 운영자와 청소 작업자를 자동 연결합니다.
 
-First, run the development server:
+## 기술 스택
+
+- **Frontend**: Next.js 16 (App Router) + TypeScript
+- **Backend**: Supabase (PostgreSQL + Auth + Storage + Edge Functions)
+- **Deploy**: Vercel
+- **AI Agents**: Supabase Edge Functions (Matching / Quality / Finance / Growth)
+
+## 설치 및 실행
 
 ```bash
+npm install
+cp .env.example .env.local  # 환경 변수 설정
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 환경 변수
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+`.env.example` 파일을 참고하여 `.env.local` 을 설정하세요.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| 변수 | 설명 |
+|------|------|
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase 프로젝트 URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase Anon Key |
+| `KAKAO_CLIENT_ID` | 카카오 앱 REST API 키 |
+| `NAVER_MAP_CLIENT_ID` | 네이버 지도 클라이언트 ID |
 
-## Learn More
+## 프로젝트 구조
 
-To learn more about Next.js, take a look at the following resources:
+```
+app/
+├── (landing)     랜딩 페이지
+├── login/         카카오 로그인
+├── onboarding/    역할 선택
+├── dashboard/     운영자 대시보드
+├── spaces/        공간 관리
+├── requests/      청소 요청
+├── clean/         작업자 앱
+├── earnings/      정산
+├── profile/       프로필
+└── admin/         관리자 콘솔
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## AI 에이전트
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+| 에이전트 | 주기 | 역할 |
+|---------|------|------|
+| Matching Agent | 5분 | OPEN 작업 자동 매칭 |
+| Quality Agent | 10분 | 사진 AI 검수 + 자동 승인 |
+| Finance Agent | 30분 | 정산 금액 계산 |
+| Growth Agent | 매일 02:00 | 이탈 위험 감지 |

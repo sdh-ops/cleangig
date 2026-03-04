@@ -1,0 +1,169 @@
+'use client'
+
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
+
+const TIER_CONFIG: Record<string, { label: string; color: string; next: string; desc: string }> = {
+    STARTER: { label: '🌱 스타터', color: '#94A3B8', next: '실버 (10건 완료)', desc: '수수료 10%' },
+    SILVER: { label: '🥈 실버', color: '#94A3B8', next: '골드 (50건 완료)', desc: '수수료 9%' },
+    GOLD: { label: '🥇 골드', color: '#F59E0B', next: '마스터 (200건 완료)', desc: '수수료 8%' },
+    MASTER: { label: '👑 마스터', color: '#8B5CF6', next: '최고 등급!', desc: '수수료 7%' },
+}
+
+interface Props {
+    profile: { id: string; name: string; email?: string; phone?: string; profile_image?: string; role: string; tier?: string; avg_rating?: number; total_jobs?: number; bio?: string; bank_account?: any }
+    totalCompletedJobs: number
+}
+
+export default function ProfileClient({ profile, totalCompletedJobs }: Props) {
+    const router = useRouter()
+    const [editing, setEditing] = useState(false)
+    const [name, setName] = useState(profile.name)
+    const [bio, setBio] = useState(profile.bio || '')
+    const [saving, setSaving] = useState(false)
+
+    const tierInfo = TIER_CONFIG[profile.tier || 'STARTER']
+
+    const handleSave = async () => {
+        setSaving(true)
+        const supabase = createClient()
+        await supabase.from('users').update({ name, bio }).eq('id', profile.id)
+        setSaving(false)
+        setEditing(false)
+        router.refresh()
+    }
+
+    const handleLogout = async () => {
+        const supabase = createClient()
+        await supabase.auth.signOut()
+        router.push('/')
+    }
+
+    return (
+        <div className="page-container">
+            {/* 헤더 프로필 */}
+            <div style={{ background: profile.role === 'worker' ? 'linear-gradient(135deg, #1A1A2E, #16213E)' : 'linear-gradient(135deg, #00C471, #00A85E)', padding: 'var(--spacing-xl) var(--spacing-md)', paddingTop: 'calc(var(--spacing-xl) + env(safe-area-inset-top, 0))' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-lg)' }}>
+                    <div style={{ width: 72, height: 72, borderRadius: '50%', background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, fontWeight: 800, color: '#fff', flexShrink: 0, overflow: 'hidden', border: '3px solid rgba(255,255,255,0.3)' }}>
+                        {profile.profile_image
+                            ? <img src={profile.profile_image} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            : profile.name[0]}
+                    </div>
+                    <div style={{ flex: 1 }}>
+                        {editing ? (
+                            <input style={{ background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.3)', borderRadius: 8, padding: '6px 10px', color: '#fff', fontSize: 18, fontWeight: 700, width: '100%' }}
+                                value={name} onChange={e => setName(e.target.value)} />
+                        ) : (
+                            <h1 style={{ fontSize: 22, fontWeight: 800, color: '#fff' }}>{profile.name}</h1>
+                        )}
+                        <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: 'var(--font-sm)', marginTop: 2 }}>
+                            {profile.role === 'worker' ? '청소 작업자' : '공간 운영자'}
+                            {profile.role === 'worker' && tierInfo && (
+                                <span style={{ marginLeft: 8, background: 'rgba(255,255,255,0.2)', padding: '2px 8px', borderRadius: 999, fontSize: 12 }}>
+                                    {tierInfo.label}
+                                </span>
+                            )}
+                        </p>
+                    </div>
+                    <button onClick={() => setEditing(!editing)} style={{ color: 'rgba(255,255,255,0.8)', fontSize: 22 }}>✏️</button>
+                </div>
+
+                {editing && (
+                    <div style={{ marginTop: 'var(--spacing-md)' }}>
+                        <textarea style={{ width: '100%', background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.3)', borderRadius: 8, padding: 10, color: '#fff', fontSize: 13, resize: 'none' }}
+                            rows={2} placeholder="자기소개를 입력하세요" value={bio} onChange={e => setBio(e.target.value)} />
+                        <button className="btn btn-primary btn-full mt-sm" onClick={handleSave} disabled={saving}>
+                            {saving ? <span className="spinner" /> : '저장하기'}
+                        </button>
+                    </div>
+                )}
+            </div>
+
+            <div className="page-content">
+                {/* 통계 (작업자) */}
+                {profile.role === 'worker' && (
+                    <>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 'var(--spacing-sm)', marginBottom: 'var(--spacing-md)' }}>
+                            {[
+                                { label: '전체 작업', val: profile.total_jobs || 0 },
+                                { label: '완료', val: totalCompletedJobs },
+                                { label: '평점', val: profile.avg_rating ? `⭐ ${profile.avg_rating.toFixed(1)}` : '-' },
+                            ].map((s, i) => (
+                                <div key={i} style={{ background: 'var(--color-bg)', borderRadius: 14, padding: 'var(--spacing-md)', textAlign: 'center' }}>
+                                    <div style={{ fontSize: 'var(--font-xl)', fontWeight: 800 }}>{s.val}</div>
+                                    <div style={{ fontSize: 'var(--font-xs)', color: 'var(--color-text-tertiary)', marginTop: 2 }}>{s.label}</div>
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* 등급 정보 */}
+                        {tierInfo && (
+                            <div className="card" style={{ padding: 'var(--spacing-md)', marginBottom: 'var(--spacing-md)' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <div>
+                                        <div style={{ fontWeight: 700 }}>{tierInfo.label}</div>
+                                        <div style={{ fontSize: 'var(--font-xs)', color: 'var(--color-text-secondary)' }}>{tierInfo.desc}</div>
+                                    </div>
+                                    <div style={{ fontSize: 'var(--font-xs)', color: 'var(--color-text-tertiary)' }}>다음: {tierInfo.next}</div>
+                                </div>
+                            </div>
+                        )}
+                    </>
+                )}
+
+                {/* 메뉴 목록 */}
+                <div className="card" style={{ marginBottom: 'var(--spacing-md)' }}>
+                    {[
+                        { icon: '🔔', label: '푸시 알림 설정', href: '#' },
+                        { icon: '🏦', label: '정산 계좌 등록', href: '#' },
+                        { icon: '📋', label: '이용약관', href: '/terms' },
+                        { icon: '🔐', label: '개인정보처리방침', href: '/privacy' },
+                    ].map((item, i) => (
+                        <a key={i} href={item.href} style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-md)', padding: 'var(--spacing-md)', borderBottom: i < 3 ? '1px solid var(--color-border-light)' : 'none' }}>
+                            <span style={{ fontSize: 20 }}>{item.icon}</span>
+                            <span style={{ flex: 1, fontSize: 'var(--font-md)' }}>{item.label}</span>
+                            <span style={{ color: 'var(--color-text-tertiary)' }}>›</span>
+                        </a>
+                    ))}
+                </div>
+
+                <button className="btn btn-secondary btn-full" onClick={handleLogout} id="logout-btn">
+                    로그아웃
+                </button>
+            </div>
+
+            {/* 하단 탭 */}
+            <nav className="bottom-nav">
+                {profile.role === 'worker' ? (
+                    <>
+                        <a href="/clean" className="bottom-nav-item">
+                            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" /></svg>오늘
+                        </a>
+                        <a href="/clean/jobs" className="bottom-nav-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>일감 찾기
+                        </a>
+                        <a href="/earnings" className="bottom-nav-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="1" x2="12" y2="23" /><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" /></svg>정산
+                        </a>
+                    </>
+                ) : (
+                    <>
+                        <a href="/dashboard" className="bottom-nav-item">
+                            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" /></svg>홈
+                        </a>
+                        <a href="/requests" className="bottom-nav-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="3" /><path d="M3 9h18M9 21V9" /></svg>요청 목록
+                        </a>
+                        <a href="/spaces" className="bottom-nav-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" /></svg>공간
+                        </a>
+                    </>
+                )}
+                <a href="/profile" className="bottom-nav-item active">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="8" r="4" /><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" /></svg>내 정보
+                </a>
+            </nav>
+        </div>
+    )
+}
