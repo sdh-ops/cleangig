@@ -19,8 +19,11 @@ function LoginContent() {
                 provider: 'kakao',
                 options: {
                     redirectTo: `${window.location.origin}/auth/callback`,
-                    queryParams: defaultRole ? { role: defaultRole } : {},
-                    scopes: 'profile_nickname,profile_image',
+                    queryParams: {
+                        role: defaultRole || '',
+                        scope: 'profile_nickname profile_image'
+                    },
+                    scopes: 'profile_nickname profile_image',
                 },
             })
             if (error) throw error
