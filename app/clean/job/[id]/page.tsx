@@ -182,6 +182,50 @@ export default function JobDetailPage() {
             </div>
 
             <div className="page-content">
+                {/* 매칭 전용 상세 정보 (출발 후 또는 배정 시 확인 가능) */}
+                {['ASSIGNED', 'EN_ROUTE', 'ARRIVED', 'IN_PROGRESS'].includes(job.status) && (
+                    <div className="info-card card" style={{ borderColor: 'var(--color-primary-soft)', borderWidth: 2 }}>
+                        <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 'var(--spacing-md) var(--spacing-md) 0' }}>
+                            <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--color-primary)' }}>🏠 공간 이용 가이드</h3>
+                            <button
+                                onClick={() => router.push(`/chat/${id}`)}
+                                style={{ background: 'var(--color-primary)', color: '#fff', padding: '4px 12px', borderRadius: 20, fontSize: 13, fontWeight: 600 }}
+                            >
+                                💬 운영자 채팅
+                            </button>
+                        </div>
+                        <div style={{ padding: 'var(--spacing-md)' }}>
+                            <div className="guide-item">
+                                <span className="guide-label">상세 주소</span>
+                                <div className="guide-value" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    {space?.address} {space?.address_detail}
+                                    <a
+                                        href={`https://map.kakao.com/link/search/${encodeURIComponent(space?.address)}`}
+                                        target="_blank"
+                                        className="map-link"
+                                    >
+                                        📍 길찾기
+                                    </a>
+                                </div>
+                            </div>
+                            <div className="guide-item" style={{ marginTop: 12 }}>
+                                <span className="guide-label">출입 비밀번호</span>
+                                <div className="guide-value font-bold" style={{ fontSize: 18, color: 'var(--color-primary)' }}>
+                                    {space?.entry_code || '현장 확인 필요'}
+                                </div>
+                            </div>
+                            {space?.caution_notes && (
+                                <div className="guide-item" style={{ marginTop: 12 }}>
+                                    <span className="guide-label">주의사항</span>
+                                    <div className="guide-value" style={{ fontSize: 13, color: 'var(--color-text-secondary)', whiteSpace: 'pre-wrap' }}>
+                                        {space?.caution_notes}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
+
                 {/* 일정 정보 */}
                 <div className="info-card card">
                     <div className="info-row">
@@ -194,7 +238,7 @@ export default function JobDetailPage() {
                     </div>
                     {job.special_instructions && (
                         <div className="special-note">
-                            <span>📝</span> {job.special_instructions}
+                            <span>📝 요청사항</span> {job.special_instructions}
                         </div>
                     )}
                 </div>

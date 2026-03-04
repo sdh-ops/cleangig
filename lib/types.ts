@@ -154,7 +154,6 @@ export interface PriceOptions {
     size_sqm?: number
 }
 
-// 매칭 스코어 계산 입력
 export interface MatchingInput {
     job: Job
     worker: User
@@ -162,4 +161,14 @@ export interface MatchingInput {
     worker_lng: number
     space_lat: number
     space_lng: number
+}
+
+export interface Message {
+    id: string
+    job_id: string
+    sender_id: string
+    receiver_id: string
+    content: string
+    is_read: boolean
+    created_at: string
 }

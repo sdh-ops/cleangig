@@ -50,6 +50,8 @@ export default function CreateSpacePage() {
         type: 'airbnb' as SpaceType,
         address: '',
         address_detail: '',
+        entry_code: '',
+        caution_notes: '',
         size_sqm: '',
         base_price: '30000',
         estimated_duration: '60',
@@ -77,6 +79,8 @@ export default function CreateSpacePage() {
             type: form.type,
             address: form.address,
             address_detail: form.address_detail,
+            entry_code: form.entry_code,
+            caution_notes: form.caution_notes,
             size_sqm: form.size_sqm ? parseInt(form.size_sqm) : null,
             base_price: parseInt(form.base_price),
             estimated_duration: parseInt(form.estimated_duration),
@@ -142,6 +146,20 @@ export default function CreateSpacePage() {
                                 value={form.address} onChange={e => setForm(f => ({ ...f, address: e.target.value }))} />
                             <input className="form-input mt-sm" placeholder="상세주소 (동·호수 등)"
                                 value={form.address_detail} onChange={e => setForm(f => ({ ...f, address_detail: e.target.value }))} />
+                        </div>
+
+                        {/* 출입 정보 및 주의사항 (추가됨) */}
+                        <div className="form-group">
+                            <label className="form-label">출입 비밀번호 (작업자 매칭 시에만 공개)</label>
+                            <input className="form-input" placeholder="예: *1234# 또는 공동현관문 포함"
+                                value={form.entry_code} onChange={e => setForm(f => ({ ...f, entry_code: e.target.value }))} />
+                        </div>
+
+                        <div className="form-group">
+                            <label className="form-label">청소 시 주의사항 (작업자 매칭 시에만 공개)</label>
+                            <textarea className="form-input" placeholder="예: 현관 옆 소독제 비치, 음식물 쓰레기는 문 앞에 등"
+                                rows={2} value={form.caution_notes}
+                                onChange={e => setForm(f => ({ ...f, caution_notes: e.target.value }))} />
                         </div>
 
                         {/* 규모 & 가격 */}
