@@ -19,7 +19,7 @@ export default function CreateRequestPage() {
         recurring_days: [] as string[],
         special_instructions: '',
         supplies_to_check: [] as string[],
-        preferred_worker_id: ''
+        targeted_worker_id: ''
     })
     const [selectedSpace, setSelectedSpace] = useState<Space | null>(null)
     const [loading, setLoading] = useState(false)
@@ -92,7 +92,7 @@ export default function CreateRequestPage() {
             is_recurring: form.is_recurring,
             recurring_config: form.is_recurring ? { days: form.recurring_days } : null,
             supplies_to_check: form.supplies_to_check,
-            preferred_worker_id: form.preferred_worker_id || null,
+            targeted_worker_id: form.targeted_worker_id || null,
         }).select().single()
 
         if (!error && job) {
@@ -279,20 +279,20 @@ export default function CreateRequestPage() {
                                 style={{
                                     display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
                                     padding: '12px', minWidth: '80px', borderRadius: '12px',
-                                    border: `2px solid ${form.preferred_worker_id === '' ? 'var(--color-primary)' : 'var(--color-border)'}`,
-                                    background: form.preferred_worker_id === '' ? 'var(--color-primary-light)' : '#fff',
+                                    border: `2px solid ${form.targeted_worker_id === '' ? 'var(--color-primary)' : 'var(--color-border)'}`,
+                                    background: form.targeted_worker_id === '' ? 'var(--color-primary-light)' : '#fff',
                                     transition: 'all .2s', flexShrink: 0
                                 }}
-                                onClick={() => setForm(f => ({ ...f, preferred_worker_id: '' }))}
+                                onClick={() => setForm(f => ({ ...f, targeted_worker_id: '' }))}
                             >
                                 <span style={{ fontSize: '24px', marginBottom: '4px' }}>📢</span>
-                                <span style={{ fontSize: '12px', fontWeight: form.preferred_worker_id === '' ? 700 : 500 }}>전체 공개</span>
+                                <span style={{ fontSize: '12px', fontWeight: form.targeted_worker_id === '' ? 700 : 500 }}>전체 공개</span>
                             </button>
 
                             {favoritePartners.map(fav => {
                                 const worker = fav.users
                                 if (!worker) return null
-                                const isSelected = form.preferred_worker_id === worker.id
+                                const isSelected = form.targeted_worker_id === worker.id
                                 return (
                                     <button
                                         key={worker.id}
@@ -303,7 +303,7 @@ export default function CreateRequestPage() {
                                             background: isSelected ? '#FFEDD5' : '#fff',
                                             transition: 'all .2s', flexShrink: 0
                                         }}
-                                        onClick={() => setForm(f => ({ ...f, preferred_worker_id: worker.id }))}
+                                        onClick={() => setForm(f => ({ ...f, targeted_worker_id: worker.id }))}
                                     >
                                         <div className="avatar avatar-md mb-xs" style={{ background: '#F97316', fontSize: '14px' }}>{worker.name[0]}</div>
                                         <span style={{ fontSize: '13px', fontWeight: isSelected ? 700 : 500, color: '#9A3412' }}>{worker.name}</span>

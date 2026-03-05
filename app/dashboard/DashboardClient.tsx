@@ -73,9 +73,12 @@ export default function DashboardClient({ profile, todayJobs, spaces, recentJobs
             </section>
 
             {/* 빠른 액션 */}
-            <section className="quick-actions page-content" style={{ paddingTop: 0, paddingBottom: 0 }}>
-                <Link href="/requests/create" className="btn btn-primary btn-full" id="create-request-btn">
+            <section className="quick-actions page-content" style={{ paddingTop: 0, paddingBottom: 0, display: 'flex', gap: '8px' }}>
+                <Link href="/requests/create" className="btn btn-primary" id="create-request-btn" style={{ flex: 1.5 }}>
                     + 새 청소 요청
+                </Link>
+                <Link href="/market" className="btn btn-secondary" style={{ flex: 1, background: '#FEF2F2', color: '#E11D48', borderColor: '#FECDD3' }}>
+                    🛒 비품 마켓 (특가)
                 </Link>
             </section>
 

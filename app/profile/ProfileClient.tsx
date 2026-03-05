@@ -12,7 +12,7 @@ const TIER_CONFIG: Record<string, { label: string; color: string; next: string; 
 }
 
 interface Props {
-    profile: { id: string; name: string; email?: string; phone?: string; profile_image?: string; role: string; tier?: string; avg_rating?: number; total_jobs?: number; bio?: string; bank_account?: any; is_verified?: boolean }
+    profile: { id: string; name: string; email?: string; phone?: string; profile_image?: string; role: string; tier?: string; avg_rating?: number; total_jobs?: number; bio?: string; bank_account?: any; is_verified?: boolean; manner_temperature?: number }
     totalCompletedJobs: number
 }
 
@@ -112,6 +112,17 @@ export default function ProfileClient({ profile, totalCompletedJobs }: Props) {
             </div>
 
             <div className="page-content">
+                {/* 매너 온도 (공통) */}
+                <div className="card" style={{ padding: 'var(--spacing-md)', marginBottom: 'var(--spacing-md)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
+                        <span style={{ fontSize: '15px', fontWeight: 700, color: 'var(--color-text-primary)' }}>매너 온도</span>
+                        <span style={{ fontSize: '20px', fontWeight: 800, color: '#E11D48' }}>{profile.manner_temperature || 36.5}°C 🌡️</span>
+                    </div>
+                    <div style={{ background: '#FEF2F2', borderRadius: '8px', height: '14px', overflow: 'hidden' }}>
+                        <div style={{ width: `${Math.min(100, (profile.manner_temperature || 36.5))}%`, background: 'linear-gradient(90deg, #FCA5A5 0%, #E11D48 100%)', height: '100%', borderRadius: '8px', transition: 'width 1s ease-out' }}></div>
+                    </div>
+                </div>
+
                 {/* 통계 (클린파트너) */}
                 {profile.role === 'worker' && (
                     <>

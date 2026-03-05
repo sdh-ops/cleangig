@@ -45,11 +45,15 @@ export default function JobsListPage() {
 
     const fetchJobs = async () => {
         const supabase = createClient()
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) return
+
         const { data } = await supabase
             .from('jobs')
             .select('*, spaces(name, address, type, reference_photos, lat, lng)')
             .eq('status', 'OPEN')
             .gte('scheduled_at', new Date().toISOString())
+            .or(`targeted_worker_id.is.null,targeted_worker_id.eq.${user.id}`)
             .order('is_urgent', { ascending: false })
             .order('scheduled_at')
             .limit(50)
@@ -159,6 +163,9 @@ export default function JobsListPage() {
                                             <div style={{ flex: 1 }}>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                                                     <span style={{ fontWeight: 700, fontSize: 'var(--font-md)' }}>{space?.name || '공간'}</span>
+                                                    {job.targeted_worker_id && (
+                                                        <span style={{ background: '#FFF1F2', color: '#E11D48', border: '1px solid #FECDD3', padding: '2px 6px', borderRadius: 4, fontSize: 11, fontWeight: 800 }}>💖 단독 제안</span>
+                                                    )}
                                                     {job.is_urgent && (
                                                         <span style={{ background: 'var(--color-red)', color: '#fff', padding: '2px 6px', borderRadius: 4, fontSize: 11, fontWeight: 600 }}>🔥 긴급</span>
                                                     )}

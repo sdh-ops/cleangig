@@ -1,28 +1,79 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { loadPaymentWidget, PaymentWidgetInstance } from '@tosspayments/payment-widget-sdk'
 
 interface Props {
     isOpen: boolean
     onClose: () => void
     amount: number
     jobName: string
-    onSuccess: () => void
+    jobId: string
+    paymentContext: 'accept' | 'extra'
+    workerId?: string
+    appId?: string
 }
 
-export default function PaymentModal({ isOpen, onClose, amount, jobName, onSuccess }: Props) {
+export default function PaymentModal({ isOpen, onClose, amount, jobName, jobId, paymentContext, workerId, appId }: Props) {
     const [isProcessing, setIsProcessing] = useState(false)
-    const [payMethod, setPayMethod] = useState<'card' | 'transfer'>('card')
+    const [paymentWidget, setPaymentWidget] = useState<PaymentWidgetInstance | null>(null)
+
+    useEffect(() => {
+        if (!isOpen) return
+
+        let mounted = true;
+        (async () => {
+            try {
+                // 토스페이먼츠 공식 테스트 환경 연동 키
+                const clientKey = "test_gck_docs_Ovk5rk1EwkEbP0W43n07xlzm"
+                const customerKey = `USER_${Math.random().toString(36).substring(2, 10)}`
+
+                const widget = await loadPaymentWidget(clientKey, customerKey)
+                if (!mounted) return
+
+                setPaymentWidget(widget)
+
+                // 결제창 위젯 렌더링
+                const paymentMethodsWidget = widget.renderPaymentMethods('#payment-widget', { value: amount }, { variantKey: 'DEFAULT' })
+
+                // 이용약관 위젯 렌더링
+                widget.renderAgreement('#agreement', { variantKey: 'AGREEMENT' })
+
+            } catch (err) {
+                console.error("토스페이먼츠 위젯 로드 실패:", err)
+            }
+        })()
+
+        return () => { mounted = false }
+    }, [isOpen, amount])
 
     if (!isOpen) return null
 
-    const handlePay = () => {
+    const handlePay = async () => {
+        if (!paymentWidget) return
         setIsProcessing(true)
-        // 토스페이먼츠 가상 결제 시뮬레이션 지연
-        setTimeout(() => {
+
+        try {
+            const orderId = `ORDER_${Date.now()}_${jobId.substring(0, 8)}`
+
+            // 콜백 URL 구성 (Toss 결제 후 돌아올 라우트)
+            const originURL = typeof window !== 'undefined' ? window.location.origin : ''
+            const successUrl = new URL(`${originURL}/payment/success`)
+            successUrl.searchParams.append('context', paymentContext)
+            successUrl.searchParams.append('jobId', jobId)
+            if (workerId) successUrl.searchParams.append('workerId', workerId)
+            if (appId) successUrl.searchParams.append('appId', appId)
+
+            await paymentWidget.requestPayment({
+                orderId,
+                orderName: jobName,
+                successUrl: successUrl.toString(),
+                failUrl: `${originURL}/payment/fail?jobId=${jobId}`,
+            })
+        } catch (err) {
+            console.error('결제 요청 에러:', err)
             setIsProcessing(false)
-            onSuccess()
-        }, 2000)
+        }
     }
 
     return (
@@ -32,54 +83,37 @@ export default function PaymentModal({ isOpen, onClose, amount, jobName, onSucce
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             zIndex: 9999, padding: 20
         }}>
-            <div className="card" style={{ width: '100%', maxWidth: 400, padding: 0, overflow: 'hidden', animation: 'slideUp 0.3s ease-out' }}>
+            <div className="card" style={{ width: '100%', maxWidth: 480, padding: 0, overflowY: 'auto', maxHeight: '90vh', animation: 'slideUp 0.3s ease-out' }}>
                 <div style={{ padding: '24px 24px 16px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
                         <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>안전 결제</h2>
                         <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 24, cursor: 'pointer', padding: 0, color: '#999' }}>×</button>
                     </div>
 
-                    <div style={{ textAlign: 'center', marginBottom: 32 }}>
-                        <div style={{ fontSize: 14, color: 'var(--color-text-secondary)', marginBottom: 8 }}>{jobName}</div>
-                        <div style={{ fontSize: 32, fontWeight: 800, color: 'var(--color-primary)' }}>
+                    <div style={{ textAlign: 'center', marginBottom: 24 }}>
+                        <div style={{ fontSize: 14, color: '#64748B', marginBottom: 8 }}>{jobName}</div>
+                        <div style={{ fontSize: 32, fontWeight: 800, color: '#00C471' }}>
                             {amount.toLocaleString()}원
                         </div>
-                        <p style={{ fontSize: 12, color: 'var(--color-text-tertiary)', marginTop: 8 }}>
-                            결제 금액은 안전하게 에스크로에 보관되며, 청소 완료 승인 시 클린파트너에게 정산됩니다. (수수료 10% 포함)
-                        </p>
                     </div>
 
-                    <div style={{ marginBottom: 24 }}>
-                        <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 12 }}>결제 수단 선택 (토스페이먼츠 테스트)</div>
-                        <div style={{ display: 'flex', gap: 8 }}>
-                            <button
-                                onClick={() => setPayMethod('card')}
-                                style={{
-                                    flex: 1, padding: '12px', borderRadius: 8, border: `2px solid ${payMethod === 'card' ? 'var(--color-primary)' : '#E2E8F0'}`,
-                                    background: payMethod === 'card' ? 'var(--color-primary-light)' : '#fff',
-                                    fontWeight: 600, color: payMethod === 'card' ? 'var(--color-primary-dark)' : '#64748B', cursor: 'pointer'
-                                }}
-                            >💳 신용카드</button>
-                            <button
-                                onClick={() => setPayMethod('transfer')}
-                                style={{
-                                    flex: 1, padding: '12px', borderRadius: 8, border: `2px solid ${payMethod === 'transfer' ? 'var(--color-primary)' : '#E2E8F0'}`,
-                                    background: payMethod === 'transfer' ? 'var(--color-primary-light)' : '#fff',
-                                    fontWeight: 600, color: payMethod === 'transfer' ? 'var(--color-primary-dark)' : '#64748B', cursor: 'pointer'
-                                }}
-                            >🏦 계좌이체</button>
-                        </div>
-                    </div>
+                    {/* 토스 위젯이 렌더링될 DOM 노드들 */}
+                    <div id="payment-widget" style={{ minHeight: 150 }} />
+                    <div id="agreement" />
                 </div>
 
                 <div style={{ padding: 24, background: '#F8FAFC', borderTop: '1px solid #E2E8F0' }}>
                     <button
                         className="btn btn-primary btn-full btn-lg"
                         onClick={handlePay}
-                        disabled={isProcessing}
+                        disabled={isProcessing || !paymentWidget}
+                        style={{ height: 54, fontSize: 16 }}
                     >
                         {isProcessing ? <span className="spinner" style={{ borderColor: '#fff', borderTopColor: 'transparent' }} /> : `${amount.toLocaleString()}원 결제하기`}
                     </button>
+                    <div style={{ fontSize: 13, color: '#64748B', textAlign: 'center', marginTop: 12 }}>
+                        클린긱 에스크로 안전 결제 연동 테스트
+                    </div>
                 </div>
             </div>
 

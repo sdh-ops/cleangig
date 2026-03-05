@@ -176,8 +176,7 @@ export default function CreateSpacePage() {
             const filePath = `${user.id}/${fileName}`
             const { error: uploadError } = await supabase.storage.from('photos').upload(filePath, file)
             if (!uploadError) {
-                const { data: { publicUrl } } = supabase.storage.from('photos').getPublicUrl(filePath)
-                uploadedPhotoUrls.push(publicUrl)
+                uploadedPhotoUrls.push(filePath)
             }
         }
 
@@ -189,8 +188,7 @@ export default function CreateSpacePage() {
             const filePath = `${user.id}/${fileName}`
             const { error: uploadError } = await supabase.storage.from('photos').upload(filePath, bizRegPhoto)
             if (!uploadError) {
-                const { data: { publicUrl } } = supabase.storage.from('photos').getPublicUrl(filePath)
-                uploadedBizRegUrl = publicUrl
+                uploadedBizRegUrl = filePath
             }
         }
 

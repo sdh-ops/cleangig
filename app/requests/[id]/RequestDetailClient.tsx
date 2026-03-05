@@ -4,8 +4,8 @@ import Link from 'next/link'
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
-
 import PaymentModal from '@/components/common/PaymentModal'
+import SecureImage from '@/components/common/SecureImage'
 
 const STATUS_MAP: Record<string, { label: string; cls: string; desc: string }> = {
     OPEN: { label: '매칭 중', cls: 'badge-open', desc: 'AI가 클린파트너를 찾고 있어요' },
@@ -32,6 +32,13 @@ export default function RequestDetailClient({ job, photos, payment, applications
     const [showDispute, setShowDispute] = useState(false)
     const [isFavorite, setIsFavorite] = useState(initialIsFavorite)
     const [togglingFav, setTogglingFav] = useState(false)
+
+    // 리뷰 상태
+    const [reviewModalOpen, setReviewModalOpen] = useState(false)
+    const [reviewRating, setReviewRating] = useState(5)
+    const [reviewComment, setReviewComment] = useState('')
+    const [reviewSubmitted, setReviewSubmitted] = useState(false)
+    const [submittingReview, setSubmittingReview] = useState(false)
 
     // 결제 모달 상태
     const [paymentModalOpen, setPaymentModalOpen] = useState(false)
@@ -85,34 +92,8 @@ export default function RequestDetailClient({ job, photos, payment, applications
         setPaymentModalOpen(true)
     }
 
-    // 결제 모달 성공 콜백
-    const handlePaymentSuccess = async () => {
-        setPaymentModalOpen(false)
-
-        if (paymentContext === 'accept' && selectedApp) {
-            setApproving(true)
-            const supabase = createClient()
-            await supabase.from('jobs').update({ status: 'ASSIGNED', worker_id: selectedApp.workerId }).eq('id', job.id)
-            await supabase.from('job_applications').update({ status: 'ACCEPTED' }).eq('id', selectedApp.appId)
-            await supabase.from('job_applications').update({ status: 'REJECTED' }).eq('job_id', job.id).neq('id', selectedApp.appId)
-
-            // 작업자에게 실시간 알림 발송
-            const { error: notifyError } = await supabase.rpc('notify_user', {
-                p_user_id: selectedApp.workerId,
-                p_title: '🎉 매칭 확정!',
-                p_message: '공간 파트너님이 배정 및 결제를 완료했습니다. 일정을 확인해주세요!',
-                p_url: `/clean/job/${job.id}`
-            })
-            if (notifyError) console.error(notifyError)
-
-            alert('안전 결제 및 배정이 완료되었습니다.')
-            router.refresh()
-            setApproving(false)
-        } else if (paymentContext === 'extra') {
-            await executeApprove()
-            alert('추가 요금 결제 및 승인이 완료되었습니다.')
-        }
-    }
+    // 결제 관련 로직은 토스페이먼츠 연동(Redirect) 후 `/payment/success`에서 처리되므로
+    // 기존 가상 결제 성공 콜백(handlePaymentSuccess) 로직은 success 페이지로 이관되었습니다.
 
     // 분쟁 신고
     const handleDispute = async () => {
@@ -144,6 +125,29 @@ export default function RequestDetailClient({ job, photos, payment, applications
             setIsFavorite(true)
         }
         setTogglingFav(false)
+    }
+
+    // 리뷰 제출
+    const handleSubmitReview = async () => {
+        if (!worker) return
+        setSubmittingReview(true)
+        const supabase = createClient()
+        await supabase.from('reviews').insert({
+            job_id: job.id, reviewer_id: userId, reviewee_id: worker.id,
+            rating: reviewRating, comment: reviewComment
+        })
+
+        const { error: notifyError } = await supabase.rpc('notify_user', {
+            p_user_id: worker.id, p_title: '⭐ 새로운 리뷰 도착',
+            p_message: `공간 파트너님이 ${reviewRating}점 리뷰를 남겼어요!`, p_url: `/profile`
+        })
+        if (notifyError) console.error(notifyError)
+
+        alert('소중한 리뷰가 등록되었습니다. 매너 온도가 반영됩니다!')
+        setReviewSubmitted(true)
+        setReviewModalOpen(false)
+        setSubmittingReview(false)
+        router.refresh()
     }
 
     return (
@@ -198,7 +202,9 @@ export default function RequestDetailClient({ job, photos, payment, applications
                                 <div className="avatar avatar-md" style={{ background: 'var(--color-primary)' }}>{worker.name?.[0]}</div>
                                 <div>
                                     <div className="worker-name">{worker.name}</div>
-                                    <div className="text-sm text-secondary">⭐ {worker.avg_rating?.toFixed(1) || '-'} · {worker.tier}</div>
+                                    <div className="text-sm text-secondary">
+                                        <span style={{ color: '#E11D48', fontWeight: 800 }}>{worker.manner_temperature || 36.5}°C</span> · ⭐ {worker.avg_rating?.toFixed(1) || '-'} · {worker.tier}
+                                    </div>
                                 </div>
                             </div>
                             <button
@@ -312,7 +318,7 @@ export default function RequestDetailClient({ job, photos, payment, applications
                         <div className="photo-grid">
                             {afterPhotos.map((p: any) => (
                                 <div key={p.id} className="photo-wrapper">
-                                    <img src={p.photo_url} alt="" className="photo-thumb" />
+                                    <SecureImage srcOrPath={p.photo_url} className="photo-thumb" />
                                     {p.ai_quality_score && (
                                         <div className="ai-score" style={{ background: p.ai_quality_score >= 80 ? 'var(--color-primary)' : 'var(--color-orange)' }}>
                                             AI {p.ai_quality_score}점
@@ -361,6 +367,22 @@ export default function RequestDetailClient({ job, photos, payment, applications
                     </div>
                 )}
 
+                {/* 공간파트너 액션: 청소 완료 후 리뷰 작성 */}
+                {isOperator && ['APPROVED', 'PAID_OUT'].includes(job.status) && !reviewSubmitted && (
+                    <div className="action-section" style={{ marginTop: 'var(--spacing-lg)' }}>
+                        <div className="card p-md" style={{ background: 'linear-gradient(135deg, #FFF1F2, #FFE4E6)', border: '1px solid #FECDD3' }}>
+                            <div className="flex justify-between items-center mb-xs">
+                                <h3 className="font-bold text-md mb-none" style={{ color: '#BE123C' }}>⭐ 클린파트너는 어떠셨나요?</h3>
+                                <span style={{ fontSize: 28 }}>🌡️</span>
+                            </div>
+                            <p className="text-sm text-secondary mb-md" style={{ color: '#9F1239' }}>작업에 대한 솔직한 리뷰를 남겨주시면 파트너의 매너 온도가 올라갑니다!</p>
+                            <button className="btn btn-full" style={{ background: '#BE123C', color: '#fff', border: 'none' }} onClick={() => setReviewModalOpen(true)}>
+                                리뷰 작성하고 매너 온도 올리기
+                            </button>
+                        </div>
+                    </div>
+                )}
+
                 {/* 분쟁 모달 */}
                 {showDispute && (
                     <div className="modal-overlay" onClick={() => setShowDispute(false)}>
@@ -379,13 +401,42 @@ export default function RequestDetailClient({ job, photos, payment, applications
                     </div>
                 )}
 
-                {/* 결제 모달 렌더링 */}
+                {/* 리뷰 모달 */}
+                {reviewModalOpen && (
+                    <div className="modal-overlay" onClick={() => setReviewModalOpen(false)}>
+                        <div className="modal-sheet" onClick={e => e.stopPropagation()}>
+                            <div className="modal-handle" />
+                            <h3 className="font-bold text-lg mb-md text-center">파트너 리뷰 남기기</h3>
+                            <div className="flex justify-center gap-xs mb-md">
+                                {[1, 2, 3, 4, 5].map(star => (
+                                    <button
+                                        key={star}
+                                        onClick={() => setReviewRating(star)}
+                                        style={{ fontSize: 32, filter: star <= reviewRating ? 'none' : 'grayscale(100%) opacity(30%)', transition: 'all 0.2s', background: 'none', border: 'none', cursor: 'pointer' }}
+                                    >
+                                        ⭐
+                                    </button>
+                                ))}
+                            </div>
+                            <div className="form-group mb-md">
+                                <textarea className="form-input" rows={4} placeholder="청소 퀄리티, 시간 준수 등 파트너에게 느낀 점을 자유롭게 적어주세요. (선택)"
+                                    value={reviewComment} onChange={e => setReviewComment(e.target.value)} />
+                            </div>
+                            <button className="btn btn-full" style={{ background: '#E11D48', color: '#fff', border: 'none' }} onClick={handleSubmitReview} disabled={submittingReview}>
+                                {submittingReview ? <span className="spinner" /> : `${reviewRating}점 리뷰 보내기`}
+                            </button>
+                        </div>
+                    </div>
+                )}
+
                 <PaymentModal
                     isOpen={paymentModalOpen}
                     onClose={() => setPaymentModalOpen(false)}
                     amount={paymentContext === 'accept' ? job.price : job.extra_charge_amount}
                     jobName={space?.name ? `[${space.name}] 청소 결제` : '청소 결제'}
-                    onSuccess={handlePaymentSuccess}
+                    jobId={job.id}
+                    paymentContext={paymentContext}
+                    workerId={selectedApp?.workerId}
                 />
             </div>
 

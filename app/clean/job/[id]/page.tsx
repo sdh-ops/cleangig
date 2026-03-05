@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Job, ChecklistItem } from '@/lib/types'
+import SecureImage from '@/components/common/SecureImage'
 
 const STATUS_FLOW: Record<string, { next: string; label: string; btnLabel: string; btnColor: string }> = {
     ASSIGNED: { next: 'EN_ROUTE', label: '배정 완료', btnLabel: '🚗 출발하기', btnColor: 'btn-primary' },
@@ -151,21 +152,19 @@ export default function JobDetailPage() {
 
         if (uploadError) { alert('사진 업로드 실패'); setUploadingIdx(null); return }
 
-        const { data: { publicUrl } } = supabase.storage.from('photos').getPublicUrl(path)
-
         // photos 테이블에 기록
         await supabase.from('photos').insert({
             job_id: id,
             uploaded_by: user.id,
             type: 'after',
-            photo_url: publicUrl,
+            photo_url: path,
             checklist_item_id: checklistIdx !== undefined ? checklist[checklistIdx]?.id : null,
         })
 
         // 체크리스트에 사진 URL 업데이트
         if (checklistIdx !== undefined) {
             const next = [...checklist]
-            next[checklistIdx] = { ...next[checklistIdx], completed: true, photo_url: publicUrl }
+            next[checklistIdx] = { ...next[checklistIdx], completed: true, photo_url: path }
             setChecklist(next)
         }
         setUploadingIdx(null)
@@ -184,10 +183,9 @@ export default function JobDetailPage() {
             .from('photos').upload(path, file, { contentType: file.type })
 
         if (uploadError) { alert('사진 업로드 실패'); setSubmitting(false); return }
-        const { data: { publicUrl } } = supabase.storage.from('photos').getPublicUrl(path)
 
         const currentReports = (job.pre_damage_report as any) || []
-        const newReport = { desc: damageDesc || '특이사항 없음', photo_url: publicUrl }
+        const newReport = { desc: damageDesc || '특이사항 없음', photo_url: path }
 
         await supabase.from('jobs').update({
             pre_damage_report: [...currentReports, newReport]
@@ -392,7 +390,11 @@ export default function JobDetailPage() {
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                             {((job.pre_damage_report as any[]) || []).map((r, i) => (
                                 <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'center', background: 'rgba(255,255,255,0.7)', padding: 8, borderRadius: 8 }}>
-                                    {r.photo_url && <img src={r.photo_url} alt="증거" style={{ width: 40, height: 40, borderRadius: 4, objectFit: 'cover' }} />}
+                                    {r.photo_url && (
+                                        <div style={{ width: 40, height: 40, borderRadius: 4, overflow: 'hidden' }}>
+                                            <SecureImage srcOrPath={r.photo_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                        </div>
+                                    )}
                                     <span style={{ fontSize: 12, color: '#92400E' }}>{r.desc}</span>
                                 </div>
                             ))}
@@ -431,7 +433,7 @@ export default function JobDetailPage() {
                                         </button>
                                     )}
                                     {item.photo_url && (
-                                        <img src={item.photo_url} alt="" className="check-thumb" />
+                                        <SecureImage srcOrPath={item.photo_url} className="check-thumb" />
                                     )}
                                 </div>
                             ))}

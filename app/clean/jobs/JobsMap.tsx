@@ -6,9 +6,20 @@ export default function JobsMap({ jobs }: { jobs: any[] }) {
     const mapElement = useRef<HTMLDivElement>(null)
     const [map, setMap] = useState<any>(null)
     const markersRef = useRef<any[]>([])
+    const [naverLoaded, setNaverLoaded] = useState(false)
 
     useEffect(() => {
-        if (!mapElement.current || !(window as any).naver) return
+        const checkNaverMap = setInterval(() => {
+            if ((window as any).naver && (window as any).naver.maps) {
+                setNaverLoaded(true)
+                clearInterval(checkNaverMap)
+            }
+        }, 100)
+        return () => clearInterval(checkNaverMap)
+    }, [])
+
+    useEffect(() => {
+        if (!mapElement.current || !naverLoaded) return
 
         const naverMaps = (window as any).naver.maps
 
@@ -26,7 +37,7 @@ export default function JobsMap({ jobs }: { jobs: any[] }) {
     }, [])
 
     useEffect(() => {
-        if (!map || !(window as any).naver) return
+        if (!map || !naverLoaded) return
         const naverMaps = (window as any).naver.maps
 
         // 기존 마커 제거
