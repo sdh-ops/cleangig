@@ -1,195 +1,379 @@
-'use client'
+'use client';
 
-import Link from 'next/link'
-import { useState, useEffect } from 'react'
-import { createClient } from '@/lib/supabase/client'
-import NotificationBell from '@/components/common/NotificationBell'
+import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { motion } from 'framer-motion';
+import { createClient } from '@/lib/supabase/client';
+import Header from '@/components/layout/Header';
+import BottomNav from '@/components/layout/BottomNav';
 
 interface Job {
-    id: string; status: string; price: number; scheduled_at: string
-    estimated_duration: number; is_urgent: boolean
-    spaces?: { name: string; address: string; type: string }
-    job_id?: string; space_name?: string; space_type?: string; distance_meters?: number
-}
-interface Props {
-    profile: { id: string; name: string; avg_rating: number; tier: string; total_jobs: number }
-    activeJob: Job | null
-    weekEarnings: number
-    pendingCount: number
+    id: string;
+    status: string;
+    price: number;
+    scheduled_at: string;
+    estimated_duration: number;
+    is_urgent: boolean;
+    spaces?: { name: string; address: string; type: string };
+    job_id?: string;
+    space_name?: string;
+    space_type?: string;
+    distance_meters?: number;
 }
 
-const TIER_LABEL: Record<string, string> = { STARTER: '🌱 스타터', SILVER: '🥈 실버', GOLD: '🥇 골드', MASTER: '👑 마스터' }
+interface Props {
+    profile: { id: string; name: string; avg_rating: number; tier: string; total_jobs: number };
+    activeJob: Job | null;
+    weekEarnings: number;
+    pendingCount: number;
+}
+
+const TIER_LABEL: Record<string, string> = {
+    STARTER: '🌱 스타터',
+    SILVER: '🥈 실버',
+    GOLD: '🥇 골드',
+    MASTER: '👑 마스터'
+};
 
 export default function CleanMainClient({ profile, activeJob, weekEarnings, pendingCount }: Props) {
-    const [nearbyJobs, setNearbyJobs] = useState<Job[]>([])
-    const [loading, setLoading] = useState(true)
-    const [locationError, setLocationError] = useState('')
+    const [nearbyJobs, setNearbyJobs] = useState<Job[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [locationError, setLocationError] = useState('');
 
     useEffect(() => {
-        if (!navigator.geolocation) { setLoading(false); return }
+        if (!navigator.geolocation) {
+            setLoading(false);
+            return;
+        }
         navigator.geolocation.getCurrentPosition(
             async (pos) => {
-                const supabase = createClient()
+                const supabase = createClient();
                 const { data, error } = await supabase.rpc('nearby_open_jobs', {
                     worker_lat: pos.coords.latitude,
                     worker_lng: pos.coords.longitude,
                     radius_km: 10,
-                })
-                if (!error && data) setNearbyJobs(data as Job[])
-                setLoading(false)
+                });
+                if (!error && data) setNearbyJobs(data as Job[]);
+                setLoading(false);
             },
             () => {
-                setLocationError('위치 권한을 허용하면 내 주변 청소 요청을 볼 수 있어요')
-                // 위치 없이 전체 OPEN 목록 표시
+                setLocationError('위치 권한을 허용하면 내 주변 청소 요청을 볼 수 있어요');
                 createClient()
                     .from('jobs').select('*, spaces(name,address,type)')
                     .eq('status', 'OPEN').order('scheduled_at').limit(10)
-                    .then(({ data }) => { setNearbyJobs((data as Job[]) || []); setLoading(false) })
+                    .then(({ data }) => {
+                        setNearbyJobs((data as Job[]) || []);
+                        setLoading(false);
+                    });
             }
-        )
-    }, [])
+        );
+    }, []);
 
     return (
-        <div className="page-container premium-bg" style={{ backgroundColor: '#fff', minHeight: '100dvh' }}>
-            {/* 상단 화이트 헤더 */}
-            <header className="premium-header" style={{ background: '#fff' }}>
-                <div className="header-top flex justify-between items-center">
-                    <div>
-                        <p className="text-secondary" style={{ fontSize: '13px', marginBottom: -2 }}>안녕하세요, 👋</p>
-                        <h1 className="text-xl font-bold" style={{ letterSpacing: '-0.02em' }}>{profile.name}님</h1>
-                        <span className="badge-pill" style={{ background: 'var(--color-primary-light)', color: 'var(--color-primary)', fontSize: '10px', marginTop: '4px' }}>
-                            {TIER_LABEL[profile.tier || 'STARTER']}
-                        </span>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                        <NotificationBell />
-                        <Link href="/profile" style={{ width: 40, height: 40, borderRadius: '50%', background: '#F2F4F6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, border: '1px solid var(--color-border-light)', textDecoration: 'none' }}>
-                            👤
-                        </Link>
-                    </div>
-                </div>
+        <div className="page-container bg-premium-v2">
+            <Header />
 
-                {/* 이번 주 수익 & 목표 달성 위젯 (Sparkle Style) */}
-                <div className="card sparkle-card" style={{ marginTop: '20px', padding: '24px', background: 'linear-gradient(135deg, var(--color-primary) 0%, #308AFF 100%)', border: 'none' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                        <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.8)', fontWeight: 600 }}>이번 주 정산 예정 🎯</p>
-                        {pendingCount > 0 && <span className="badge" style={{ background: '#FFD400', color: '#000', fontSize: '10px', fontWeight: 800 }}>입금 대기 {pendingCount}</span>}
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 12 }}>
-                        <p style={{ fontSize: '28px', fontWeight: 900, color: '#fff' }}>{weekEarnings.toLocaleString()}원</p>
-                        <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.6)' }}>목표 30만</p>
-                    </div>
-                    <div style={{ width: '100%', height: 10, background: 'rgba(255,255,255,0.2)', borderRadius: 99, overflow: 'hidden' }}>
-                        <div style={{
-                            width: `${Math.min((weekEarnings / 300000) * 100, 100)}%`,
-                            height: '100%',
-                            background: '#fff',
-                            borderRadius: 99,
-                            boxShadow: '0 0 10px rgba(255,255,255,0.5)',
-                            transition: 'width 1s ease-out'
-                        }} />
-                    </div>
-                </div>
-            </header>
+            <main className="page-content">
+                {/* Welcome Text */}
+                <section className="welcome-section">
+                    <p className="welcome-sub text-secondary">{TIER_LABEL[profile.tier || 'STARTER']} 파트너</p>
+                    <h2 className="welcome-title">{profile.name}님, 좋은 하루예요! ✨</h2>
+                </section>
 
-            <div className="page-content" style={{ padding: '0 20px 100px' }}>
-                {/* 진행 중 작업 - 플로팅 스타일 */}
-                {activeJob && (
-                    <Link href={`/clean/job/${activeJob.id}`} className="card" style={{ display: 'block', padding: '20px', border: '2px solid var(--color-primary)', background: '#F0F7FF', marginBottom: '24px', textDecoration: 'none' }}>
-                        <div className="flex items-center gap-md">
-                            <div style={{ width: 10, height: 10, borderRadius: '50%', background: 'var(--color-primary)', animation: 'pulse 2s infinite' }} />
-                            <div style={{ flex: 1 }}>
-                                <p style={{ fontSize: '12px', color: 'var(--color-primary)', fontWeight: 800, marginBottom: 2 }}>현재 청소 중</p>
-                                <p style={{ fontSize: '16px', fontWeight: 800, color: '#000' }}>{(activeJob.spaces as any)?.name}</p>
-                            </div>
-                            <span style={{ fontSize: '20px', color: 'var(--color-primary)' }}>›</span>
+                {/* Earnings Card (Stitch ID: 3dc9...) */}
+                <section className="earnings-section">
+                    <div className="earnings-card card-premium">
+                        <div className="card-header">
+                            <span className="label">이번 주 정산 예정 금액</span>
+                            {pendingCount > 0 && <span className="pending-badge">입금 대기 {pendingCount}</span>}
                         </div>
-                    </Link>
+                        <div className="amount-row">
+                            <h3 className="amount">{weekEarnings.toLocaleString()}원</h3>
+                            <span className="target">목표 30만</span>
+                        </div>
+                        <div className="progress-container">
+                            <div
+                                className="progress-bar"
+                                style={{ width: `${Math.min((weekEarnings / 300000) * 100, 100)}%` }}
+                            />
+                        </div>
+                        <p className="goal-text">목표 금액까지 {Math.max(0, 300000 - weekEarnings).toLocaleString()}원 남았어요!</p>
+                    </div>
+                </section>
+
+                {/* Active Job Floating (If exists) */}
+                {activeJob && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="active-job-card"
+                    >
+                        <Link href={`/clean/job/${activeJob.id}`} className="active-link">
+                            <div className="status-indicator">
+                                <span className="dot pulse" />
+                                <span className="status-text">현재 청소 진행 중</span>
+                            </div>
+                            <div className="job-info">
+                                <strong>{(activeJob.spaces as any)?.name}</strong>
+                                <span>상세보기 →</span>
+                            </div>
+                        </Link>
+                    </motion.div>
                 )}
 
-                {/* AI 동선 추천 - 섹션 강조 */}
-                <div style={{ marginBottom: '28px' }}>
-                    <div className="flex justify-between items-center mb-md">
-                        <h2 style={{ fontSize: '18px', fontWeight: 800, color: '#000', letterSpacing: '-0.02em' }}>
-                            {locationError ? '전체 일감' : '✨ AI 추천 일감'}
-                        </h2>
-                        <Link href="/clean/jobs" style={{ fontSize: '13px', color: 'var(--color-primary)', fontWeight: 700, textDecoration: 'none' }}>전체 보기</Link>
+                {/* AI Recommendations */}
+                <section className="recommend-section">
+                    <div className="section-header">
+                        <h3 className="section-title">✨ 파트너님을 위한 추천 클리닝</h3>
+                        <Link href="/clean/jobs" className="view-all">전체보기</Link>
                     </div>
 
                     {loading ? (
-                        <div className="job-list">
-                            {[1, 2].map(i => <div key={i} className="skeleton" style={{ height: 120, borderRadius: 20, background: '#F2F4F6' }} />)}
+                        <div className="skeleton-grid">
+                            {[1, 2].map(i => <div key={i} className="skeleton-card" />)}
                         </div>
                     ) : nearbyJobs.length === 0 ? (
-                        <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--color-text-tertiary)' }}>
-                            <div style={{ fontSize: 40, marginBottom: 12 }}>🔍</div>
-                            <p style={{ fontSize: 15, fontWeight: 600 }}>주변에 새 일감이 없어요</p>
+                        <div className="empty-state-v2">
+                            <div className="icon">🔍</div>
+                            <p>주변에 새로 올라온 일감이 없네요</p>
                         </div>
                     ) : (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                            {nearbyJobs.map((job: any, i) => (
-                                <Link href={`/clean/job/${job.job_id || job.id}`} key={job.job_id || job.id}
-                                    className="card card-hover" style={{ display: 'block', padding: '20px', border: i === 0 ? '1px solid var(--color-primary-light)' : '1px solid #F2F4F6', background: i === 0 ? 'var(--color-primary-light)' : '#fff', textDecoration: 'none' }}>
-                                    <div className="flex justify-between items-start mb-sm">
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                            <span style={{ fontSize: 20 }}>{job.space_type === 'airbnb' ? '🏠' : '🏢'}</span>
-                                            <div>
-                                                <div style={{ fontSize: '15px', fontWeight: 800, color: '#000' }}>{job.space_name || (job.spaces as any)?.name}</div>
-                                                <div style={{ fontSize: '12px', color: 'var(--color-text-tertiary)' }}>{(job.distance_meters ? job.distance_meters / 1000 : 0.5).toFixed(1)}km 거리에요</div>
-                                            </div>
-                                        </div>
-                                        <div style={{ textAlign: 'right' }}>
-                                            <div style={{ fontSize: '18px', fontWeight: 900, color: 'var(--color-primary)' }}>₩{(job.price || 0).toLocaleString()}</div>
-                                            {job.is_urgent && <span style={{ fontSize: '10px', color: 'var(--color-red)', fontWeight: 800 }}>🔥 긴급</span>}
-                                        </div>
+                        <div className="job-grid">
+                            {nearbyJobs.map((job: any) => (
+                                <Link
+                                    href={`/clean/job/${job.job_id || job.id}`}
+                                    key={job.job_id || job.id}
+                                    className="job-card-premium card"
+                                >
+                                    <div className="card-top">
+                                        <span className="space-type-badge">
+                                            {job.space_type === 'airbnb' ? 'Airbnb' : 'Office'}
+                                        </span>
+                                        <span className="price">₩{(job.price || 0).toLocaleString()}</span>
                                     </div>
-                                    <div style={{ display: 'flex', gap: 12, marginTop: 12, paddingTop: 12, borderTop: '1px solid rgba(0,0,0,0.03)' }}>
-                                        <div style={{ fontSize: '12px', color: 'var(--color-text-secondary)', fontWeight: 600 }}>⏰ {new Date(job.scheduled_at).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}</div>
-                                        <div style={{ fontSize: '12px', color: 'var(--color-text-secondary)', fontWeight: 600 }}>⏱ {job.estimated_duration}분 소요</div>
+                                    <h4 className="job-name">{job.space_name || (job.spaces as any)?.name}</h4>
+                                    <div className="job-meta">
+                                        <span>📍 {(job.distance_meters ? job.distance_meters / 1000 : 0.5).toFixed(1)}km</span>
+                                        <span>⏰ {new Date(job.scheduled_at).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}</span>
                                     </div>
                                 </Link>
                             ))}
                         </div>
                     )}
-                </div>
-            </div>
+                </section>
+            </main>
 
-            {/* 하단 탭 - 통일된 디자인 */}
-            <nav className="premium-bottom-nav">
-                <Link href="/clean" className="nav-item active">
-                    <div className="nav-icon-box">🏠</div>
-                    <span>홈</span>
-                </Link>
-                <Link href="/clean/jobs" className="nav-item">
-                    <div className="nav-icon-box">📋</div>
-                    <span>일정</span>
-                </Link>
-                <Link href="/earnings" className="nav-item">
-                    <div className="nav-icon-box">🏦</div>
-                    <span>정산</span>
-                </Link>
-                <Link href="/profile" className="nav-item">
-                    <div className="nav-icon-box">👤</div>
-                    <span>마이</span>
-                </Link>
-            </nav>
+            <BottomNav />
 
             <style jsx>{`
-                .premium-bottom-nav {
-                    position: fixed; bottom: 0; left: 0; right: 0;
-                    height: 80px; background: rgba(255, 255, 255, 0.9);
-                    backdrop-filter: blur(15px); border-top: 1px solid #F2F4F6;
-                    display: flex; justify-content: space-around; align-items: center;
-                    padding-bottom: env(safe-area-inset-bottom); z-index: 100;
-                }
-                .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; color: #8B95A1; font-size: 11px; font-weight: 600; text-decoration: none; }
-                .nav-item.active { color: var(--color-primary); }
-                .nav-icon-box { font-size: 22px; margin-bottom: 2px; }
-                .badge-pill { font-size: 11px; padding: 4px 10px; border-radius: 99px; font-weight: 700; }
-                @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.6;transform:scale(1.2)} }
-                .skeleton { animation: skeleton-loading 1s linear infinite alternate; }
-                @keyframes skeleton-loading { from { background-color: #F2F4F6; } to { background-color: #E5E7EB; } }
-            `}</style>
+        .bg-premium-v2 {
+          background-color: var(--color-bg);
+          min-height: 100vh;
+        }
+        .page-content {
+          padding: 24px 20px 120px;
+        }
+        .welcome-section {
+          margin-bottom: 24px;
+        }
+        .welcome-sub {
+          font-size: 14px;
+          font-weight: 700;
+          margin-bottom: 4px;
+        }
+        .welcome-title {
+          font-size: 24px;
+          font-weight: 800;
+          letter-spacing: -0.02em;
+        }
+        .earnings-section {
+          margin-bottom: 24px;
+        }
+        .earnings-card {
+          background: var(--color-primary);
+          padding: 24px;
+          border-radius: 28px;
+          color: #FFFFFF;
+          box-shadow: var(--shadow-md);
+        }
+        .card-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 12px;
+        }
+        .card-header .label {
+          font-size: 14px;
+          opacity: 0.8;
+          font-weight: 600;
+        }
+        .pending-badge {
+          background: var(--color-accent);
+          color: #000;
+          font-size: 11px;
+          font-weight: 800;
+          padding: 4px 10px;
+          border-radius: 99px;
+        }
+        .amount-row {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-end;
+          margin-bottom: 12px;
+        }
+        .amount {
+          font-size: 28px;
+          font-weight: 900;
+        }
+        .target {
+          font-size: 13px;
+          opacity: 0.6;
+        }
+        .progress-container {
+          height: 8px;
+          background: rgba(255, 255, 255, 0.2);
+          border-radius: 99px;
+          overflow: hidden;
+          margin-bottom: 12px;
+        }
+        .progress-bar {
+          height: 100%;
+          background: #FFFFFF;
+          border-radius: 99px;
+          box-shadow: 0 0 12px rgba(255, 255, 255, 0.5);
+          transition: width 1s ease-out;
+        }
+        .goal-text {
+          font-size: 12px;
+          opacity: 0.7;
+          font-weight: 500;
+        }
+        .active-job-card {
+          background: var(--color-primary-soft);
+          border: 1.5px solid var(--color-primary-light);
+          padding: 16px 20px;
+          border-radius: 20px;
+          margin-bottom: 28px;
+        }
+        .active-link {
+          text-decoration: none;
+          color: inherit;
+        }
+        .status-indicator {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          margin-bottom: 4px;
+        }
+        .dot {
+          width: 8px;
+          height: 8px;
+          background: var(--color-primary);
+          border-radius: 50%;
+        }
+        .pulse {
+          animation: pulse-ani 2s infinite;
+        }
+        @keyframes pulse-ani {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50% { opacity: 0.5; transform: scale(1.3); }
+        }
+        .status-text {
+          font-size: 12px;
+          font-weight: 800;
+          color: var(--color-primary);
+        }
+        .job-info {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+        .job-info strong {
+          font-size: 16px;
+          color: var(--color-text-primary);
+        }
+        .job-info span {
+          font-size: 13px;
+          color: var(--color-primary);
+          font-weight: 700;
+        }
+        .recommend-section .section-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 16px;
+        }
+        .section-title {
+          font-size: 18px;
+          font-weight: 800;
+        }
+        .view-all {
+          font-size: 14px;
+          color: var(--color-primary);
+          font-weight: 700;
+          text-decoration: none;
+        }
+        .job-grid {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+        }
+        .job-card-premium {
+          padding: 20px;
+          text-decoration: none;
+        }
+        .card-top {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 8px;
+        }
+        .space-type-badge {
+          background: var(--color-bg);
+          color: var(--color-text-secondary);
+          padding: 4px 10px;
+          border-radius: 8px;
+          font-size: 11px;
+          font-weight: 700;
+          border: 1px solid var(--color-border-light);
+        }
+        .price {
+          font-size: 19px;
+          font-weight: 900;
+          color: var(--color-primary);
+        }
+        .job-name {
+          font-size: 17px;
+          font-weight: 800;
+          color: var(--color-text-primary);
+          margin-bottom: 12px;
+        }
+        .job-meta {
+          display: flex;
+          gap: 16px;
+          font-size: 13px;
+          color: var(--color-text-tertiary);
+          font-weight: 600;
+        }
+        .skeleton-card {
+          height: 120px;
+          background: #E9ECEF;
+          border-radius: 24px;
+          animation: shimmer 1.5s infinite alternate;
+        }
+        @keyframes shimmer {
+          from { opacity: 0.5; } to { opacity: 1; }
+        }
+        .empty-state-v2 {
+          text-align: center;
+          padding: 48px 0;
+          color: var(--color-text-tertiary);
+        }
+        .empty-state-v2 .icon {
+          font-size: 40px;
+          margin-bottom: 12px;
+        }
+      `}</style>
         </div>
-    )
+    );
 }

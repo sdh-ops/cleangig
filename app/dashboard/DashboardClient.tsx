@@ -1,17 +1,19 @@
-'use client'
+'use client';
 
-import Link from 'next/link'
-import { useState } from 'react'
-import NotificationBell from '@/components/common/NotificationBell'
+import React, { useState } from 'react';
+import Link from 'next/link';
+import { motion } from 'framer-motion';
+import Header from '@/components/layout/Header';
+import BottomNav from '@/components/layout/BottomNav';
 
 interface Props {
-    profile: { name: string; email?: string; profile_image?: string }
-    todayJobs: Array<{ id: string; status: string; price: number; scheduled_at: string; spaces?: { name: string; type: string } }>
-    spaces: Array<{ id: string; name: string; type: string; base_price: number; is_active: boolean }>
-    recentJobs: Array<{ id: string; status: string; price: number; scheduled_at: string; spaces?: { name: string } }>
-    monthJobs: Array<{ status: string; price: number; scheduled_at: string; spaces?: { name: string } }>
-    monthTotal: number
-    monthCount: number
+    profile: { name: string; email?: string; profile_image?: string };
+    todayJobs: Array<{ id: string; status: string; price: number; scheduled_at: string; spaces?: { name: string; type: string } }>;
+    spaces: Array<{ id: string; name: string; type: string; base_price: number; is_active: boolean }>;
+    recentJobs: Array<{ id: string; status: string; price: number; scheduled_at: string; spaces?: { name: string } }>;
+    monthJobs: Array<{ status: string; price: number; scheduled_at: string; spaces?: { name: string } }>;
+    monthTotal: number;
+    monthCount: number;
 }
 
 const STATUS_MAP: Record<string, { label: string; cls: string }> = {
@@ -25,192 +27,321 @@ const STATUS_MAP: Record<string, { label: string; cls: string }> = {
     DISPUTED: { label: '분쟁 중', cls: 'badge-disputed' },
     PAID_OUT: { label: '정산 완료', cls: 'badge-paid' },
     CANCELED: { label: '취소', cls: '' },
-}
+};
 
-export default function DashboardClient({ profile, todayJobs, spaces, recentJobs, monthJobs, monthTotal, monthCount }: Props) {
-    const [activeTab, setActiveTab] = useState<'today' | 'spaces' | 'calendar'>('today')
-
-    const submittedJobs = todayJobs.filter(j => j.status === 'SUBMITTED')
-    const formatTime = (iso: string) => new Date(iso).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })
-    const formatPrice = (p: number) => `${(p).toLocaleString()}원`
+export default function DashboardClient({ profile, todayJobs, spaces, monthTotal, monthCount }: Props) {
+    const formatTime = (iso: string) => new Date(iso).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
+    const formatPrice = (p: number) => `${(p).toLocaleString()}원`;
 
     return (
-        <div className="page-container premium-bg">
-            {/* 상단 앱바 - 화이트 프리미엄 */}
-            <header className="premium-header">
-                <div className="header-top flex justify-between items-center">
-                    <div className="flex items-center gap-sm">
-                        <div className="dash-avatar avatar avatar-md">
-                            {profile.profile_image
-                                ? <img src={profile.profile_image} alt="" className="avatar avatar-md" />
-                                : profile.name[0]}
-                        </div>
-                        <div>
-                            <p className="text-secondary" style={{ fontSize: '13px', marginBottom: -2 }}>안녕하세요,</p>
-                            <h1 className="text-lg font-bold" style={{ letterSpacing: '-0.02em' }}>{profile.name}님</h1>
-                        </div>
-                    </div>
-                    <NotificationBell />
-                </div>
-            </header>
+        <div className="page-container bg-premium-v2">
+            <Header />
 
-            <main className="page-content" style={{ paddingTop: '8px' }}>
-                {/* 1. 스파클 점수 섹션 (Trust Widget) */}
-                <section className="sparkle-section mb-lg">
-                    <div className="card sparkle-card">
-                        <div className="sparkle-header flex justify-between items-center mb-md">
-                            <div className="flex items-center gap-xs">
-                                <span style={{ fontSize: '20px' }}>⭐</span>
-                                <span className="text-sm font-semibold text-secondary">스파클 점수</span>
-                            </div>
-                            <span className="badge badge-premium">상위 2%</span>
+            <main className="page-content">
+                {/* Welcome & Stats Section */}
+                <section className="dashboard-hero">
+                    <div className="welcome-box">
+                        <p className="sub text-secondary">공간 파트너</p>
+                        <h2 className="title">{profile.name}님, 환영합니다! ✨</h2>
+                    </div>
+
+                    <div className="bento-grid">
+                        <div className="bento-item main-stat">
+                            <span className="label">이번 달 총 지출</span>
+                            <h3 className="value">{formatPrice(monthTotal)}</h3>
+                            <p className="detail">{monthCount}건의 청소 완료</p>
                         </div>
-                        <div className="sparkle-content flex items-center justify-between">
-                            <div className="sparkle-info">
-                                <h2 className="text-3xl font-bold mb-xs" style={{ color: 'var(--color-primary)' }}>98%</h2>
-                                <p className="text-sm text-secondary font-medium">매우 우수한 활동을<br />이어가고 계시네요!</p>
+                        <div className="bento-column">
+                            <div className="bento-item sub-stat">
+                                <span className="label">운영 중인 공간</span>
+                                <h4 className="value-sm">{spaces.length}개</h4>
                             </div>
-                            <div className="sparkle-visual">
-                                <div className="progress-ring-container">
-                                    <svg width="80" height="80" viewBox="0 0 80 80">
-                                        <circle cx="40" cy="40" r="34" fill="none" stroke="#F2F4F6" strokeWidth="8" />
-                                        <circle cx="40" cy="40" r="34" fill="none" stroke="var(--color-primary)" strokeWidth="8"
-                                            strokeDasharray={`${2 * Math.PI * 34}`} strokeDashoffset={`${2 * Math.PI * 34 * (1 - 0.98)}`}
-                                            strokeLinecap="round" transform="rotate(-90 40 40)" />
-                                    </svg>
-                                    <span className="sparkle-icon">✨</span>
-                                </div>
+                            <div className="bento-item sub-stat">
+                                <span className="label">오늘의 일정</span>
+                                <h4 className="value-sm">{todayJobs.length}건</h4>
                             </div>
                         </div>
                     </div>
                 </section>
 
-                {/* 2. 벤토 그리드 레이아웃 (통계) */}
-                <section className="bento-grid mb-lg">
-                    <div className="card bento-item bento-main" style={{ background: 'var(--color-primary-light)', border: 'none' }}>
-                        <p className="text-xs font-semibold text-primary mb-sm">이번 달 정산</p>
-                        <h3 className="text-xl font-bold">{formatPrice(monthTotal)}</h3>
-                        <p className="text-xs text-secondary mt-xs">{monthCount}건의 작업 완료</p>
-                    </div>
-                    <div className="bento-side-column">
-                        <div className="card bento-item" style={{ marginBottom: '12px' }}>
-                            <p className="text-xs font-semibold text-secondary mb-xs">평균 평점</p>
-                            <div className="flex items-center gap-xs">
-                                <span className="font-bold">4.9</span>
-                                <span style={{ color: '#FFD400', fontSize: '12px' }}>★</span>
-                            </div>
-                        </div>
-                        <div className="card bento-item">
-                            <p className="text-xs font-semibold text-secondary mb-xs">오늘 작업</p>
-                            <span className="font-bold">{todayJobs.length}건</span>
-                        </div>
-                    </div>
+                {/* Quick Actions */}
+                <section className="actions-section">
+                    <Link href="/requests/create" className="btn-premium btn-full">
+                        ✨ 새로운 청소 요청하기
+                    </Link>
                 </section>
 
-                {/* 3. 빠른 액션 */}
-                <section className="quick-actions mb-lg">
-                    <div className="flex gap-sm">
-                        <Link href="/requests/create" className="btn btn-primary btn-full" style={{ borderRadius: '18px' }}>
-                            + 새 청소 요청
-                        </Link>
-                        <Link href="/market" className="btn btn-secondary flex-shrink-0" style={{ width: '60px', padding: 0, borderRadius: '18px' }}>
-                            🛒
-                        </Link>
-                    </div>
-                </section>
-
-                {/* 4. 오늘의 일정 리스트 */}
-                <section className="job-list-section">
-                    <div className="flex justify-between items-center mb-md">
-                        <h3 className="font-bold">오늘의 일정</h3>
-                        <Link href="/requests" className="text-sm font-semibold text-primary">전체보기 ›</Link>
+                {/* Today's Schedule (Stitch ID: 053d...) */}
+                <section className="schedule-section">
+                    <div className="section-header">
+                        <h3 className="section-title">오늘의 청소 일정</h3>
+                        <Link href="/requests" className="view-link">전체보기</Link>
                     </div>
 
                     {todayJobs.length === 0 ? (
-                        <div className="empty-card card">
-                            <p className="text-sm text-secondary">오늘 예정된 청소가 없어요</p>
+                        <div className="empty-card-v2">
+                            <p>오늘 예정된 청소 일정이 없습니다.</p>
+                            <Link href="/requests/create" className="text-link">첫 요청 등록하기 →</Link>
                         </div>
                     ) : (
-                        <div className="job-list flex flex-col gap-md">
-                            {todayJobs.map(job => (
-                                <Link href={`/requests/${job.id}`} key={job.id} className="job-card-premium card card-hover">
-                                    <div className="p-md flex justify-between items-center">
-                                        <div className="flex flex-col gap-xs">
-                                            <span className="text-xs font-bold text-primary">⏰ {formatTime(job.scheduled_at)}</span>
-                                            <span className="font-bold text-md">{(job.spaces as any)?.name || '공간'}</span>
-                                            <span className="text-xs text-secondary">{(job.spaces as any)?.type === 'airbnb' ? '에어비앤비' : '일반 주거'}</span>
-                                        </div>
-                                        <div className="flex flex-col items-end gap-sm">
-                                            <span className={`badge-pill ${STATUS_MAP[job.status]?.cls}`}>
-                                                {STATUS_MAP[job.status]?.label}
-                                            </span>
-                                            <span className="font-bold" style={{ color: 'var(--color-primary)' }}>{formatPrice(job.price)}</span>
-                                        </div>
+                        <div className="job-stack">
+                            {todayJobs.map((job) => (
+                                <Link href={`/requests/${job.id}`} key={job.id} className="job-card-v2 card">
+                                    <div className="card-left">
+                                        <span className="time">⏰ {formatTime(job.scheduled_at)}</span>
+                                        <h4 className="space-name">{(job.spaces as any)?.name}</h4>
+                                        <span className="space-type">{(job.spaces as any)?.type === 'airbnb' ? '에어비앤비' : '일반 공간'}</span>
+                                    </div>
+                                    <div className="card-right">
+                                        <span className={`status-badge ${STATUS_MAP[job.status]?.cls}`}>
+                                            {STATUS_MAP[job.status]?.label}
+                                        </span>
+                                        <span className="price">{formatPrice(job.price)}</span>
                                     </div>
                                 </Link>
                             ))}
                         </div>
                     )}
                 </section>
+
+                {/* Sparkle Score Widget */}
+                <section className="sparkle-widget-section">
+                    <div className="sparkle-card-premium card">
+                        <div className="sparkle-info">
+                            <div className="label-row">
+                                <span className="label">나의 스파클 점수</span>
+                                <span className="percentile">상위 5%</span>
+                            </div>
+                            <h3 className="score-value">95%</h3>
+                            <p className="score-desc">파트너님은 매우 신뢰받는 공간 소유주입니다!</p>
+                        </div>
+                        <div className="sparkle-visual">
+                            <div className="ring">
+                                <svg width="60" height="60" viewBox="0 0 60 60">
+                                    <circle cx="30" cy="30" r="26" fill="none" stroke="var(--color-primary-soft)" strokeWidth="6" />
+                                    <circle cx="30" cy="30" r="26" fill="none" stroke="var(--color-primary)" strokeWidth="6"
+                                        strokeDasharray="163" strokeDashoffset="8" strokeLinecap="round" transform="rotate(-90 30 30)" />
+                                </svg>
+                                <span className="star">✨</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
             </main>
 
-            {/* 하단 내비게이션 - 글래스모피즘 믹스 */}
-            <nav className="premium-bottom-nav">
-                <Link href="/dashboard" className="nav-item active">
-                    <div className="nav-icon-box">🏠</div>
-                    <span>홈</span>
-                </Link>
-                <Link href="/requests" className="nav-item">
-                    <div className="nav-icon-box">📋</div>
-                    <span>일정</span>
-                </Link>
-                <Link href="/spaces" className="nav-item">
-                    <div className="nav-icon-box">🏢</div>
-                    <span>공간</span>
-                </Link>
-                <Link href="/profile" className="nav-item">
-                    <div className="nav-icon-box">👤</div>
-                    <span>마이</span>
-                </Link>
-            </nav>
+            <BottomNav />
 
             <style jsx>{`
-                .premium-bg { background-color: #FFFFFF; min-height: 100dvh; }
-                .premium-header { padding: 16px 20px; background: #fff; }
-                
-                .sparkle-card {
-                    padding: 24px;
-                    border: none;
-                    background: linear-gradient(135deg, #FFFFFF 0%, #F9FBFF 100%);
-                    box-shadow: 0 10px 25px rgba(0, 100, 255, 0.08);
-                    position: relative;
-                }
-                .badge-premium { background: var(--color-primary-light); color: var(--color-primary); font-size: 11px; padding: 4px 8px; }
-                
-                .progress-ring-container { position: relative; width: 80px; height: 80px; }
-                .sparkle-icon { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 24px; }
-                
-                .bento-grid { display: flex; gap: 12px; }
-                .bento-main { flex: 1.5; padding: 20px; display: flex; flex-direction: column; justify-content: center; }
-                .bento-side-column { flex: 1; display: flex; flex-direction: column; }
-                .bento-item { padding: 16px; border-radius: 20px; }
-                
-                .job-card-premium { border-radius: 20px; transition: all 0.2s; border: 1px solid #F2F4F6; }
-                .badge-pill { font-size: 11px; padding: 4px 10px; border-radius: 99px; font-weight: 700; }
-                .empty-card { padding: 40px 20px; text-align: center; border: 1px dashed var(--color-border); }
-                
-                .premium-bottom-nav {
-                    position: fixed; bottom: 0; left: 0; right: 0;
-                    height: 80px; background: rgba(255, 255, 255, 0.9);
-                    backdrop-filter: blur(15px); border-top: 1px solid #F2F4F6;
-                    display: flex; justify-content: space-around; align-items: center;
-                    padding-bottom: env(safe-area-inset-bottom); z-index: 100;
-                }
-                .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; color: #8B95A1; font-size: 11px; font-weight: 600; }
-                .nav-item.active { color: var(--color-primary); }
-                .nav-icon-box { font-size: 22px; margin-bottom: 2px; }
-            `}</style>
+        .bg-premium-v2 {
+          background-color: var(--color-bg);
+          min-height: 100vh;
+        }
+        .page-content {
+          padding: 24px 20px 120px;
+        }
+        .dashboard-hero {
+          margin-bottom: 28px;
+        }
+        .welcome-box {
+          margin-bottom: 20px;
+        }
+        .welcome-box .sub {
+          font-size: 14px;
+          font-weight: 700;
+          margin-bottom: 4px;
+        }
+        .welcome-box .title {
+          font-size: 24px;
+          font-weight: 800;
+          letter-spacing: -0.02em;
+        }
+        .bento-grid {
+          display: flex;
+          gap: 12px;
+        }
+        .bento-item {
+          background: var(--color-surface);
+          border-radius: 24px;
+          padding: 20px;
+          box-shadow: var(--shadow-sm);
+        }
+        .main-stat {
+          flex: 1.4;
+          background: var(--color-primary-soft);
+          border: 1px solid var(--color-primary-light);
+        }
+        .bento-column {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+        }
+        .sub-stat {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+        }
+        .label {
+          font-size: 12px;
+          color: var(--color-text-tertiary);
+          font-weight: 700;
+          display: block;
+          margin-bottom: 4px;
+        }
+        .value {
+          font-size: 20px;
+          font-weight: 900;
+          color: var(--color-primary);
+        }
+        .value-sm {
+          font-size: 18px;
+          font-weight: 800;
+          color: var(--color-text-primary);
+        }
+        .detail {
+          font-size: 11px;
+          color: var(--color-text-secondary);
+          margin-top: 4px;
+        }
+        .actions-section {
+          margin-bottom: 32px;
+        }
+        .schedule-section {
+          margin-bottom: 32px;
+        }
+        .section-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 16px;
+        }
+        .section-title {
+          font-size: 18px;
+          font-weight: 800;
+        }
+        .view-link {
+          font-size: 14px;
+          color: var(--color-primary);
+          font-weight: 700;
+          text-decoration: none;
+        }
+        .job-stack {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+        }
+        .job-card-v2 {
+          padding: 20px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          text-decoration: none;
+        }
+        .card-left .time {
+          font-size: 12px;
+          font-weight: 800;
+          color: var(--color-primary-medium);
+          display: block;
+          margin-bottom: 4px;
+        }
+        .space-name {
+          font-size: 16px;
+          font-weight: 800;
+          color: var(--color-text-primary);
+          margin-bottom: 2px;
+        }
+        .space-type {
+          font-size: 12px;
+          color: var(--color-text-tertiary);
+          font-weight: 600;
+        }
+        .card-right {
+          display: flex;
+          flex-direction: column;
+          align-items: flex-end;
+          gap: 8px;
+        }
+        .status-badge {
+          padding: 4px 10px;
+          border-radius: 99px;
+          font-size: 11px;
+          font-weight: 700;
+        }
+        .badge-open { background: #EBF3FF; color: #3182F6; }
+        .badge-progress { background: #FFF4E5; color: #FF9500; }
+        .price {
+          font-size: 16px;
+          font-weight: 800;
+          color: var(--color-text-primary);
+        }
+        .empty-card-v2 {
+          background: #FFFFFF;
+          border: 1.5px dashed var(--color-border);
+          padding: 32px;
+          text-align: center;
+          border-radius: 24px;
+          color: var(--color-text-tertiary);
+          font-size: 14px;
+        }
+        .text-link {
+          color: var(--color-primary);
+          font-weight: 700;
+          text-decoration: none;
+          display: block;
+          margin-top: 8px;
+        }
+        .sparkle-widget-section {
+          margin-top: 12px;
+        }
+        .sparkle-card-premium {
+          display: flex;
+          align-items: center;
+          padding: 24px;
+          gap: 20px;
+          background: linear-gradient(135deg, #FFFFFF 0%, #F7FBFC 100%);
+        }
+        .sparkle-info {
+           flex: 1;
+        }
+        .label-row {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 4px;
+        }
+        .percentile {
+          background: var(--color-primary-light);
+          color: var(--color-primary-dark);
+          font-size: 10px;
+          font-weight: 800;
+          padding: 2px 8px;
+          border-radius: 99px;
+        }
+        .score-value {
+          font-size: 28px;
+          font-weight: 900;
+          color: var(--color-primary);
+          margin-bottom: 4px;
+        }
+        .score-desc {
+          font-size: 12px;
+          color: var(--color-text-secondary);
+          line-height: 1.4;
+        }
+        .sparkle-visual .ring {
+          position: relative;
+          width: 60px;
+          height: 60px;
+        }
+        .star {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          font-size: 18px;
+        }
+      `}</style>
         </div>
-    )
+    );
 }
-
