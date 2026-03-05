@@ -5,13 +5,15 @@ import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 
+import PaymentModal from '@/components/common/PaymentModal'
+
 const STATUS_MAP: Record<string, { label: string; cls: string; desc: string }> = {
     OPEN: { label: '매칭 중', cls: 'badge-open', desc: 'AI가 클린파트너를 찾고 있어요' },
     ASSIGNED: { label: '배정 완료', cls: 'badge-assigned', desc: '클린파트너가 배정됐어요' },
     EN_ROUTE: { label: '이동 중', cls: 'badge-assigned', desc: '클린파트너가 이동 중이에요' },
     ARRIVED: { label: '도착', cls: 'badge-assigned', desc: '클린파트너가 도착했어요' },
     IN_PROGRESS: { label: '청소 중', cls: 'badge-progress', desc: '청소가 진행 중이에요' },
-    SUBMITTED: { label: '검수 대기', cls: 'badge-submitted', desc: 'AI가 사진을 검수 중이에요' },
+    SUBMITᆫ: { label: '검수 대기', cls: 'badge-submitted', desc: 'AI가 사진을 검수 중이에요' },
     APPROVED: { label: '승인 완료', cls: 'badge-approved', desc: '청소가 완료됐어요! 정산 처리 중' },
     DISPUTED: { label: '분쟁 중', cls: 'badge-disputed', desc: '' },
     PAID_OUT: { label: '정산 완료', cls: 'badge-paid', desc: '정산이 완료됐어요' },
@@ -31,6 +33,11 @@ export default function RequestDetailClient({ job, photos, payment, applications
     const [isFavorite, setIsFavorite] = useState(initialIsFavorite)
     const [togglingFav, setTogglingFav] = useState(false)
 
+    // 결제 모달 상태
+    const [paymentModalOpen, setPaymentModalOpen] = useState(false)
+    const [paymentContext, setPaymentContext] = useState<'accept' | 'extra'>('accept')
+    const [selectedApp, setSelectedApp] = useState<{ appId: string, workerId: string } | null>(null)
+
     const st = STATUS_MAP[job.status] || { label: job.status, cls: '', desc: '' }
     const space = job.spaces
     const worker = job.users
@@ -38,17 +45,30 @@ export default function RequestDetailClient({ job, photos, payment, applications
     const afterPhotos = photos.filter((p: any) => p.type === 'after')
 
     // 공간파트너: 수동 승인
-    const handleApprove = async () => {
+    const handleApproveBtnClick = () => {
         if (job.extra_charge_amount > 0) {
-            if (!window.confirm(`클린파트너가 추가 요금 ${job.extra_charge_amount.toLocaleString()}원을 청구했습니다.\n사유: ${job.extra_charge_reason}\n\n승인하시겠습니까? 승인 시 기존 결제 금액에 더해 추가 결제가 진행됩니다.`)) return
+            setPaymentContext('extra')
+            setPaymentModalOpen(true)
         } else {
             if (!window.confirm('청소 결과를 승인하시겠습니까? 승인 시 정산이 진행됩니다.')) return
+            executeApprove()
         }
+    }
 
+    const executeApprove = async () => {
         setApproving(true)
         const supabase = createClient()
         await supabase.from('jobs').update({ status: 'APPROVED', auto_approved: false }).eq('id', job.id)
-        // Finance Agent 호출
+
+        // 작업자에게 실시간 알림 발송
+        const { error: notifyError } = await supabase.rpc('notify_user', {
+            p_user_id: job.worker_id,
+            p_title: '💰 정산 완료 안내',
+            p_message: '공간 파트너님이 청소를 승인했습니다. 정산이 곧 완료됩니다.',
+            p_url: '/earnings'
+        })
+        if (notifyError) console.error(notifyError)
+
         fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/finance-agent`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}` },
@@ -58,21 +78,40 @@ export default function RequestDetailClient({ job, photos, payment, applications
         setApproving(false)
     }
 
-    // 공간파트너: 지원자 선발 (승낙)
-    const handleAcceptApplicant = async (appId: string, workerId: string) => {
-        if (!confirm('이 클린파트너를 배정하시겠습니까?')) return
-        setApproving(true)
-        const supabase = createClient()
-        // 1. Job 상태 업데이트
-        await supabase.from('jobs').update({ status: 'ASSIGNED', worker_id: workerId }).eq('id', job.id)
-        // 2. 해당 지원서는 ACCEPTED
-        await supabase.from('job_applications').update({ status: 'ACCEPTED' }).eq('id', appId)
-        // 3. 나머지 지원서는 REJECTED
-        await supabase.from('job_applications').update({ status: 'REJECTED' }).eq('job_id', job.id).neq('id', appId)
+    // 공간파트너: 지원자 선발 클릭
+    const handleAcceptBtnClick = (appId: string, workerId: string) => {
+        setSelectedApp({ appId, workerId })
+        setPaymentContext('accept')
+        setPaymentModalOpen(true)
+    }
 
-        alert('성공적으로 배정되었습니다.')
-        router.refresh()
-        setApproving(false)
+    // 결제 모달 성공 콜백
+    const handlePaymentSuccess = async () => {
+        setPaymentModalOpen(false)
+
+        if (paymentContext === 'accept' && selectedApp) {
+            setApproving(true)
+            const supabase = createClient()
+            await supabase.from('jobs').update({ status: 'ASSIGNED', worker_id: selectedApp.workerId }).eq('id', job.id)
+            await supabase.from('job_applications').update({ status: 'ACCEPTED' }).eq('id', selectedApp.appId)
+            await supabase.from('job_applications').update({ status: 'REJECTED' }).eq('job_id', job.id).neq('id', selectedApp.appId)
+
+            // 작업자에게 실시간 알림 발송
+            const { error: notifyError } = await supabase.rpc('notify_user', {
+                p_user_id: selectedApp.workerId,
+                p_title: '🎉 매칭 확정!',
+                p_message: '공간 파트너님이 배정 및 결제를 완료했습니다. 일정을 확인해주세요!',
+                p_url: `/clean/job/${job.id}`
+            })
+            if (notifyError) console.error(notifyError)
+
+            alert('안전 결제 및 배정이 완료되었습니다.')
+            router.refresh()
+            setApproving(false)
+        } else if (paymentContext === 'extra') {
+            await executeApprove()
+            alert('추가 요금 결제 및 승인이 완료되었습니다.')
+        }
     }
 
     // 분쟁 신고
@@ -210,7 +249,7 @@ export default function RequestDetailClient({ job, photos, payment, applications
                                             </div>
                                             <button
                                                 className="btn btn-primary btn-sm px-md"
-                                                onClick={() => handleAcceptApplicant(app.id, app.worker_id)}
+                                                onClick={() => handleAcceptBtnClick(app.id, app.worker_id)}
                                                 disabled={approving}
                                             >
                                                 선택하기
@@ -312,7 +351,7 @@ export default function RequestDetailClient({ job, photos, payment, applications
                             {job.auto_approved ? '✅ AI가 자동 검수 완료했어요.' : '📸 청소 사진을 확인하고 승인해주세요.'}
                         </p>
                         <div className="action-btns">
-                            <button className="btn btn-primary btn-full" onClick={handleApprove} disabled={approving} id="approve-btn">
+                            <button className="btn btn-primary btn-full" onClick={handleApproveBtnClick} disabled={approving} id="approve-btn">
                                 {approving ? <span className="spinner" /> : '✅ 청소 승인'}
                             </button>
                             <button className="btn btn-secondary btn-full" onClick={() => setShowDispute(true)} id="dispute-btn">
@@ -339,6 +378,15 @@ export default function RequestDetailClient({ job, photos, payment, applications
                         </div>
                     </div>
                 )}
+
+                {/* 결제 모달 렌더링 */}
+                <PaymentModal
+                    isOpen={paymentModalOpen}
+                    onClose={() => setPaymentModalOpen(false)}
+                    amount={paymentContext === 'accept' ? job.price : job.extra_charge_amount}
+                    jobName={space?.name ? `[${space.name}] 청소 결제` : '청소 결제'}
+                    onSuccess={handlePaymentSuccess}
+                />
             </div>
 
             <style jsx>{`

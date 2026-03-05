@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import NotificationBell from '@/components/common/NotificationBell'
 
 interface Job {
     id: string; status: string; price: number; scheduled_at: string
@@ -58,14 +59,17 @@ export default function CleanMainClient({ profile, activeJob, weekEarnings, pend
                         <h1 className="clean-name">{profile.name}님</h1>
                         <span className="tier-badge">{TIER_LABEL[profile.tier || 'STARTER']}</span>
                     </div>
-                    <div className="clean-stats-mini">
-                        <div>
-                            <div className="mini-val">⭐ {profile.avg_rating?.toFixed(1) || '-'}</div>
-                            <div className="mini-label">평점</div>
-                        </div>
-                        <div>
-                            <div className="mini-val">{profile.total_jobs || 0}</div>
-                            <div className="mini-label">총 작업</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                        <NotificationBell />
+                        <div className="clean-stats-mini">
+                            <div>
+                                <div className="mini-val">⭐ {profile.avg_rating?.toFixed(1) || '-'}</div>
+                                <div className="mini-label">평점</div>
+                            </div>
+                            <div>
+                                <div className="mini-val">{profile.total_jobs || 0}</div>
+                                <div className="mini-label">총 작업</div>
+                            </div>
                         </div>
                     </div>
                 </div>

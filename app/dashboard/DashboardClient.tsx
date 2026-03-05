@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
+import NotificationBell from '@/components/common/NotificationBell'
 
 interface Props {
     profile: { name: string; email?: string; profile_image?: string }
@@ -42,10 +43,13 @@ export default function DashboardClient({ profile, todayJobs, spaces, recentJobs
                         <p className="text-sm text-secondary">안녕하세요 👋</p>
                         <h1 className="dash-name">{profile.name}님</h1>
                     </div>
-                    <div className="dash-avatar avatar avatar-md">
-                        {profile.profile_image
-                            ? <img src={profile.profile_image} alt="" className="avatar avatar-md" style={{ borderRadius: '50%' }} />
-                            : profile.name[0]}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                        <NotificationBell />
+                        <div className="dash-avatar avatar avatar-md">
+                            {profile.profile_image
+                                ? <img src={profile.profile_image} alt="" className="avatar avatar-md" style={{ borderRadius: '50%' }} />
+                                : profile.name[0]}
+                        </div>
                     </div>
                 </div>
             </header>
@@ -91,6 +95,17 @@ export default function DashboardClient({ profile, todayJobs, spaces, recentJobs
             {/* 오늘 일정 */}
             {activeTab === 'today' && (
                 <div className="page-content" style={{ paddingTop: 0 }}>
+                    {/* 승인 대기 강제 배너 */}
+                    {submittedJobs.length > 0 && (
+                        <div className="card mb-md" style={{ background: '#FEF2F2', border: '1px solid #FCA5A5', padding: '16px', animation: 'pulse 2s infinite' }}>
+                            <h3 style={{ margin: '0 0 8px 0', fontSize: '15px', color: '#DC2626', fontWeight: 800 }}>🚨 정산 승인 대기 중 ({submittedJobs.length}건)</h3>
+                            <p style={{ margin: '0 0 12px 0', fontSize: '13px', color: '#991B1B' }}>클린파트너가 청소를 마치고 승인을 기다리고 있어요. 빠른 정산을 위해 방금 올라온 사진을 확인해주세요!</p>
+                            <Link href="/requests" className="btn btn-sm btn-full block" style={{ background: '#DC2626', color: '#fff', textAlign: 'center', border: 'none' }}>
+                                지금 승인하러 가기 →
+                            </Link>
+                        </div>
+                    )}
+
                     {todayJobs.length === 0 ? (
                         <div className="empty-state">
                             <div style={{ fontSize: 48 }}>🗓️</div>
