@@ -37,8 +37,8 @@ export async function proxy(request: NextRequest) {
         return NextResponse.redirect(url)
     }
 
-    // 이미 로그인한 사용자가 /login에 접근할 때
-    if (user && request.nextUrl.pathname === '/login') {
+    // 이미 로그인한 사용자가 / 또는 /login에 접근할 때
+    if (user && (request.nextUrl.pathname === '/' || request.nextUrl.pathname === '/login')) {
         const requestedRole = request.nextUrl.searchParams.get('role')
 
         // 유저 정보 가져와서 역할 확인

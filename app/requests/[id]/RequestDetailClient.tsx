@@ -6,10 +6,10 @@ import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 
 const STATUS_MAP: Record<string, { label: string; cls: string; desc: string }> = {
-    OPEN: { label: '매칭 중', cls: 'badge-open', desc: 'AI가 작업자를 찾고 있어요' },
-    ASSIGNED: { label: '배정 완료', cls: 'badge-assigned', desc: '작업자가 배정됐어요' },
-    EN_ROUTE: { label: '이동 중', cls: 'badge-assigned', desc: '작업자가 이동 중이에요' },
-    ARRIVED: { label: '도착', cls: 'badge-assigned', desc: '작업자가 도착했어요' },
+    OPEN: { label: '매칭 중', cls: 'badge-open', desc: 'AI가 클린파트너를 찾고 있어요' },
+    ASSIGNED: { label: '배정 완료', cls: 'badge-assigned', desc: '클린파트너가 배정됐어요' },
+    EN_ROUTE: { label: '이동 중', cls: 'badge-assigned', desc: '클린파트너가 이동 중이에요' },
+    ARRIVED: { label: '도착', cls: 'badge-assigned', desc: '클린파트너가 도착했어요' },
     IN_PROGRESS: { label: '청소 중', cls: 'badge-progress', desc: '청소가 진행 중이에요' },
     SUBMITTED: { label: '검수 대기', cls: 'badge-submitted', desc: 'AI가 사진을 검수 중이에요' },
     APPROVED: { label: '승인 완료', cls: 'badge-approved', desc: '청소가 완료됐어요! 정산 처리 중' },
@@ -19,10 +19,10 @@ const STATUS_MAP: Record<string, { label: string; cls: string; desc: string }> =
 }
 
 interface Props {
-    job: any; photos: any[]; payment: any; userId: string
+    job: any; photos: any[]; payment: any; applications: any[]; userId: string
 }
 
-export default function RequestDetailClient({ job, photos, payment, userId }: Props) {
+export default function RequestDetailClient({ job, photos, payment, applications, userId }: Props) {
     const router = useRouter()
     const [approving, setApproving] = useState(false)
     const [disputing, setDisputing] = useState(false)
@@ -35,7 +35,7 @@ export default function RequestDetailClient({ job, photos, payment, userId }: Pr
     const isOperator = job.operator_id === userId
     const afterPhotos = photos.filter((p: any) => p.type === 'after')
 
-    // 운영자: 수동 승인
+    // 공간파트너: 수동 승인
     const handleApprove = async () => {
         setApproving(true)
         const supabase = createClient()
@@ -46,6 +46,23 @@ export default function RequestDetailClient({ job, photos, payment, userId }: Pr
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}` },
             body: JSON.stringify({ job_id: job.id })
         }).catch(console.error)
+        router.refresh()
+        setApproving(false)
+    }
+
+    // 공간파트너: 지원자 선발 (승낙)
+    const handleAcceptApplicant = async (appId: string, workerId: string) => {
+        if (!confirm('이 클린파트너를 배정하시겠습니까?')) return
+        setApproving(true)
+        const supabase = createClient()
+        // 1. Job 상태 업데이트
+        await supabase.from('jobs').update({ status: 'ASSIGNED', worker_id: workerId }).eq('id', job.id)
+        // 2. 해당 지원서는 ACCEPTED
+        await supabase.from('job_applications').update({ status: 'ACCEPTED' }).eq('id', appId)
+        // 3. 나머지 지원서는 REJECTED
+        await supabase.from('job_applications').update({ status: 'REJECTED' }).eq('job_id', job.id).neq('id', appId)
+
+        alert('성공적으로 배정되었습니다.')
         router.refresh()
         setApproving(false)
     }
@@ -88,16 +105,65 @@ export default function RequestDetailClient({ job, photos, payment, userId }: Pr
                     </div>
                 </div>
 
-                {/* 작업자 정보 */}
-                {worker && (
+                {/* 클린파트너 정보 */}
+                {worker ? (
                     <div className="worker-card card">
                         <div className="worker-info">
-                            <div className="avatar avatar-md">{worker.name?.[0]}</div>
+                            <div className="avatar avatar-md" style={{ background: 'var(--color-primary)' }}>{worker.name?.[0]}</div>
                             <div>
                                 <div className="worker-name">{worker.name}</div>
                                 <div className="text-sm text-secondary">⭐ {worker.avg_rating?.toFixed(1) || '-'} · {worker.tier}</div>
                             </div>
                         </div>
+                    </div>
+                ) : job.status === 'OPEN' && (
+                    <div className="applications-section mb-md">
+                        <div className="flex items-center justify-between mb-sm pr-md">
+                            <h3 className="section-label mb-none">현재 지원자 현황</h3>
+                            <span className="text-primary text-sm font-bold">{applications.length}명 지원중</span>
+                        </div>
+                        {applications.length === 0 ? (
+                            <div className="card p-md text-center text-sm text-secondary bg-gray-50 mb-md" style={{ background: 'var(--color-surface)' }}>
+                                아직 지원한 클린파트너가 없습니다.<br />조금만 더 기다려주세요!
+                            </div>
+                        ) : (
+                            <div className="flex flex-col gap-sm">
+                                {applications.map((app: any) => (
+                                    <div key={app.id} className="card p-md" style={{ border: '1px solid var(--color-border)' }}>
+                                        <div className="flex justify-between items-start mb-sm">
+                                            <div className="flex gap-sm items-center">
+                                                <div className="avatar avatar-md bg-blue-100 text-primary font-bold">
+                                                    {app.users?.name?.[0] || 'C'}
+                                                </div>
+                                                <div>
+                                                    <div className="font-bold flex items-center gap-xs">
+                                                        {app.users?.name || '익명 파트너'}
+                                                        <span className="badge" style={{ fontSize: 10, padding: '2px 6px', background: 'var(--color-bg)', color: 'var(--color-text-secondary)' }}>
+                                                            {app.users?.tier || 'NEW'}
+                                                        </span>
+                                                    </div>
+                                                    <div className="text-xs text-secondary mt-1">
+                                                        ⭐ {app.users?.avg_rating?.toFixed(1) || '신규'} · 성공 {app.users?.jobs_completed || 0}회
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <button
+                                                className="btn btn-primary btn-sm px-md"
+                                                onClick={() => handleAcceptApplicant(app.id, app.worker_id)}
+                                                disabled={approving}
+                                            >
+                                                선택하기
+                                            </button>
+                                        </div>
+                                        {app.message && (
+                                            <div className="text-sm mt-sm p-sm" style={{ background: 'var(--color-bg)', borderRadius: 8 }}>
+                                                "{app.message}"
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
                 )}
 
@@ -129,13 +195,13 @@ export default function RequestDetailClient({ job, photos, payment, userId }: Pr
                             <div className="payment-row text-secondary text-sm"><span>플랫폼 수수료 (10%)</span><span>-₩{payment.platform_fee.toLocaleString()}</span></div>
                             <div className="payment-row text-secondary text-sm"><span>원천징수 (3.3%)</span><span>-₩{payment.withholding_tax.toLocaleString()}</span></div>
                             <div className="divider" />
-                            <div className="payment-row font-bold text-primary"><span>작업자 수령액</span><span>₩{payment.worker_payout.toLocaleString()}</span></div>
+                            <div className="payment-row font-bold text-primary"><span>클린파트너 수령액</span><span>₩{payment.worker_payout.toLocaleString()}</span></div>
                             <div className="payment-row text-sm text-secondary"><span>상태</span><span className={`badge ${payment.status === 'RELEASED' ? 'badge-approved' : 'badge-open'}`}>{payment.status === 'HELD' ? '입금 대기' : payment.status === 'RELEASED' ? '입금 완료' : payment.status}</span></div>
                         </div>
                     </div>
                 )}
 
-                {/* 운영자 액션: 검수 대기 */}
+                {/* 공간파트너 액션: 검수 대기 */}
                 {isOperator && job.status === 'SUBMITTED' && (
                     <div className="action-section">
                         <p className="text-sm text-secondary mb-md">

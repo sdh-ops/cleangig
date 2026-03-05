@@ -30,7 +30,7 @@ export default function JobsListPage() {
         )
         fetchJobs()
 
-        // Realtime 구독 — 새 일감 즉시 표시
+        // Realtime 구독 — 새 청소 요청 즉시 표시
         const supabase = createClient()
         const channel = supabase.channel('open-jobs')
             .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'jobs' },
@@ -45,7 +45,7 @@ export default function JobsListPage() {
         const supabase = createClient()
         const { data } = await supabase
             .from('jobs')
-            .select('*, spaces(name, address, type)')
+            .select('*, spaces(name, address, type, reference_photos)')
             .eq('status', 'OPEN')
             .gte('scheduled_at', new Date().toISOString())
             .order('is_urgent', { ascending: false })
@@ -69,7 +69,7 @@ export default function JobsListPage() {
         <div className="page-container">
             {/* 헤더 */}
             <header style={{ padding: 'var(--spacing-md)', borderBottom: '1px solid var(--color-border-light)', background: 'var(--color-surface)', position: 'sticky', top: 0, zIndex: 10 }}>
-                <h1 style={{ fontSize: 'var(--font-lg)', fontWeight: 800, marginBottom: 'var(--spacing-sm)' }}>🔍 일감 찾기</h1>
+                <h1 style={{ fontSize: 'var(--font-lg)', fontWeight: 800, marginBottom: 'var(--spacing-sm)' }}>🔍 청소 찾기</h1>
                 <input
                     className="form-input"
                     style={{ minHeight: 44, fontSize: 'var(--font-sm)' }}
@@ -102,7 +102,7 @@ export default function JobsListPage() {
                 {/* Realtime 배지 */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 'var(--spacing-md)', fontSize: 'var(--font-xs)', color: 'var(--color-primary)', fontWeight: 600 }}>
                     <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--color-primary)', display: 'inline-block', animation: 'pulse 2s infinite' }} />
-                    실시간 업데이트 중 · {filtered.length}건의 일감
+                    실시간 업데이트 중 · {filtered.length}건의 청소 요청
                 </div>
 
                 {loading ? (
@@ -112,8 +112,8 @@ export default function JobsListPage() {
                 ) : filtered.length === 0 ? (
                     <div style={{ textAlign: 'center', padding: 'var(--spacing-3xl)', color: 'var(--color-text-secondary)' }}>
                         <div style={{ fontSize: 48, marginBottom: 'var(--spacing-md)' }}>🔍</div>
-                        <p>현재 등록된 일감이 없어요</p>
-                        <p style={{ fontSize: 'var(--font-xs)', marginTop: 8 }}>알림을 켜두면 새 일감 즉시 알림!</p>
+                        <p>현재 등록된 청소 요청이 없어요</p>
+                        <p style={{ fontSize: 'var(--font-xs)', marginTop: 8 }}>알림을 켜두면 새 요청 즉시 알림!</p>
                     </div>
                 ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-sm)' }}>
@@ -123,13 +123,18 @@ export default function JobsListPage() {
                             const when = new Date(job.scheduled_at)
                             const isToday = when.toDateString() === new Date().toDateString()
                             const timeStr = when.toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+                            const mainPhoto = space?.reference_photos?.[0]
 
                             return (
                                 <Link href={`/clean/job/${job.id}`} key={job.id} className="card card-hover"
                                     style={{ display: 'block', padding: 'var(--spacing-md)' }} id={`job-${job.id}`}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)', flex: 1 }}>
-                                            <span style={{ fontSize: 28, flexShrink: 0 }}>{icon}</span>
+                                            {mainPhoto ? (
+                                                <img src={mainPhoto} alt="" style={{ width: 48, height: 48, borderRadius: 12, objectFit: 'cover', flexShrink: 0, border: '1px solid var(--color-border)' }} />
+                                            ) : (
+                                                <span style={{ fontSize: 28, flexShrink: 0, width: 48, height: 48, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--color-bg)', borderRadius: 12 }}>{icon}</span>
+                                            )}
                                             <div style={{ flex: 1 }}>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                                                     <span style={{ fontWeight: 700, fontSize: 'var(--font-md)' }}>{space?.name || '공간'}</span>
@@ -171,7 +176,7 @@ export default function JobsListPage() {
                 </Link>
                 <Link href="/clean/jobs" className="bottom-nav-item active">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
-                    일감 찾기
+                    청소 찾기
                 </Link>
                 <Link href="/earnings" className="bottom-nav-item">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="1" x2="12" y2="23" /><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" /></svg>

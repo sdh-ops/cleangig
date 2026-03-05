@@ -37,7 +37,7 @@ export default function ProfileClient({ profile, totalCompletedJobs }: Props) {
 
     const handleRoleSwitch = async () => {
         const nextRole = profile.role === 'worker' ? 'operator' : 'worker'
-        const roleName = nextRole === 'worker' ? '청소 작업자' : '공간 운영자'
+        const roleName = nextRole === 'worker' ? '클린파트너' : '공간파트너'
 
         if (!confirm(`${roleName}(으)로 역할을 전환하시겠습니까?`)) return
 
@@ -80,7 +80,7 @@ export default function ProfileClient({ profile, totalCompletedJobs }: Props) {
                             <h1 style={{ fontSize: 22, fontWeight: 800, color: '#fff' }}>{profile.name}</h1>
                         )}
                         <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: 'var(--font-sm)', marginTop: 2 }}>
-                            {profile.role === 'worker' ? '청소 작업자' : '공간 운영자'}
+                            {profile.role === 'worker' ? '클린파트너' : '공간파트너'}
                             {profile.role === 'worker' && tierInfo && (
                                 <span style={{ marginLeft: 8, background: 'rgba(255,255,255,0.2)', padding: '2px 8px', borderRadius: 999, fontSize: 12 }}>
                                     {tierInfo.label}
@@ -103,7 +103,7 @@ export default function ProfileClient({ profile, totalCompletedJobs }: Props) {
             </div>
 
             <div className="page-content">
-                {/* 통계 (작업자) */}
+                {/* 통계 (클린파트너) */}
                 {profile.role === 'worker' && (
                     <>
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 'var(--spacing-sm)', marginBottom: 'var(--spacing-md)' }}>
@@ -143,7 +143,7 @@ export default function ProfileClient({ profile, totalCompletedJobs }: Props) {
                     >
                         <span style={{ fontSize: 20 }}>{profile.role === 'worker' ? '🏠' : '🧹'}</span>
                         <span style={{ flex: 1, fontSize: 'var(--font-md)', fontWeight: 600, color: 'var(--color-primary)' }}>
-                            {profile.role === 'worker' ? '공간 운영자로 전환하기' : '청소 작업자로 전환하기'}
+                            {profile.role === 'worker' ? '공간파트너로 전환하기' : '클린파트너로 전환하기'}
                         </span>
                         {switching ? (
                             <div className="spinner-sm" style={{ width: 14, height: 14, border: '2px solid rgba(0,0,0,0.1)', borderTopColor: 'var(--color-primary)', borderRadius: '50%', animation: 'spin 0.6s linear infinite' }} />
@@ -179,7 +179,7 @@ export default function ProfileClient({ profile, totalCompletedJobs }: Props) {
                             <svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" /></svg>오늘
                         </a>
                         <a href="/clean/jobs" className="bottom-nav-item">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>일감 찾기
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>청소 찾기
                         </a>
                         <a href="/earnings" className="bottom-nav-item">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="1" x2="12" y2="23" /><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" /></svg>정산

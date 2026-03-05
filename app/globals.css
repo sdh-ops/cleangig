@@ -362,7 +362,7 @@ textarea.form-input {
 }
 
 /* =====================
-   하단 탭 내비게이션 (작업자 PWA)
+   하단 탭 내비게이션 (클린파트너 PWA)
    ===================== */
 .bottom-nav {
   position: fixed;
@@ -610,6 +610,27 @@ textarea.form-input {
   width: 88px;
   height: 88px;
   font-size: 32px;
+}
+
+/* =====================
+   빈 화면 (Empty State)
+   ===================== */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  min-height: 40vh;
+  gap: var(--spacing-md);
+  color: var(--color-text-secondary);
+  padding: var(--spacing-xl) 0;
+}
+
+.empty-state p {
+  font-size: var(--font-md);
+  color: var(--color-text-tertiary);
+  margin-bottom: var(--spacing-sm);
 }
 
 /* =====================

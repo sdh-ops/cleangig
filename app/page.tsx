@@ -37,7 +37,7 @@ export default function LandingPage() {
             <span className="hero-highlight">공간을 운영하세요</span>
           </h1>
           <p className="hero-desc">
-            에어비앤비·파티룸·무인매장 운영자와 검증된 청소 작업자를<br />
+            에어비앤비·파티룸·무인매장 공간파트너와 검증된 클린파트너를<br />
             AI가 실시간으로 연결합니다
           </p>
 
@@ -60,10 +60,10 @@ export default function LandingPage() {
 
           <div className="hero-cta">
             <Link href="/login?role=operator" className="btn btn-primary btn-lg">
-              공간 운영자로 시작 →
+              공간파트너로 시작 →
             </Link>
             <Link href="/login?role=worker" className="btn btn-secondary btn-lg">
-              청소 작업자로 시작
+              클린파트너로 시작
             </Link>
           </div>
         </div>
@@ -100,7 +100,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* 탭 섹션: 운영자 vs 작업자 */}
+      {/* 탭 섹션: 공간파트너 vs 클린파트너 */}
       <section className="tab-section">
         <div className="section-inner">
           <div className="tab-toggle">
@@ -108,25 +108,25 @@ export default function LandingPage() {
               className={`tab-btn ${activeTab === 'operator' ? 'active' : ''}`}
               onClick={() => setActiveTab('operator')}
             >
-              🏠 공간 운영자
+              🏠 공간파트너
             </button>
             <button
               className={`tab-btn ${activeTab === 'worker' ? 'active' : ''}`}
               onClick={() => setActiveTab('worker')}
             >
-              🧹 청소 작업자
+              🧹 클린파트너
             </button>
           </div>
 
           {activeTab === 'operator' ? (
             <div className="features-grid">
               {[
-                { icon: '⚡', title: '5분 안에 매칭', desc: 'AI가 주변 검증된 작업자를 즉시 찾아드립니다' },
+                { icon: '⚡', title: '5분 안에 매칭', desc: 'AI가 주변 검증된 클린파트너를 즉시 찾아드립니다' },
                 { icon: '📸', title: 'AI 사진 검수', desc: '청소 전/후 사진을 AI가 자동으로 품질 검증합니다' },
                 { icon: '🔒', title: '에스크로 결제', desc: '청소 완료 후 자동 정산. 불만족 시 전액 환불' },
                 { icon: '🔄', title: '예약 자동 연동', desc: '에어비앤비 체크아웃 시 청소 자동 요청' },
                 { icon: '📊', title: '운영 리포트', desc: '월별 청소 비용·이력을 한눈에 확인' },
-                { icon: '⭐', title: '단골 작업자', desc: '만족한 작업자를 즐겨찾기해서 계속 이용' },
+                { icon: '⭐', title: '단골 클린파트너', desc: '만족한 클린파트너를 즐겨찾기해서 계속 이용' },
               ].map((f, i) => (
                 <div className="feature-card card" key={i}>
                   <div className="feature-icon">{f.icon}</div>
@@ -138,8 +138,8 @@ export default function LandingPage() {
           ) : (
             <div className="features-grid">
               {[
-                { icon: '📍', title: '가까운 일감 먼저', desc: '현재 위치 기준 가장 가까운 청소를 추천' },
-                { icon: '🕐', title: '원하는 시간에만', desc: '강제 배정 없음. 원하는 일감만 골라서 수락' },
+                { icon: '📍', title: '가까운 청소 먼저', desc: '현재 위치 기준 가장 가까운 청소를 추천' },
+                { icon: '🕐', title: '원하는 시간에만', desc: '강제 배정 없음. 원하는 청소만 골라서 수락' },
                 { icon: '💰', title: '빠른 정산', desc: '작업 완료 즉시 정산 계산, 주 1회 자동 입금' },
                 { icon: '📈', title: '등급제 혜택', desc: '경험 쌓을수록 수수료 할인 + 우선 매칭' },
                 { icon: '📋', title: '체크리스트 가이드', desc: '공간별 상세 체크리스트로 실수 없이 청소' },
@@ -164,7 +164,7 @@ export default function LandingPage() {
             {[
               { num: '10만+', label: '잠재 공간 수', sub: '에어비앤비·파티룸·무인매장' },
               { num: '25,000원~', label: '평균 청소 단가', sub: '부업으로 시간당 ~2만원' },
-              { num: '70%', label: 'AI 자동 검수', sub: '운영자 검수 시간 70% 절감' },
+              { num: '70%', label: 'AI 자동 검수', sub: '공간파트너 검수 시간 70% 절감' },
               { num: '3.3%', label: '원천징수 처리', sub: '세금 신고 자동 계산' },
             ].map((t, i) => (
               <div className="trust-item" key={i}>

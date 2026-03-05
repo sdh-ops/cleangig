@@ -18,7 +18,7 @@ export default async function ChatPage({ params }: { params: { id: string } }) {
 
     if (!job) redirect('/')
 
-    // 운영자이거나 배정된 작업자만 입장 가능
+    // 공간파트너이거나 배정된 클린파트너만 입장 가능
     if (job.operator_id !== user.id && job.worker_id !== user.id) {
         redirect('/')
     }

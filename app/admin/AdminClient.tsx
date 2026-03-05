@@ -55,7 +55,7 @@ export default function AdminClient({ stats, recentEvents, topWorkers, churnRisk
                 {/* KPI 요약 */}
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginTop: 20 }}>
                     {[
-                        { label: '전체 회원', val: stats.totalUsers || 0, sub: `운영자 ${stats.totalOperators || 0} · 작업자 ${stats.totalWorkers || 0}`, color: '#3B82F6' },
+                        { label: '전체 회원', val: stats.totalUsers || 0, sub: `공간파트너 ${stats.totalOperators || 0} · 클린파트너 ${stats.totalWorkers || 0}`, color: '#3B82F6' },
                         { label: '오늘 청소', val: stats.todayJobs || 0, sub: `매칭 대기 ${stats.openJobs || 0}건`, color: '#00C471' },
                         { label: '분쟁 중', val: stats.disputedJobs || 0, sub: '즉시 처리 필요', color: (stats.disputedJobs || 0) > 0 ? '#EF4444' : '#64748B' },
                     ].map((k, i) => (
@@ -73,7 +73,7 @@ export default function AdminClient({ stats, recentEvents, topWorkers, churnRisk
                 {([
                     ['overview', '📊 현황'],
                     ['agents', '🤖 AI 에이전트'],
-                    ['workers', '🏆 작업자'],
+                    ['workers', '🏆 클린파트너'],
                     ['risks', '⚠️ 이탈 위험'],
                 ] as const).map(([key, label]) => (
                     <button key={key} style={{ ...tabStyle(key), color: tab === key ? '#00C471' : '#64748B', background: 'none', border: 'none', borderBottom: tab === key ? '2px solid #00C471' : '2px solid transparent', paddingBottom: 12 }}
@@ -121,7 +121,7 @@ export default function AdminClient({ stats, recentEvents, topWorkers, churnRisk
                         <h3 style={{ color: '#94A3B8', fontSize: 13, fontWeight: 600, marginBottom: 16 }}>에이전트 수동 실행</h3>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                             {[
-                                { name: 'matching-agent', label: '🤖 Matching Agent', desc: 'OPEN 작업에 적합한 작업자 자동 매칭', color: '#3B82F6' },
+                                { name: 'matching-agent', label: '🤖 Matching Agent', desc: 'OPEN 작업에 적합한 클린파트너 자동 매칭', color: '#3B82F6' },
                                 { name: 'quality-agent', label: '📸 Quality Agent', desc: 'SUBMITTED 작업 사진 AI 검수 + 자동 승인', color: '#8B5CF6' },
                                 { name: 'finance-agent', label: '💰 Finance Agent', desc: 'APPROVED 작업 정산 금액 계산', color: '#00C471' },
                                 { name: 'growth-agent', label: '📈 Growth Agent', desc: '이탈 위험 사용자 감지 + 점수화', color: '#F59E0B' },
@@ -148,10 +148,10 @@ export default function AdminClient({ stats, recentEvents, topWorkers, churnRisk
                     </div>
                 )}
 
-                {/* 작업자 탭 */}
+                {/* 클린파트너 탭 */}
                 {tab === 'workers' && (
                     <div>
-                        <h3 style={{ color: '#94A3B8', fontSize: 13, fontWeight: 600, marginBottom: 16 }}>🏆 상위 작업자</h3>
+                        <h3 style={{ color: '#94A3B8', fontSize: 13, fontWeight: 600, marginBottom: 16 }}>🏆 상위 클린파트너</h3>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                             {topWorkers.map((w: any, i) => (
                                 <div key={w.id} style={{ background: '#1E293B', borderRadius: 12, padding: '14px 16px', border: '1px solid #334155', display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -180,7 +180,7 @@ export default function AdminClient({ stats, recentEvents, topWorkers, churnRisk
                                 <div key={c.id} style={{ background: '#1E293B', borderRadius: 12, padding: '14px 16px', border: '1px solid #EF444433', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                     <div>
                                         <div style={{ color: '#F1F5F9', fontWeight: 700 }}>{(c.users as any)?.name}</div>
-                                        <div style={{ color: '#64748B', fontSize: 12 }}>{(c.users as any)?.role === 'worker' ? '작업자' : '운영자'}</div>
+                                        <div style={{ color: '#64748B', fontSize: 12 }}>{(c.users as any)?.role === 'worker' ? '클린파트너' : '공간파트너'}</div>
                                     </div>
                                     <div style={{ textAlign: 'right' }}>
                                         <div style={{ color: '#EF4444', fontWeight: 800, fontSize: 16 }}>{Math.round(c.score * 100)}점</div>

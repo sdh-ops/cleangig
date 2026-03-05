@@ -43,7 +43,7 @@ export default async function EarningsPage() {
                     <div style={{ textAlign: 'center', padding: 'var(--spacing-3xl) 0', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--spacing-md)', color: 'var(--color-text-secondary)' }}>
                         <div style={{ fontSize: 48 }}>💳</div>
                         <p>아직 정산 내역이 없어요</p>
-                        <Link href="/clean/jobs" className="btn btn-primary btn-sm">일감 찾기</Link>
+                        <Link href="/clean/jobs" className="btn btn-primary btn-sm">청소 찾기</Link>
                     </div>
                 ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-sm)' }}>
@@ -81,7 +81,7 @@ export default async function EarningsPage() {
                 </Link>
                 <Link href="/clean/jobs" className="bottom-nav-item">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
-                    일감 찾기
+                    청소 찾기
                 </Link>
                 <Link href="/earnings" className="bottom-nav-item active">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="1" x2="12" y2="23" /><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" /></svg>

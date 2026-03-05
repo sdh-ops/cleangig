@@ -3,7 +3,7 @@ import './globals.css'
 
 export const metadata: Metadata = {
   title: 'CleanGig — 공간 청소 매칭 플랫폼',
-  description: '에어비앤비·파티룸·무인매장 운영자와 청소 작업자를 실시간으로 연결합니다. AI 품질 검수, 자동 정산, 에스크로 결제.',
+  description: '에어비앤비·파티룸·무인매장 공간파트너와 클린파트너를 실시간으로 연결합니다. AI 품질 검수, 자동 정산, 에스크로 결제.',
   keywords: ['청소 대행', '파티룸 청소', '에어비앤비 청소', '청소 부업', '청소 알바'],
   manifest: '/manifest.json',
   appleWebApp: { capable: true, statusBarStyle: 'default', title: 'CleanGig' },

@@ -9,7 +9,7 @@ export default async function RequestsPage() {
 
     const { data: jobs } = await supabase
         .from('jobs')
-        .select('*, spaces(name, address)')
+        .select('*, spaces(name, address, type, reference_photos)')
         .eq('operator_id', user.id)
         .order('scheduled_at', { ascending: false })
 
@@ -45,9 +45,18 @@ export default async function RequestsPage() {
                         {jobs?.map((job: any) => (
                             <Link href={`/requests/${job.id}`} key={job.id} className="card card-hover p-md">
                                 <div className="flex justify-between items-start mb-sm">
-                                    <div>
-                                        <h3 className="font-bold text-lg">{job.spaces?.name}</h3>
-                                        <p className="text-xs text-secondary">{job.spaces?.address}</p>
+                                    <div className="flex gap-sm items-center">
+                                        {job.spaces?.reference_photos?.[0] ? (
+                                            <img src={job.spaces.reference_photos[0]} alt="" style={{ width: 48, height: 48, borderRadius: 12, objectFit: 'cover', flexShrink: 0, border: '1px solid var(--color-border)' }} />
+                                        ) : (
+                                            <div style={{ width: 48, height: 48, borderRadius: 12, background: 'var(--color-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, flexShrink: 0 }}>
+                                                🏢
+                                            </div>
+                                        )}
+                                        <div>
+                                            <h3 className="font-bold text-lg">{job.spaces?.name}</h3>
+                                            <p className="text-xs text-secondary">{job.spaces?.address}</p>
+                                        </div>
                                     </div>
                                     <span className={`badge ${STATUS_MAP[job.status]?.cls}`}>
                                         {STATUS_MAP[job.status]?.label}

@@ -22,5 +22,11 @@ export default async function RequestDetailPage({ params }: { params: Promise<{ 
     const { data: payment } = await supabase
         .from('payments').select('*').eq('job_id', id).maybeSingle()
 
-    return <RequestDetailClient job={job as any} photos={photos || []} payment={payment} userId={user.id} />
+    const { data: applications } = await supabase
+        .from('job_applications')
+        .select('*, users!job_applications_worker_id_fkey(name, avg_rating, tier, profile_image)')
+        .eq('job_id', id)
+        .order('created_at')
+
+    return <RequestDetailClient job={job as any} photos={photos || []} payment={payment} applications={applications || []} userId={user.id} />
 }

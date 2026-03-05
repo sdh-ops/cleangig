@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
+import ICalForm from './ICalForm'
 
 export default async function SpaceDetailPage({ params }: { params: { id: string } }) {
     const supabase = await createClient()
@@ -18,7 +19,7 @@ export default async function SpaceDetailPage({ params }: { params: { id: string
 
     const SPACE_TYPE_ICON: Record<string, string> = {
         airbnb: '🏠', partyroom: '🎉', studio: '📸', gym: '💪',
-        unmanned_store: '🏪', study_cafe: '📚', other: '🏢'
+        unmanned_store: '🏪', study_cafe: '📚', practice_room: '🎤', workspace: '🎨', other: '🏢'
     }
 
     return (
@@ -48,7 +49,7 @@ export default async function SpaceDetailPage({ params }: { params: { id: string
                             <label className="text-xs text-tertiary">주소</label>
                             <p className="text-md font-medium">{space.address} {space.address_detail}</p>
                         </div>
-                        <div className="grid grid-cols-2 gap-md">
+                        <div className="grid grid-cols-2 gap-md mt-sm">
                             <div className="info-item">
                                 <label className="text-xs text-tertiary">기본 청소 단가</label>
                                 <p className="text-md font-bold text-primary">₩{space.base_price?.toLocaleString()}</p>
@@ -57,10 +58,22 @@ export default async function SpaceDetailPage({ params }: { params: { id: string
                                 <label className="text-xs text-tertiary">예상 소요 시간</label>
                                 <p className="text-md font-medium">{space.estimated_duration}분</p>
                             </div>
+                            <div className="info-item">
+                                <label className="text-xs text-tertiary">청소 난이도</label>
+                                <p className="text-md font-medium">{space.cleaning_difficulty}</p>
+                            </div>
+                            <div className="info-item">
+                                <label className="text-xs text-tertiary">면적</label>
+                                <p className="text-md font-medium">{space.size_sqm ? `${space.size_sqm}㎡ (약 ${Math.round(space.size_sqm * 0.3025)}평)` : '미입력'}</p>
+                            </div>
+                        </div>
+                        <div className="info-item mt-xs">
+                            <label className="text-xs text-tertiary">출입 정보 (보호됨)</label>
+                            <p className="text-md font-medium" style={{ color: '#D97706' }}>🔒 {space.entry_code || '입력된 정보 없음'}</p>
                         </div>
                         <div className="info-item">
-                            <label className="text-xs text-tertiary">출입 정보</label>
-                            <p className="text-md font-medium">{space.entry_code || '입력된 정보 없음'}</p>
+                            <label className="text-xs text-tertiary">주차 가능 여부</label>
+                            <p className="text-md font-medium">{space.is_parking_available ? `가능 (${space.parking_guide || '안내 없음'})` : '불가'}</p>
                         </div>
                         <div className="info-item">
                             <label className="text-xs text-tertiary">주의사항</label>
@@ -68,6 +81,8 @@ export default async function SpaceDetailPage({ params }: { params: { id: string
                         </div>
                     </div>
                 </div>
+
+                <ICalForm spaceId={space.id} initialUrl={space.ical_url} />
 
                 <div className="flex flex-col gap-sm">
                     <Link href={`/requests/create?space_id=${space.id}`} className="btn btn-primary btn-full">

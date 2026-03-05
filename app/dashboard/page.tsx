@@ -35,7 +35,7 @@ export default async function DashboardPage() {
 
     const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString()
     const { data: monthJobs } = await supabase
-        .from('jobs').select('status, price')
+        .from('jobs').select('status, price, scheduled_at, spaces(name)')
         .eq('operator_id', user.id).gte('scheduled_at', monthStart)
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -48,6 +48,7 @@ export default async function DashboardPage() {
             todayJobs={todayJobs || []}
             spaces={(spaces || []) as any[]}
             recentJobs={recentJobs || []}
+            monthJobs={(monthJobs || []) as any[]}
             monthTotal={monthTotal}
             monthCount={monthCount}
         />

@@ -21,7 +21,13 @@ export default function JobDetailPage() {
     const [submitting, setSubmitting] = useState(false)
     const [uploadingIdx, setUploadingIdx] = useState<number | null>(null)
     const fileInputRef = useRef<HTMLInputElement>(null)
+    const damagePhotoInputRef = useRef<HTMLInputElement>(null)
     const [activeUploadIdx, setActiveUploadIdx] = useState<number | null>(null)
+    const [damageDesc, setDamageDesc] = useState('')
+    const [showDamageReport, setShowDamageReport] = useState(false)
+    const [user, setUser] = useState<any>(null)
+    const [application, setApplication] = useState<any>(null)
+    const [applyMessage, setApplyMessage] = useState('')
 
     useEffect(() => {
         fetchJob()
@@ -36,14 +42,40 @@ export default function JobDetailPage() {
 
     const fetchJob = async () => {
         const supabase = createClient()
+        const { data: { user: u } } = await supabase.auth.getUser()
+        setUser(u)
+
         const { data } = await supabase
             .from('jobs').select('*, spaces(*)')
             .eq('id', id).single()
         if (data) {
             setJob(data as Job)
             setChecklist((data.checklist as ChecklistItem[]) || [])
+            if (u) {
+                const { data: appData } = await supabase.from('job_applications')
+                    .select('*').eq('job_id', id).eq('worker_id', u.id).single()
+                setApplication(appData)
+            }
         }
         setLoading(false)
+    }
+
+    const handleApply = async () => {
+        if (!user) return
+        setSubmitting(true)
+        const supabase = createClient()
+        const { error } = await supabase.from('job_applications').insert({
+            job_id: id,
+            worker_id: user.id,
+            message: applyMessage
+        })
+        if (!error) {
+            alert('지원이 완료되었습니다. 공간파트너의 승낙을 기다려주세요.')
+            fetchJob()
+        } else {
+            alert('지원에 실패했습니다.')
+        }
+        setSubmitting(false)
     }
 
     const handleStatusNext = async () => {
@@ -129,6 +161,35 @@ export default function JobDetailPage() {
         setUploadingIdx(null)
     }
 
+    const handleDamageReportUpload = async (file: File) => {
+        const supabase = createClient()
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user || !job) return
+
+        setSubmitting(true)
+        const ext = file.name.split('.').pop()
+        const path = `jobs/${id}/damage_${Date.now()}.${ext}`
+
+        const { error: uploadError } = await supabase.storage
+            .from('photos').upload(path, file, { contentType: file.type })
+
+        if (uploadError) { alert('사진 업로드 실패'); setSubmitting(false); return }
+        const { data: { publicUrl } } = supabase.storage.from('photos').getPublicUrl(path)
+
+        const currentReports = (job.pre_damage_report as any) || []
+        const newReport = { desc: damageDesc || '특이사항 없음', photo_url: publicUrl }
+
+        await supabase.from('jobs').update({
+            pre_damage_report: [...currentReports, newReport]
+        }).eq('id', id)
+
+        alert('파손 및 특이사항이 사전 보고되었습니다. 공간파트너에게 전달됩니다.')
+        setShowDamageReport(false)
+        setDamageDesc('')
+        await fetchJob()
+        setSubmitting(false)
+    }
+
     const toggleChecklist = (idx: number) => {
         const next = [...checklist]
         next[idx] = { ...next[idx], completed: !next[idx].completed }
@@ -186,40 +247,63 @@ export default function JobDetailPage() {
                 {['ASSIGNED', 'EN_ROUTE', 'ARRIVED', 'IN_PROGRESS'].includes(job.status) && (
                     <div className="info-card card" style={{ borderColor: 'var(--color-primary-soft)', borderWidth: 2 }}>
                         <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 'var(--spacing-md) var(--spacing-md) 0' }}>
-                            <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--color-primary)' }}>🏠 공간 이용 가이드</h3>
+                            <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--color-primary)' }}>🏠 현장 가이드라인</h3>
                             <button
                                 onClick={() => router.push(`/chat/${id}`)}
                                 style={{ background: 'var(--color-primary)', color: '#fff', padding: '4px 12px', borderRadius: 20, fontSize: 13, fontWeight: 600 }}
                             >
-                                💬 운영자 채팅
+                                💬 공간파트너 채팅
                             </button>
                         </div>
-                        <div style={{ padding: 'var(--spacing-md)' }}>
-                            <div className="guide-item">
-                                <span className="guide-label">상세 주소</span>
-                                <div className="guide-value" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                    {space?.address} {space?.address_detail}
-                                    <a
-                                        href={`https://map.kakao.com/link/search/${encodeURIComponent(space?.address)}`}
-                                        target="_blank"
-                                        className="map-link"
-                                    >
-                                        📍 길찾기
+
+                        {/* 기준 사진 제공 시 최상단 노출 */}
+                        {(space?.reference_photos?.length > 0) && (
+                            <div style={{ padding: '0 var(--spacing-md)' }}>
+                                <p className="guide-label mt-sm mb-xs text-primary font-bold">📸 완벽한 기준 뷰 (목표)</p>
+                                <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 8 }}>
+                                    {space.reference_photos.map((url: string, i: number) => (
+                                        <img key={i} src={url} alt="기준사진" style={{ width: 120, height: 90, borderRadius: 8, objectFit: 'cover', flexShrink: 0, border: '1px solid var(--color-border)' }} />
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        <div style={{ padding: '0 var(--spacing-md) var(--spacing-md)' }}>
+                            <div className="guide-item mt-sm">
+                                <span className="guide-label">출입 방법 및 위치</span>
+                                <div className="guide-value font-bold" style={{ fontSize: 16, color: 'var(--color-primary)' }}>
+                                    {space?.entry_code || '현장 확인 필요'}
+                                    <a href={`https://map.kakao.com/link/search/${encodeURIComponent(space?.address || '')}`} target="_blank" className="map-link ml-sm" style={{ fontSize: 13, background: '#eee', padding: '4px 8px', borderRadius: 12 }}>
+                                        📍 지도 보기
                                     </a>
                                 </div>
                             </div>
-                            <div className="guide-item" style={{ marginTop: 12 }}>
-                                <span className="guide-label">출입 비밀번호</span>
-                                <div className="guide-value font-bold" style={{ fontSize: 18, color: 'var(--color-primary)' }}>
-                                    {space?.entry_code || '현장 확인 필요'}
+
+                            {space?.cleaning_tool_location && (
+                                <div className="guide-item mt-sm bg-blue-50" style={{ background: 'var(--color-primary-light)', padding: 12, borderRadius: 8 }}>
+                                    <span className="guide-label text-primary flex items-center gap-1">🧽 청소 도구 및 세제 위치</span>
+                                    <div className="guide-value font-bold">{space.cleaning_tool_location}</div>
                                 </div>
-                            </div>
+                            )}
+
+                            {space?.trash_guide && (
+                                <div className="guide-item mt-sm">
+                                    <span className="guide-label">🗑 쓰레기 배출 안내</span>
+                                    <div className="guide-value text-sm">{space.trash_guide}</div>
+                                </div>
+                            )}
+
+                            {space?.parking_guide && (
+                                <div className="guide-item mt-sm">
+                                    <span className="guide-label">🚗 주차 안내</span>
+                                    <div className="guide-value text-sm">{space.parking_guide}</div>
+                                </div>
+                            )}
+
                             {space?.caution_notes && (
-                                <div className="guide-item" style={{ marginTop: 12 }}>
-                                    <span className="guide-label">주의사항</span>
-                                    <div className="guide-value" style={{ fontSize: 13, color: 'var(--color-text-secondary)', whiteSpace: 'pre-wrap' }}>
-                                        {space?.caution_notes}
-                                    </div>
+                                <div className="guide-item mt-sm">
+                                    <span className="guide-label">⚠️ 주의사항</span>
+                                    <div className="guide-value text-sm text-secondary whitespace-pre-wrap">{space.caution_notes}</div>
                                 </div>
                             )}
                         </div>
@@ -229,8 +313,13 @@ export default function JobDetailPage() {
                 {/* 일정 정보 */}
                 <div className="info-card card">
                     <div className="info-row">
-                        <span>⏰ 시작 예정</span>
-                        <span className="font-bold">{new Date(job.scheduled_at).toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                        <span>⏰ 청소 시간</span>
+                        <span className="font-bold">
+                            {job.time_window_start && job.time_window_end
+                                ? `${new Date(job.scheduled_at).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' })} ${job.time_window_start.substring(0, 5)} ~ ${job.time_window_end.substring(0, 5)}`
+                                : new Date(job.scheduled_at).toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+                            }
+                        </span>
                     </div>
                     <div className="info-row">
                         <span>⏱ 예상 시간</span>
@@ -242,6 +331,64 @@ export default function JobDetailPage() {
                         </div>
                     )}
                 </div>
+
+                {/* 파손 사전 보고 UI (도착 상태일 때만 + 보호 차원) */}
+                {job.status === 'ARRIVED' && (
+                    <div className="card mt-md mb-md" style={{ padding: 'var(--spacing-md)', background: '#FEF2F2', border: '1px solid #FCA5A5' }}>
+                        <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                            <span style={{ fontSize: 24 }}>🚨</span>
+                            <div style={{ flex: 1 }}>
+                                <h4 style={{ color: '#DC2626', fontWeight: 700, margin: '0 0 4px 0' }}>청소 시작 전 확인 필수</h4>
+                                <p style={{ fontSize: 13, color: '#991B1B', margin: '0 0 12px 0', lineHeight: 1.4 }}>
+                                    이전 게스트가 파손하거나 심각하게 오염시킨 부분이 있다면, 청소를 시작하기 전에 먼저 증거 사진을 남겨주세요. 클린파트너님의 책임을 피할 수 있습니다.
+                                </p>
+
+                                {showDamageReport ? (
+                                    <div style={{ background: '#fff', padding: 12, borderRadius: 8, border: '1px solid #FCCCA7' }}>
+                                        <textarea
+                                            placeholder="파손/오염 내용을 간략히 적어주세요."
+                                            style={{ width: '100%', padding: 8, borderRadius: 6, border: '1px solid #ddd', fontSize: 13, marginBottom: 8 }}
+                                            rows={2}
+                                            value={damageDesc}
+                                            onChange={e => setDamageDesc(e.target.value)}
+                                        />
+                                        <button
+                                            className="btn btn-secondary btn-full btn-sm"
+                                            onClick={() => damagePhotoInputRef.current?.click()}
+                                            disabled={submitting || !damageDesc}
+                                        >
+                                            {submitting ? <span className="spinner"></span> : '📸 파손 증거 사진 업로드 및 보고'}
+                                        </button>
+                                        <button style={{ background: 'transparent', color: '#666', fontSize: 12, marginTop: 8, border: 'none', width: '100%' }} onClick={() => setShowDamageReport(false)}>취소</button>
+                                    </div>
+                                ) : (
+                                    <button
+                                        className="btn btn-sm"
+                                        style={{ background: '#DC2626', color: '#fff', width: '100%', fontWeight: 700 }}
+                                        onClick={() => setShowDamageReport(true)}
+                                    >
+                                        파손/오염 사전 보고 창 열기
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* 기 보고된 파손 내역 */}
+                {(job.pre_damage_report as any[])?.length > 0 && (
+                    <div className="card mb-md" style={{ padding: 'var(--spacing-md)', border: '1px solid #FCD34D', background: '#FEF3C7' }}>
+                        <h4 style={{ color: '#B45309', fontWeight: 700, fontSize: 14, margin: '0 0 8px 0' }}>⚠️ 파손 사전 보고 완료 내역</h4>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                            {((job.pre_damage_report as any[]) || []).map((r, i) => (
+                                <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'center', background: 'rgba(255,255,255,0.7)', padding: 8, borderRadius: 8 }}>
+                                    {r.photo_url && <img src={r.photo_url} alt="증거" style={{ width: 40, height: 40, borderRadius: 4, objectFit: 'cover' }} />}
+                                    <span style={{ fontSize: 12, color: '#92400E' }}>{r.desc}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
 
                 {/* 체크리스트 */}
                 {['IN_PROGRESS', 'ARRIVED', 'SUBMITTED', 'APPROVED', 'PAID_OUT'].includes(job.status) && checklist.length > 0 && (
@@ -292,6 +439,15 @@ export default function JobDetailPage() {
                         e.target.value = ''
                     }}
                 />
+                <input
+                    ref={damagePhotoInputRef} type="file" accept="image/*" capture="environment"
+                    style={{ display: 'none' }}
+                    onChange={e => {
+                        const file = e.target.files?.[0]
+                        if (file) handleDamageReportUpload(file)
+                        e.target.value = ''
+                    }}
+                />
 
                 {/* 완료 사진 업로드 버튼 (IN_PROGRESS) */}
                 {job.status === 'IN_PROGRESS' && (
@@ -299,10 +455,43 @@ export default function JobDetailPage() {
                         📸 청소 완료 사진 추가
                     </button>
                 )}
+
+                {/* 지원서 폼 (OPEN) */}
+                {job.status === 'OPEN' && !application && (
+                    <div className="card mt-md mb-md p-md" style={{ border: '2px solid var(--color-primary)' }}>
+                        <h3 className="font-bold text-md mb-sm flex items-center gap-xs"><span>✨</span> 이 청소에 지원하시겠어요?</h3>
+                        <p className="text-secondary text-sm mb-md">공간 파트너가 클린파트너님의 프로필과 메시지를 확인 후 매칭을 수락합니다.</p>
+                        <textarea
+                            className="form-input mb-md"
+                            placeholder="간단한 인사말이나 어필할 내용을 적어주세요 (선택)"
+                            rows={3}
+                            value={applyMessage}
+                            onChange={e => setApplyMessage(e.target.value)}
+                        />
+                    </div>
+                )}
             </div>
 
             {/* 하단 액션 버튼 */}
-            {flow && (
+            {job.status === 'OPEN' && (
+                <div className="action-footer">
+                    {application ? (
+                        <button className="btn btn-secondary btn-full btn-lg" disabled style={{ background: 'var(--color-bg)', color: 'var(--color-text-tertiary)' }}>
+                            ⏳ 공간 파트너의 승낙(배정) 대기 중...
+                        </button>
+                    ) : (
+                        <button
+                            className="btn btn-primary btn-full btn-lg"
+                            onClick={handleApply}
+                            disabled={submitting}
+                        >
+                            {submitting ? <span className="spinner" /> : '🙋‍♂️ 지원하기'}
+                        </button>
+                    )}
+                </div>
+            )}
+
+            {flow && job.status !== 'OPEN' && (
                 <div className="action-footer">
                     <button
                         className={`btn ${flow.btnColor} btn-full btn-lg`}

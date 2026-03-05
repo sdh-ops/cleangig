@@ -8,6 +8,7 @@ interface Props {
     todayJobs: Array<{ id: string; status: string; price: number; scheduled_at: string; spaces?: { name: string; type: string } }>
     spaces: Array<{ id: string; name: string; type: string; base_price: number; is_active: boolean }>
     recentJobs: Array<{ id: string; status: string; price: number; scheduled_at: string; spaces?: { name: string } }>
+    monthJobs: Array<{ status: string; price: number; scheduled_at: string; spaces?: { name: string } }>
     monthTotal: number
     monthCount: number
 }
@@ -25,8 +26,8 @@ const STATUS_MAP: Record<string, { label: string; cls: string }> = {
     CANCELED: { label: '취소', cls: '' },
 }
 
-export default function DashboardClient({ profile, todayJobs, spaces, recentJobs, monthTotal, monthCount }: Props) {
-    const [activeTab, setActiveTab] = useState<'today' | 'spaces'>('today')
+export default function DashboardClient({ profile, todayJobs, spaces, recentJobs, monthJobs, monthTotal, monthCount }: Props) {
+    const [activeTab, setActiveTab] = useState<'today' | 'spaces' | 'calendar'>('today')
 
     const submittedJobs = todayJobs.filter(j => j.status === 'SUBMITTED')
     const formatTime = (iso: string) => new Date(iso).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })
@@ -82,6 +83,9 @@ export default function DashboardClient({ profile, todayJobs, spaces, recentJobs
                 <button className={`dash-tab ${activeTab === 'spaces' ? 'active' : ''}`} onClick={() => setActiveTab('spaces')}>
                     내 공간 ({spaces.length})
                 </button>
+                <button className={`dash-tab ${activeTab === 'calendar' ? 'active' : ''}`} onClick={() => setActiveTab('calendar')}>
+                    월간 캘린더
+                </button>
             </div>
 
             {/* 오늘 일정 */}
@@ -135,6 +139,44 @@ export default function DashboardClient({ profile, todayJobs, spaces, recentJobs
                         <Link href="/spaces/create" className="add-space-btn">
                             <span>+</span> 새 공간 등록
                         </Link>
+                    </div>
+                </div>
+            )}
+
+            {/* 캘린더 목록 */}
+            {activeTab === 'calendar' && (
+                <div className="page-content" style={{ paddingTop: 0 }}>
+                    <div className="card p-md">
+                        <div className="flex justify-between items-center mb-md">
+                            <h3 className="font-bold text-lg">{new Date().getFullYear()}년 {new Date().getMonth() + 1}월</h3>
+                        </div>
+                        <div className="calendar-grid">
+                            <div className="cal-day-header text-red">일</div>
+                            <div className="cal-day-header">월</div>
+                            <div className="cal-day-header">화</div>
+                            <div className="cal-day-header">수</div>
+                            <div className="cal-day-header">목</div>
+                            <div className="cal-day-header">금</div>
+                            <div className="cal-day-header text-blue">토</div>
+                            {Array.from({ length: new Date(new Date().getFullYear(), new Date().getMonth(), 1).getDay() }).map((_, i) => (
+                                <div key={`empty-${i}`} className="cal-cell empty"></div>
+                            ))}
+                            {Array.from({ length: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate() }).map((_, i) => {
+                                const dayJobs = monthJobs.filter(j => new Date(j.scheduled_at).getDate() === i + 1)
+                                const hasJobs = dayJobs.length > 0;
+                                return (
+                                    <div key={i} className={`cal-cell ${i + 1 === new Date().getDate() ? 'cal-today' : ''} ${hasJobs ? 'has-jobs' : ''}`}>
+                                        <span className="cal-date">{i + 1}</span>
+                                        {hasJobs && <div className="cal-dots">
+                                            {dayJobs.slice(0, 3).map((dj, idx) => (
+                                                <div key={idx} className={`cal-dot ${dj.status === 'OPEN' ? 'open' : ''}`}></div>
+                                            ))}
+                                        </div>}
+                                    </div>
+                                )
+                            })}
+                        </div>
+                        <p className="text-secondary text-xs mt-sm text-center">💡 iCal 연동 시 스마트 일정 관리가 가능해집니다.</p>
                     </div>
                 </div>
             )}
@@ -204,11 +246,19 @@ export default function DashboardClient({ profile, todayJobs, spaces, recentJobs
         }
         .add-space-btn:hover { border-color: var(--color-primary); color: var(--color-primary); background: var(--color-primary-light); }
 
-        .empty-state {
-          text-align: center; padding: var(--spacing-3xl) var(--spacing-lg);
-          display: flex; flex-direction: column; align-items: center; gap: var(--spacing-md);
-          color: var(--color-text-secondary);
-        }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+        .cal-day-header { text-align: center; font-size: 11px; font-weight: 700; color: var(--color-text-secondary); padding: 8px 0; }
+        .text-red { color: #E11D48; }
+        .text-blue { color: #2563EB; }
+        .cal-cell { background: var(--color-surface); border-radius: 8px; min-height: 48px; border: 1px solid var(--color-border-light); display: flex; flex-direction: column; align-items: center; padding: 4px 2px; }
+        .cal-cell.empty { background: transparent; border-color: transparent; }
+        .cal-cell.cal-today { border-color: var(--color-primary); background: var(--color-primary-light); }
+        .cal-cell.has-jobs { border-color: var(--color-primary); }
+        .cal-date { font-size: 12px; font-weight: 600; color: var(--color-text-primary); margin-bottom: 2px; }
+        .cal-today .cal-date { color: var(--color-primary-dark); }
+        .cal-dots { display: flex; gap: 2px; justify-content: center; flex-wrap: wrap; }
+        .cal-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--color-green); }
+        .cal-dot.open { background: var(--color-orange); }
 
         .quick-actions { padding: var(--spacing-md) !important; }
       `}</style>

@@ -47,7 +47,7 @@ function OnboardingContent() {
                     >
                         <div className="role-icon">🏠</div>
                         <div className="role-content">
-                            <div className="role-title">공간 운영자</div>
+                            <div className="role-title">공간파트너</div>
                             <div className="role-desc">에어비앤비·파티룸·무인매장 등<br />공간을 운영하고 청소를 맡기고 싶어요</div>
                         </div>
                         <div className="role-check">{selectedRole === 'operator' ? '✅' : '○'}</div>
@@ -60,7 +60,7 @@ function OnboardingContent() {
                     >
                         <div className="role-icon">🧹</div>
                         <div className="role-content">
-                            <div className="role-title">청소 작업자</div>
+                            <div className="role-title">클린파트너</div>
                             <div className="role-desc">원하는 시간에 가까운 곳에서<br />청소 부업을 하고 싶어요</div>
                         </div>
                         <div className="role-check">{selectedRole === 'worker' ? '✅' : '○'}</div>
@@ -73,7 +73,7 @@ function OnboardingContent() {
                     disabled={loading}
                     id="onboarding-confirm"
                 >
-                    {loading ? <span className="spinner" /> : `${selectedRole === 'operator' ? '운영자' : '작업자'}로 시작하기 →`}
+                    {loading ? <span className="spinner" /> : `${selectedRole === 'operator' ? '공간파트너' : '클린파트너'}로 시작하기 →`}
                 </button>
             </div>
 

@@ -11,8 +11,11 @@ export default function CreateRequestPage() {
     const [form, setForm] = useState({
         space_id: '',
         scheduled_date: '',
-        scheduled_time: '10:00',
+        time_window_start: '11:00',
+        time_window_end: '15:00',
         is_urgent: false,
+        is_recurring: false,
+        recurring_days: [] as string[],
         special_instructions: '',
     })
     const [selectedSpace, setSelectedSpace] = useState<Space | null>(null)
@@ -59,13 +62,15 @@ export default function CreateRequestPage() {
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) return
 
-        const scheduledAt = new Date(`${form.scheduled_date}T${form.scheduled_time}:00+09:00`).toISOString()
+        const scheduledAt = new Date(`${form.scheduled_date}T${form.time_window_start}:00+09:00`).toISOString()
 
         const { data: job, error } = await supabase.from('jobs').insert({
             space_id: form.space_id,
             operator_id: user.id,
             status: 'OPEN',
             scheduled_at: scheduledAt,
+            time_window_start: form.time_window_start,
+            time_window_end: form.time_window_end,
             estimated_duration: selectedSpace?.estimated_duration || 60,
             price,
             price_breakdown: {
@@ -75,7 +80,8 @@ export default function CreateRequestPage() {
             checklist: selectedSpace?.checklist_template || [],
             special_instructions: form.special_instructions || null,
             is_urgent: form.is_urgent,
-            is_recurring: false,
+            is_recurring: form.is_recurring,
+            recurring_config: form.is_recurring ? { days: form.recurring_days } : null,
         }).select().single()
 
         if (!error && job) {
@@ -147,17 +153,59 @@ export default function CreateRequestPage() {
                 </div>
 
                 <div className="form-group">
-                    <label className="form-label">청소 시작 시간 *</label>
-                    <div className="time-grid">
-                        {['08:00', '10:00', '12:00', '14:00', '16:00', '18:00', '20:00'].map(t => (
-                            <button
-                                key={t}
-                                className={`time-btn ${form.scheduled_time === t ? 'selected' : ''}`}
-                                onClick={() => setForm(f => ({ ...f, scheduled_time: t }))}
-                            >{t}</button>
-                        ))}
+                    <label className="form-label">청소 가능 시간 (선택 범위 내 작업 완료) *</label>
+                    <div className="time-window-row">
+                        <div className="time-col">
+                            <span className="text-xs text-secondary mb-xs">시작 가능 시간</span>
+                            <input className="form-input" type="time" value={form.time_window_start}
+                                onChange={e => setForm(f => ({ ...f, time_window_start: e.target.value }))} />
+                        </div>
+                        <div className="time-tilde">~</div>
+                        <div className="time-col">
+                            <span className="text-xs text-secondary mb-xs">완료 한계 시간</span>
+                            <input className="form-input" type="time" value={form.time_window_end}
+                                onChange={e => setForm(f => ({ ...f, time_window_end: e.target.value }))} />
+                        </div>
+                    </div>
+                    <p className="form-hint mt-xs">클린파트너가 위 시간 범위 내에 도착하여 청소를 모두 마칩니다.</p>
+                </div>
+
+                {/* 반복 청소 옵션 */}
+                <div className="urgent-toggle" onClick={() => setForm(f => ({ ...f, is_recurring: !f.is_recurring }))}>
+                    <div className="urgent-info">
+                        <div className="urgent-title">🔁 정기 청소 (반복)</div>
+                        <div className="urgent-desc">매주 정해진 요일에 자동으로 청소 요청</div>
+                    </div>
+                    <div className={`toggle ${form.is_recurring ? 'on' : ''}`}>
+                        <div className="toggle-thumb" />
                     </div>
                 </div>
+
+                {form.is_recurring && (
+                    <div className="form-group slide-down">
+                        <label className="form-label">반복 요일 선택</label>
+                        <div className="day-picker">
+                            {['월', '화', '수', '목', '금', '토', '일'].map(day => {
+                                const selected = form.recurring_days.includes(day)
+                                return (
+                                    <button
+                                        key={day}
+                                        className={`day-btn ${selected ? 'selected' : ''}`}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setForm(f => ({
+                                                ...f,
+                                                recurring_days: selected
+                                                    ? f.recurring_days.filter(d => d !== day)
+                                                    : [...f.recurring_days, day]
+                                            }))
+                                        }}
+                                    >{day}</button>
+                                )
+                            })}
+                        </div>
+                    </div>
+                )}
 
                 {/* 긴급 옵션 */}
                 <div className="urgent-toggle" onClick={() => setForm(f => ({ ...f, is_urgent: !f.is_urgent }))}>
@@ -174,7 +222,7 @@ export default function CreateRequestPage() {
                 <div className="form-group">
                     <label className="form-label">특이사항 (선택)</label>
                     <textarea className="form-input" rows={2}
-                        placeholder="작업자에게 전달할 내용 (예: 비밀번호 1234, 반려동물 있음)"
+                        placeholder="클린파트너에게 전달할 내용 (예: 비밀번호 1234, 반려동물 있음)"
                         value={form.special_instructions}
                         onChange={e => setForm(f => ({ ...f, special_instructions: e.target.value }))} />
                 </div>
@@ -194,11 +242,11 @@ export default function CreateRequestPage() {
                         )}
                         <div className="divider" />
                         <div className="price-row price-total">
-                            <span>작업자 수령액</span>
+                            <span>클린파트너 수령액</span>
                             <span>{price.toLocaleString()}원</span>
                         </div>
                         <div className="price-row text-secondary text-sm">
-                            <span>운영자 결제 금액 (수수료 10%)</span>
+                            <span>공간파트너 결제 금액 (수수료 10%)</span>
                             <span>{Math.round(price * 1.1).toLocaleString()}원</span>
                         </div>
                         <div className="price-row text-secondary text-sm">
@@ -242,13 +290,12 @@ export default function CreateRequestPage() {
         .space-select-info { flex: 1; }
         .space-select-name { font-size: var(--font-md); font-weight: 700; }
         .space-select-addr { font-size: var(--font-xs); color: var(--color-text-tertiary); }
-        .time-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--spacing-sm); }
-        .time-btn {
-          padding: 10px 4px; border-radius: 10px; font-size: var(--font-sm); font-weight: 600;
-          border: 2px solid var(--color-border); background: var(--color-surface);
-          cursor: pointer; transition: all var(--transition-fast);
-        }
-        .time-btn.selected { border-color: var(--color-primary); background: var(--color-primary); color: #fff; }
+        .time-window-row { display: flex; align-items: flex-end; gap: var(--spacing-sm); }
+        .time-col { flex: 1; display: flex; flex-direction: column; }
+        .time-tilde { padding-bottom: 12px; font-weight: 700; color: var(--color-text-tertiary); }
+        .day-picker { display: flex; gap: 8px; justify-content: space-between; margin-top: 8px; }
+        .day-btn { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--color-border); background: var(--color-surface); font-weight: 600; font-size: 14px; cursor: pointer; transition: all .2s; }
+        .day-btn.selected { background: var(--color-primary); color: #fff; border-color: var(--color-primary); }
         .urgent-toggle {
           display: flex; justify-content: space-between; align-items: center;
           padding: var(--spacing-md); border-radius: 14px;

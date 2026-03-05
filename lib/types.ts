@@ -1,5 +1,5 @@
 export type UserRole = 'operator' | 'worker' | 'admin'
-export type SpaceType = 'airbnb' | 'partyroom' | 'studio' | 'gym' | 'unmanned_store' | 'study_cafe' | 'other'
+export type SpaceType = 'airbnb' | 'partyroom' | 'studio' | 'gym' | 'unmanned_store' | 'study_cafe' | 'practice_room' | 'workspace' | 'other'
 export type JobStatus =
     | 'OPEN' | 'ASSIGNED' | 'EN_ROUTE' | 'ARRIVED'
     | 'IN_PROGRESS' | 'SUBMITTED' | 'APPROVED'
@@ -39,6 +39,10 @@ export interface Space {
     location?: unknown
     size_sqm?: number
     floor_count?: number
+    cleaning_tool_location?: string
+    parking_guide?: string
+    trash_guide?: string
+    reference_photos?: string[]
     checklist_template: ChecklistItem[]
     base_price: number
     estimated_duration: number
@@ -72,6 +76,9 @@ export interface Job {
     special_instructions?: string
     is_urgent: boolean
     is_recurring: boolean
+    time_window_start?: string
+    time_window_end?: string
+    pre_damage_report?: { desc: string; photo_url?: string }[]
     recurring_config?: Record<string, unknown>
     matching_score?: number
     auto_approved: boolean

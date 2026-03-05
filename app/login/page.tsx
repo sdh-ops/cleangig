@@ -41,9 +41,9 @@ function LoginContent() {
                     <h1 className="login-title">CleanGig</h1>
                     <p className="login-subtitle">
                         {defaultRole === 'operator'
-                            ? '공간 운영자로 시작하기'
+                            ? '공간파트너로 시작하기'
                             : defaultRole === 'worker'
-                                ? '청소 작업자로 시작하기'
+                                ? '클린파트너로 시작하기'
                                 : '청소 매칭 플랫폼'}
                     </p>
                 </div>
@@ -52,13 +52,13 @@ function LoginContent() {
                 <div className="login-benefits">
                     {defaultRole === 'worker' ? (
                         <>
-                            <div className="benefit-item">✅ 가까운 곳 일감만 골라서 수락</div>
+                            <div className="benefit-item">✅ 가까운 곳 청소만 골라서 수락</div>
                             <div className="benefit-item">✅ 작업 완료 후 빠른 정산</div>
                             <div className="benefit-item">✅ 앱 설치 없이 카카오로 바로 시작</div>
                         </>
                     ) : (
                         <>
-                            <div className="benefit-item">✅ 5분 안에 검증된 작업자 매칭</div>
+                            <div className="benefit-item">✅ 5분 안에 검증된 클린파트너 매칭</div>
                             <div className="benefit-item">✅ AI가 청소 품질 자동 검수</div>
                             <div className="benefit-item">✅ 에스크로로 결제금 안전 보호</div>
                         </>
@@ -96,11 +96,11 @@ function LoginContent() {
                 <div className="login-switch">
                     {defaultRole === 'worker' ? (
                         <a href="/login?role=operator" className="switch-link">
-                            공간 운영자이신가요? →
+                            공간파트너이신가요? →
                         </a>
                     ) : (
                         <a href="/login?role=worker" className="switch-link">
-                            청소 작업자이신가요? →
+                            클린파트너이신가요? →
                         </a>
                     )}
                 </div>

@@ -80,7 +80,7 @@ export default function ChatClient({ jobId, userId, receiverId, spaceName }: Pro
                 <button onClick={() => router.back()} className="back-btn">←</button>
                 <div style={{ flex: 1 }}>
                     <h1 className="chat-title">{spaceName}</h1>
-                    <p className="chat-subtitle">운영자 ↔ 작업자 채팅</p>
+                    <p className="chat-subtitle">공간파트너 ↔ 클린파트너 채팅</p>
                 </div>
             </header>
 
