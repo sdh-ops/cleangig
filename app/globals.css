@@ -8,18 +8,47 @@
    CSS 변수 (디자인 토큰)
    ===================== */
 :root {
-  /* 색상 — 프라이머리 (사용자 팔레트 적용) */
-  --color-primary: #769FCD;
-  /* Base Blue */
-  --color-primary-dark: #3F72AF;
-  /* Deep Blue (Text Secondary 참고) */
-  --color-primary-light: #D6E6F2;
-  /* Sky Blue */
-  --color-primary-soft: #F7FBFC;
-  /* White-Grey */
-  --color-accent: #B9D7EA;
-  /* Light Blue-Grey */
+  /* 색상 — 프리미엄 화이트 테마 & 토스 블루 (Toss Blue) */
+  --color-primary: #3182F6;
+  --color-primary-dark: #1B64DA;
+  --color-primary-light: #EBF3FF;
+  --color-primary-soft: #F9FAFB;
+  --color-accent: #FFD400;
+  /* Sparkle Yellow */
 
+  /* 배경 및 중립 섹션 */
+  --color-bg: #FFFFFF;
+  /* Pure White */
+  --color-surface: #FFFFFF;
+  --color-surface-variant: #F2F4F6;
+  --color-border: #E5E8EB;
+  --color-border-light: #F2F4F6;
+
+  /* 텍스트 (명도 대비 강화) */
+  --color-text-primary: #191F28;
+  /* Toss Dark Grey */
+  --color-text-secondary: #4E5968;
+  --color-text-tertiary: #8B95A1;
+  --color-text-disabled: #D1D6DB;
+
+  /* 그림자 (더 미세하고 고급스럽게) */
+  --shadow-xs: 0 1px 3px rgba(0, 0, 0, 0.02);
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 8px 20px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.12);
+  --shadow-xl: 0 20px 48px rgba(0, 0, 0, 0.15);
+
+  /* 타이포그래피 (전연령 접근성 강화: 기본 크기 상향) */
+  --font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+  --font-xs: 13px;
+  --font-sm: 15px;
+  --font-base: 17px;
+  /* 16px -> 17px 상향 */
+  --font-md: 19px;
+  --font-lg: 21px;
+  --font-xl: 26px;
+  --font-2xl: 30px;
+  --font-3xl: 36px;
   /* 색상 — 보조 (일부 유지 및 보완) */
   --color-blue: #3F72AF;
   --color-blue-light: #D6E6F2;
@@ -175,12 +204,12 @@ select {
 .btn-primary {
   background: var(--color-primary);
   color: #fff;
-  box-shadow: 0 2px 8px rgba(0, 196, 113, 0.30);
+  box-shadow: 0 4px 12px rgba(0, 100, 255, 0.2);
 }
 
 .btn-primary:hover:not(:disabled) {
   background: var(--color-primary-dark);
-  box-shadow: 0 4px 16px rgba(0, 196, 113, 0.40);
+  box-shadow: 0 6px 16px rgba(0, 100, 255, 0.3);
 }
 
 .btn-secondary {
@@ -245,7 +274,7 @@ select {
 .card {
   background: var(--color-surface);
   border-radius: 24px;
-  border: none;
+  border: 1px solid var(--color-border-light);
   box-shadow: var(--shadow-sm);
   overflow: hidden;
   transition: box-shadow var(--transition-fast), transform var(--transition-fast);

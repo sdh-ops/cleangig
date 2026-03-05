@@ -2,7 +2,9 @@ import { createClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function GET(request: NextRequest) {
-    const { searchParams, origin } = new URL(request.url)
+    const requestUrl = new URL(request.url)
+    const origin = requestUrl.origin
+    const searchParams = requestUrl.searchParams
     const code = searchParams.get('code')
     const role = searchParams.get('role') // operator | worker
 
@@ -10,7 +12,12 @@ export async function GET(request: NextRequest) {
         const supabase = await createClient()
         const { data, error } = await supabase.auth.exchangeCodeForSession(code)
 
-        if (!error && data.user) {
+        if (error) {
+            console.error('❌ Auth Callback Error (exchangeCode):', error.message)
+            return NextResponse.redirect(`${origin}/login?error=${encodeURIComponent(error.message)}`)
+        }
+
+        if (data.user) {
             // users 테이블에 프로필 있는지 확인
             const { data: existingUser } = await supabase
                 .from('users')

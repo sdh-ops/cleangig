@@ -223,159 +223,162 @@ export default function JobDetailPage() {
     const progress = checklist.length > 0 ? (completedCount / checklist.length) * 100 : 0
 
     return (
-        <div className="page-container">
-            <header className="job-header">
-                <button onClick={() => router.back()} className="back-btn">←</button>
+        <div className="page-container premium-bg" style={{ backgroundColor: '#fff', minHeight: '100dvh' }}>
+            <header style={{
+                display: 'flex', alignItems: 'center', gap: '16px', padding: '24px 20px 16px',
+                background: '#fff', position: 'sticky', top: 0, zIndex: 10, borderBottom: '1px solid #F2F4F6'
+            }}>
+                <button onClick={() => router.back()} style={{
+                    fontSize: '20px', width: '40px', height: '40px', background: '#F2L4F6',
+                    borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none'
+                }}>←</button>
                 <div style={{ flex: 1 }}>
-                    <h1 className="job-space-name">{space?.name || '청소 작업'}</h1>
-                    <p className="job-address">{space?.address}</p>
+                    <h1 style={{ fontSize: '18px', fontWeight: 800, color: '#000', letterSpacing: '-0.02em' }}>{space?.name || '청소 작업'}</h1>
+                    <p style={{ fontSize: '13px', color: '#8B95A1', fontWeight: 500, marginTop: '2px' }}>{space?.address}</p>
                 </div>
             </header>
 
-            {/* 상태 진행 표시 */}
-            <div className="status-banner" style={{
-                background: job.status === 'IN_PROGRESS' ? 'linear-gradient(135deg, #769FCD, #3F72AF)' :
-                    job.status === 'SUBMITTED' ? '#8B5CF6' :
-                        job.status === 'APPROVED' || job.status === 'PAID_OUT' ? '#3F72AF' : 'var(--color-primary)'
-            }}>
-                <div className="status-text">
-                    {job.status === 'ASSIGNED' && '🚗 지금 출발하세요!'}
-                    {job.status === 'EN_ROUTE' && '📍 이동 중...'}
-                    {job.status === 'ARRIVED' && '🏠 도착했어요! 청소를 시작하세요'}
-                    {job.status === 'IN_PROGRESS' && '🧹 청소 진행 중'}
-                    {job.status === 'SUBMITTED' && '⏳ AI 품질 검수 중...'}
-                    {job.status === 'APPROVED' && '✅ 승인 완료! 정산 처리 중'}
-                    {job.status === 'PAID_OUT' && '💰 정산 완료!'}
+            {/* 상태 진행 카드 */}
+            <div style={{ padding: '20px' }}>
+                <div style={{
+                    background: '#F9FAFB', borderRadius: '24px', padding: '24px',
+                    border: '1px solid #F2F4F6', position: 'relative', overflow: 'hidden'
+                }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                        <span style={{
+                            background: 'var(--color-primary-light)', color: 'var(--color-primary)',
+                            padding: '6px 12px', borderRadius: '10px', fontSize: '12px', fontWeight: 800
+                        }}>
+                            {job.status === 'ASSIGNED' && '준비 단계'}
+                            {job.status === 'EN_ROUTE' && '이동 단계'}
+                            {job.status === 'ARRIVED' && '작업 대기'}
+                            {job.status === 'IN_PROGRESS' && '작업 중'}
+                            {['SUBMITTED', 'APPROVED', 'PAID_OUT'].includes(job.status) && '완료 확인'}
+                        </span>
+                        <div style={{ fontSize: '20px', fontWeight: 900, color: 'var(--color-primary)' }}>₩{job.price.toLocaleString()}</div>
+                    </div>
+                    <h2 style={{ fontSize: '22px', fontWeight: 800, marginBottom: '8px', color: '#191F28' }}>
+                        {job.status === 'ASSIGNED' && '🚗 지금 출발할까요?'}
+                        {job.status === 'EN_ROUTE' && '📍 현장으로 가는 중'}
+                        {job.status === 'ARRIVED' && '🏠 도착을 완료했어요'}
+                        {job.status === 'IN_PROGRESS' && '🧹 반짝이는 청소 중'}
+                        {job.status === 'SUBMITTED' && '⏳ 품질 검수 대기'}
+                        {job.status === 'APPROVED' && '✅ 승인된 작업'}
+                        {job.status === 'PAID_OUT' && '💰 정산이 완료된 작업'}
+                    </h2>
+                    <p style={{ fontSize: '14px', color: '#4E5968', lineHeight: 1.5 }}>
+                        {job.status === 'ASSIGNED' && '지금 출발 버튼을 눌러 이동을 시작하세요.'}
+                        {job.status === 'EN_ROUTE' && '현장에 도착하면 도착 완료 버튼을 눌러주세요.'}
+                        {job.status === 'ARRIVED' && '체크리스트를 확인하며 꼼꼼히 청소해 주세요.'}
+                        {job.status === 'IN_PROGRESS' && '완료 후에는 모든 공간 사진을 꼭 남겨주세요.'}
+                        {job.status === 'SUBMITTED' && 'AI와 공간 파트너가 꼼꼼히 확인하고 있어요.'}
+                    </p>
                 </div>
-                <div className="status-price">₩{job.price.toLocaleString()}</div>
             </div>
 
-            <div className="page-content">
-                {/* 매칭 전용 상세 정보 (출발 후 또는 배정 시 확인 가능) */}
+            <div className="page-content" style={{ padding: '0 20px 120px' }}>
+                {/* 매칭 전용 상세 정보 */}
                 {['ASSIGNED', 'EN_ROUTE', 'ARRIVED', 'IN_PROGRESS'].includes(job.status) && (
-                    <div className="info-card card" style={{ borderColor: 'var(--color-primary-soft)', borderWidth: 2 }}>
-                        <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 'var(--spacing-md) var(--spacing-md) 0' }}>
-                            <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--color-primary)' }}>🏠 현장 가이드라인</h3>
+                    <div style={{ marginTop: '12px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                            <h3 style={{ fontSize: '16px', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <span style={{ fontSize: '20px' }}>📘</span> 현장 가이드라인
+                            </h3>
                             <button
                                 onClick={() => router.push(`/chat/${id}`)}
-                                style={{ background: 'var(--color-primary)', color: '#fff', padding: '4px 12px', borderRadius: 20, fontSize: 13, fontWeight: 600 }}
+                                style={{ background: '#F2F4F6', color: '#4E5968', padding: '8px 16px', borderRadius: '12px', fontSize: '13px', fontWeight: 700, border: 'none' }}
                             >
-                                💬 공간파트너 채팅
+                                💬 채팅 문의
                             </button>
                         </div>
 
-                        {/* 기준 사진 제공 시 최상단 노출 */}
+                        {/* 기준 사진 */}
                         {(space?.reference_photos?.length > 0) && (
-                            <div style={{ padding: '0 var(--spacing-md)' }}>
-                                <p className="guide-label mt-sm mb-xs text-primary font-bold">📸 완벽한 기준 뷰 (목표)</p>
-                                <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 8 }}>
+                            <div style={{ marginBottom: '24px' }}>
+                                <p style={{ fontSize: '13px', fontWeight: 700, color: 'var(--color-primary)', marginBottom: '10px' }}>✨ 목표 청소 상태 (기준 뷰)</p>
+                                <div style={{ display: 'flex', gap: '10px', overflowX: 'auto', paddingBottom: '4px' }} className="no-scrollbar">
                                     {space.reference_photos.map((url: string, i: number) => (
-                                        <img key={i} src={url} alt="기준사진" style={{ width: 120, height: 90, borderRadius: 8, objectFit: 'cover', flexShrink: 0, border: '1px solid var(--color-border)' }} />
+                                        <img key={i} src={url} alt="기준사진" style={{ width: 140, height: 100, borderRadius: '16px', objectFit: 'cover', flexShrink: 0, border: '1px solid #F2F4F6' }} />
                                     ))}
                                 </div>
                             </div>
                         )}
 
-                        <div style={{ padding: '0 var(--spacing-md) var(--spacing-md)' }}>
-                            <div className="guide-item mt-sm">
-                                <span className="guide-label">출입 방법 및 위치</span>
-                                <div className="guide-value font-bold" style={{ fontSize: 16, color: 'var(--color-primary)' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                            {/* 출입 방법 */}
+                            <div style={{ background: '#F9FAFB', padding: '20px', borderRadius: '20px', border: '1px solid #F2F4F6' }}>
+                                <div style={{ fontSize: '12px', color: '#8B95A1', fontWeight: 700, marginBottom: '6px' }}>🔑 출입 방법 및 비밀번호</div>
+                                <div style={{ fontSize: '18px', fontWeight: 800, color: 'var(--color-primary)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                     {space?.entry_code || '현장 확인 필요'}
-                                    <a href={`https://map.naver.com/v5/search/${encodeURIComponent(space?.address || '')}`} target="_blank" rel="noreferrer" className="btn btn-sm ml-sm" style={{ fontSize: 13, background: '#03C75A', color: '#fff', border: 'none', borderRadius: 8 }}>
-                                        🗺️ 네이버 길찾기
+                                    <a href={`https://map.naver.com/v5/search/${encodeURIComponent(space?.address || '')}`} target="_blank" rel="noreferrer"
+                                        style={{ background: '#03C75A', color: '#fff', padding: '6px 12px', borderRadius: '8px', fontSize: '12px', textDecoration: 'none', fontWeight: 700 }}>
+                                        🗺️ 길찾기
                                     </a>
                                 </div>
                             </div>
 
-                            {space?.cleaning_tool_location && (
-                                <div className="guide-item mt-sm bg-blue-50" style={{ background: 'var(--color-primary-light)', padding: 12, borderRadius: 8 }}>
-                                    <span className="guide-label text-primary flex items-center gap-1">🧽 청소 도구 및 세제 위치</span>
-                                    <div className="guide-value font-bold">{space.cleaning_tool_location}</div>
+                            {/* 도구 위치 및 쓰레기 */}
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                                <div style={{ background: '#F9FAFB', padding: '16px', borderRadius: '20px', border: '1px solid #F2F4F6' }}>
+                                    <div style={{ fontSize: '12px', color: '#8B95A1', fontWeight: 700, marginBottom: '4px' }}>🧽 도구 위치</div>
+                                    <div style={{ fontSize: '13px', fontWeight: 700, color: '#4E5968' }}>{space?.cleaning_tool_location || '제공 안됨'}</div>
                                 </div>
-                            )}
-
-                            {space?.trash_guide && (
-                                <div className="guide-item mt-sm">
-                                    <span className="guide-label">🗑 쓰레기 배출 안내</span>
-                                    <div className="guide-value text-sm">{space.trash_guide}</div>
+                                <div style={{ background: '#F9FAFB', padding: '16px', borderRadius: '20px', border: '1px solid #F2F4F6' }}>
+                                    <div style={{ fontSize: '12px', color: '#8B95A1', fontWeight: 700, marginBottom: '4px' }}>🗑 쓰레기 방식</div>
+                                    <div style={{ fontSize: '13px', fontWeight: 700, color: '#4E5968' }}>{space?.trash_guide || '확인 필요'}</div>
                                 </div>
-                            )}
+                            </div>
 
                             {space?.parking_guide && (
-                                <div className="guide-item mt-sm">
-                                    <span className="guide-label">🚗 주차 안내</span>
-                                    <div className="guide-value text-sm">{space.parking_guide}</div>
+                                <div style={{ padding: '0 8px', fontSize: '13px', color: '#6B7684' }}>
+                                    <span style={{ fontWeight: 800 }}>🚗 주차: </span>{space.parking_guide}
                                 </div>
                             )}
 
                             {space?.caution_notes && (
-                                <div className="guide-item mt-sm">
-                                    <span className="guide-label">⚠️ 주의사항</span>
-                                    <div className="guide-value text-sm text-secondary whitespace-pre-wrap">{space.caution_notes}</div>
+                                <div style={{ padding: '16px', borderRadius: '16px', background: '#FFF1F2', color: '#E11D48', fontSize: '13px', fontWeight: 600 }}>
+                                    <span style={{ display: 'block', fontWeight: 800, marginBottom: '4px' }}>⚠️ 주의사항</span>
+                                    {space.caution_notes}
                                 </div>
                             )}
                         </div>
                     </div>
                 )}
 
-                {/* 일정 정보 */}
-                <div className="info-card card">
-                    <div className="info-row">
-                        <span>⏰ 청소 시간</span>
-                        <span className="font-bold">
-                            {job.time_window_start && job.time_window_end
-                                ? `${new Date(job.scheduled_at).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' })} ${job.time_window_start.substring(0, 5)} ~ ${job.time_window_end.substring(0, 5)}`
-                                : new Date(job.scheduled_at).toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
-                            }
-                        </span>
-                    </div>
-                    <div className="info-row">
-                        <span>⏱ 예상 시간</span>
-                        <span className="font-bold">{job.estimated_duration}분</span>
-                    </div>
-                    {job.special_instructions && (
-                        <div className="special-note">
-                            <span>📝 요청사항</span> {job.special_instructions}
-                        </div>
-                    )}
-                </div>
-
-                {/* 파손 사전 보고 UI (도착 상태일 때만 + 보호 차원) */}
+                {/* 파손 사전 보고 */}
                 {job.status === 'ARRIVED' && (
-                    <div className="card mt-md mb-md" style={{ padding: 'var(--spacing-md)', background: '#FEF2F2', border: '1px solid #FCA5A5' }}>
-                        <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-                            <span style={{ fontSize: 24 }}>🚨</span>
-                            <div style={{ flex: 1 }}>
-                                <h4 style={{ color: '#DC2626', fontWeight: 700, margin: '0 0 4px 0' }}>청소 시작 전 확인 필수</h4>
-                                <p style={{ fontSize: 13, color: '#991B1B', margin: '0 0 12px 0', lineHeight: 1.4 }}>
-                                    이전 게스트가 파손하거나 심각하게 오염시킨 부분이 있다면, 청소를 시작하기 전에 먼저 증거 사진을 남겨주세요. 클린파트너님의 책임을 피할 수 있습니다.
+                    <div style={{ marginTop: '24px', padding: '20px', background: '#FFF1F2', borderRadius: '24px', border: '1px solid #FECDD3' }}>
+                        <div style={{ display: 'flex', gap: '12px' }}>
+                            <span style={{ fontSize: '24px' }}>📢</span>
+                            <div>
+                                <h4 style={{ color: '#E11D48', fontWeight: 800, margin: '0 0 4px' }}>작업 시작 전 체크하세요!</h4>
+                                <p style={{ fontSize: '13px', color: '#BE123C', lineHeight: 1.5, marginBottom: '16px' }}>
+                                    이전 사용자가 망가뜨린 부분이 있나요? 나중에 책임질 수 없도록 미리 사진을 찍어 보고하세요.
                                 </p>
-
                                 {showDamageReport ? (
-                                    <div style={{ background: '#fff', padding: 12, borderRadius: 8, border: '1px solid #FCCCA7' }}>
+                                    <div style={{ background: '#fff', padding: '16px', borderRadius: '16px', border: '1px solid #FF8E99' }}>
                                         <textarea
-                                            placeholder="파손/오염 내용을 간략히 적어주세요."
-                                            style={{ width: '100%', padding: 8, borderRadius: 6, border: '1px solid #ddd', fontSize: 13, marginBottom: 8 }}
+                                            placeholder="파손이나 오염 상태를 간략히 적어주세요."
+                                            style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid #F2F4F6', background: '#F9FAFB', fontSize: '14px', marginBottom: '12px' }}
                                             rows={2}
                                             value={damageDesc}
                                             onChange={e => setDamageDesc(e.target.value)}
                                         />
                                         <button
-                                            className="btn btn-secondary btn-full btn-sm"
+                                            style={{ width: '100%', height: '48px', background: '#E11D48', color: '#fff', borderRadius: '12px', fontWeight: 700, border: 'none' }}
                                             onClick={() => damagePhotoInputRef.current?.click()}
                                             disabled={submitting || !damageDesc}
                                         >
-                                            {submitting ? <span className="spinner"></span> : '📸 파손 증거 사진 업로드 및 보고'}
+                                            {submitting ? '제출 중...' : '📸 사진 찍고 보고하기'}
                                         </button>
-                                        <button style={{ background: 'transparent', color: '#666', fontSize: 12, marginTop: 8, border: 'none', width: '100%' }} onClick={() => setShowDamageReport(false)}>취소</button>
+                                        <button style={{ width: '100%', background: 'transparent', color: '#8B95A1', fontSize: '13px', marginTop: '10px', border: 'none' }} onClick={() => setShowDamageReport(false)}>취소</button>
                                     </div>
                                 ) : (
                                     <button
-                                        className="btn btn-sm"
-                                        style={{ background: '#DC2626', color: '#fff', width: '100%', fontWeight: 700 }}
+                                        style={{ width: '100%', height: '44px', background: '#E11D48', color: '#fff', borderRadius: '12px', fontWeight: 800, border: 'none' }}
                                         onClick={() => setShowDamageReport(true)}
                                     >
-                                        파손/오염 사전 보고 창 열기
+                                        파손/오염 사전 보고
                                     </button>
                                 )}
                             </div>
@@ -383,57 +386,53 @@ export default function JobDetailPage() {
                     </div>
                 )}
 
-                {/* 기 보고된 파손 내역 */}
-                {(job.pre_damage_report as any[])?.length > 0 && (
-                    <div className="card mb-md" style={{ padding: 'var(--spacing-md)', border: '1px solid #FCD34D', background: '#FEF3C7' }}>
-                        <h4 style={{ color: '#B45309', fontWeight: 700, fontSize: 14, margin: '0 0 8px 0' }}>⚠️ 파손 사전 보고 완료 내역</h4>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                            {((job.pre_damage_report as any[]) || []).map((r, i) => (
-                                <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'center', background: 'rgba(255,255,255,0.7)', padding: 8, borderRadius: 8 }}>
-                                    {r.photo_url && (
-                                        <div style={{ width: 40, height: 40, borderRadius: 4, overflow: 'hidden' }}>
-                                            <SecureImage srcOrPath={r.photo_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                        </div>
-                                    )}
-                                    <span style={{ fontSize: 12, color: '#92400E' }}>{r.desc}</span>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                )}
-
-                {/* 체크리스트 */}
+                {/* 체크리스트 섹션 */}
                 {['IN_PROGRESS', 'ARRIVED', 'SUBMITTED', 'APPROVED', 'PAID_OUT'].includes(job.status) && checklist.length > 0 && (
-                    <div className="checklist-section">
-                        <div className="checklist-header">
-                            <h2 className="checklist-title">체크리스트</h2>
-                            <span className="checklist-progress">{completedCount}/{checklist.length}</span>
+                    <div style={{ marginTop: '32px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '12px' }}>
+                            <h2 style={{ fontSize: '18px', fontWeight: 800 }}>📝 체크리스트</h2>
+                            <span style={{ fontSize: '14px', fontWeight: 700, color: 'var(--color-primary)' }}>{completedCount} / {checklist.length} 완료</span>
                         </div>
-                        <div className="checklist-progress-bar">
-                            <div className="checklist-progress-fill" style={{ width: `${progress}%` }} />
+                        <div style={{ height: '8px', background: '#F2F4F6', borderRadius: '4px', marginBottom: '20px', overflow: 'hidden' }}>
+                            <div style={{ height: '100%', background: 'var(--color-primary)', width: `${progress}%`, transition: 'width 0.3s ease' }} />
                         </div>
 
-                        <div className="checklist-items">
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                             {checklist.map((item, idx) => (
-                                <div key={item.id} className={`checklist-row ${item.completed ? 'completed' : ''}`}>
-                                    <button className="check-btn" onClick={() => toggleChecklist(idx)}
-                                        disabled={['SUBMITTED', 'APPROVED', 'PAID_OUT'].includes(job.status)}>
-                                        <div className={`check-circle ${item.completed ? 'checked' : ''}`}>
-                                            {item.completed && '✓'}
-                                        </div>
+                                <div key={item.id} style={{
+                                    display: 'flex', alignItems: 'center', gap: '12px', padding: '16px',
+                                    borderRadius: '16px', background: item.completed ? '#F0F7FF' : '#F9FAFB',
+                                    border: `1px solid ${item.completed ? '#D0E6FF' : '#F2F4F6'}`,
+                                    transition: 'all 0.2s'
+                                }}>
+                                    <button onClick={() => toggleChecklist(idx)} disabled={['SUBMITTED', 'APPROVED', 'PAID_OUT'].includes(job.status)}
+                                        style={{
+                                            width: '28px', height: '28px', borderRadius: '50%',
+                                            background: item.completed ? 'var(--color-primary)' : '#fff',
+                                            border: `2px solid ${item.completed ? 'var(--color-primary)' : '#D1D8E0'}`,
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                            color: '#fff', fontSize: '14px', fontWeight: 800
+                                        }}>
+                                        {item.completed ? '✓' : ''}
                                     </button>
-                                    <div className="check-label">
-                                        <span className={item.completed ? 'line-through' : ''}>{item.label}</span>
-                                        {item.required && <span className="required-dot">필수</span>}
+                                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                        <span style={{
+                                            fontSize: '15px', fontWeight: 600,
+                                            color: item.completed ? '#8B95A1' : '#191F28',
+                                            textDecoration: item.completed ? 'line-through' : 'none'
+                                        }}>{item.label}</span>
+                                        {item.required && <span style={{ color: '#E11D48', fontSize: '10px', fontWeight: 800, background: '#FFF1F2', padding: '1px 4px', borderRadius: '4px' }}>필수</span>}
                                     </div>
-                                    {/* 사진 업로드 버튼 */}
                                     {job.status === 'IN_PROGRESS' && (
-                                        <button className="photo-btn" onClick={() => { setActiveUploadIdx(idx); fileInputRef.current?.click() }}>
-                                            {item.photo_url ? '📸✓' : uploadingIdx === idx ? <span className="spinner" style={{ width: 16, height: 16, borderWidth: 2 }} /> : '📸'}
+                                        <button
+                                            onClick={() => { setActiveUploadIdx(idx); fileInputRef.current?.click() }}
+                                            style={{ background: '#fff', border: '1px solid #F2F4F6', width: '36px', height: '36px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px' }}
+                                        >
+                                            {item.photo_url ? '✅' : uploadingIdx === idx ? '⏳' : '📸'}
                                         </button>
                                     )}
-                                    {item.photo_url && (
-                                        <SecureImage srcOrPath={item.photo_url} className="check-thumb" />
+                                    {item.photo_url && !['IN_PROGRESS'].includes(job.status) && (
+                                        <SecureImage srcOrPath={item.photo_url} style={{ width: '36px', height: '36px', borderRadius: '8px', objectFit: 'cover' }} />
                                     )}
                                 </div>
                             ))}
@@ -441,204 +440,155 @@ export default function JobDetailPage() {
                     </div>
                 )}
 
-                {/* 비품 체크 (공간파트너가 설정한 경우에만) */}
+                {/* 비품 점검 */}
                 {['IN_PROGRESS', 'ARRIVED', 'SUBMITTED', 'APPROVED', 'PAID_OUT'].includes(job.status) && (job.supplies_to_check as string[])?.length > 0 && (
-                    <div className="checklist-section">
-                        <div className="checklist-header mb-sm">
-                            <h2 className="checklist-title">비품 점검결과</h2>
-                        </div>
-                        <p className="form-hint mb-md">수량이 부족한 비품만 선택해서 즉시 알려주세요.</p>
-                        <div className="checklist-items">
+                    <div style={{ marginTop: '32px' }}>
+                        <h2 style={{ fontSize: '18px', fontWeight: 800, marginBottom: '4px' }}>🚨 부족한 비품 보고</h2>
+                        <p style={{ fontSize: '13px', color: '#8B95A1', marginBottom: '16px' }}>공간에 없는 비품을 선택해 실시간으로 알려주세요.</p>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                             {(job.supplies_to_check as string[]).map((item, idx) => {
                                 const isShort = supplyShortages.includes(item)
                                 return (
-                                    <div key={idx} className={`checklist-row ${isShort ? 'short' : ''}`} style={{ borderColor: isShort ? '#FCA5A5' : 'var(--color-border-light)', background: isShort ? '#FEF2F2' : 'var(--color-surface)' }}>
-                                        <button className="check-btn" onClick={() => {
+                                    <button key={idx}
+                                        onClick={() => {
                                             setSupplyShortages(prev =>
                                                 prev.includes(item) ? prev.filter(x => x !== item) : [...prev, item]
                                             )
-                                        }} disabled={['SUBMITTED', 'APPROVED', 'PAID_OUT'].includes(job.status)}>
-                                            <div className={`check-circle ${isShort ? 'short' : ''}`} style={{ borderColor: isShort ? '#DC2626' : 'var(--color-border)', color: isShort ? '#DC2626' : 'transparent', background: isShort ? '#FECACA' : 'transparent' }}>
-                                                {isShort && '🚨'}
-                                            </div>
-                                        </button>
-                                        <div className="check-label" style={{ color: isShort ? '#991B1B' : '' }}>
-                                            <span style={{ fontWeight: isShort ? 700 : 500 }}>{item}</span>
-                                            {isShort && <span style={{ color: '#DC2626', fontSize: 12, fontWeight: 700, marginLeft: 8 }}>부족 요청됨</span>}
-                                        </div>
-                                    </div>
+                                        }}
+                                        disabled={['SUBMITTED', 'APPROVED', 'PAID_OUT'].includes(job.status)}
+                                        style={{
+                                            padding: '16px', borderRadius: '20px', textAlign: 'center',
+                                            background: isShort ? '#FFF1F2' : '#F9FAFB',
+                                            border: `1px solid ${isShort ? '#FECDD3' : '#F2F4F6'}`,
+                                            color: isShort ? '#E11D48' : '#4E5968',
+                                            fontSize: '14px', fontWeight: 700, transition: 'all 0.2s'
+                                        }}
+                                    >
+                                        {isShort && '⚠️ '} {item}
+                                    </button>
                                 )
                             })}
                         </div>
                     </div>
                 )}
 
-                {/* 추가 요금 청구 시스템 */}
+                {/* 지원서 폼 (OPEN) */}
+                {job.status === 'OPEN' && !application && (
+                    <div style={{ marginTop: '32px', padding: '24px', background: '#F0F7FF', borderRadius: '24px', border: '1px solid #D0E6FF' }}>
+                        <h3 style={{ fontSize: '18px', fontWeight: 800, marginBottom: '8px', color: '#191F28' }}>✨ 이 청소에 지원하시겠어요?</h3>
+                        <p style={{ fontSize: '14px', color: '#4E5968', lineHeight: 1.5, marginBottom: '20px' }}>공간 파트너가 클린파트너님의 프로필과 메시지를 확인 후 매칭을 수락합니다.</p>
+                        <textarea
+                            style={{ width: '100%', padding: '16px', borderRadius: '16px', border: '1px solid #D1D8E0', background: '#fff', fontSize: '15px', marginBottom: '20px' }}
+                            placeholder="간단한 인사말이나 어필할 내용을 적어주세요 (선택)"
+                            rows={3}
+                            value={applyMessage}
+                            onChange={e => setApplyMessage(e.target.value)}
+                        />
+                        <button
+                            onClick={handleApply}
+                            disabled={submitting}
+                            style={{
+                                width: '100%', height: '56px', borderRadius: '16px', border: 'none',
+                                background: 'var(--color-primary)', color: '#fff',
+                                fontSize: '16px', fontWeight: 800,
+                                boxShadow: '0 8px 16px rgba(49, 130, 246, 0.2)',
+                                opacity: submitting ? 0.6 : 1
+                            }}
+                        >
+                            {submitting ? '지원 처리 중...' : '🙋‍♂️ 지원하기'}
+                        </button>
+                    </div>
+                )}
+
+                {/* 지원 완료 대기 상태 */}
+                {job.status === 'OPEN' && application && (
+                    <div style={{ marginTop: '32px', padding: '24px', background: '#F9FAFB', borderRadius: '24px', border: '1px solid #F2F4F6', textAlign: 'center' }}>
+                        <div style={{ fontSize: '32px', marginBottom: '12px' }}>⏳</div>
+                        <h3 style={{ fontSize: '18px', fontWeight: 800, marginBottom: '8px' }}>지원을 완료했어요</h3>
+                        <p style={{ fontSize: '14px', color: '#8B95A1' }}>공간 파트너의 매칭 승낙을 기다리고 있습니다.</p>
+                    </div>
+                )}
+
+                {/* 추가 요금 청구 */}
                 {job.status === 'IN_PROGRESS' && (
-                    <div className="card mt-md mb-md p-md" style={{ border: '1px solid #D97706', background: '#FEF3C7' }}>
-                        <div className="flex justify-between items-center mb-sm">
-                            <h3 className="font-bold mb-none" style={{ color: '#B45309' }}>💸 현장 오염도 추가 청구</h3>
-                            <button className="text-secondary text-sm font-bold" onClick={() => setShowExtraCharge(!showExtraCharge)}>
-                                {showExtraCharge || extraCharge > 0 ? '접기' : '청구하기'}
+                    <div style={{ marginTop: '40px', padding: '24px', background: '#F9FAFB', borderRadius: '24px', border: '1px solid #F2F4F6' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                            <h3 style={{ fontSize: '16px', fontWeight: 800 }}>💸 특이 오염 추가 청구</h3>
+                            <button style={{ color: 'var(--color-primary)', background: 'none', border: 'none', fontWeight: 700, fontSize: '13px' }} onClick={() => setShowExtraCharge(!showExtraCharge)}>
+                                {showExtraCharge || extraCharge > 0 ? '접기' : '작성하기'}
                             </button>
                         </div>
                         {(showExtraCharge || extraCharge > 0) && (
-                            <div className="slide-down mt-sm">
-                                <p className="text-xs mb-sm" style={{ color: '#92400E' }}>예상치 못한 심각한 오염(토사물 등)이나 규정 외 폐기물이 있을 경우, 공간파트너에게 추가 요금을 청구할 수 있습니다. (증거 사진 필수 제출)</p>
-                                <div className="form-group mb-sm">
-                                    <label className="text-sm font-bold block mb-xs">추가 청구 금액 (원)</label>
+                            <div>
+                                <p style={{ fontSize: '13px', color: '#8B95A1', lineHeight: 1.5, marginBottom: '16px' }}>토사물, 심한 쓰레기 등 규정 외 오염이 있다면 금액을 청구하세요. (사진 증거 필수)</p>
+                                <div style={{ marginBottom: '16px' }}>
+                                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, marginBottom: '6px' }}>추가 금액 (원)</label>
                                     <input
-                                        type="number" className="form-input" placeholder="예: 10000"
+                                        type="number" style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid #F2F4F6', fontSize: '14px', fontWeight: 700 }}
+                                        placeholder="청구할 금액 입력"
                                         value={extraCharge || ''} onChange={e => setExtraCharge(parseInt(e.target.value) || 0)}
                                     />
                                 </div>
-                                <div className="form-group">
-                                    <label className="text-sm font-bold block mb-xs">청구 사유</label>
+                                <div>
+                                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, marginBottom: '6px' }}>청구 사유</label>
                                     <textarea
-                                        className="form-input" rows={2} placeholder="기존 파티 뒷정리 미흡으로 인한 쓰레기 5봉투 추가 발생 등 상세히 적어주세요."
+                                        style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid #F2F4F6', fontSize: '14px' }}
+                                        placeholder="상세 사유를 입력하세요." rows={2}
                                         value={extraChargeReason} onChange={e => setExtraChargeReason(e.target.value)}
                                     />
-                                    {extraCharge > 0 && !extraChargeReason.trim() && (
-                                        <p className="text-xs mt-xs text-red">청구 사유를 반드시 입력해주세요.</p>
-                                    )}
                                 </div>
                             </div>
                         )}
                     </div>
                 )}
 
-                {/* CS 개입 긴급 중재 에스컬레이션 버튼 (보안 장치) */}
+                {/* 고객센터 지원 버튼 */}
                 {['ARRIVED', 'IN_PROGRESS'].includes(job.status) && (
-                    <div className="card mb-md p-md" style={{ background: '#F8FAFC', border: '1px solid #CBD5E1', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <div>
-                            <h4 className="font-bold mb-xs" style={{ color: '#334155', fontSize: 13 }}>도저히 청소가 불가능한가요?</h4>
-                            <p className="text-xs" style={{ color: '#64748B', maxWidth: 200, lineHeight: 1.4 }}>
-                                호스트와 연락이 닿지 않거나 분쟁 소지가 있을 시, 플랫폼 관리자를 호출하세요.
-                            </p>
-                        </div>
+                    <div style={{ marginTop: '24px', textAlign: 'center' }}>
                         <button
-                            className="btn btn-sm"
-                            style={{ background: '#475569', color: '#fff', fontSize: 13, fontWeight: 700, padding: '8px 12px' }}
-                            onClick={() => {
-                                if (window.confirm('고객센터(CS) 긴급 중재를 요청하시겠습니까?\n작업 상태가 일시 보류되며, 운영팀에서 곧 연락을 드립니다.')) {
-                                    alert('🚨 긴급 중재 요청이 접수되었습니다. 안심하시고 현장 사진을 최대한 많이 촬영해두세요.');
-                                }
-                            }}
-                        >
-                            📞 CS 개입 요청
+                            onClick={() => { if (window.confirm('도저히 작업이 불가능한 현장인가요? CS팀이 즉시 개입합니다.')) alert('접수되었습니다.'); }}
+                            style={{ color: '#8B95A1', fontSize: '13px', fontWeight: 600, background: 'none', border: 'none', textDecoration: 'underline' }}>
+                            도움이 필요한가요? CS 긴급 중재 요청
                         </button>
-                    </div>
-                )}
-
-                {/* 숨겨진 파일 입력 */}
-                <input
-                    ref={fileInputRef} type="file" accept="image/*" capture="environment"
-                    style={{ display: 'none' }}
-                    onChange={e => {
-                        const file = e.target.files?.[0]
-                        if (file && activeUploadIdx !== null) handlePhotoUpload(file, activeUploadIdx)
-                        e.target.value = ''
-                    }}
-                />
-                <input
-                    ref={damagePhotoInputRef} type="file" accept="image/*" capture="environment"
-                    style={{ display: 'none' }}
-                    onChange={e => {
-                        const file = e.target.files?.[0]
-                        if (file) handleDamageReportUpload(file)
-                        e.target.value = ''
-                    }}
-                />
-
-                {/* 완료 사진 업로드 버튼 (IN_PROGRESS) */}
-                {job.status === 'IN_PROGRESS' && (
-                    <button className="upload-all-btn" onClick={() => { setActiveUploadIdx(undefined as any); fileInputRef.current?.click() }}>
-                        📸 청소 완료 사진 추가
-                    </button>
-                )}
-
-                {/* 지원서 폼 (OPEN) */}
-                {job.status === 'OPEN' && !application && (
-                    <div className="card mt-md mb-md p-md" style={{ border: '2px solid var(--color-primary)' }}>
-                        <h3 className="font-bold text-md mb-sm flex items-center gap-xs"><span>✨</span> 이 청소에 지원하시겠어요?</h3>
-                        <p className="text-secondary text-sm mb-md">공간 파트너가 클린파트너님의 프로필과 메시지를 확인 후 매칭을 수락합니다.</p>
-                        <textarea
-                            className="form-input mb-md"
-                            placeholder="간단한 인사말이나 어필할 내용을 적어주세요 (선택)"
-                            rows={3}
-                            value={applyMessage}
-                            onChange={e => setApplyMessage(e.target.value)}
-                        />
                     </div>
                 )}
             </div>
 
-            {/* 하단 액션 버튼 */}
-            {job.status === 'OPEN' && (
-                <div className="action-footer">
-                    {application ? (
-                        <button className="btn btn-secondary btn-full btn-lg" disabled style={{ background: 'var(--color-bg)', color: 'var(--color-text-tertiary)' }}>
-                            ⏳ 공간 파트너의 승낙(배정) 대기 중...
-                        </button>
-                    ) : (
-                        <button
-                            className="btn btn-primary btn-full btn-lg"
-                            onClick={handleApply}
-                            disabled={submitting}
-                        >
-                            {submitting ? <span className="spinner" /> : '🙋‍♂️ 지원하기'}
-                        </button>
-                    )}
-                </div>
-            )}
-
+            {/* 하단 플로팅 버튼 */}
             {flow && job.status !== 'OPEN' && (
-                <div className="action-footer">
+                <div style={{
+                    position: 'fixed', bottom: 0, left: 50, transform: 'translateX(-50%)',
+                    width: '100%', maxWidth: '480px', padding: '20px',
+                    background: 'rgba(255, 255, 255, 0.9)', backdropFilter: 'blur(15px)',
+                    borderTop: '1px solid #F2F4F6', zIndex: 100
+                }}>
                     <button
-                        className={`btn ${flow.btnColor} btn-full btn-lg`}
                         onClick={handleStatusNext}
                         disabled={submitting || (extraCharge > 0 && !extraChargeReason.trim())}
-                        id={`action-${flow.next}`}
+                        style={{
+                            width: '100%', height: '56px', borderRadius: '18px', border: 'none',
+                            background: 'var(--color-primary)', color: '#fff',
+                            fontSize: '18px', fontWeight: 800,
+                            boxShadow: '0 8px 16px rgba(49, 130, 246, 0.25)',
+                            transition: 'all 0.2s', opacity: (submitting || (extraCharge > 0 && !extraChargeReason.trim())) ? 0.5 : 1
+                        }}
                     >
-                        {submitting ? <span className="spinner" /> : flow.btnLabel}
+                        {submitting ? '처리 중...' : flow.btnLabel}
                     </button>
                 </div>
             )}
 
+            {/* 숨겨진 입력 */}
+            <input ref={fileInputRef} type="file" accept="image/*" capture="environment" style={{ display: 'none' }}
+                onChange={e => { const file = e.target.files?.[0]; if (file && activeUploadIdx !== null) handlePhotoUpload(file, activeUploadIdx); e.target.value = ''; }} />
+            <input ref={damagePhotoInputRef} type="file" accept="image/*" capture="environment" style={{ display: 'none' }}
+                onChange={e => { const file = e.target.files?.[0]; if (file) handleDamageReportUpload(file); e.target.value = ''; }} />
+
             <style jsx>{`
-        .job-header { display: flex; gap: var(--spacing-md); align-items: center; padding: var(--spacing-md); border-bottom: 1px solid var(--color-border-light); }
-        .back-btn { font-size: 22px; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 50%; flex-shrink: 0; }
-        .back-btn:hover { background: var(--color-bg); }
-        .job-space-name { font-size: var(--font-lg); font-weight: 700; }
-        .job-address { font-size: var(--font-xs); color: var(--color-text-tertiary); }
-        .status-banner { padding: var(--spacing-md); display: flex; justify-content: space-between; align-items: center; color: #fff; }
-        .status-text { font-weight: 700; font-size: var(--font-md); }
-        .status-price { font-size: var(--font-xl); font-weight: 800; }
-        .info-card { margin-bottom: var(--spacing-md); }
-        .info-row { display: flex; justify-content: space-between; padding: var(--spacing-sm) var(--spacing-md); font-size: var(--font-sm); border-bottom: 1px solid var(--color-border-light); }
-        .info-row:last-child { border-bottom: none; }
-        .special-note { padding: var(--spacing-sm) var(--spacing-md); font-size: var(--font-sm); color: var(--color-text-secondary); background: var(--color-orange-light); border-radius: 0 0 16px 16px; }
-        .checklist-section { margin-bottom: var(--spacing-md); }
-        .checklist-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-sm); }
-        .checklist-title { font-size: var(--font-md); font-weight: 700; }
-        .checklist-progress { font-size: var(--font-sm); font-weight: 700; color: var(--color-primary); }
-        .checklist-progress-bar { height: 4px; background: var(--color-border); border-radius: 2px; margin-bottom: var(--spacing-md); }
-        .checklist-progress-fill { height: 100%; background: var(--color-primary); border-radius: 2px; transition: width .3s ease; }
-        .checklist-items { display: flex; flex-direction: column; gap: var(--spacing-xs); }
-        .checklist-row { display: flex; align-items: center; gap: var(--spacing-sm); padding: var(--spacing-sm) var(--spacing-md); border-radius: 12px; background: var(--color-surface); border: 1px solid var(--color-border-light); transition: all .2s; }
-        .checklist-row.completed { background: var(--color-primary-light); border-color: var(--color-primary-soft); }
-        .check-btn { flex-shrink: 0; }
-        .check-circle { width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--color-border); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; transition: all .2s; }
-        .check-circle.checked { background: var(--color-primary); border-color: var(--color-primary); color: #fff; }
-        .check-label { flex: 1; font-size: var(--font-sm); display: flex; align-items: center; gap: var(--spacing-xs); }
-        .line-through { text-decoration: line-through; color: var(--color-text-tertiary); }
-        .required-dot { background: var(--color-red); color: #fff; font-size: 10px; padding: 1px 5px; border-radius: 4px; }
-        .photo-btn { flex-shrink: 0; font-size: 20px; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 8px; background: var(--color-bg); }
-        .check-thumb { width: 36px; height: 36px; border-radius: 8px; object-fit: cover; flex-shrink: 0; }
-        .upload-all-btn { width: 100%; padding: var(--spacing-md); border: 2px dashed var(--color-primary); border-radius: 16px; color: var(--color-primary); font-weight: 700; font-size: var(--font-md); cursor: pointer; margin-bottom: var(--spacing-md); transition: all .2s; }
-        .upload-all-btn:hover { background: var(--color-primary-light); }
-        .action-footer { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px; padding: var(--spacing-md); padding-bottom: calc(var(--spacing-md) + env(safe-area-inset-bottom, 0)); background: var(--color-surface); border-top: 1px solid var(--color-border-light); box-shadow: 0 -4px 12px rgba(0,0,0,.06); z-index: 100; }
-      `}</style>
+                .no-scrollbar::-webkit-scrollbar { display: none; }
+                .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+                @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.6;transform:scale(1.2)} }
+            `}</style>
         </div>
     )
 }

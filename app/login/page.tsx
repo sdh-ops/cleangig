@@ -25,7 +25,7 @@ function LoginContent() {
             const { error } = await supabase.auth.signInWithOAuth({
                 provider: 'kakao',
                 options: {
-                    redirectTo: `${window.location.origin}/auth/callback${defaultRole ? `?role=${defaultRole}` : ''}`,
+                    redirectTo: `${window.location.origin.trim()}/auth/callback${defaultRole ? `?role=${defaultRole}` : ''}`,
                     queryParams: {
                         scope: 'profile_nickname profile_image account_email'
                     },

@@ -35,251 +35,182 @@ export default function DashboardClient({ profile, todayJobs, spaces, recentJobs
     const formatPrice = (p: number) => `${(p).toLocaleString()}원`
 
     return (
-        <div className="page-container">
-            {/* 상단 헤더 */}
-            <header className="dash-header">
-                <div className="dash-header-inner">
-                    <div>
-                        <p className="text-sm text-secondary">안녕하세요 👋</p>
-                        <h1 className="dash-name">{profile.name}님</h1>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                        <NotificationBell />
+        <div className="page-container premium-bg">
+            {/* 상단 앱바 - 화이트 프리미엄 */}
+            <header className="premium-header">
+                <div className="header-top flex justify-between items-center">
+                    <div className="flex items-center gap-sm">
                         <div className="dash-avatar avatar avatar-md">
                             {profile.profile_image
-                                ? <img src={profile.profile_image} alt="" className="avatar avatar-md" style={{ borderRadius: '50%' }} />
+                                ? <img src={profile.profile_image} alt="" className="avatar avatar-md" />
                                 : profile.name[0]}
                         </div>
+                        <div>
+                            <p className="text-secondary" style={{ fontSize: '13px', marginBottom: -2 }}>안녕하세요,</p>
+                            <h1 className="text-lg font-bold" style={{ letterSpacing: '-0.02em' }}>{profile.name}님</h1>
+                        </div>
                     </div>
+                    <NotificationBell />
                 </div>
             </header>
 
-            {/* 이달 통계 카드 */}
-            <section className="stat-section">
-                <div className="stat-cards">
-                    <div className="stat-card">
-                        <p className="stat-card-label">이번 달 청소</p>
-                        <p className="stat-card-value">{monthCount}건</p>
-                    </div>
-                    <div className="stat-card">
-                        <p className="stat-card-label">이번 달 지출</p>
-                        <p className="stat-card-value">{formatPrice(monthTotal)}</p>
-                    </div>
-                    <div className="stat-card stat-card-alert" style={{ display: submittedJobs.length ? 'flex' : 'none' }}>
-                        <p className="stat-card-label">검수 대기</p>
-                        <p className="stat-card-value text-primary">{submittedJobs.length}건</p>
-                    </div>
-                </div>
-            </section>
-
-            {/* 빠른 액션 */}
-            <section className="quick-actions page-content" style={{ paddingTop: 0, paddingBottom: 0, display: 'flex', gap: '8px' }}>
-                <Link href="/requests/create" className="btn btn-primary" id="create-request-btn" style={{ flex: 1.5 }}>
-                    + 새 청소 요청
-                </Link>
-                <Link href="/market" className="btn btn-secondary" style={{ flex: 1, background: '#FEF2F2', color: '#E11D48', borderColor: '#FECDD3' }}>
-                    🛒 비품 마켓 (특가)
-                </Link>
-            </section>
-
-            {/* 탭 */}
-            <div className="dash-tabs">
-                <button className={`dash-tab ${activeTab === 'today' ? 'active' : ''}`} onClick={() => setActiveTab('today')}>
-                    오늘 일정 ({todayJobs.length})
-                </button>
-                <button className={`dash-tab ${activeTab === 'spaces' ? 'active' : ''}`} onClick={() => setActiveTab('spaces')}>
-                    내 공간 ({spaces.length})
-                </button>
-                <button className={`dash-tab ${activeTab === 'calendar' ? 'active' : ''}`} onClick={() => setActiveTab('calendar')}>
-                    월간 캘린더
-                </button>
-            </div>
-
-            {/* 오늘 일정 */}
-            {activeTab === 'today' && (
-                <div className="page-content" style={{ paddingTop: 0 }}>
-                    {/* 승인 대기 강제 배너 */}
-                    {submittedJobs.length > 0 && (
-                        <div className="card mb-md" style={{ background: '#FEF2F2', border: '1px solid #FCA5A5', padding: '16px', animation: 'pulse 2s infinite' }}>
-                            <h3 style={{ margin: '0 0 8px 0', fontSize: '15px', color: '#DC2626', fontWeight: 800 }}>🚨 정산 승인 대기 중 ({submittedJobs.length}건)</h3>
-                            <p style={{ margin: '0 0 12px 0', fontSize: '13px', color: '#991B1B' }}>클린파트너가 청소를 마치고 승인을 기다리고 있어요. 빠른 정산을 위해 방금 올라온 사진을 확인해주세요!</p>
-                            <Link href="/requests" className="btn btn-sm btn-full block" style={{ background: '#DC2626', color: '#fff', textAlign: 'center', border: 'none' }}>
-                                지금 승인하러 가기 →
-                            </Link>
+            <main className="page-content" style={{ paddingTop: '8px' }}>
+                {/* 1. 스파클 점수 섹션 (Trust Widget) */}
+                <section className="sparkle-section mb-lg">
+                    <div className="card sparkle-card">
+                        <div className="sparkle-header flex justify-between items-center mb-md">
+                            <div className="flex items-center gap-xs">
+                                <span style={{ fontSize: '20px' }}>⭐</span>
+                                <span className="text-sm font-semibold text-secondary">스파클 점수</span>
+                            </div>
+                            <span className="badge badge-premium">상위 2%</span>
                         </div>
-                    )}
+                        <div className="sparkle-content flex items-center justify-between">
+                            <div className="sparkle-info">
+                                <h2 className="text-3xl font-bold mb-xs" style={{ color: 'var(--color-primary)' }}>98%</h2>
+                                <p className="text-sm text-secondary font-medium">매우 우수한 활동을<br />이어가고 계시네요!</p>
+                            </div>
+                            <div className="sparkle-visual">
+                                <div className="progress-ring-container">
+                                    <svg width="80" height="80" viewBox="0 0 80 80">
+                                        <circle cx="40" cy="40" r="34" fill="none" stroke="#F2F4F6" strokeWidth="8" />
+                                        <circle cx="40" cy="40" r="34" fill="none" stroke="var(--color-primary)" strokeWidth="8"
+                                            strokeDasharray={`${2 * Math.PI * 34}`} strokeDashoffset={`${2 * Math.PI * 34 * (1 - 0.98)}`}
+                                            strokeLinecap="round" transform="rotate(-90 40 40)" />
+                                    </svg>
+                                    <span className="sparkle-icon">✨</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                {/* 2. 벤토 그리드 레이아웃 (통계) */}
+                <section className="bento-grid mb-lg">
+                    <div className="card bento-item bento-main" style={{ background: 'var(--color-primary-light)', border: 'none' }}>
+                        <p className="text-xs font-semibold text-primary mb-sm">이번 달 정산</p>
+                        <h3 className="text-xl font-bold">{formatPrice(monthTotal)}</h3>
+                        <p className="text-xs text-secondary mt-xs">{monthCount}건의 작업 완료</p>
+                    </div>
+                    <div className="bento-side-column">
+                        <div className="card bento-item" style={{ marginBottom: '12px' }}>
+                            <p className="text-xs font-semibold text-secondary mb-xs">평균 평점</p>
+                            <div className="flex items-center gap-xs">
+                                <span className="font-bold">4.9</span>
+                                <span style={{ color: '#FFD400', fontSize: '12px' }}>★</span>
+                            </div>
+                        </div>
+                        <div className="card bento-item">
+                            <p className="text-xs font-semibold text-secondary mb-xs">오늘 작업</p>
+                            <span className="font-bold">{todayJobs.length}건</span>
+                        </div>
+                    </div>
+                </section>
+
+                {/* 3. 빠른 액션 */}
+                <section className="quick-actions mb-lg">
+                    <div className="flex gap-sm">
+                        <Link href="/requests/create" className="btn btn-primary btn-full" style={{ borderRadius: '18px' }}>
+                            + 새 청소 요청
+                        </Link>
+                        <Link href="/market" className="btn btn-secondary flex-shrink-0" style={{ width: '60px', padding: 0, borderRadius: '18px' }}>
+                            🛒
+                        </Link>
+                    </div>
+                </section>
+
+                {/* 4. 오늘의 일정 리스트 */}
+                <section className="job-list-section">
+                    <div className="flex justify-between items-center mb-md">
+                        <h3 className="font-bold">오늘의 일정</h3>
+                        <Link href="/requests" className="text-sm font-semibold text-primary">전체보기 ›</Link>
+                    </div>
 
                     {todayJobs.length === 0 ? (
-                        <div className="empty-state">
-                            <div style={{ fontSize: 48 }}>🗓️</div>
-                            <p>오늘 예정된 청소가 없어요</p>
-                            <Link href="/requests/create" className="btn btn-primary btn-sm">청소 요청하기</Link>
+                        <div className="empty-card card">
+                            <p className="text-sm text-secondary">오늘 예정된 청소가 없어요</p>
                         </div>
                     ) : (
-                        <div className="job-list">
+                        <div className="job-list flex flex-col gap-md">
                             {todayJobs.map(job => (
-                                <Link href={`/requests/${job.id}`} key={job.id} className="job-card card card-hover">
-                                    <div className="job-card-body">
-                                        <div className="job-card-top">
-                                            <span className="job-space-name">{(job.spaces as any)?.name || '공간'}</span>
-                                            <span className={`badge ${STATUS_MAP[job.status]?.cls}`}>
+                                <Link href={`/requests/${job.id}`} key={job.id} className="job-card-premium card card-hover">
+                                    <div className="p-md flex justify-between items-center">
+                                        <div className="flex flex-col gap-xs">
+                                            <span className="text-xs font-bold text-primary">⏰ {formatTime(job.scheduled_at)}</span>
+                                            <span className="font-bold text-md">{(job.spaces as any)?.name || '공간'}</span>
+                                            <span className="text-xs text-secondary">{(job.spaces as any)?.type === 'airbnb' ? '에어비앤비' : '일반 주거'}</span>
+                                        </div>
+                                        <div className="flex flex-col items-end gap-sm">
+                                            <span className={`badge-pill ${STATUS_MAP[job.status]?.cls}`}>
                                                 {STATUS_MAP[job.status]?.label}
                                             </span>
-                                        </div>
-                                        <div className="job-card-bottom">
-                                            <span className="text-secondary text-sm">⏰ {formatTime(job.scheduled_at)}</span>
-                                            <span className="text-primary font-bold">{formatPrice(job.price)}</span>
+                                            <span className="font-bold" style={{ color: 'var(--color-primary)' }}>{formatPrice(job.price)}</span>
                                         </div>
                                     </div>
                                 </Link>
                             ))}
                         </div>
                     )}
-                </div>
-            )}
+                </section>
+            </main>
 
-            {/* 공간 목록 */}
-            {activeTab === 'spaces' && (
-                <div className="page-content" style={{ paddingTop: 0 }}>
-                    <div className="space-list">
-                        {spaces.map(space => (
-                            <Link href={`/spaces/${space.id}`} key={space.id} className="space-card card card-hover">
-                                <div className="space-icon">
-                                    {space.type === 'airbnb' ? '🏠' : space.type === 'partyroom' ? '🎉' : space.type === 'studio' ? '📸' : '🏢'}
-                                </div>
-                                <div className="space-info">
-                                    <div className="space-name">{space.name}</div>
-                                    <div className="space-price text-secondary text-sm">기본 {formatPrice(space.base_price)}</div>
-                                </div>
-                                <span>›</span>
-                            </Link>
-                        ))}
-                        <Link href="/spaces/create" className="add-space-btn">
-                            <span>+</span> 새 공간 등록
-                        </Link>
-                    </div>
-                </div>
-            )}
-
-            {/* 캘린더 목록 */}
-            {activeTab === 'calendar' && (
-                <div className="page-content" style={{ paddingTop: 0 }}>
-                    <div className="card p-md">
-                        <div className="flex justify-between items-center mb-md">
-                            <h3 className="font-bold text-lg">{new Date().getFullYear()}년 {new Date().getMonth() + 1}월</h3>
-                        </div>
-                        <div className="calendar-grid">
-                            <div className="cal-day-header text-red">일</div>
-                            <div className="cal-day-header">월</div>
-                            <div className="cal-day-header">화</div>
-                            <div className="cal-day-header">수</div>
-                            <div className="cal-day-header">목</div>
-                            <div className="cal-day-header">금</div>
-                            <div className="cal-day-header text-blue">토</div>
-                            {Array.from({ length: new Date(new Date().getFullYear(), new Date().getMonth(), 1).getDay() }).map((_, i) => (
-                                <div key={`empty-${i}`} className="cal-cell empty"></div>
-                            ))}
-                            {Array.from({ length: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate() }).map((_, i) => {
-                                const dayJobs = monthJobs.filter(j => new Date(j.scheduled_at).getDate() === i + 1)
-                                const hasJobs = dayJobs.length > 0;
-                                return (
-                                    <div key={i} className={`cal-cell ${i + 1 === new Date().getDate() ? 'cal-today' : ''} ${hasJobs ? 'has-jobs' : ''}`}>
-                                        <span className="cal-date">{i + 1}</span>
-                                        {hasJobs && <div className="cal-dots">
-                                            {dayJobs.slice(0, 3).map((dj, idx) => (
-                                                <div key={idx} className={`cal-dot ${dj.status === 'OPEN' ? 'open' : ''}`}></div>
-                                            ))}
-                                        </div>}
-                                    </div>
-                                )
-                            })}
-                        </div>
-                        <p className="text-secondary text-xs mt-sm text-center">💡 iCal 연동 시 스마트 일정 관리가 가능해집니다.</p>
-                    </div>
-                </div>
-            )}
-
-            {/* 하단 내비게이션 */}
-            <nav className="bottom-nav">
-                <Link href="/dashboard" className="bottom-nav-item active">
-                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" /></svg>
-                    홈
+            {/* 하단 내비게이션 - 글래스모피즘 믹스 */}
+            <nav className="premium-bottom-nav">
+                <Link href="/dashboard" className="nav-item active">
+                    <div className="nav-icon-box">🏠</div>
+                    <span>홈</span>
                 </Link>
-                <Link href="/requests" className="bottom-nav-item">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="3" /><path d="M3 9h18M9 21V9" /></svg>
-                    요청 목록
+                <Link href="/requests" className="nav-item">
+                    <div className="nav-icon-box">📋</div>
+                    <span>일정</span>
                 </Link>
-                <Link href="/spaces" className="bottom-nav-item">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg>
-                    공간
+                <Link href="/spaces" className="nav-item">
+                    <div className="nav-icon-box">🏢</div>
+                    <span>공간</span>
                 </Link>
-                <Link href="/profile" className="bottom-nav-item">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="8" r="4" /><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" /></svg>
-                    프로필
+                <Link href="/profile" className="nav-item">
+                    <div className="nav-icon-box">👤</div>
+                    <span>마이</span>
                 </Link>
             </nav>
 
             <style jsx>{`
-        .dash-header {
-          background: linear-gradient(135deg, #769FCD 0%, #3F72AF 100%);
-          padding: var(--spacing-xl) var(--spacing-md) var(--spacing-lg);
-          padding-top: calc(var(--spacing-xl) + env(safe-area-inset-top, 0));
-        }
-        .dash-header-inner { display: flex; justify-content: space-between; align-items: center; }
-        .dash-name { font-size: var(--font-xl); font-weight: 800; color: #fff; }
-        .dash-header .text-secondary { color: rgba(255,255,255,0.8) !important; }
-
-        .stat-section { padding: var(--spacing-md); margin-top: -16px; }
-        .stat-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: var(--spacing-sm); }
-        .stat-card {
-          background: #fff; border-radius: 16px; padding: var(--spacing-md);
-          box-shadow: var(--shadow-md); display: flex; flex-direction: column; gap: 4px;
-        }
-        .stat-card-label { font-size: var(--font-xs); color: var(--color-text-tertiary); font-weight: 500; }
-        .stat-card-value { font-size: var(--font-lg); font-weight: 800; color: var(--color-text-primary); }
-        .stat-card-alert { border: 2px solid var(--color-primary); }
-
-        .dash-tabs { display: flex; border-bottom: 1px solid var(--color-border-light); padding: 0 var(--spacing-md); margin-top: var(--spacing-md); }
-        .dash-tab { flex: 1; padding: var(--spacing-sm) 0; font-size: var(--font-sm); font-weight: 600; color: var(--color-text-tertiary); border-bottom: 2px solid transparent; transition: all var(--transition-fast); margin-bottom: -1px; }
-        .dash-tab.active { color: var(--color-primary); border-bottom-color: var(--color-primary); }
-
-        .job-list { display: flex; flex-direction: column; gap: var(--spacing-sm); }
-        .job-card { display: block; }
-        .job-card-body { padding: var(--spacing-md); }
-        .job-card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-xs); }
-        .job-card-bottom { display: flex; justify-content: space-between; align-items: center; }
-        .job-space-name { font-size: var(--font-md); font-weight: 700; }
-
-        .space-list { display: flex; flex-direction: column; gap: var(--spacing-sm); }
-        .space-card { display: flex; align-items: center; gap: var(--spacing-md); padding: var(--spacing-md); }
-        .space-icon { font-size: 32px; }
-        .space-info { flex: 1; }
-        .space-name { font-size: var(--font-md); font-weight: 700; }
-        .add-space-btn {
-          display: flex; align-items: center; justify-content: center; gap: var(--spacing-sm);
-          padding: var(--spacing-md); border-radius: 16px;
-          border: 2px dashed var(--color-border);
-          color: var(--color-text-tertiary); font-size: var(--font-sm); font-weight: 600;
-          cursor: pointer; transition: all var(--transition-fast);
-        }
-        .add-space-btn:hover { border-color: var(--color-primary); color: var(--color-primary); background: var(--color-primary-light); }
-
-        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
-        .cal-day-header { text-align: center; font-size: 11px; font-weight: 700; color: var(--color-text-secondary); padding: 8px 0; }
-        .text-red { color: #E11D48; }
-        .text-blue { color: #2563EB; }
-        .cal-cell { background: var(--color-surface); border-radius: 8px; min-height: 48px; border: 1px solid var(--color-border-light); display: flex; flex-direction: column; align-items: center; padding: 4px 2px; }
-        .cal-cell.empty { background: transparent; border-color: transparent; }
-        .cal-cell.cal-today { border-color: var(--color-primary); background: var(--color-primary-light); }
-        .cal-cell.has-jobs { border-color: var(--color-primary); }
-        .cal-date { font-size: 12px; font-weight: 600; color: var(--color-text-primary); margin-bottom: 2px; }
-        .cal-today .cal-date { color: var(--color-primary-dark); }
-        .cal-dots { display: flex; gap: 2px; justify-content: center; flex-wrap: wrap; }
-        .cal-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--color-green); }
-        .cal-dot.open { background: var(--color-orange); }
-
-        .quick-actions { padding: var(--spacing-md) !important; }
-      `}</style>
+                .premium-bg { background-color: #FFFFFF; min-height: 100dvh; }
+                .premium-header { padding: 16px 20px; background: #fff; }
+                
+                .sparkle-card {
+                    padding: 24px;
+                    border: none;
+                    background: linear-gradient(135deg, #FFFFFF 0%, #F9FBFF 100%);
+                    box-shadow: 0 10px 25px rgba(0, 100, 255, 0.08);
+                    position: relative;
+                }
+                .badge-premium { background: var(--color-primary-light); color: var(--color-primary); font-size: 11px; padding: 4px 8px; }
+                
+                .progress-ring-container { position: relative; width: 80px; height: 80px; }
+                .sparkle-icon { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 24px; }
+                
+                .bento-grid { display: flex; gap: 12px; }
+                .bento-main { flex: 1.5; padding: 20px; display: flex; flex-direction: column; justify-content: center; }
+                .bento-side-column { flex: 1; display: flex; flex-direction: column; }
+                .bento-item { padding: 16px; border-radius: 20px; }
+                
+                .job-card-premium { border-radius: 20px; transition: all 0.2s; border: 1px solid #F2F4F6; }
+                .badge-pill { font-size: 11px; padding: 4px 10px; border-radius: 99px; font-weight: 700; }
+                .empty-card { padding: 40px 20px; text-align: center; border: 1px dashed var(--color-border); }
+                
+                .premium-bottom-nav {
+                    position: fixed; bottom: 0; left: 0; right: 0;
+                    height: 80px; background: rgba(255, 255, 255, 0.9);
+                    backdrop-filter: blur(15px); border-top: 1px solid #F2F4F6;
+                    display: flex; justify-content: space-around; align-items: center;
+                    padding-bottom: env(safe-area-inset-bottom); z-index: 100;
+                }
+                .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; color: #8B95A1; font-size: 11px; font-weight: 600; }
+                .nav-item.active { color: var(--color-primary); }
+                .nav-icon-box { font-size: 22px; margin-bottom: 2px; }
+            `}</style>
         </div>
     )
 }
+

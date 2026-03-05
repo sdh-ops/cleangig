@@ -50,225 +50,146 @@ export default function CleanMainClient({ profile, activeJob, weekEarnings, pend
     }, [])
 
     return (
-        <div className="page-container">
-            {/* 헤더 */}
-            <header className="clean-header">
-                <div className="clean-header-inner">
+        <div className="page-container premium-bg" style={{ backgroundColor: '#fff', minHeight: '100dvh' }}>
+            {/* 상단 화이트 헤더 */}
+            <header className="premium-header" style={{ background: '#fff' }}>
+                <div className="header-top flex justify-between items-center">
                     <div>
-                        <p className="clean-greeting">안녕하세요 👋</p>
-                        <h1 className="clean-name">{profile.name}님</h1>
-                        <span className="tier-badge">{TIER_LABEL[profile.tier || 'STARTER']}</span>
+                        <p className="text-secondary" style={{ fontSize: '13px', marginBottom: -2 }}>안녕하세요, 👋</p>
+                        <h1 className="text-xl font-bold" style={{ letterSpacing: '-0.02em' }}>{profile.name}님</h1>
+                        <span className="badge-pill" style={{ background: 'var(--color-primary-light)', color: 'var(--color-primary)', fontSize: '10px', marginTop: '4px' }}>
+                            {TIER_LABEL[profile.tier || 'STARTER']}
+                        </span>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                         <NotificationBell />
-                        <div className="clean-stats-mini">
-                            <div>
-                                <div className="mini-val">⭐ {profile.avg_rating?.toFixed(1) || '-'}</div>
-                                <div className="mini-label">평점</div>
-                            </div>
-                            <div>
-                                <div className="mini-val">{profile.total_jobs || 0}</div>
-                                <div className="mini-label">총 작업</div>
-                            </div>
-                        </div>
+                        <Link href="/profile" style={{ width: 40, height: 40, borderRadius: '50%', background: '#F2F4F6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, border: '1px solid var(--color-border-light)', textDecoration: 'none' }}>
+                            👤
+                        </Link>
                     </div>
                 </div>
 
-                {/* 이번 주 수익 & 목표 달성 게이지 */}
-                <div className="week-earning-card" style={{ flexDirection: 'column', alignItems: 'stretch' }}>
+                {/* 이번 주 수익 & 목표 달성 위젯 (Sparkle Style) */}
+                <div className="card sparkle-card" style={{ marginTop: '20px', padding: '24px', background: 'linear-gradient(135deg, var(--color-primary) 0%, #308AFF 100%)', border: 'none' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                        <p className="week-label">누적 수익 달성률 🎯</p>
-                        {pendingCount > 0 && <div className="pending-badge">입금 대기 {pendingCount}건</div>}
+                        <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.8)', fontWeight: 600 }}>이번 주 정산 예정 🎯</p>
+                        {pendingCount > 0 && <span className="badge" style={{ background: '#FFD400', color: '#000', fontSize: '10px', fontWeight: 800 }}>입금 대기 {pendingCount}</span>}
                     </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 8 }}>
-                        <p className="week-amount">{weekEarnings.toLocaleString()}원</p>
-                        <p className="text-xs" style={{ color: 'rgba(255,255,255,0.6)' }}>목표 300,000원</p>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 12 }}>
+                        <p style={{ fontSize: '28px', fontWeight: 900, color: '#fff' }}>{weekEarnings.toLocaleString()}원</p>
+                        <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.6)' }}>목표 30만</p>
                     </div>
-                    {/* 게이지 바 */}
-                    <div style={{ width: '100%', height: 8, background: 'rgba(255,255,255,0.2)', borderRadius: 4, overflow: 'hidden' }}>
+                    <div style={{ width: '100%', height: 10, background: 'rgba(255,255,255,0.2)', borderRadius: 99, overflow: 'hidden' }}>
                         <div style={{
                             width: `${Math.min((weekEarnings / 300000) * 100, 100)}%`,
                             height: '100%',
-                            background: '#10B981', // green
-                            borderRadius: 4,
+                            background: '#fff',
+                            borderRadius: 99,
+                            boxShadow: '0 0 10px rgba(255,255,255,0.5)',
                             transition: 'width 1s ease-out'
                         }} />
                     </div>
                 </div>
             </header>
 
-            <div className="page-content">
-                {/* 진행 중 작업 */}
+            <div className="page-content" style={{ padding: '0 20px 100px' }}>
+                {/* 진행 중 작업 - 플로팅 스타일 */}
                 {activeJob && (
-                    <Link href={`/clean/job/${activeJob.id}`} className="active-job-card card" id="active-job-banner">
-                        <div className="active-job-inner">
-                            <div className="active-pulse" />
+                    <Link href={`/clean/job/${activeJob.id}`} className="card" style={{ display: 'block', padding: '20px', border: '2px solid var(--color-primary)', background: '#F0F7FF', marginBottom: '24px', textDecoration: 'none' }}>
+                        <div className="flex items-center gap-md">
+                            <div style={{ width: 10, height: 10, borderRadius: '50%', background: 'var(--color-primary)', animation: 'pulse 2s infinite' }} />
                             <div style={{ flex: 1 }}>
-                                <p className="active-label">진행 중인 작업</p>
-                                <p className="active-space">{(activeJob.spaces as any)?.name}</p>
-                                <p className="text-sm text-secondary">{(activeJob.spaces as any)?.address}</p>
+                                <p style={{ fontSize: '12px', color: 'var(--color-primary)', fontWeight: 800, marginBottom: 2 }}>현재 청소 중</p>
+                                <p style={{ fontSize: '16px', fontWeight: 800, color: '#000' }}>{(activeJob.spaces as any)?.name}</p>
                             </div>
-                            <div className="active-arrow">→</div>
+                            <span style={{ fontSize: '20px', color: 'var(--color-primary)' }}>›</span>
                         </div>
                     </Link>
                 )}
 
-                {/* 위치 오류 */}
-                {locationError && (
-                    <div className="location-banner">
-                        📍 {locationError}
+                {/* AI 동선 추천 - 섹션 강조 */}
+                <div style={{ marginBottom: '28px' }}>
+                    <div className="flex justify-between items-center mb-md">
+                        <h2 style={{ fontSize: '18px', fontWeight: 800, color: '#000', letterSpacing: '-0.02em' }}>
+                            {locationError ? '전체 일감' : '✨ AI 추천 일감'}
+                        </h2>
+                        <Link href="/clean/jobs" style={{ fontSize: '13px', color: 'var(--color-primary)', fontWeight: 700, textDecoration: 'none' }}>전체 보기</Link>
                     </div>
-                )}
 
-                {/* 주변 일감 */}
-                <div className="section-header">
-                    <h2 className="section-title-sm">
-                        {locationError ? '전체 일감' : '📍 내 주변 일감'}
-                    </h2>
-                    <Link href="/clean/jobs" className="see-all">전체 보기 →</Link>
-                </div>
-
-                {loading ? (
-                    <div className="job-list">
-                        {[1, 2, 3].map(i => <div key={i} className="skeleton" style={{ height: 100, borderRadius: 16 }} />)}
-                    </div>
-                ) : nearbyJobs.length === 0 ? (
-                    <div className="empty-state">
-                        <div style={{ fontSize: 48 }}>🔍</div>
-                        <p>주변에 새 일감이 없어요</p>
-                        <p className="text-sm text-secondary">알림을 켜두면 새 일감 시 즉시 알려드려요</p>
-                    </div>
-                ) : (
-                    <>
-                        {/* 스마트 동선 추천 (가장 가까운 1건 하이라이트) */}
-                        {nearbyJobs[0] && (
-                            <div className="mb-md">
-                                <h3 className="text-sm font-bold mb-sm" style={{ color: 'var(--color-primary)' }}>✨ AI 똑똑한 동선 추천</h3>
-                                <Link href={`/clean/job/${nearbyJobs[0].job_id || nearbyJobs[0].id}`} className="card card-hover" style={{ display: 'block', padding: 'var(--spacing-md)', border: '2px solid var(--color-primary-light)', background: '#F0F9FF' }}>
-                                    <div className="flex justify-between items-center mb-xs">
-                                        <div className="font-bold flex items-center gap-xs">
-                                            {nearbyJobs[0].space_type === 'airbnb' ? '🏠' : '🏢'} {nearbyJobs[0].space_name || (nearbyJobs[0].spaces as any)?.name}
-                                            <span className="badge" style={{ background: '#0284C7', color: '#fff', fontSize: 10 }}>동선 최적</span>
-                                        </div>
-                                        <div className="font-bold" style={{ color: '#0369A1', fontSize: 18 }}>₩{(nearbyJobs[0].price || 0).toLocaleString()}</div>
-                                    </div>
-                                    <div className="text-sm text-secondary flex gap-md">
-                                        <span>⏰ {new Date(nearbyJobs[0].scheduled_at).toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
-                                        <span>📍 현재 위치에서 {(nearbyJobs[0].distance_meters ? nearbyJobs[0].distance_meters / 1000 : 0.5).toFixed(1)}km</span>
-                                    </div>
-                                </Link>
-                            </div>
-                        )}
-
+                    {loading ? (
                         <div className="job-list">
-                            {nearbyJobs.slice(1).map((job: any) => (
+                            {[1, 2].map(i => <div key={i} className="skeleton" style={{ height: 120, borderRadius: 20, background: '#F2F4F6' }} />)}
+                        </div>
+                    ) : nearbyJobs.length === 0 ? (
+                        <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--color-text-tertiary)' }}>
+                            <div style={{ fontSize: 40, marginBottom: 12 }}>🔍</div>
+                            <p style={{ fontSize: 15, fontWeight: 600 }}>주변에 새 일감이 없어요</p>
+                        </div>
+                    ) : (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                            {nearbyJobs.map((job: any, i) => (
                                 <Link href={`/clean/job/${job.job_id || job.id}`} key={job.job_id || job.id}
-                                    className="nearby-job-card card card-hover" id={`job-${job.job_id || job.id}`}>
-                                    <div className="njc-header">
-                                        <div className="njc-space-type">
-                                            {job.space_type === 'airbnb' ? '🏠' : job.space_type === 'partyroom' ? '🎉' : '🏢'}
-                                            <span>{job.space_name || (job.spaces as any)?.name}</span>
-                                            {job.is_urgent && <span className="urgent-tag">🔥 긴급</span>}
+                                    className="card card-hover" style={{ display: 'block', padding: '20px', border: i === 0 ? '1px solid var(--color-primary-light)' : '1px solid #F2F4F6', background: i === 0 ? 'var(--color-primary-light)' : '#fff', textDecoration: 'none' }}>
+                                    <div className="flex justify-between items-start mb-sm">
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                            <span style={{ fontSize: 20 }}>{job.space_type === 'airbnb' ? '🏠' : '🏢'}</span>
+                                            <div>
+                                                <div style={{ fontSize: '15px', fontWeight: 800, color: '#000' }}>{job.space_name || (job.spaces as any)?.name}</div>
+                                                <div style={{ fontSize: '12px', color: 'var(--color-text-tertiary)' }}>{(job.distance_meters ? job.distance_meters / 1000 : 0.5).toFixed(1)}km 거리에요</div>
+                                            </div>
                                         </div>
-                                        <span className="njc-price">₩{(job.price || 0).toLocaleString()}</span>
+                                        <div style={{ textAlign: 'right' }}>
+                                            <div style={{ fontSize: '18px', fontWeight: 900, color: 'var(--color-primary)' }}>₩{(job.price || 0).toLocaleString()}</div>
+                                            {job.is_urgent && <span style={{ fontSize: '10px', color: 'var(--color-red)', fontWeight: 800 }}>🔥 긴급</span>}
+                                        </div>
                                     </div>
-                                    <div className="njc-details">
-                                        <span>⏰ {new Date(job.scheduled_at).toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
-                                        <span>⏱ {job.estimated_duration}분</span>
-                                        {job.distance_meters && <span>📍 {(job.distance_meters / 1000).toFixed(1)}km</span>}
+                                    <div style={{ display: 'flex', gap: 12, marginTop: 12, paddingTop: 12, borderTop: '1px solid rgba(0,0,0,0.03)' }}>
+                                        <div style={{ fontSize: '12px', color: 'var(--color-text-secondary)', fontWeight: 600 }}>⏰ {new Date(job.scheduled_at).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}</div>
+                                        <div style={{ fontSize: '12px', color: 'var(--color-text-secondary)', fontWeight: 600 }}>⏱ {job.estimated_duration}분 소요</div>
                                     </div>
                                 </Link>
                             ))}
                         </div>
-                    </>
-                )}
+                    )}
+                </div>
             </div>
 
-            {/* 하단 탭 */}
-            <nav className="bottom-nav">
-                <Link href="/clean" className="bottom-nav-item active">
-                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" /></svg>
-                    오늘
+            {/* 하단 탭 - 통일된 디자인 */}
+            <nav className="premium-bottom-nav">
+                <Link href="/clean" className="nav-item active">
+                    <div className="nav-icon-box">🏠</div>
+                    <span>홈</span>
                 </Link>
-                <Link href="/clean/jobs" className="bottom-nav-item">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
-                    청소 찾기
+                <Link href="/clean/jobs" className="nav-item">
+                    <div className="nav-icon-box">📋</div>
+                    <span>일정</span>
                 </Link>
-                <Link href="/earnings" className="bottom-nav-item">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="1" x2="12" y2="23" /><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" /></svg>
-                    정산
+                <Link href="/earnings" className="nav-item">
+                    <div className="nav-icon-box">🏦</div>
+                    <span>정산</span>
                 </Link>
-                <Link href="/profile" className="bottom-nav-item">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="8" r="4" /><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" /></svg>
-                    내 정보
+                <Link href="/profile" className="nav-item">
+                    <div className="nav-icon-box">👤</div>
+                    <span>마이</span>
                 </Link>
             </nav>
 
             <style jsx>{`
-        .clean-header {
-          background: linear-gradient(135deg, #112D4E 0%, #3F72AF 100%);
-          padding: var(--spacing-xl) var(--spacing-md) var(--spacing-md);
-          padding-top: calc(var(--spacing-xl) + env(safe-area-inset-top, 0));
-        }
-        .clean-header-inner { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: var(--spacing-md); }
-        .clean-greeting { font-size: var(--font-sm); color: rgba(255,255,255,0.6); }
-        .clean-name { font-size: var(--font-xl); font-weight: 800; color: #fff; }
-        .tier-badge {
-          display: inline-flex; padding: 3px 10px; border-radius: 999px;
-          background: rgba(255,255,255,0.15); color: #fff; font-size: 11px; font-weight: 600;
-          margin-top: 4px;
-        }
-        .clean-stats-mini { text-align: right; display: flex; gap: var(--spacing-md); }
-        .mini-val { font-size: var(--font-md); font-weight: 800; color: #fff; }
-        .mini-label { font-size: 10px; color: rgba(255,255,255,0.5); }
-
-        .week-earning-card {
-          background: rgba(255,255,255,0.1); border-radius: 16px; padding: var(--spacing-md);
-          display: flex; justify-content: space-between; align-items: center;
-          border: 1px solid rgba(255,255,255,0.15);
-        }
-        .week-label { font-size: var(--font-xs); color: rgba(255,255,255,0.7); margin-bottom: 2px; }
-        .week-amount { font-size: var(--font-2xl); font-weight: 800; color: #fff; }
-        .pending-badge {
-          background: var(--color-orange); color: #fff;
-          padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 600;
-        }
-
-        .active-job-card { display: block; margin-bottom: var(--spacing-md); border: 2px solid var(--color-primary); }
-        .active-job-inner { display: flex; align-items: center; gap: var(--spacing-md); padding: var(--spacing-md); }
-        .active-pulse {
-          width: 12px; height: 12px; border-radius: 50%; background: var(--color-primary);
-          flex-shrink: 0; animation: pulse 2s infinite;
-        }
-        @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.6;transform:scale(1.3)} }
-        .active-label { font-size: var(--font-xs); color: var(--color-primary); font-weight: 600; }
-        .active-space { font-size: var(--font-md); font-weight: 700; }
-        .active-arrow { font-size: 22px; color: var(--color-primary); }
-
-        .location-banner {
-          background: var(--color-orange-light); color: var(--color-orange);
-          padding: var(--spacing-sm) var(--spacing-md); border-radius: var(--btn-radius-sm);
-          font-size: var(--font-sm); margin-bottom: var(--spacing-md);
-        }
-
-        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-md); }
-        .section-title-sm { font-size: var(--font-md); font-weight: 700; }
-        .see-all { font-size: var(--font-sm); color: var(--color-primary); font-weight: 600; }
-
-        .job-list { display: flex; flex-direction: column; gap: var(--spacing-sm); }
-        .nearby-job-card { display: block; padding: var(--spacing-md); }
-        .njc-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-        .njc-space-type { display: flex; align-items: center; gap: var(--spacing-xs); font-weight: 700; font-size: var(--font-md); }
-        .njc-price { font-size: var(--font-lg); font-weight: 800; color: var(--color-primary); }
-        .njc-details { display: flex; gap: var(--spacing-md); font-size: var(--font-xs); color: var(--color-text-secondary); }
-        .urgent-tag { background: var(--color-red); color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 10px; }
-
-        .empty-state {
-          text-align: center; padding: var(--spacing-3xl) 0;
-          display: flex; flex-direction: column; align-items: center; gap: var(--spacing-sm);
-          color: var(--color-text-secondary);
-        }
-      `}</style>
+                .premium-bottom-nav {
+                    position: fixed; bottom: 0; left: 0; right: 0;
+                    height: 80px; background: rgba(255, 255, 255, 0.9);
+                    backdrop-filter: blur(15px); border-top: 1px solid #F2F4F6;
+                    display: flex; justify-content: space-around; align-items: center;
+                    padding-bottom: env(safe-area-inset-bottom); z-index: 100;
+                }
+                .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; color: #8B95A1; font-size: 11px; font-weight: 600; text-decoration: none; }
+                .nav-item.active { color: var(--color-primary); }
+                .nav-icon-box { font-size: 22px; margin-bottom: 2px; }
+                .badge-pill { font-size: 11px; padding: 4px 10px; border-radius: 99px; font-weight: 700; }
+                @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.6;transform:scale(1.2)} }
+                .skeleton { animation: skeleton-loading 1s linear infinite alternate; }
+                @keyframes skeleton-loading { from { background-color: #F2F4F6; } to { background-color: #E5E7EB; } }
+            `}</style>
         </div>
     )
 }
