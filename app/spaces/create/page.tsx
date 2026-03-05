@@ -95,7 +95,7 @@ export default function CreateSpacePage() {
     const calculateRecommendedPrice = () => {
         const duration = parseInt(form.estimated_duration) || 60
         const sqm = parseInt(form.size_sqm) || 30
-        const diffRate = form.cleaning_difficulty === '상' || form.cleaning_difficulty === '어려움' ? 1.2 : form.cleaning_difficulty === '하' || form.cleaning_difficulty === '쉬움' ? 0.9 : 1.0
+        const diffRate = form.cleaning_difficulty === '특수' ? 1.5 : form.cleaning_difficulty === '어려움' ? 1.2 : form.cleaning_difficulty === '쉬움' ? 0.9 : 1.0
 
         const hourlyBase = 15000 * (duration / 60)
         const sizeBase = (sqm / 33) * 2000 // 33sqm ~= 10평
@@ -316,8 +316,9 @@ export default function CreateSpacePage() {
                                 <label className="form-label">청소 난이도</label>
                                 <select className="form-input" value={form.cleaning_difficulty} onChange={e => setForm(f => ({ ...f, cleaning_difficulty: e.target.value }))}>
                                     <option value="쉬움">쉬움</option>
-                                    <option value="보통">보통</option>
-                                    <option value="어려움">어려움</option>
+                                    <option value="보통">보통 (일반 퇴실)</option>
+                                    <option value="어려움">어려움 (넓은 공간/세밀함)</option>
+                                    <option value="특수">🚨 특수 (파티룸 야간/대형 쓰레기 - 단가 1.5배)</option>
                                 </select>
                             </div>
                         </div>

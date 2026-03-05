@@ -132,6 +132,25 @@ export default function RequestDetailClient({ job, photos, payment, applications
                     </div>
                 </div>
 
+                {/* 이동 중(EN_ROUTE) 안심 모니터링 패널 */}
+                {job.status === 'EN_ROUTE' && isOperator && (
+                    <div className="card mb-md p-md" style={{ background: '#F0F9FF', border: '1px solid #BAE6FD' }}>
+                        <div className="flex items-start gap-sm">
+                            <span style={{ fontSize: 24 }}>🚗</span>
+                            <div>
+                                <h3 className="font-bold mb-xs" style={{ color: '#0369A1', fontSize: 15 }}>클린파트너가 이동 중입니다</h3>
+                                <p className="text-sm" style={{ color: '#0284C7', marginBottom: 12 }}>
+                                    클린파트너가 현장으로 출발했습니다. 지도 상의 이동 동선(ETA) 추적 기능은 추후 정식 연동될 예정입니다.
+                                </p>
+                                <div className="flex items-center gap-xs text-xs font-bold" style={{ color: '#0369A1', background: '#E0F2FE', padding: '6px 12px', borderRadius: 12, display: 'inline-flex' }}>
+                                    <span className="spinner" style={{ width: 12, height: 12, borderWidth: 2, borderColor: '#0369A1', borderRightColor: 'transparent' }} />
+                                    도착 예정 시간(ETA): 약 15~20분
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 {/* 클린파트너 정보 */}
                 {worker ? (
                     <div className="worker-card card">
@@ -220,6 +239,15 @@ export default function RequestDetailClient({ job, photos, payment, applications
                                     {item}
                                 </span>
                             ))}
+                        </div>
+                        <div className="mt-md" style={{ borderTop: '1px dashed #FCA5A5', paddingTop: 12 }}>
+                            <button
+                                className="btn btn-full btn-sm"
+                                style={{ background: '#fff', color: '#DC2626', border: '1px solid #FCA5A5', fontWeight: 700 }}
+                                onClick={() => alert('🛒 추후 비품 커머스 플랫폼이 연동되면 이 버튼을 통해 쿠팡/B2B 식자재몰 등에서 원클릭으로 구매 및 배송 지시가 가능해집니다!')}
+                            >
+                                🚀 부족한 비품 바로 구매하기 (준비 중)
+                            </button>
                         </div>
                     </div>
                 )}

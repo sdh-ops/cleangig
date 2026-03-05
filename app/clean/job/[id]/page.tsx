@@ -505,6 +505,29 @@ export default function JobDetailPage() {
                     </div>
                 )}
 
+                {/* CS 개입 긴급 중재 에스컬레이션 버튼 (보안 장치) */}
+                {['ARRIVED', 'IN_PROGRESS'].includes(job.status) && (
+                    <div className="card mb-md p-md" style={{ background: '#F8FAFC', border: '1px solid #CBD5E1', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <div>
+                            <h4 className="font-bold mb-xs" style={{ color: '#334155', fontSize: 13 }}>도저히 청소가 불가능한가요?</h4>
+                            <p className="text-xs" style={{ color: '#64748B', maxWidth: 200, lineHeight: 1.4 }}>
+                                호스트와 연락이 닿지 않거나 분쟁 소지가 있을 시, 플랫폼 관리자를 호출하세요.
+                            </p>
+                        </div>
+                        <button
+                            className="btn btn-sm"
+                            style={{ background: '#475569', color: '#fff', fontSize: 13, fontWeight: 700, padding: '8px 12px' }}
+                            onClick={() => {
+                                if (window.confirm('고객센터(CS) 긴급 중재를 요청하시겠습니까?\n작업 상태가 일시 보류되며, 운영팀에서 곧 연락을 드립니다.')) {
+                                    alert('🚨 긴급 중재 요청이 접수되었습니다. 안심하시고 현장 사진을 최대한 많이 촬영해두세요.');
+                                }
+                            }}
+                        >
+                            📞 CS 개입 요청
+                        </button>
+                    </div>
+                )}
+
                 {/* 숨겨진 파일 입력 */}
                 <input
                     ref={fileInputRef} type="file" accept="image/*" capture="environment"

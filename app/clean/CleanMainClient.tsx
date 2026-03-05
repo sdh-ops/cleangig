@@ -8,6 +8,7 @@ interface Job {
     id: string; status: string; price: number; scheduled_at: string
     estimated_duration: number; is_urgent: boolean
     spaces?: { name: string; address: string; type: string }
+    job_id?: string; space_name?: string; space_type?: string; distance_meters?: number
 }
 interface Props {
     profile: { id: string; name: string; avg_rating: number; tier: string; total_jobs: number }
@@ -69,15 +70,26 @@ export default function CleanMainClient({ profile, activeJob, weekEarnings, pend
                     </div>
                 </div>
 
-                {/* 이번 주 수익 */}
-                <div className="week-earning-card">
-                    <div>
-                        <p className="week-label">이번 주 수익</p>
-                        <p className="week-amount">{weekEarnings.toLocaleString()}원</p>
+                {/* 이번 주 수익 & 목표 달성 게이지 */}
+                <div className="week-earning-card" style={{ flexDirection: 'column', alignItems: 'stretch' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                        <p className="week-label">누적 수익 달성률 🎯</p>
+                        {pendingCount > 0 && <div className="pending-badge">입금 대기 {pendingCount}건</div>}
                     </div>
-                    {pendingCount > 0 && (
-                        <div className="pending-badge">입금 대기 {pendingCount}건</div>
-                    )}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 8 }}>
+                        <p className="week-amount">{weekEarnings.toLocaleString()}원</p>
+                        <p className="text-xs" style={{ color: 'rgba(255,255,255,0.6)' }}>목표 300,000원</p>
+                    </div>
+                    {/* 게이지 바 */}
+                    <div style={{ width: '100%', height: 8, background: 'rgba(255,255,255,0.2)', borderRadius: 4, overflow: 'hidden' }}>
+                        <div style={{
+                            width: `${Math.min((weekEarnings / 300000) * 100, 100)}%`,
+                            height: '100%',
+                            background: '#10B981', // green
+                            borderRadius: 4,
+                            transition: 'width 1s ease-out'
+                        }} />
+                    </div>
                 </div>
             </header>
 
@@ -123,26 +135,48 @@ export default function CleanMainClient({ profile, activeJob, weekEarnings, pend
                         <p className="text-sm text-secondary">알림을 켜두면 새 일감 시 즉시 알려드려요</p>
                     </div>
                 ) : (
-                    <div className="job-list">
-                        {nearbyJobs.map((job: any) => (
-                            <Link href={`/clean/job/${job.job_id || job.id}`} key={job.job_id || job.id}
-                                className="nearby-job-card card card-hover" id={`job-${job.job_id || job.id}`}>
-                                <div className="njc-header">
-                                    <div className="njc-space-type">
-                                        {job.space_type === 'airbnb' ? '🏠' : job.space_type === 'partyroom' ? '🎉' : '🏢'}
-                                        <span>{job.space_name}</span>
-                                        {job.is_urgent && <span className="urgent-tag">🔥 긴급</span>}
+                    <>
+                        {/* 스마트 동선 추천 (가장 가까운 1건 하이라이트) */}
+                        {nearbyJobs[0] && (
+                            <div className="mb-md">
+                                <h3 className="text-sm font-bold mb-sm" style={{ color: 'var(--color-primary)' }}>✨ AI 똑똑한 동선 추천</h3>
+                                <Link href={`/clean/job/${nearbyJobs[0].job_id || nearbyJobs[0].id}`} className="card card-hover" style={{ display: 'block', padding: 'var(--spacing-md)', border: '2px solid var(--color-primary-light)', background: '#F0F9FF' }}>
+                                    <div className="flex justify-between items-center mb-xs">
+                                        <div className="font-bold flex items-center gap-xs">
+                                            {nearbyJobs[0].space_type === 'airbnb' ? '🏠' : '🏢'} {nearbyJobs[0].space_name || (nearbyJobs[0].spaces as any)?.name}
+                                            <span className="badge" style={{ background: '#0284C7', color: '#fff', fontSize: 10 }}>동선 최적</span>
+                                        </div>
+                                        <div className="font-bold" style={{ color: '#0369A1', fontSize: 18 }}>₩{(nearbyJobs[0].price || 0).toLocaleString()}</div>
                                     </div>
-                                    <span className="njc-price">₩{(job.price || 0).toLocaleString()}</span>
-                                </div>
-                                <div className="njc-details">
-                                    <span>⏰ {new Date(job.scheduled_at).toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
-                                    <span>⏱ {job.estimated_duration}분</span>
-                                    {job.distance_meters && <span>📍 {(job.distance_meters / 1000).toFixed(1)}km</span>}
-                                </div>
-                            </Link>
-                        ))}
-                    </div>
+                                    <div className="text-sm text-secondary flex gap-md">
+                                        <span>⏰ {new Date(nearbyJobs[0].scheduled_at).toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                                        <span>📍 현재 위치에서 {(nearbyJobs[0].distance_meters ? nearbyJobs[0].distance_meters / 1000 : 0.5).toFixed(1)}km</span>
+                                    </div>
+                                </Link>
+                            </div>
+                        )}
+
+                        <div className="job-list">
+                            {nearbyJobs.slice(1).map((job: any) => (
+                                <Link href={`/clean/job/${job.job_id || job.id}`} key={job.job_id || job.id}
+                                    className="nearby-job-card card card-hover" id={`job-${job.job_id || job.id}`}>
+                                    <div className="njc-header">
+                                        <div className="njc-space-type">
+                                            {job.space_type === 'airbnb' ? '🏠' : job.space_type === 'partyroom' ? '🎉' : '🏢'}
+                                            <span>{job.space_name || (job.spaces as any)?.name}</span>
+                                            {job.is_urgent && <span className="urgent-tag">🔥 긴급</span>}
+                                        </div>
+                                        <span className="njc-price">₩{(job.price || 0).toLocaleString()}</span>
+                                    </div>
+                                    <div className="njc-details">
+                                        <span>⏰ {new Date(job.scheduled_at).toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                                        <span>⏱ {job.estimated_duration}분</span>
+                                        {job.distance_meters && <span>📍 {(job.distance_meters / 1000).toFixed(1)}km</span>}
+                                    </div>
+                                </Link>
+                            ))}
+                        </div>
+                    </>
                 )}
             </div>
 
