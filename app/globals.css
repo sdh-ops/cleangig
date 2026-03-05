@@ -42,46 +42,45 @@
   --color-text-tertiary: #9DB2BF;
   --color-text-disabled: #D1D5DB;
 
-  /* 그림자 */
-  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.06);
-  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07), 0 2px 4px rgba(0, 0, 0, 0.06);
-  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.08), 0 4px 6px rgba(0, 0, 0, 0.05);
-  --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.10), 0 10px 10px rgba(0, 0, 0, 0.04);
+  /* 그림자 (더 크고 부드럽게 - 토스/당근 스타일) */
+  --shadow-xs: 0 2px 4px rgba(0, 0, 0, 0.04);
+  --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.08);
+  --shadow-xl: 0 20px 48px rgba(0, 0, 0, 0.12);
 
-  /* 타이포그래피 (접근성: 최소 16px) */
+  /* 타이포그래피 (시니어 배려: 전체적으로 키움) */
   --font-family: 'Pretendard', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-xs: clamp(12px, 3vw, 13px);
-  --font-sm: clamp(13px, 3.5vw, 14px);
-  --font-base: clamp(15px, 4vw, 16px);
-  --font-md: clamp(16px, 4.5vw, 18px);
-  --font-lg: clamp(18px, 5vw, 20px);
-  --font-xl: clamp(20px, 5.5vw, 24px);
-  --font-2xl: clamp(24px, 6vw, 30px);
-  --font-3xl: clamp(28px, 7vw, 36px);
-  --font-4xl: clamp(32px, 8vw, 48px);
+  --font-xs: 13px;
+  --font-sm: 15px;
+  --font-base: 16px;
+  --font-md: 18px;
+  --font-lg: 20px;
+  --font-xl: 24px;
+  --font-2xl: 28px;
+  --font-3xl: 32px;
+  --font-4xl: 40px;
 
-  /* 버튼/터치 (접근성: 최소 48px) */
-  --btn-height-sm: 40px;
-  --btn-height-md: clamp(48px, 13vw, 56px);
-  --btn-height-lg: clamp(56px, 15vw, 64px);
-  --btn-radius: 14px;
-  --btn-radius-sm: 10px;
+  /* 버튼/터치 (더 큼직하게) */
+  --btn-height-sm: 44px;
+  --btn-height-md: 54px;
+  --btn-height-lg: 60px;
+  --btn-radius: 16px;
+  --btn-radius-sm: 12px;
   --btn-radius-full: 9999px;
 
   /* 레이아웃 */
   --max-width-app: 480px;
-  /* 모바일 앱 최대 너비 */
   --max-width-dashboard: 1280px;
-  --nav-height-bottom: 68px;
+  --nav-height-bottom: 72px;
   --nav-height-top: 60px;
 
-  /* 간격 */
-  --spacing-xs: 4px;
-  --spacing-sm: 8px;
-  --spacing-md: 16px;
-  --spacing-lg: 24px;
-  --spacing-xl: 32px;
+  /* 간격 (더 넓고 시원하게) */
+  --spacing-xs: 6px;
+  --spacing-sm: 12px;
+  --spacing-md: 20px;
+  --spacing-lg: 28px;
+  --spacing-xl: 40px;
   --spacing-2xl: 48px;
   --spacing-3xl: 64px;
 
@@ -155,16 +154,16 @@ select {
   min-height: var(--btn-height-md);
   padding: 0 var(--spacing-lg);
   border-radius: var(--btn-radius);
-  font-size: var(--font-base);
-  font-weight: 600;
+  font-size: var(--font-md);
+  font-weight: 700;
   letter-spacing: -0.01em;
-  transition: transform var(--transition-fast), opacity var(--transition-fast), box-shadow var(--transition-fast);
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.2s, box-shadow 0.2s;
   white-space: nowrap;
   user-select: none;
 }
 
 .btn:active {
-  transform: scale(0.97);
+  transform: scale(0.96);
 }
 
 .btn:disabled {
@@ -245,10 +244,15 @@ select {
    ===================== */
 .card {
   background: var(--color-surface);
-  border-radius: 20px;
-  border: 1px solid var(--color-border-light);
+  border-radius: 24px;
+  border: none;
   box-shadow: var(--shadow-sm);
   overflow: hidden;
+  transition: box-shadow var(--transition-fast), transform var(--transition-fast);
+}
+
+.card:hover {
+  box-shadow: var(--shadow-md);
 }
 
 .card-body {
@@ -286,20 +290,21 @@ select {
 
 .form-input {
   width: 100%;
-  min-height: 52px;
+  min-height: 54px;
   padding: 0 var(--spacing-md);
-  border: 1.5px solid var(--color-border);
-  border-radius: var(--btn-radius-sm);
+  border: none;
+  border-radius: 16px;
   font-size: var(--font-base);
+  font-weight: 500;
   color: var(--color-text-primary);
-  background: var(--color-surface);
-  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  background: #F3F4F6;
+  transition: background var(--transition-fast), box-shadow var(--transition-fast);
   outline: none;
 }
 
 .form-input:focus {
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(0, 196, 113, 0.12);
+  background: var(--color-surface);
+  box-shadow: 0 0 0 2px var(--color-primary);
 }
 
 .form-input::placeholder {
@@ -371,15 +376,16 @@ textarea.form-input {
   transform: translateX(-50%);
   width: 100%;
   max-width: var(--max-width-app);
-  height: var(--nav-height-bottom);
-  background: var(--color-surface);
-  border-top: 1px solid var(--color-border-light);
+  height: calc(var(--nav-height-bottom) + env(safe-area-inset-bottom, 0px));
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
   display: flex;
   align-items: center;
   justify-content: space-around;
-  padding-bottom: env(safe-area-inset-bottom, 8px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
   z-index: 100;
-  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.06);
 }
 
 .bottom-nav-item {

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
+import JobsMap from './JobsMap'
 
 interface Job {
     id: string; status: string; price: number; scheduled_at: string
@@ -22,6 +23,7 @@ export default function JobsListPage() {
     const [userLat, setUserLat] = useState<number | null>(null)
     const [userLng, setUserLng] = useState<number | null>(null)
     const [searchText, setSearchText] = useState('')
+    const [viewMode, setViewMode] = useState<'list' | 'map'>('list')
 
     useEffect(() => {
         navigator.geolocation?.getCurrentPosition(
@@ -45,7 +47,7 @@ export default function JobsListPage() {
         const supabase = createClient()
         const { data } = await supabase
             .from('jobs')
-            .select('*, spaces(name, address, type, reference_photos)')
+            .select('*, spaces(name, address, type, reference_photos, lat, lng)')
             .eq('status', 'OPEN')
             .gte('scheduled_at', new Date().toISOString())
             .order('is_urgent', { ascending: false })
@@ -79,28 +81,40 @@ export default function JobsListPage() {
                 />
             </header>
 
-            {/* 필터 탭 */}
-            <div style={{ display: 'flex', borderBottom: '1px solid var(--color-border-light)', padding: '0 var(--spacing-md)' }}>
-                {([
-                    { key: 'nearby', label: '📍 가까운 순' },
-                    { key: 'all', label: '전체' },
-                    { key: 'urgent', label: '🔥 긴급' },
-                ] as const).map(tab => (
-                    <button key={tab.key}
-                        style={{
-                            flex: 1, padding: 'var(--spacing-sm) 0',
-                            fontSize: 'var(--font-sm)', fontWeight: 600,
-                            color: filter === tab.key ? 'var(--color-primary)' : 'var(--color-text-tertiary)',
-                            borderBottom: filter === tab.key ? '2px solid var(--color-primary)' : '2px solid transparent',
-                            marginBottom: -1, transition: 'all .2s'
-                        }}
-                        onClick={() => setFilter(tab.key)}>{tab.label}</button>
-                ))}
+            {/* 상단 액션 바 (필터 + 뷰 토글) */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 'var(--spacing-sm) var(--spacing-md)', borderBottom: '1px solid var(--color-border-light)' }}>
+                <div style={{ display: 'flex', gap: 'var(--spacing-xs)' }}>
+                    {([
+                        { key: 'nearby', label: '📍 가까운 순' },
+                        { key: 'all', label: '전체' },
+                        { key: 'urgent', label: '🔥 긴급' },
+                    ] as const).map(tab => (
+                        <button key={tab.key}
+                            style={{
+                                padding: '6px 12px',
+                                borderRadius: 16,
+                                fontSize: 13, fontWeight: 700,
+                                background: filter === tab.key ? 'var(--color-primary-dark)' : 'var(--color-surface)',
+                                color: filter === tab.key ? '#fff' : 'var(--color-text-tertiary)',
+                                border: `1px solid ${filter === tab.key ? 'var(--color-primary-dark)' : 'var(--color-border-light)'}`,
+                                transition: 'all .2s'
+                            }}
+                            onClick={() => setFilter(tab.key)}>{tab.label}</button>
+                    ))}
+                </div>
+                <div style={{ background: 'var(--color-border-light)', borderRadius: 8, padding: 2, display: 'flex' }}>
+                    <button
+                        onClick={() => setViewMode('list')}
+                        style={{ padding: '4px 10px', fontSize: 12, fontWeight: 700, borderRadius: 6, background: viewMode === 'list' ? '#fff' : 'transparent', color: viewMode === 'list' ? 'var(--color-text-primary)' : 'var(--color-text-tertiary)', boxShadow: viewMode === 'list' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none', transition: 'all .2s' }}>목록</button>
+                    <button
+                        onClick={() => setViewMode('map')}
+                        style={{ padding: '4px 10px', fontSize: 12, fontWeight: 700, borderRadius: 6, background: viewMode === 'map' ? '#fff' : 'transparent', color: viewMode === 'map' ? 'var(--color-text-primary)' : 'var(--color-text-tertiary)', boxShadow: viewMode === 'map' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none', transition: 'all .2s' }}>지도</button>
+                </div>
             </div>
 
             <div className="page-content">
                 {/* Realtime 배지 */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 'var(--spacing-md)', fontSize: 'var(--font-xs)', color: 'var(--color-primary)', fontWeight: 600 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 'var(--spacing-sm)', fontSize: 'var(--font-xs)', color: 'var(--color-primary)', fontWeight: 600 }}>
                     <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--color-primary)', display: 'inline-block', animation: 'pulse 2s infinite' }} />
                     실시간 업데이트 중 · {filtered.length}건의 청소 요청
                 </div>
@@ -113,10 +127,17 @@ export default function JobsListPage() {
                     <div style={{ textAlign: 'center', padding: 'var(--spacing-3xl)', color: 'var(--color-text-secondary)' }}>
                         <div style={{ fontSize: 48, marginBottom: 'var(--spacing-md)' }}>🔍</div>
                         <p>현재 등록된 청소 요청이 없어요</p>
-                        <p style={{ fontSize: 'var(--font-xs)', marginTop: 8 }}>알림을 켜두면 새 요청 즉시 알림!</p>
+                        <p style={{ fontSize: 'var(--font-xs)', marginTop: 8 }}>알림을 켜두면 새 요청 시 즉시 알려드려요.</p>
+                    </div>
+                ) : viewMode === 'map' ? (
+                    <div style={{ position: 'relative', height: 'calc(100vh - 280px)', borderRadius: 20, overflow: 'hidden', border: '1px solid var(--color-border-light)', boxShadow: 'var(--shadow-md)' }}>
+                        <JobsMap jobs={filtered} />
+                        <div style={{ position: 'absolute', bottom: 16, left: 16, right: 16, background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(12px)', padding: 12, borderRadius: 12, boxShadow: 'var(--shadow-lg)', fontSize: 13, fontWeight: 700, color: 'var(--color-text-primary)', textAlign: 'center', border: '1px solid rgba(0,0,0,0.05)' }}>
+                            <span style={{ fontSize: 16, marginRight: 6 }}>📍</span>지도 상의 핀을 눌러 상세 정보를 확인하세요.
+                        </div>
                     </div>
                 ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-sm)' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-md)' }}>
                         {filtered.map((job: any) => {
                             const space = job.spaces
                             const icon = SPACE_TYPE_ICON[space?.type] || '🏢'

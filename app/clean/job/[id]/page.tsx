@@ -17,6 +17,10 @@ export default function JobDetailPage() {
     const router = useRouter()
     const [job, setJob] = useState<Job | null>(null)
     const [checklist, setChecklist] = useState<ChecklistItem[]>([])
+    const [supplyShortages, setSupplyShortages] = useState<string[]>([])
+    const [extraCharge, setExtraCharge] = useState(0)
+    const [extraChargeReason, setExtraChargeReason] = useState('')
+    const [showExtraCharge, setShowExtraCharge] = useState(false)
     const [loading, setLoading] = useState(true)
     const [submitting, setSubmitting] = useState(false)
     const [uploadingIdx, setUploadingIdx] = useState<number | null>(null)
@@ -51,6 +55,9 @@ export default function JobDetailPage() {
         if (data) {
             setJob(data as Job)
             setChecklist((data.checklist as ChecklistItem[]) || [])
+            setSupplyShortages((data.supply_shortages as string[]) || [])
+            setExtraCharge(data.extra_charge_amount || 0)
+            setExtraChargeReason(data.extra_charge_reason || '')
             if (u) {
                 const { data: appData } = await supabase.from('job_applications')
                     .select('*').eq('job_id', id).eq('worker_id', u.id).single()
@@ -107,6 +114,9 @@ export default function JobDetailPage() {
         await supabase.from('jobs').update({
             status: flow.next,
             checklist,
+            supply_shortages: supplyShortages,
+            extra_charge_amount: extraCharge,
+            extra_charge_reason: extraChargeReason,
             ...(flow.next === 'IN_PROGRESS' ? { started_at: new Date().toISOString() } : {}),
             ...(flow.next === 'SUBMITTED' ? { completed_at: new Date().toISOString() } : {}),
         }).eq('id', id)
@@ -273,8 +283,8 @@ export default function JobDetailPage() {
                                 <span className="guide-label">출입 방법 및 위치</span>
                                 <div className="guide-value font-bold" style={{ fontSize: 16, color: 'var(--color-primary)' }}>
                                     {space?.entry_code || '현장 확인 필요'}
-                                    <a href={`https://map.kakao.com/link/search/${encodeURIComponent(space?.address || '')}`} target="_blank" className="map-link ml-sm" style={{ fontSize: 13, background: '#eee', padding: '4px 8px', borderRadius: 12 }}>
-                                        📍 지도 보기
+                                    <a href={`https://map.naver.com/v5/search/${encodeURIComponent(space?.address || '')}`} target="_blank" rel="noreferrer" className="btn btn-sm ml-sm" style={{ fontSize: 13, background: '#03C75A', color: '#fff', border: 'none', borderRadius: 8 }}>
+                                        🗺️ 네이버 길찾기
                                     </a>
                                 </div>
                             </div>
@@ -429,6 +439,72 @@ export default function JobDetailPage() {
                     </div>
                 )}
 
+                {/* 비품 체크 (공간파트너가 설정한 경우에만) */}
+                {['IN_PROGRESS', 'ARRIVED', 'SUBMITTED', 'APPROVED', 'PAID_OUT'].includes(job.status) && (job.supplies_to_check as string[])?.length > 0 && (
+                    <div className="checklist-section">
+                        <div className="checklist-header mb-sm">
+                            <h2 className="checklist-title">비품 점검결과</h2>
+                        </div>
+                        <p className="form-hint mb-md">수량이 부족한 비품만 선택해서 즉시 알려주세요.</p>
+                        <div className="checklist-items">
+                            {(job.supplies_to_check as string[]).map((item, idx) => {
+                                const isShort = supplyShortages.includes(item)
+                                return (
+                                    <div key={idx} className={`checklist-row ${isShort ? 'short' : ''}`} style={{ borderColor: isShort ? '#FCA5A5' : 'var(--color-border-light)', background: isShort ? '#FEF2F2' : 'var(--color-surface)' }}>
+                                        <button className="check-btn" onClick={() => {
+                                            setSupplyShortages(prev =>
+                                                prev.includes(item) ? prev.filter(x => x !== item) : [...prev, item]
+                                            )
+                                        }} disabled={['SUBMITTED', 'APPROVED', 'PAID_OUT'].includes(job.status)}>
+                                            <div className={`check-circle ${isShort ? 'short' : ''}`} style={{ borderColor: isShort ? '#DC2626' : 'var(--color-border)', color: isShort ? '#DC2626' : 'transparent', background: isShort ? '#FECACA' : 'transparent' }}>
+                                                {isShort && '🚨'}
+                                            </div>
+                                        </button>
+                                        <div className="check-label" style={{ color: isShort ? '#991B1B' : '' }}>
+                                            <span style={{ fontWeight: isShort ? 700 : 500 }}>{item}</span>
+                                            {isShort && <span style={{ color: '#DC2626', fontSize: 12, fontWeight: 700, marginLeft: 8 }}>부족 요청됨</span>}
+                                        </div>
+                                    </div>
+                                )
+                            })}
+                        </div>
+                    </div>
+                )}
+
+                {/* 추가 요금 청구 시스템 */}
+                {job.status === 'IN_PROGRESS' && (
+                    <div className="card mt-md mb-md p-md" style={{ border: '1px solid #D97706', background: '#FEF3C7' }}>
+                        <div className="flex justify-between items-center mb-sm">
+                            <h3 className="font-bold mb-none" style={{ color: '#B45309' }}>💸 현장 오염도 추가 청구</h3>
+                            <button className="text-secondary text-sm font-bold" onClick={() => setShowExtraCharge(!showExtraCharge)}>
+                                {showExtraCharge || extraCharge > 0 ? '접기' : '청구하기'}
+                            </button>
+                        </div>
+                        {(showExtraCharge || extraCharge > 0) && (
+                            <div className="slide-down mt-sm">
+                                <p className="text-xs mb-sm" style={{ color: '#92400E' }}>예상치 못한 심각한 오염(토사물 등)이나 규정 외 폐기물이 있을 경우, 공간파트너에게 추가 요금을 청구할 수 있습니다. (증거 사진 필수 제출)</p>
+                                <div className="form-group mb-sm">
+                                    <label className="text-sm font-bold block mb-xs">추가 청구 금액 (원)</label>
+                                    <input
+                                        type="number" className="form-input" placeholder="예: 10000"
+                                        value={extraCharge || ''} onChange={e => setExtraCharge(parseInt(e.target.value) || 0)}
+                                    />
+                                </div>
+                                <div className="form-group">
+                                    <label className="text-sm font-bold block mb-xs">청구 사유</label>
+                                    <textarea
+                                        className="form-input" rows={2} placeholder="기존 파티 뒷정리 미흡으로 인한 쓰레기 5봉투 추가 발생 등 상세히 적어주세요."
+                                        value={extraChargeReason} onChange={e => setExtraChargeReason(e.target.value)}
+                                    />
+                                    {extraCharge > 0 && !extraChargeReason.trim() && (
+                                        <p className="text-xs mt-xs text-red">청구 사유를 반드시 입력해주세요.</p>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                )}
+
                 {/* 숨겨진 파일 입력 */}
                 <input
                     ref={fileInputRef} type="file" accept="image/*" capture="environment"
@@ -496,7 +572,7 @@ export default function JobDetailPage() {
                     <button
                         className={`btn ${flow.btnColor} btn-full btn-lg`}
                         onClick={handleStatusNext}
-                        disabled={submitting}
+                        disabled={submitting || (extraCharge > 0 && !extraChargeReason.trim())}
                         id={`action-${flow.next}`}
                     >
                         {submitting ? <span className="spinner" /> : flow.btnLabel}

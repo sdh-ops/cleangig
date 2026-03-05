@@ -48,6 +48,11 @@ export interface Space {
     estimated_duration: number
     photos: string[]
     is_active: boolean
+    biz_type?: 'BUSINESS' | 'INDIVIDUAL'
+    biz_reg_number?: string
+    biz_email?: string
+    biz_reg_image?: string
+    cash_receipt_number?: string
     created_at: string
     updated_at: string
 }
@@ -82,6 +87,12 @@ export interface Job {
     recurring_config?: Record<string, unknown>
     matching_score?: number
     auto_approved: boolean
+    supplies_to_check?: string[]
+    supply_shortages?: string[]
+    extra_charge_amount?: number
+    extra_charge_reason?: string
+    checklist_completed?: ChecklistItem[]
+    preferred_worker_id?: string
     created_at: string
     updated_at: string
     // 조인된 데이터
@@ -138,6 +149,14 @@ export interface Dispute {
     refund_amount: number
     created_at: string
     updated_at: string
+}
+
+export interface FavoritePartner {
+    id: string
+    operator_id: string
+    worker_id: string
+    created_at: string
+    users?: User
 }
 
 export interface AgentEvent {

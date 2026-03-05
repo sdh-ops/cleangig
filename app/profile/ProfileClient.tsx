@@ -12,7 +12,7 @@ const TIER_CONFIG: Record<string, { label: string; color: string; next: string; 
 }
 
 interface Props {
-    profile: { id: string; name: string; email?: string; phone?: string; profile_image?: string; role: string; tier?: string; avg_rating?: number; total_jobs?: number; bio?: string; bank_account?: any }
+    profile: { id: string; name: string; email?: string; phone?: string; profile_image?: string; role: string; tier?: string; avg_rating?: number; total_jobs?: number; bio?: string; bank_account?: any; is_verified?: boolean }
     totalCompletedJobs: number
 }
 
@@ -79,14 +79,23 @@ export default function ProfileClient({ profile, totalCompletedJobs }: Props) {
                         ) : (
                             <h1 style={{ fontSize: 22, fontWeight: 800, color: '#fff' }}>{profile.name}</h1>
                         )}
-                        <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: 'var(--font-sm)', marginTop: 2 }}>
-                            {profile.role === 'worker' ? '클린파트너' : '공간파트너'}
-                            {profile.role === 'worker' && tierInfo && (
-                                <span style={{ marginLeft: 8, background: 'rgba(255,255,255,0.2)', padding: '2px 8px', borderRadius: 999, fontSize: 12 }}>
-                                    {tierInfo.label}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
+                            <span style={{ color: 'rgba(255,255,255,0.8)', fontSize: '13px' }}>
+                                {profile.role === 'worker' ? '클린파트너' : '공간파트너'}
+                            </span>
+                            {profile.role === 'worker' && profile.is_verified && (
+                                <span style={{ background: 'rgba(52, 211, 153, 0.2)', border: '1px solid rgba(52, 211, 153, 0.5)', color: '#A7F3D0', padding: '2px 8px', borderRadius: 12, fontSize: 11, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 4 }}>
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ width: 12, height: 12 }}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>
+                                    안심 파트너
                                 </span>
                             )}
-                        </p>
+                            {profile.role === 'worker' && tierInfo && (
+                                <span style={{ background: 'rgba(255,255,255,0.15)', border: `1px solid ${tierInfo.color}66`, color: '#fff', padding: '2px 8px', borderRadius: 12, fontSize: 11, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 4 }}>
+                                    <span style={{ fontSize: 12 }}>{tierInfo.label.split(' ')[0]}</span>
+                                    {tierInfo.label.split(' ')[1]}
+                                </span>
+                            )}
+                        </div>
                     </div>
                     <button onClick={() => setEditing(!editing)} style={{ color: 'rgba(255,255,255,0.8)', fontSize: 22 }}>✏️</button>
                 </div>

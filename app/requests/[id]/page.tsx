@@ -28,5 +28,12 @@ export default async function RequestDetailPage({ params }: { params: Promise<{ 
         .eq('job_id', id)
         .order('created_at')
 
-    return <RequestDetailClient job={job as any} photos={photos || []} payment={payment} applications={applications || []} userId={user.id} />
+    let isFavorite = false
+    if (job.worker_id) {
+        const { data: fav } = await supabase.from('favorite_partners')
+            .select('id').eq('operator_id', user.id).eq('worker_id', job.worker_id).maybeSingle()
+        if (fav) isFavorite = true
+    }
+
+    return <RequestDetailClient job={job as any} photos={photos || []} payment={payment} applications={applications || []} userId={user.id} initialIsFavorite={isFavorite} />
 }

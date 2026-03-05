@@ -8,6 +8,7 @@ import { Space } from '@/lib/types'
 export default function CreateRequestPage() {
     const router = useRouter()
     const [spaces, setSpaces] = useState<Space[]>([])
+    const [favoritePartners, setFavoritePartners] = useState<any[]>([])
     const [form, setForm] = useState({
         space_id: '',
         scheduled_date: '',
@@ -17,6 +18,8 @@ export default function CreateRequestPage() {
         is_recurring: false,
         recurring_days: [] as string[],
         special_instructions: '',
+        supplies_to_check: [] as string[],
+        preferred_worker_id: ''
     })
     const [selectedSpace, setSelectedSpace] = useState<Space | null>(null)
     const [loading, setLoading] = useState(false)
@@ -31,6 +34,12 @@ export default function CreateRequestPage() {
                 .from('spaces').select('*')
                 .eq('operator_id', user.id).eq('is_active', true)
             setSpaces(data as Space[] || [])
+
+            const { data: favs } = await supabase
+                .from('favorite_partners')
+                .select('worker_id, users!favorite_partners_worker_id_fkey(id, name, tier, avg_rating)')
+                .eq('operator_id', user.id)
+            if (favs) setFavoritePartners(favs)
         }
         fetchSpaces()
 
@@ -82,6 +91,8 @@ export default function CreateRequestPage() {
             is_urgent: form.is_urgent,
             is_recurring: form.is_recurring,
             recurring_config: form.is_recurring ? { days: form.recurring_days } : null,
+            supplies_to_check: form.supplies_to_check,
+            preferred_worker_id: form.preferred_worker_id || null,
         }).select().single()
 
         if (!error && job) {
@@ -226,6 +237,83 @@ export default function CreateRequestPage() {
                         value={form.special_instructions}
                         onChange={e => setForm(f => ({ ...f, special_instructions: e.target.value }))} />
                 </div>
+
+                {/* 비품 체크 옵션 */}
+                <div className="form-group slide-down mt-md">
+                    <label className="form-label">클린파트너가 꼭 확인해야 할 비품 (선택)</label>
+                    <p className="form-hint mb-sm">체크해두시면 클린파트너가 수량 부족 시 알려줍니다.</p>
+                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                        {['휴지', '수건', '종량제봉투', '핸드워시', '주방세제', '음료수'].map(item => {
+                            const isSelected = form.supplies_to_check.includes(item)
+                            return (
+                                <button
+                                    key={item}
+                                    style={{
+                                        padding: '6px 14px', borderRadius: '20px', fontSize: 'var(--font-sm)',
+                                        border: `1px solid ${isSelected ? 'var(--color-primary)' : 'var(--color-border)'}`,
+                                        background: isSelected ? 'var(--color-primary-light)' : 'var(--color-surface)',
+                                        color: isSelected ? 'var(--color-primary-dark)' : 'var(--color-text-secondary)',
+                                        fontWeight: isSelected ? 700 : 500, transition: 'all .2s'
+                                    }}
+                                    onClick={() => setForm(f => ({
+                                        ...f,
+                                        supplies_to_check: isSelected
+                                            ? f.supplies_to_check.filter(x => x !== item)
+                                            : [...f.supplies_to_check, item]
+                                    }))}
+                                >
+                                    {item}
+                                </button>
+                            )
+                        })}
+                    </div>
+                </div>
+
+                {/* 단골 파트너 지정 화면 */}
+                {favoritePartners.length > 0 && (
+                    <div className="form-group slide-down mt-md p-md card" style={{ background: '#FFF7ED', border: '1px solid #FED7AA' }}>
+                        <label className="form-label" style={{ color: '#C2410C' }}>💖 단골 파트너 지정 전송 (선택)</label>
+                        <p className="form-hint mb-sm">지정한 클린파트너에게만 단독으로 알림이 가며 수락 대기 상태가 됩니다.</p>
+                        <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '8px' }}>
+                            <button
+                                style={{
+                                    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                                    padding: '12px', minWidth: '80px', borderRadius: '12px',
+                                    border: `2px solid ${form.preferred_worker_id === '' ? 'var(--color-primary)' : 'var(--color-border)'}`,
+                                    background: form.preferred_worker_id === '' ? 'var(--color-primary-light)' : '#fff',
+                                    transition: 'all .2s', flexShrink: 0
+                                }}
+                                onClick={() => setForm(f => ({ ...f, preferred_worker_id: '' }))}
+                            >
+                                <span style={{ fontSize: '24px', marginBottom: '4px' }}>📢</span>
+                                <span style={{ fontSize: '12px', fontWeight: form.preferred_worker_id === '' ? 700 : 500 }}>전체 공개</span>
+                            </button>
+
+                            {favoritePartners.map(fav => {
+                                const worker = fav.users
+                                if (!worker) return null
+                                const isSelected = form.preferred_worker_id === worker.id
+                                return (
+                                    <button
+                                        key={worker.id}
+                                        style={{
+                                            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                                            padding: '12px', minWidth: '90px', borderRadius: '12px',
+                                            border: `2px solid ${isSelected ? '#EA580C' : 'var(--color-border)'}`,
+                                            background: isSelected ? '#FFEDD5' : '#fff',
+                                            transition: 'all .2s', flexShrink: 0
+                                        }}
+                                        onClick={() => setForm(f => ({ ...f, preferred_worker_id: worker.id }))}
+                                    >
+                                        <div className="avatar avatar-md mb-xs" style={{ background: '#F97316', fontSize: '14px' }}>{worker.name[0]}</div>
+                                        <span style={{ fontSize: '13px', fontWeight: isSelected ? 700 : 500, color: '#9A3412' }}>{worker.name}</span>
+                                        <span style={{ fontSize: '10px', color: '#EA580C' }}>{worker.tier}</span>
+                                    </button>
+                                )
+                            })}
+                        </div>
+                    </div>
+                )}
 
                 {/* 가격 요약 */}
                 {selectedSpace && (

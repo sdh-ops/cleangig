@@ -19,15 +19,17 @@ const STATUS_MAP: Record<string, { label: string; cls: string; desc: string }> =
 }
 
 interface Props {
-    job: any; photos: any[]; payment: any; applications: any[]; userId: string
+    job: any; photos: any[]; payment: any; applications: any[]; userId: string; initialIsFavorite?: boolean
 }
 
-export default function RequestDetailClient({ job, photos, payment, applications, userId }: Props) {
+export default function RequestDetailClient({ job, photos, payment, applications, userId, initialIsFavorite = false }: Props) {
     const router = useRouter()
     const [approving, setApproving] = useState(false)
     const [disputing, setDisputing] = useState(false)
     const [disputeReason, setDisputeReason] = useState('')
     const [showDispute, setShowDispute] = useState(false)
+    const [isFavorite, setIsFavorite] = useState(initialIsFavorite)
+    const [togglingFav, setTogglingFav] = useState(false)
 
     const st = STATUS_MAP[job.status] || { label: job.status, cls: '', desc: '' }
     const space = job.spaces
@@ -37,6 +39,12 @@ export default function RequestDetailClient({ job, photos, payment, applications
 
     // 공간파트너: 수동 승인
     const handleApprove = async () => {
+        if (job.extra_charge_amount > 0) {
+            if (!window.confirm(`클린파트너가 추가 요금 ${job.extra_charge_amount.toLocaleString()}원을 청구했습니다.\n사유: ${job.extra_charge_reason}\n\n승인하시겠습니까? 승인 시 기존 결제 금액에 더해 추가 결제가 진행됩니다.`)) return
+        } else {
+            if (!window.confirm('청소 결과를 승인하시겠습니까? 승인 시 정산이 진행됩니다.')) return
+        }
+
         setApproving(true)
         const supabase = createClient()
         await supabase.from('jobs').update({ status: 'APPROVED', auto_approved: false }).eq('id', job.id)
@@ -80,6 +88,25 @@ export default function RequestDetailClient({ job, photos, payment, applications
         router.refresh()
     }
 
+    // 단골 파트너 토글
+    const handleToggleFavorite = async () => {
+        if (!worker) return
+        setTogglingFav(true)
+        const supabase = createClient()
+        if (isFavorite) {
+            await supabase.from('favorite_partners')
+                .delete()
+                .eq('operator_id', userId)
+                .eq('worker_id', worker.id)
+            setIsFavorite(false)
+        } else {
+            await supabase.from('favorite_partners')
+                .insert({ operator_id: userId, worker_id: worker.id })
+            setIsFavorite(true)
+        }
+        setTogglingFav(false)
+    }
+
     return (
         <div className="page-container">
             <header className="detail-header">
@@ -108,12 +135,27 @@ export default function RequestDetailClient({ job, photos, payment, applications
                 {/* 클린파트너 정보 */}
                 {worker ? (
                     <div className="worker-card card">
-                        <div className="worker-info">
-                            <div className="avatar avatar-md" style={{ background: 'var(--color-primary)' }}>{worker.name?.[0]}</div>
-                            <div>
-                                <div className="worker-name">{worker.name}</div>
-                                <div className="text-sm text-secondary">⭐ {worker.avg_rating?.toFixed(1) || '-'} · {worker.tier}</div>
+                        <div className="worker-info" style={{ width: '100%', justifyContent: 'space-between' }}>
+                            <div className="flex gap-md items-center">
+                                <div className="avatar avatar-md" style={{ background: 'var(--color-primary)' }}>{worker.name?.[0]}</div>
+                                <div>
+                                    <div className="worker-name">{worker.name}</div>
+                                    <div className="text-sm text-secondary">⭐ {worker.avg_rating?.toFixed(1) || '-'} · {worker.tier}</div>
+                                </div>
                             </div>
+                            <button
+                                onClick={handleToggleFavorite}
+                                disabled={togglingFav}
+                                style={{
+                                    background: isFavorite ? '#FEF2F2' : 'var(--color-surface)',
+                                    color: isFavorite ? '#DC2626' : 'var(--color-text-secondary)',
+                                    border: `1px solid ${isFavorite ? '#FCA5A5' : 'var(--color-border)'}`,
+                                    padding: '6px 12px', borderRadius: 20, fontSize: 13, fontWeight: 700,
+                                    display: 'flex', alignItems: 'center', gap: 4, transition: 'all .2s'
+                                }}
+                            >
+                                {isFavorite ? '💖 단골 파트너' : '🤍 단골로 등록'}
+                            </button>
                         </div>
                     </div>
                 ) : job.status === 'OPEN' && (
@@ -167,6 +209,35 @@ export default function RequestDetailClient({ job, photos, payment, applications
                     </div>
                 )}
 
+                {/* 부족한 비품 (있을 경우에만 노출) */}
+                {(job.supply_shortages as string[])?.length > 0 && (
+                    <div className="card mb-md" style={{ padding: 'var(--spacing-md)', border: '1px solid #FCA5A5', background: '#FEF2F2' }}>
+                        <h3 className="font-bold text-md mb-xs" style={{ color: '#DC2626' }}>🚨 보충이 필요한 비품</h3>
+                        <p className="text-sm text-secondary mb-sm" style={{ color: '#991B1B' }}>클린파트너가 다음 비품이 현장에 부족하다고 보고했습니다.</p>
+                        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                            {(job.supply_shortages as string[]).map((item, idx) => (
+                                <span key={idx} style={{ background: '#DC2626', color: '#fff', padding: '4px 10px', borderRadius: 20, fontSize: 13, fontWeight: 700 }}>
+                                    {item}
+                                </span>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {/* 추가 요금 청구 내역 */}
+                {job.extra_charge_amount > 0 && (
+                    <div className="card mb-md p-md" style={{ border: '1px solid #D97706', background: '#FEF3C7' }}>
+                        <h3 className="font-bold text-md mb-xs" style={{ color: '#B45309' }}>💸 현장 오염도 추가 청구</h3>
+                        <div className="flex justify-between items-center mb-sm">
+                            <span className="text-sm font-bold" style={{ color: '#92400E' }}>추가 청구 금액</span>
+                            <span className="font-bold text-lg text-primary">+{job.extra_charge_amount.toLocaleString()}원</span>
+                        </div>
+                        <p className="text-sm text-secondary p-sm bg-white rounded-md border border-yellow-200">
+                            <strong>사유:</strong> {job.extra_charge_reason}
+                        </p>
+                    </div>
+                )}
+
                 {/* 청소 완료 사진 */}
                 {afterPhotos.length > 0 && (
                     <div className="photos-section">
@@ -191,11 +262,16 @@ export default function RequestDetailClient({ job, photos, payment, applications
                     <div className="payment-card card">
                         <h3 className="section-label">정산 내역</h3>
                         <div className="payment-rows">
-                            <div className="payment-row"><span>총 금액</span><span>₩{payment.gross_amount.toLocaleString()}</span></div>
+                            <div className="payment-row"><span>기본 청소 금액</span><span>₩{job.price.toLocaleString()}</span></div>
+                            {job.extra_charge_amount > 0 && (
+                                <div className="payment-row text-primary font-bold"><span>추가 청구 금액</span><span>+₩{job.extra_charge_amount.toLocaleString()}</span></div>
+                            )}
+                            <div className="divider" />
+                            <div className="payment-row"><span>총 청구 금액</span><span>₩{(job.price + (job.extra_charge_amount || 0)).toLocaleString()}</span></div>
                             <div className="payment-row text-secondary text-sm"><span>플랫폼 수수료 (10%)</span><span>-₩{payment.platform_fee.toLocaleString()}</span></div>
                             <div className="payment-row text-secondary text-sm"><span>원천징수 (3.3%)</span><span>-₩{payment.withholding_tax.toLocaleString()}</span></div>
                             <div className="divider" />
-                            <div className="payment-row font-bold text-primary"><span>클린파트너 수령액</span><span>₩{payment.worker_payout.toLocaleString()}</span></div>
+                            <div className="payment-row font-bold text-primary"><span>클린파트너 최종 수령액</span><span>₩{payment.worker_payout.toLocaleString()}</span></div>
                             <div className="payment-row text-sm text-secondary"><span>상태</span><span className={`badge ${payment.status === 'RELEASED' ? 'badge-approved' : 'badge-open'}`}>{payment.status === 'HELD' ? '입금 대기' : payment.status === 'RELEASED' ? '입금 완료' : payment.status}</span></div>
                         </div>
                     </div>

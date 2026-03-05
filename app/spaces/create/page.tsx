@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { SpaceType } from '@/lib/types'
@@ -75,12 +75,35 @@ export default function CreateSpacePage() {
         description: '',
         is_parking_available: false,
         cleaning_difficulty: '보통',
+        biz_type: 'INDIVIDUAL' as 'BUSINESS' | 'INDIVIDUAL',
+        biz_reg_number: '',
+        biz_email: '',
+        cash_receipt_number: '',
     })
     const [checklist, setChecklist] = useState(DEFAULT_CHECKLISTS['airbnb'])
     const [referencePhotos, setReferencePhotos] = useState<File[]>([])
     const [photoPreviewUrls, setPhotoPreviewUrls] = useState<string[]>([])
+    const [bizRegPhoto, setBizRegPhoto] = useState<File | null>(null)
+    const [bizRegPhotoUrl, setBizRegPhotoUrl] = useState<string>('')
     const [loading, setLoading] = useState(false)
-    const [step, setStep] = useState(1) // 1: 기본정보, 2: 가이드, 3: 체크리스트/사진
+    const [step, setStep] = useState(1) // 1: 기본정보, 2: 가이드, 3: 체크리스트, 4: 정산정보
+
+    const [mapLocation, setMapLocation] = useState<{ lat: number, lng: number } | null>(null)
+    const mapRef = useRef<HTMLDivElement>(null)
+
+    // AI 단가 계산 공식 (시급 15000원 + 10평당 2000원) * 난이도 가중치
+    const calculateRecommendedPrice = () => {
+        const duration = parseInt(form.estimated_duration) || 60
+        const sqm = parseInt(form.size_sqm) || 30
+        const diffRate = form.cleaning_difficulty === '상' || form.cleaning_difficulty === '어려움' ? 1.2 : form.cleaning_difficulty === '하' || form.cleaning_difficulty === '쉬움' ? 0.9 : 1.0
+
+        const hourlyBase = 15000 * (duration / 60)
+        const sizeBase = (sqm / 33) * 2000 // 33sqm ~= 10평
+
+        const rawPrice = (hourlyBase + sizeBase) * diffRate
+        return Math.round(rawPrice / 1000) * 1000 // 1000원 단위 반올림
+    }
+    const recommendedPrice = calculateRecommendedPrice()
 
     const handleTypeChange = (type: SpaceType) => {
         setForm(f => ({ ...f, type }))
@@ -104,6 +127,40 @@ export default function CreateSpacePage() {
         setPhotoPreviewUrls(prev => prev.filter((_, i) => i !== index))
     }
 
+    const handleAddressCheck = async () => {
+        if (!form.address) return alert('주소를 먼저 입력해주세요.')
+        try {
+            const naver = (window as any).naver
+            if (naver && naver.maps && naver.maps.Service) {
+                naver.maps.Service.geocode({ query: form.address }, (status: any, response: any) => {
+                    if (status === naver.maps.Service.Status.OK && response.v2.addresses.length > 0) {
+                        const lat = parseFloat(response.v2.addresses[0].y)
+                        const lng = parseFloat(response.v2.addresses[0].x)
+                        setMapLocation({ lat, lng })
+
+                        setTimeout(() => {
+                            if (mapRef.current) {
+                                const map = new naver.maps.Map(mapRef.current, { center: new naver.maps.LatLng(lat, lng), zoom: 16 })
+                                new naver.maps.Marker({ position: new naver.maps.LatLng(lat, lng), map })
+                            }
+                        }, 100)
+                    } else {
+                        alert('정확한 주소를 찾을 수 없습니다. 도로명 주소로 다시 시도해보세요.')
+                    }
+                })
+            }
+        } catch (e) { console.error('Geocoding failed', e) }
+    }
+
+    const handleBizRegPhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (!e.target.files?.[0]) return
+        const file = e.target.files[0]
+        setBizRegPhoto(file)
+        const reader = new FileReader()
+        reader.onload = (e) => setBizRegPhotoUrl(e.target?.result as string)
+        reader.readAsDataURL(file)
+    }
+
     const handleSubmit = async () => {
         if (!form.name || !form.address) return
         setLoading(true)
@@ -121,6 +178,19 @@ export default function CreateSpacePage() {
             if (!uploadError) {
                 const { data: { publicUrl } } = supabase.storage.from('photos').getPublicUrl(filePath)
                 uploadedPhotoUrls.push(publicUrl)
+            }
+        }
+
+        // 사업자등록증 첨부
+        let uploadedBizRegUrl = null
+        if (bizRegPhoto) {
+            const fileExt = bizRegPhoto.name.split('.').pop()
+            const fileName = `biz_${Date.now()}_${Math.random()}.${fileExt}`
+            const filePath = `${user.id}/${fileName}`
+            const { error: uploadError } = await supabase.storage.from('photos').upload(filePath, bizRegPhoto)
+            if (!uploadError) {
+                const { data: { publicUrl } } = supabase.storage.from('photos').getPublicUrl(filePath)
+                uploadedBizRegUrl = publicUrl
             }
         }
 
@@ -144,6 +214,13 @@ export default function CreateSpacePage() {
             checklist_template: checklist,
             reference_photos: uploadedPhotoUrls,
             is_active: true,
+            biz_type: form.biz_type,
+            biz_reg_number: form.biz_type === 'BUSINESS' ? form.biz_reg_number : null,
+            biz_email: form.biz_type === 'BUSINESS' ? form.biz_email : null,
+            biz_reg_image: form.biz_type === 'BUSINESS' ? uploadedBizRegUrl : null,
+            cash_receipt_number: form.biz_type === 'INDIVIDUAL' ? form.cash_receipt_number : null,
+            lat: mapLocation?.lat || null,
+            lng: mapLocation?.lng || null
         }).select().single()
 
         if (!error && data) {
@@ -199,11 +276,27 @@ export default function CreateSpacePage() {
                         {/* 주소 */}
                         <div className="form-group">
                             <label className="form-label">주소 *</label>
-                            <input className="form-input" placeholder="예: 서울 마포구 합정동 123-4"
-                                value={form.address} onChange={e => setForm(f => ({ ...f, address: e.target.value }))} />
+                            <div style={{ display: 'flex', gap: 8 }}>
+                                <input className="form-input" placeholder="예: 서울 마포구 합정동 123-4"
+                                    value={form.address} onChange={e => setForm(f => ({ ...f, address: e.target.value }))} />
+                                <button className="btn btn-secondary" style={{ flexShrink: 0, width: 100 }} onClick={handleAddressCheck}>지도 확인</button>
+                            </div>
                             <input className="form-input mt-sm" placeholder="상세주소 (동·호수 등)"
                                 value={form.address_detail} onChange={e => setForm(f => ({ ...f, address_detail: e.target.value }))} />
                         </div>
+
+                        {/* 지도 미리보기 영역 */}
+                        <div
+                            ref={mapRef}
+                            style={{
+                                width: '100%',
+                                height: mapLocation ? 200 : 0,
+                                borderRadius: 16,
+                                marginTop: mapLocation ? 8 : 0,
+                                overflow: 'hidden',
+                                transition: 'all 0.3s ease'
+                            }}
+                        />
 
                         {/* 규모 & 난이도 */}
                         <div className="form-group mt-xl">
@@ -233,7 +326,24 @@ export default function CreateSpacePage() {
                             <label className="form-label">기본 청소 단가 (원)</label>
                             <input className="form-input" type="number" placeholder="30000"
                                 value={form.base_price} onChange={e => setForm(f => ({ ...f, base_price: e.target.value }))} />
-                            <p className="form-hint">클린파트너 기준 단가입니다. 플랫폼 수수료 10%가 추가됩니다.</p>
+
+                            <div style={{ marginTop: 8, padding: '10px 12px', background: '#F0F9FF', border: '1px solid #BAE6FD', borderRadius: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <div>
+                                    <div style={{ fontSize: 13, fontWeight: 700, color: '#0369A1', display: 'flex', alignItems: 'center', gap: 4 }}>
+                                        <span>✨ AI 스마트 추천 단가</span>
+                                    </div>
+                                    <div style={{ fontSize: 11, color: '#0284C7', marginTop: 2 }}>면적, 소요시간, 난이도 기반 산출</div>
+                                </div>
+                                <button
+                                    className="btn btn-sm"
+                                    style={{ background: '#0284C7', color: '#fff', border: 'none', borderRadius: 6, fontWeight: 600 }}
+                                    onClick={() => setForm(f => ({ ...f, base_price: recommendedPrice.toString() }))}
+                                >
+                                    {recommendedPrice.toLocaleString()}원 적용
+                                </button>
+                            </div>
+
+                            <p className="form-hint mt-xs">클린파트너 기준 단가입니다. 예약 결제 시 플랫폼 수수료 10%가 추가됩니다.</p>
                         </div>
 
                         <div className="form-group">
@@ -384,10 +494,82 @@ export default function CreateSpacePage() {
                             <button className="btn btn-secondary btn-full btn-lg" onClick={() => setStep(2)}>← 이전</button>
                             <button
                                 className="btn btn-primary btn-full btn-lg"
-                                onClick={handleSubmit}
-                                disabled={loading || checklist.length === 0}
+                                onClick={() => setStep(4)}
+                                disabled={checklist.length === 0}
                             >
-                                {loading ? <span className="spinner" /> : '🏠 공간 등록 완료'}
+                                다음: 정산 설정 →
+                            </button>
+                        </div>
+                    </>
+                )}
+
+                {step === 4 && (
+                    <>
+                        <div className="mb-md">
+                            <h3 className="section-title">스마트 매입 증빙 💸</h3>
+                            <p className="form-hint mt-xs">복잡한 세금계산서, 현금영수증 발급을 플랫폼이 알아서 처리해드립니다. 사업자 여부를 선택해주세요.</p>
+                        </div>
+
+                        <div className="form-group mt-lg">
+                            <div style={{ display: 'flex', gap: 'var(--spacing-sm)' }}>
+                                <button
+                                    className={`btn btn-full ${form.biz_type === 'INDIVIDUAL' ? 'btn-primary' : 'btn-secondary'}`}
+                                    onClick={() => setForm(f => ({ ...f, biz_type: 'INDIVIDUAL' }))}
+                                >개인 (현금영수증)</button>
+                                <button
+                                    className={`btn btn-full ${form.biz_type === 'BUSINESS' ? 'btn-primary' : 'btn-secondary'}`}
+                                    onClick={() => setForm(f => ({ ...f, biz_type: 'BUSINESS' }))}
+                                >사업자 (세금계산서)</button>
+                            </div>
+                        </div>
+
+                        {form.biz_type === 'INDIVIDUAL' ? (
+                            <div className="form-group mt-lg" style={{ background: '#F0F9FF', padding: 'var(--spacing-md)', borderRadius: 16, border: '1px solid #BAE6FD' }}>
+                                <label className="form-label" style={{ color: '#0369A1' }}>휴대폰 번호 (소득공제용)</label>
+                                <input className="form-input" placeholder="010-0000-0000"
+                                    value={form.cash_receipt_number} onChange={e => setForm(f => ({ ...f, cash_receipt_number: e.target.value }))} />
+                                <p className="form-hint" style={{ color: '#0284C7', marginTop: 8 }}>입력해주신 번호로 매 결제 시 플랫폼 수수료에 대한 현금영수증이 자동 발급됩니다.</p>
+                            </div>
+                        ) : (
+                            <div className="mt-lg" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-md)' }}>
+                                <div className="form-group">
+                                    <label className="form-label">사업자등록번호</label>
+                                    <input className="form-input" placeholder="000-00-00000"
+                                        value={form.biz_reg_number} onChange={e => setForm(f => ({ ...f, biz_reg_number: e.target.value }))} />
+                                </div>
+                                <div className="form-group">
+                                    <label className="form-label">세금계산서 수신 이메일</label>
+                                    <input className="form-input" placeholder="admin@example.com"
+                                        value={form.biz_email} onChange={e => setForm(f => ({ ...f, biz_email: e.target.value }))} />
+                                </div>
+                                <div className="form-group">
+                                    <label className="form-label">사업자등록증 사진 첨부</label>
+                                    {bizRegPhotoUrl ? (
+                                        <div className="photo-preview" style={{ width: '100%', height: 160 }}>
+                                            <img src={bizRegPhotoUrl} alt="사업자등록증 미리보기" style={{ objectFit: 'contain' }} />
+                                            <button className="photo-delete" onClick={() => { setBizRegPhoto(null); setBizRegPhotoUrl('') }}>✕</button>
+                                        </div>
+                                    ) : (
+                                        <label className="photo-add-btn" style={{ width: '100%', height: 160 }}>
+                                            <input type="file" accept="image/*" onChange={handleBizRegPhotoChange} style={{ display: 'none' }} />
+                                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+                                                <span className="add-icon">+</span>
+                                                <span style={{ fontSize: 'var(--font-sm)' }}>사진 첨부하기</span>
+                                            </div>
+                                        </label>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+                        <div className="form-row mt-xl">
+                            <button className="btn btn-secondary btn-full btn-lg" onClick={() => setStep(3)}>← 이전</button>
+                            <button
+                                className="btn btn-primary btn-full btn-lg"
+                                onClick={handleSubmit}
+                                disabled={loading || (form.biz_type === 'BUSINESS' && (!form.biz_reg_number || !bizRegPhotoUrl))}
+                            >
+                                {loading ? <span className="spinner" /> : '🏠 최종 공간 등록 완료'}
                             </button>
                         </div>
                     </>

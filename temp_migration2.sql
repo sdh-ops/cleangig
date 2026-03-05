@@ -1,0 +1,5 @@
+ALTER TABLE public.spaces ADD COLUMN IF NOT EXISTS biz_type TEXT DEFAULT 'INDIVIDUAL' CHECK (biz_type IN ('BUSINESS', 'INDIVIDUAL'));
+ALTER TABLE public.spaces ADD COLUMN IF NOT EXISTS biz_reg_number TEXT;
+ALTER TABLE public.spaces ADD COLUMN IF NOT EXISTS biz_email TEXT;
+ALTER TABLE public.spaces ADD COLUMN IF NOT EXISTS biz_reg_image TEXT;
+ALTER TABLE public.spaces ADD COLUMN IF NOT EXISTS cash_receipt_number TEXT;
