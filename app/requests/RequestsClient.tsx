@@ -116,7 +116,7 @@ export default function RequestsClient({ jobs, currentTab }: Props) {
                                             {hasCleaner && (
                                                 <div className="mt-auto group-hover:scale-110 transition-transform">
                                                     <img
-                                                        src={job.cleaner.profile_image || 'https://lh3.googleusercontent.com/proxy/placeholder-avatar'}
+                                                        src={job.cleaner?.profile_image || 'https://lh3.googleusercontent.com/proxy/placeholder-avatar'}
                                                         alt="Cleaner"
                                                         className="size-8 rounded-full border-2 border-white dark:border-slate-800 shadow-sm bg-slate-100 object-cover"
                                                     />
