@@ -171,6 +171,34 @@ export default function JobDetailPage() {
         setUploadingIdx(null);
     };
 
+    const handleDamageReportUpload = async (file: File) => {
+        const supabase = createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user || !job) return;
+
+        setSubmitting(true);
+        const ext = file.name.split('.').pop();
+        const path = `damage/${id}/${Date.now()}.${ext}`;
+
+        const { error: uploadError } = await supabase.storage
+            .from('photos').upload(path, file, { contentType: file.type });
+
+        if (uploadError) { alert('파손 사진 업로드 실패'); setSubmitting(false); return; }
+
+        await supabase.from('photos').insert({
+            job_id: id,
+            uploaded_by: user.id,
+            type: 'damage',
+            photo_url: path,
+            description: damageDesc || '파손 보고'
+        });
+
+        alert('파손 보고 사진이 등록되었습니다.');
+        setSubmitting(false);
+        setShowDamageReport(false);
+        setDamageDesc('');
+    };
+
     const toggleChecklist = (idx: number) => {
         const next = [...checklist];
         next[idx] = { ...next[idx], completed: !next[idx].completed };
