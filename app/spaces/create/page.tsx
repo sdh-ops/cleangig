@@ -2,6 +2,7 @@
 
 import React, { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import Script from 'next/script';
 import { createClient } from '@/lib/supabase/client';
 import { SpaceType } from '@/lib/types';
 import Step1BasicInfo from './Step1BasicInfo';
@@ -131,10 +132,11 @@ export default function CreateSpacePage() {
         setPhotoPreviewUrls(prev => prev.filter((_, i) => i !== index));
     };
 
-    const handleAddressCheck = async () => {
-        if (!form.address) return alert('주소를 먼저 입력해주세요.');
+    const handleAddressCheck = async (searchAddress?: string) => {
+        const targetAddress = searchAddress || form.address;
+        if (!targetAddress) return alert('주소를 먼저 입력해주세요.');
         try {
-            const res = await fetch(`/api/geocode?query=${encodeURIComponent(form.address)}`);
+            const res = await fetch(`/api/geocode?query=${encodeURIComponent(targetAddress)}`);
             const data = await res.json();
 
             if (data && data.addresses && data.addresses.length > 0) {
@@ -142,9 +144,10 @@ export default function CreateSpacePage() {
                 const lat = parseFloat(addr.y);
                 const lng = parseFloat(addr.x);
                 setMapLocation({ lat, lng });
-                setForm(f => ({ ...f, address: addr.roadAddress || addr.jibunAddress }));
+                if (!searchAddress) {
+                    setForm(f => ({ ...f, address: addr.roadAddress || addr.jibunAddress }));
+                }
 
-                // 지도 표시 (SDK가 로드된 경우에만)
                 const naver = (window as any).naver;
                 if (naver && naver.maps && mapRef.current) {
                     const map = new naver.maps.Map(mapRef.current, {
@@ -157,25 +160,43 @@ export default function CreateSpacePage() {
                     });
                 }
             } else {
-                // SDK fallback (API route fails or no results)
                 const naver = (window as any).naver;
                 if (naver && naver.maps && naver.maps.Service) {
-                    naver.maps.Service.geocode({ query: form.address }, (status: any, response: any) => {
+                    naver.maps.Service.geocode({ query: targetAddress }, (status: any, response: any) => {
                         if (status === naver.maps.Service.Status.OK && response.v2.addresses.length > 0) {
                             const addr = response.v2.addresses[0];
                             const lat = parseFloat(addr.y);
                             const lng = parseFloat(addr.x);
                             setMapLocation({ lat, lng });
-                            setForm(f => ({ ...f, address: addr.roadAddress || addr.jibunAddress }));
+                            if (!searchAddress) {
+                                setForm(f => ({ ...f, address: addr.roadAddress || addr.jibunAddress }));
+                            }
                         }
                     });
-                } else {
+                } else if (!searchAddress) {
                     alert('주소 검색에 실패했습니다. 도로명 주소를 정확히 입력해주세요.');
                 }
             }
         } catch (e) {
             console.error('Geocode fallback error:', e);
         }
+    };
+
+    const handleAddressSearch = () => {
+        const daum = (window as any).daum;
+        if (!daum || !daum.Postcode) {
+            alert('주소 서비스 로딩 중입니다. 잠시 후 다시 시도해주세요.');
+            return;
+        }
+
+        new daum.Postcode({
+            oncomplete: (data: any) => {
+                const fullAddress = data.roadAddress || data.address;
+                setForm(f => ({ ...f, address: fullAddress }));
+                // 주소 선택 후 자동으로 좌표 추출 및 지도 갱신
+                handleAddressCheck(fullAddress);
+            }
+        }).open();
     };
 
     const handleBizRegPhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -279,8 +300,9 @@ export default function CreateSpacePage() {
 
                 {/* Content */}
                 <div className="flex-1 overflow-x-hidden pb-32">
+                    <Script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js" strategy="afterInteractive" />
                     <div className="transition-all duration-300 transform" key={step}>
-                        {step === 1 && <Step1BasicInfo form={form} setForm={setForm} handleAddressCheck={handleAddressCheck} mapLocation={mapLocation} mapRef={mapRef} recommendedPrice={recommendedPrice} />}
+                        {step === 1 && <Step1BasicInfo form={form} setForm={setForm} handleAddressCheck={handleAddressCheck} handleAddressSearch={handleAddressSearch} mapLocation={mapLocation} mapRef={mapRef} recommendedPrice={recommendedPrice} />}
                         {step === 2 && <Step2Guide form={form} setForm={setForm} />}
                         {step === 3 && <Step3Checklist checklist={checklist} setChecklist={setChecklist} photoPreviewUrls={photoPreviewUrls} removePhoto={removePhoto} handlePhotoChange={handlePhotoChange} />}
                         {step === 4 && <Step4BizInfo form={form} setForm={setForm} bizRegPhotoUrl={bizRegPhotoUrl} bizRegPhoto={bizRegPhoto} setBizRegPhoto={setBizRegPhoto} setBizRegPhotoUrl={setBizRegPhotoUrl} handleBizRegPhotoChange={handleBizRegPhotoChange} />}

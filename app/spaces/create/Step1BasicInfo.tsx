@@ -13,7 +13,7 @@ const SPACE_TYPES: { value: SpaceType; label: string; icon: string }[] = [
     { value: 'other', label: '기타', icon: '🏢' },
 ];
 
-export default function Step1BasicInfo({ form, setForm, handleAddressCheck, mapLocation, mapRef, recommendedPrice }: any) {
+export default function Step1BasicInfo({ form, setForm, handleAddressSearch, mapLocation, mapRef, recommendedPrice }: any) {
     const commonInputClass = "flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-slate-900 focus:outline-0 focus:ring-1 focus:ring-primary border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 dark:text-slate-100 h-14 placeholder:text-gray-500 p-[15px] text-base font-normal leading-normal transition-colors";
 
     return (
@@ -42,7 +42,6 @@ export default function Step1BasicInfo({ form, setForm, handleAddressCheck, mapL
                         onChange={e => {
                             const type = e.target.value;
                             setForm((f: any) => ({ ...f, type }));
-                            // Checklist update logic should be in parent or handled via useEffect
                         }}
                     >
                         <option disabled value="">Select space type</option>
@@ -57,13 +56,20 @@ export default function Step1BasicInfo({ form, setForm, handleAddressCheck, mapL
             <label className="flex flex-col flex-1">
                 <p className="text-base font-medium leading-normal pb-2 text-slate-900 dark:text-slate-100">주소</p>
                 <div className="flex gap-2 mb-2">
-                    <input
-                        className={commonInputClass}
-                        placeholder="도로명 주소 입력"
-                        value={form.address}
-                        onChange={e => setForm((f: any) => ({ ...f, address: e.target.value }))}
-                    />
-                    <button className="px-4 border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800 text-sm font-bold shrink-0 hover:bg-gray-100 dark:hover:bg-gray-700 transition" onClick={handleAddressCheck}>지도찾기</button>
+                    <div
+                        className={`${commonInputClass} cursor-pointer flex items-center bg-gray-50 dark:bg-gray-800/50`}
+                        onClick={handleAddressSearch}
+                    >
+                        <span className={form.address ? "text-slate-900 dark:text-slate-100" : "text-gray-500"}>
+                            {form.address || "주소를 검색해주세요"}
+                        </span>
+                    </div>
+                    <button
+                        className="px-4 border border-primary text-primary dark:text-primary-light rounded-lg bg-primary/5 text-sm font-bold shrink-0 hover:bg-primary/10 transition h-14"
+                        onClick={handleAddressSearch}
+                    >
+                        주소 검색
+                    </button>
                 </div>
                 <input
                     className={commonInputClass}
