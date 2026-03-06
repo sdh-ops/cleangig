@@ -13,7 +13,7 @@ export default async function EarningsPage() {
   }
 
   const { data: profile } = await supabase.from('users').select('role').eq('id', user.id).single();
-  if (!profile || profile.role !== 'worker') {
+  if (!profile) {
     redirect('/dashboard');
   }
 

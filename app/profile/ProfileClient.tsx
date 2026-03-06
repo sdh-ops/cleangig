@@ -13,6 +13,9 @@ const TIER_CONFIG: Record<string, { label: string; color: string; next: string; 
   MASTER: { label: '👑 마스터', color: '#8B5CF6', next: '최고 등급!', desc: '수수료 7%' },
 };
 
+const SPARKLE_DESC = "친절도, 응답 속도, 청소 매너를 종합한 점수입니다. 99.9℃에 도전해보세요!";
+const RATING_DESC = "청소 완료 후 공간 운영자가 남긴 별점 평균입니다. 서비스 품질의 지표가 됩니다.";
+
 interface Props {
   profile: { id: string; name: string; email?: string; phone?: string; profile_image?: string; role: string; tier?: string; avg_rating?: number; total_jobs?: number; bio?: string; bank_account?: any; is_verified?: boolean; manner_temperature?: number };
   totalCompletedJobs: number;
@@ -161,14 +164,20 @@ export default function ProfileClient({ profile, totalCompletedJobs }: Props) {
 
           {/* Stats Area */}
           <div className="flex px-4 py-5 gap-3">
-            <div className="flex-1 flex flex-col items-center justify-center py-4 px-2 rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm transition-shadow hover:shadow-md">
-              <span className="text-xs text-slate-500 dark:text-slate-400 font-bold mb-1.5">완료한 작업</span>
-              <span className="text-xl font-black text-slate-900 dark:text-white tracking-tight">{totalCompletedJobs}건</span>
+            <div className="flex-1 flex flex-col items-center justify-center py-4 px-2 rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm transition-shadow hover:shadow-md group relative">
+              <span className="text-xs text-slate-500 dark:text-slate-400 font-bold mb-1.5">평점</span>
+              <span className="text-xl font-black text-slate-900 dark:text-white tracking-tight">{profile.avg_rating?.toFixed(1) || '5.0'}</span>
+              <div className="absolute bottom-full mb-2 hidden group-hover:block w-48 p-2 bg-slate-800 text-white text-[10px] rounded-lg shadow-xl z-30 text-center leading-tight">
+                {RATING_DESC}
+              </div>
             </div>
-            <div className="flex-1 flex flex-col items-center justify-center py-4 px-2 rounded-2xl bg-white dark:bg-slate-900 border border-primary/20 dark:border-primary/30 shadow-sm relative overflow-hidden transition-shadow hover:shadow-md">
+            <div className="flex-1 flex flex-col items-center justify-center py-4 px-2 rounded-2xl bg-white dark:bg-slate-900 border border-primary/20 dark:border-primary/30 shadow-sm relative overflow-hidden transition-shadow hover:shadow-md group">
               <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent dark:from-primary/10" />
               <span className="text-xs text-primary font-bold mb-1.5 relative z-10">스파클 온도</span>
               <span className="text-xl font-black text-primary relative z-10 tracking-tight">{profile.manner_temperature || 98}점</span>
+              <div className="absolute bottom-full mb-2 hidden group-hover:block w-48 p-2 bg-primary text-white text-[10px] rounded-lg shadow-xl z-30 text-center leading-tight">
+                {SPARKLE_DESC}
+              </div>
             </div>
           </div>
 
@@ -202,9 +211,27 @@ export default function ProfileClient({ profile, totalCompletedJobs }: Props) {
                   </div>
                   <div className="text-left">
                     <p className="text-sm font-bold">계좌 및 정산 관리</p>
+                    <p className="text-[10px] text-slate-400">수익금 확인 및 출금 신청</p>
                   </div>
                 </div>
                 <span className="material-symbols-outlined text-slate-400">chevron_right</span>
+              </button>
+
+              {/* 운영자 대시보드 (디버깅/운영 용 임시 노출) */}
+              <button
+                className="w-full flex items-center justify-between p-4 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-xl transition-colors"
+                onClick={() => router.push('/admin')}
+              >
+                <div className="flex items-center gap-3">
+                  <div className="size-10 flex items-center justify-center bg-blue-100 dark:bg-blue-900/30 rounded-lg text-blue-500">
+                    <span className="material-symbols-outlined">admin_panel_settings</span>
+                  </div>
+                  <div className="text-left">
+                    <p className="text-sm font-bold text-blue-600">운영자 대시보드</p>
+                    <p className="text-[10px] text-blue-400">플랫폼 전체 현황 관리</p>
+                  </div>
+                </div>
+                <span className="material-symbols-outlined text-blue-400">chevron_right</span>
               </button>
 
               <button
