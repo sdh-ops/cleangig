@@ -151,23 +151,40 @@ export default function JobDetailPage() {
         const ext = file.name.split('.').pop();
         const path = `jobs/${id}/${Date.now()}.${ext}`;
 
-        const { error: uploadError } = await supabase.storage
-            .from('photos').upload(path, file, { contentType: file.type });
+        let success = false;
+        let retries = 0;
+        const maxRetries = 2;
 
-        if (uploadError) { alert('사진 업로드 실패'); setUploadingIdx(null); return; }
+        while (!success && retries <= maxRetries) {
+            try {
+                const { error: uploadError } = await supabase.storage
+                    .from('photos').upload(path, file, { contentType: file.type, upsert: true });
 
-        await supabase.from('photos').insert({
-            job_id: id,
-            uploaded_by: user.id,
-            type: 'after',
-            photo_url: path,
-            checklist_item_id: checklistIdx !== undefined ? checklist[checklistIdx]?.id : null,
-        });
+                if (uploadError) throw uploadError;
 
-        if (checklistIdx !== undefined) {
-            const next = [...checklist];
-            next[checklistIdx] = { ...next[checklistIdx], completed: true, photo_url: path };
-            setChecklist(next);
+                await supabase.from('photos').insert({
+                    job_id: id,
+                    uploaded_by: user.id,
+                    type: 'after',
+                    photo_url: path,
+                    checklist_item_id: checklistIdx !== undefined ? checklist[checklistIdx]?.id : null,
+                });
+
+                if (checklistIdx !== undefined) {
+                    const next = [...checklist];
+                    next[checklistIdx] = { ...next[checklistIdx], completed: true, photo_url: path };
+                    setChecklist(next);
+                }
+                success = true;
+            } catch (err) {
+                console.error(`Upload attempt ${retries + 1} failed:`, err);
+                retries++;
+                if (retries > maxRetries) {
+                    alert('사진 업로드에 실패했습니다. 네트워크 연결을 확인하고 다시 시도해주세요.');
+                } else {
+                    await new Promise(res => setTimeout(res, 1000)); // 1초 대기 후 재시도
+                }
+            }
         }
         setUploadingIdx(null);
     };
@@ -181,23 +198,39 @@ export default function JobDetailPage() {
         const ext = file.name.split('.').pop();
         const path = `damage/${id}/${Date.now()}.${ext}`;
 
-        const { error: uploadError } = await supabase.storage
-            .from('photos').upload(path, file, { contentType: file.type });
+        let success = false;
+        let retries = 0;
+        const maxRetries = 2;
 
-        if (uploadError) { alert('파손 사진 업로드 실패'); setSubmitting(false); return; }
+        while (!success && retries <= maxRetries) {
+            try {
+                const { error: uploadError } = await supabase.storage
+                    .from('photos').upload(path, file, { contentType: file.type, upsert: true });
 
-        await supabase.from('photos').insert({
-            job_id: id,
-            uploaded_by: user.id,
-            type: 'damage',
-            photo_url: path,
-            description: damageDesc || '파손 보고'
-        });
+                if (uploadError) throw uploadError;
 
-        alert('파손 보고 사진이 등록되었습니다.');
+                await supabase.from('photos').insert({
+                    job_id: id,
+                    uploaded_by: user.id,
+                    type: 'damage',
+                    photo_url: path,
+                    description: damageDesc || '파손 보고'
+                });
+                success = true;
+                alert('파손 보고 사진이 등록되었습니다.');
+                setShowDamageReport(false);
+                setDamageDesc('');
+            } catch (err) {
+                console.error(`Damage upload attempt ${retries + 1} failed:`, err);
+                retries++;
+                if (retries > maxRetries) {
+                    alert('파손 사진 업로드에 실패했습니다.');
+                } else {
+                    await new Promise(res => setTimeout(res, 1000));
+                }
+            }
+        }
         setSubmitting(false);
-        setShowDamageReport(false);
-        setDamageDesc('');
     };
 
     const toggleChecklist = (idx: number) => {
@@ -461,14 +494,30 @@ export default function JobDetailPage() {
                                                         >
                                                             <span className="material-symbols-outlined text-[16px]">edit</span>
                                                         </button>
+                                                        {uploadingIdx === idx && (
+                                                            <div className="absolute inset-0 bg-white/60 dark:bg-black/60 backdrop-blur-[1px] flex flex-col items-center justify-center rounded-xl">
+                                                                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary mb-2"></div>
+                                                                <span className="text-[10px] font-bold text-primary">재전송 중...</span>
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 ) : (
                                                     <button
                                                         onClick={() => { setActiveUploadIdx(idx); fileInputRef.current?.click(); }}
-                                                        className="flex items-center gap-2 text-sm font-bold text-primary bg-primary/5 hover:bg-primary/10 border border-primary/20 border-dashed px-4 py-3 rounded-xl transition-colors w-full justify-center"
+                                                        disabled={uploadingIdx !== null}
+                                                        className={`flex items-center gap-2 text-sm font-bold border border-dashed px-4 py-3 rounded-xl transition-colors w-full justify-center ${uploadingIdx === idx ? 'bg-slate-50 text-slate-400 border-slate-300' : 'text-primary bg-primary/5 hover:bg-primary/10 border-primary/20'}`}
                                                     >
-                                                        <span className="material-symbols-outlined text-[20px]">add_a_photo</span>
-                                                        {uploadingIdx === idx ? '업로드 중...' : '완료 사진 전송하기 (선택)'}
+                                                        {uploadingIdx === idx ? (
+                                                            <div className="flex items-center gap-2">
+                                                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                                                                <span>업로드 중...</span>
+                                                            </div>
+                                                        ) : (
+                                                            <>
+                                                                <span className="material-symbols-outlined text-[20px]">add_a_photo</span>
+                                                                <span>완료 사진 전송하기 (선택)</span>
+                                                            </>
+                                                        )}
                                                     </button>
                                                 )}
                                             </div>

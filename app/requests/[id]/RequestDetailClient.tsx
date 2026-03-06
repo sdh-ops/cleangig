@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import PaymentModal from '@/components/common/PaymentModal'
@@ -32,6 +32,35 @@ export default function RequestDetailClient({ job, photos, payment, applications
     const [showDispute, setShowDispute] = useState(false)
     const [isFavorite, setIsFavorite] = useState(initialIsFavorite)
     const [togglingFav, setTogglingFav] = useState(false)
+    const [currentJob, setCurrentJob] = useState(job)
+
+    // 리얼타임 상태 동기화
+    useEffect(() => {
+        setCurrentJob(job)
+    }, [job])
+
+    useEffect(() => {
+        const supabase = createClient()
+        const channel = supabase.channel(`job-detail-${job.id}`)
+            .on(
+                'postgres_changes',
+                {
+                    event: 'UPDATE',
+                    schema: 'public',
+                    table: 'jobs',
+                    filter: `id=eq.${job.id}`
+                },
+                (payload) => {
+                    console.log('Job updated in Realtime:', payload.new)
+                    setCurrentJob(payload.new)
+                }
+            )
+            .subscribe()
+
+        return () => {
+            supabase.removeChannel(channel)
+        }
+    }, [job.id])
 
     // 리뷰 상태
     const [reviewModalOpen, setReviewModalOpen] = useState(false)
@@ -50,14 +79,14 @@ export default function RequestDetailClient({ job, photos, payment, applications
     const [paymentContext, setPaymentContext] = useState<'accept' | 'extra'>('accept')
     const [selectedApp, setSelectedApp] = useState<{ appId: string, workerId: string } | null>(null)
 
-    const st = STATUS_MAP[job.status] || { label: job.status, bgCls: 'bg-gray-100', textCls: 'text-gray-700', desc: '' }
-    const space = job.spaces
-    const worker = job.users
-    const isOperator = job.operator_id === userId
+    const st = STATUS_MAP[currentJob.status] || { label: currentJob.status, bgCls: 'bg-gray-100', textCls: 'text-gray-700', desc: '' }
+    const space = currentJob.spaces
+    const worker = currentJob.users
+    const isOperator = currentJob.operator_id === userId
     const afterPhotos = photos.filter((p: any) => p.type === 'after')
 
     const handleApproveBtnClick = () => {
-        if (job.extra_charge_amount > 0) {
+        if (currentJob.extra_charge_amount > 0) {
             setPaymentContext('extra')
             setPaymentModalOpen(true)
         } else {
@@ -69,10 +98,10 @@ export default function RequestDetailClient({ job, photos, payment, applications
     const executeApprove = async () => {
         setApproving(true)
         const supabase = createClient()
-        await supabase.from('jobs').update({ status: 'APPROVED', auto_approved: false }).eq('id', job.id)
+        await supabase.from('jobs').update({ status: 'APPROVED', auto_approved: false }).eq('id', currentJob.id)
 
         const { error: notifyError } = await supabase.rpc('notify_user', {
-            p_user_id: job.worker_id,
+            p_user_id: currentJob.worker_id,
             p_title: '💰 정산 완료 안내',
             p_message: '공간 파트너님이 청소를 승인했습니다. 정산이 곧 완료됩니다.',
             p_url: '/earnings'
@@ -82,7 +111,7 @@ export default function RequestDetailClient({ job, photos, payment, applications
         fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/finance-agent`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}` },
-            body: JSON.stringify({ job_id: job.id })
+            body: JSON.stringify({ job_id: currentJob.id })
         }).catch(console.error)
         router.refresh()
         setApproving(false)
@@ -98,12 +127,32 @@ export default function RequestDetailClient({ job, photos, payment, applications
         if (!disputeReason.trim()) return
         const supabase = createClient()
         await supabase.from('disputes').insert({
-            job_id: job.id, reporter_id: userId,
+            job_id: currentJob.id, reporter_id: userId,
             category: 'photo_quality', description: disputeReason,
         })
-        await supabase.from('jobs').update({ status: 'DISPUTED' }).eq('id', job.id)
+        await supabase.from('jobs').update({ status: 'DISPUTED' }).eq('id', currentJob.id)
         setShowDispute(false)
         router.refresh()
+    }
+
+    const handleReCleaningRequest = async () => {
+        const supabase = createClient()
+        const { error } = await supabase.from('jobs').update({
+            status: 'IN_PROGRESS',
+            dispute_resolved: false,
+            extra_charge_amount: 0
+        }).eq('id', currentJob.id)
+
+        if (!error) {
+            await supabase.rpc('notify_user', {
+                p_user_id: currentJob.worker_id,
+                p_title: '🧹 재청소 요청 안내',
+                p_message: '호스트가 일부 미흡한 구간에 대해 재청소를 요청했습니다. 상세 내용을 확인해주세요.',
+                p_url: `/clean/job/${currentJob.id}`
+            })
+            alert('재청소가 요청되었습니다.')
+            router.refresh()
+        }
     }
 
     const handleToggleFavorite = async () => {
@@ -129,7 +178,7 @@ export default function RequestDetailClient({ job, photos, payment, applications
         setSubmittingReview(true)
         const supabase = createClient()
         await supabase.from('reviews').insert({
-            job_id: job.id, reviewer_id: userId, reviewee_id: worker.id,
+            job_id: currentJob.id, reviewer_id: userId, reviewee_id: worker.id,
             rating: reviewRating, comment: reviewComment,
             tags: selectedTags
         })
@@ -177,14 +226,14 @@ export default function RequestDetailClient({ job, photos, payment, applications
                         <div className="p-4 flex justify-between items-center text-sm font-medium border-t border-slate-100 dark:border-slate-700">
                             <span className="flex items-center gap-1 text-slate-600 dark:text-slate-300">
                                 <span className="material-symbols-outlined text-base">calendar_today</span>
-                                {new Date(job.scheduled_at).toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                {new Date(currentJob.scheduled_at).toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                             </span>
-                            <span className="text-primary font-bold text-base">₩{job.price.toLocaleString()}</span>
+                            <span className="text-primary font-bold text-base">₩{currentJob.price.toLocaleString()}</span>
                         </div>
                     </div>
 
                     {/* 이동 중 패널 */}
-                    {job.status === 'EN_ROUTE' && isOperator && (
+                    {currentJob.status === 'EN_ROUTE' && isOperator && (
                         <div className="bg-sky-50 dark:bg-sky-900/20 border border-sky-200 dark:border-sky-800 p-4 rounded-xl flex items-start gap-4">
                             <span className="text-3xl">🚗</span>
                             <div>
@@ -224,7 +273,7 @@ export default function RequestDetailClient({ job, photos, payment, applications
                                 {isFavorite ? '💖 단골 파트너' : '🤍 단골로 등록'}
                             </button>
                         </div>
-                    ) : job.status === 'OPEN' && (
+                    ) : currentJob.status === 'OPEN' && (
                         /* 지원자 리뷰 UI - Stitch App 적용 */
                         <div className="mt-2">
                             <h3 className="text-[17px] font-bold leading-tight tracking-[-0.015em] mb-4 text-slate-900 dark:text-slate-100 flex items-center justify-between">
@@ -279,12 +328,12 @@ export default function RequestDetailClient({ job, photos, payment, applications
                     )}
 
                     {/* 부족한 비품 */}
-                    {(job.supply_shortages as string[])?.length > 0 && (
+                    {(currentJob.supply_shortages as string[])?.length > 0 && (
                         <div className="bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-800 p-4 rounded-xl mt-2">
                             <h3 className="font-bold text-rose-600 dark:text-rose-400 text-sm mb-1 flex items-center gap-1"><span className="material-symbols-outlined text-base">warning</span> 보충이 필요한 비품</h3>
                             <p className="text-xs text-rose-600/80 mb-3">클린파트너가 다음 비품이 현장에 부족하다고 보고했습니다.</p>
                             <div className="flex gap-2 flex-wrap mb-3">
-                                {(job.supply_shortages as string[]).map((item, idx) => (
+                                {(currentJob.supply_shortages as string[]).map((item, idx) => (
                                     <span key={idx} className="bg-rose-100 dark:bg-rose-800 text-rose-700 dark:text-rose-200 px-3 py-1 rounded-full text-xs font-bold border border-rose-200 dark:border-rose-700">
                                         {item}
                                     </span>
@@ -300,15 +349,15 @@ export default function RequestDetailClient({ job, photos, payment, applications
                     )}
 
                     {/* 추가 요금 청구 */}
-                    {job.extra_charge_amount > 0 && (
+                    {currentJob.extra_charge_amount > 0 && (
                         <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 p-4 rounded-xl mt-2">
                             <h3 className="font-bold text-amber-700 dark:text-amber-500 text-sm mb-2 flex items-center gap-1"><span className="material-symbols-outlined text-base">payments</span> 현장 오염도 추가 청구</h3>
                             <div className="flex justify-between items-center mb-2">
                                 <span className="text-xs font-bold text-amber-800 dark:text-amber-400">추가 청구 금액</span>
-                                <span className="font-bold text-base text-amber-600 dark:text-amber-500">+{job.extra_charge_amount.toLocaleString()}원</span>
+                                <span className="font-bold text-base text-amber-600 dark:text-amber-500">+{currentJob.extra_charge_amount.toLocaleString()}원</span>
                             </div>
                             <div className="bg-white dark:bg-slate-800 p-3 rounded-lg border border-amber-100 dark:border-amber-900/50 text-xs text-slate-600 dark:text-slate-300">
-                                <span className="font-bold text-slate-800 dark:text-slate-200">청구 사유:</span> {job.extra_charge_reason}
+                                <span className="font-bold text-slate-800 dark:text-slate-200">청구 사유:</span> {currentJob.extra_charge_reason}
                             </div>
                         </div>
                     )}
@@ -339,18 +388,18 @@ export default function RequestDetailClient({ job, photos, payment, applications
                             <div className="flex flex-col gap-2.5 text-sm">
                                 <div className="flex justify-between items-center text-slate-600 dark:text-slate-300">
                                     <span>기본 청소 금액</span>
-                                    <span className="font-medium text-slate-900 dark:text-slate-100">₩{job.price.toLocaleString()}</span>
+                                    <span className="font-medium text-slate-900 dark:text-slate-100">₩{currentJob.price.toLocaleString()}</span>
                                 </div>
-                                {job.extra_charge_amount > 0 && (
+                                {currentJob.extra_charge_amount > 0 && (
                                     <div className="flex justify-between items-center text-amber-600 dark:text-amber-500 font-medium">
                                         <span>추가 청구 금액</span>
-                                        <span>+₩{job.extra_charge_amount.toLocaleString()}</span>
+                                        <span>+₩{currentJob.extra_charge_amount.toLocaleString()}</span>
                                     </div>
                                 )}
                                 <div className="w-full h-px bg-slate-100 dark:bg-slate-700 my-1"></div>
                                 <div className="flex justify-between items-center font-bold text-slate-900 dark:text-slate-100">
                                     <span>총 청구 금액</span>
-                                    <span>₩{(job.price + (job.extra_charge_amount || 0)).toLocaleString()}</span>
+                                    <span>₩{(currentJob.price + (currentJob.extra_charge_amount || 0)).toLocaleString()}</span>
                                 </div>
                                 <div className="flex justify-between items-center text-xs text-slate-500 mt-1">
                                     <span>플랫폼 수수료 (10%)</span>
@@ -375,33 +424,64 @@ export default function RequestDetailClient({ job, photos, payment, applications
                 </div>
 
                 {/* 공간파트너 액션: 검수 대기 */}
-                {isOperator && job.status === 'SUBMITTED' && (
+                {isOperator && currentJob.status === 'SUBMITTED' && (
                     <div className="px-4 pb-6 mt-4">
                         <div className="bg-primary-light/10 border border-primary/20 p-4 rounded-xl text-center mb-4">
                             <span className="material-symbols-outlined text-primary text-3xl mb-1">flaky</span>
                             <p className="text-sm text-primary font-medium">
-                                {job.auto_approved ? 'AI가 1차 검수를 완료했어요.' : '청소 사진을 확인하고 승인해주세요.'}
+                                {currentJob.auto_approved ? 'AI가 1차 검수를 완료했어요.' : '청소 사진을 확인하고 승인해주세요.'}
                             </p>
                         </div>
                         <div className="flex flex-col gap-3">
                             <button
-                                className="w-full h-14 bg-primary text-white rounded-xl font-bold text-[15px] flex items-center justify-center hover:bg-primary/95 transition-all shadow-md active:scale-95 disabled:opacity-50"
-                                onClick={handleApproveBtnClick} disabled={approving}
+                                onClick={handleApproveBtnClick}
+                                disabled={approving}
+                                className="w-full bg-primary text-white font-bold py-4 rounded-xl shadow-lg shadow-primary/30 flex items-center justify-center gap-2"
                             >
-                                {approving ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> : '✅ 청소 최종 승인하기'}
+                                <span className="material-symbols-outlined">verified</span>
+                                {approving ? '처리 중...' : '최종 승인 및 정산하기'}
                             </button>
                             <button
-                                className="w-full h-12 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-sm border border-slate-300 dark:border-slate-600 rounded-xl hover:bg-slate-50 transition-colors"
                                 onClick={() => setShowDispute(true)}
+                                className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-bold py-4 rounded-xl shadow-sm flex items-center justify-center gap-2"
                             >
-                                ⚠️ 문제 신고 (부분 재청소 요청)
+                                <span className="material-symbols-outlined">report</span>
+                                문제 신고 (분쟁 제기)
+                            </button>
+                        </div>
+                    </div>
+                )}
+
+                {/* 분쟁 중 액션 패널 */}
+                {isOperator && currentJob.status === 'DISPUTED' && (
+                    <div className="px-4 pb-6 mt-4">
+                        <div className="bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-800 p-4 rounded-xl text-center mb-4">
+                            <span className="material-symbols-outlined text-rose-500 text-3xl mb-1">warning</span>
+                            <p className="text-sm text-rose-700 dark:text-rose-300 font-medium">
+                                현재 해당 청소건에 대해 문제가 제기되었습니다.
+                            </p>
+                        </div>
+                        <div className="flex flex-col gap-3">
+                            <button
+                                onClick={handleReCleaningRequest}
+                                className="w-full bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 font-bold py-4 rounded-xl shadow-sm flex items-center justify-center gap-2"
+                            >
+                                <span className="material-symbols-outlined">restart_alt</span>
+                                부분 재청소 요청하기
+                            </button>
+                            <button
+                                onClick={() => alert('플랫폼 관리자에게 중재가 요청되었습니다.')}
+                                className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-bold py-4 rounded-xl shadow-sm flex items-center justify-center gap-2"
+                            >
+                                <span className="material-symbols-outlined">support_agent</span>
+                                관리자 중재 요청 (고객센터)
                             </button>
                         </div>
                     </div>
                 )}
 
                 {/* 공간파트너 액션: 청소 완료 후 리뷰 작성 */}
-                {isOperator && ['APPROVED', 'PAID_OUT'].includes(job.status) && !reviewSubmitted && (
+                {isOperator && ['APPROVED', 'PAID_OUT'].includes(currentJob.status) && !reviewSubmitted && (
                     <div className="px-4 mt-6 pb-6">
                         <div className="bg-gradient-to-br from-rose-50 to-rose-100 dark:from-rose-900/30 dark:to-rose-800/30 border border-rose-200 dark:border-rose-700/50 p-5 rounded-2xl shadow-sm">
                             <div className="flex justify-between items-center mb-2">
@@ -504,9 +584,9 @@ export default function RequestDetailClient({ job, photos, payment, applications
             <PaymentModal
                 isOpen={paymentModalOpen}
                 onClose={() => setPaymentModalOpen(false)}
-                amount={paymentContext === 'accept' ? job.price : job.extra_charge_amount}
+                amount={paymentContext === 'accept' ? currentJob.price : currentJob.extra_charge_amount}
                 jobName={space?.name ? `[${space.name}] 청소 결제` : '청소 결제'}
-                jobId={job.id}
+                jobId={currentJob.id}
                 paymentContext={paymentContext}
                 workerId={selectedApp?.workerId}
             />
