@@ -19,11 +19,18 @@ export default async function AdminDashboardPage() {
         .single();
 
     // admin 또는 operator 권한이 있으면서 화이트리스트에 있는 이메일만 허용
-    if (!profile || !isPlatformAdmin(profile.email)) {
+    if (!profile || !isPlatformAdmin(profile.email, profile.role)) {
         redirect('/profile');
     }
 
     try {
+        // 0. 사용자 전체 목록 (관리용)
+        const { data: allUsersData } = await supabase
+            .from('users')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+        const allUsers = allUsersData || [];
         // 1. 유저 집계
         const { count: totalUsers } = await supabase.from('users').select('*', { count: 'exact', head: true });
         const { count: opUsers } = await supabase.from('users').select('*', { count: 'exact', head: true }).eq('role', 'operator');
@@ -100,6 +107,7 @@ export default async function AdminDashboardPage() {
                         stats={stats}
                         recentJobs={recentJobs}
                         dailyStats={dailyStats}
+                        allUsers={allUsers}
                     />
                 </div>
             </div>
