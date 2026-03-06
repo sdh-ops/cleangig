@@ -94,8 +94,9 @@ export interface Job {
     extra_charge_amount?: number
     extra_charge_reason?: string
     checklist_completed?: ChecklistItem[]
-    targeted_worker_id?: string
+    targeting_worker_id?: string
     cleaning_difficulty?: string
+    reclean_instructions?: string
     created_at: string
     updated_at: string
     // 조인된 데이터

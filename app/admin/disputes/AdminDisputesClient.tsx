@@ -23,6 +23,25 @@ export default function AdminDisputesClient({ initialJobs }: { initialJobs: any[
             // 분쟁 상태 완료로 변경
             await supabase.from('disputes').update({ status: 'RESOLVED', resolution_notes: `Admin forced ${action}` }).eq('job_id', jobId)
 
+            // 알림 발송
+            const job = jobs.find(j => j.id === jobId)
+            if (job) {
+                // 오퍼레이터 알림
+                await supabase.rpc('notify_user', {
+                    p_user_id: job.operator_id,
+                    p_title: '⚖️ 분쟁 중재 완료 안내',
+                    p_message: `운영팀이 해당 건에 대해 [${action === 'APPROVED' ? '강제 승인' : '환불/취소'}] 결정을 내렸습니다.`,
+                    p_url: `/requests/${jobId}`
+                })
+                // 워커 알림
+                await supabase.rpc('notify_user', {
+                    p_user_id: job.worker_id,
+                    p_title: '⚖️ 분쟁 중재 완료 안내',
+                    p_message: `운영팀이 해당 건에 대해 [${action === 'APPROVED' ? '강제 승인' : '환불/취소'}] 결정을 내렸습니다.`,
+                    p_url: job.worker_id ? `/clean/job/${jobId}` : '/clean'
+                })
+            }
+
             alert('처리되었습니다.')
             setJobs(prev => prev.filter(j => j.id !== jobId))
             router.refresh()

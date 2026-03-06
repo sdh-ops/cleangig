@@ -175,16 +175,20 @@ export default function ProfileClient({ profile, totalCompletedJobs }: Props) {
           {/* Stats Area */}
           <div className="flex px-4 py-5 gap-3">
             <div className="flex-1 flex flex-col items-center justify-center py-4 px-2 rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm transition-shadow hover:shadow-md group relative">
-              <span className="text-xs text-slate-500 dark:text-slate-400 font-bold mb-1.5">평점</span>
-              <span className="text-xl font-black text-slate-900 dark:text-white tracking-tight">{profile.avg_rating?.toFixed(1) || '5.0'}</span>
+              <span className="text-xs text-slate-500 dark:text-slate-400 font-bold mb-1.5 flex items-center gap-1">
+                별점 <span className="material-symbols-outlined text-[14px]">star</span>
+              </span>
+              <span className="text-xl font-black text-slate-900 dark:text-white tracking-tight">{profile.avg_rating?.toFixed(1) || '0.0'}</span>
               <div className="absolute bottom-full mb-2 hidden group-hover:block w-48 p-2 bg-slate-800 text-white text-[10px] rounded-lg shadow-xl z-30 text-center leading-tight">
                 {RATING_DESC}
               </div>
             </div>
             <div className="flex-1 flex flex-col items-center justify-center py-4 px-2 rounded-2xl bg-white dark:bg-slate-900 border border-primary/20 dark:border-primary/30 shadow-sm relative overflow-hidden transition-shadow hover:shadow-md group">
               <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent dark:from-primary/10" />
-              <span className="text-xs text-primary font-bold mb-1.5 relative z-10">스파클 온도</span>
-              <span className="text-xl font-black text-primary relative z-10 tracking-tight">{profile.manner_temperature || 98}점</span>
+              <span className="text-xs text-primary font-bold mb-1.5 relative z-10 flex items-center gap-1">
+                스파클 온도 <span className="material-symbols-outlined text-[14px]">thermometer</span>
+              </span>
+              <span className="text-xl font-black text-primary relative z-10 tracking-tight">{profile.manner_temperature ? profile.manner_temperature.toFixed(1) : '36.5'}℃</span>
               <div className="absolute bottom-full mb-2 hidden group-hover:block w-48 p-2 bg-primary text-white text-[10px] rounded-lg shadow-xl z-30 text-center leading-tight">
                 {SPARKLE_DESC}
               </div>
@@ -195,17 +199,44 @@ export default function ProfileClient({ profile, totalCompletedJobs }: Props) {
 
           {/* Menu List */}
           <div className="flex flex-col py-2 px-3">
-            {/* 역할 전환 */}
-            <button onClick={handleRoleSwitch} disabled={switching} className="flex items-center gap-4 px-3 py-3 min-h-[64px] hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors rounded-2xl text-left w-full group mb-1">
-              <div className="flex items-center justify-center rounded-[14px] bg-primary/10 dark:bg-primary/20 text-primary shrink-0 size-12 group-active:scale-95 transition-transform">
-                <span className="material-symbols-outlined">{profile.role === 'worker' ? 'store' : 'cleaning_services'}</span>
+            <div className="px-3 mb-6">
+              <div className="bg-slate-900 dark:bg-slate-800 rounded-3xl p-6 shadow-lg border border-slate-800 dark:border-slate-700 relative overflow-hidden group">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16 pointer-events-none group-hover:scale-110 transition-transform duration-700"></div>
+                <div className="relative z-10">
+                  <div className="flex items-center justify-between mb-4">
+                    <span className="text-[11px] font-black text-white/50 uppercase tracking-[0.2em]">Current Active Role</span>
+                    <span className="px-2.5 py-1 bg-primary/20 text-primary text-[10px] font-bold rounded-lg border border-primary/20">PRO</span>
+                  </div>
+                  <div className="flex items-center gap-4 mb-6">
+                    <div className="size-16 rounded-2xl bg-white/10 flex items-center justify-center text-white border border-white/10">
+                      <span className="material-symbols-outlined text-4xl">
+                        {profile.role === 'worker' ? 'cleaning_services' : 'storefront'}
+                      </span>
+                    </div>
+                    <div>
+                      <h4 className="text-xl font-black text-white leading-tight">
+                        {profile.role === 'worker' ? '클린 파트너' : '공간 파트너'}
+                      </h4>
+                      <p className="text-sm text-white/60 font-medium">활동 모드를 변경하시겠습니까?</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={handleRoleSwitch}
+                    disabled={switching}
+                    className="w-full h-14 bg-white dark:bg-slate-100 text-slate-900 rounded-2xl font-black text-sm flex items-center justify-center gap-2 hover:bg-slate-100 active:scale-[0.98] transition-all shadow-xl disabled:opacity-50"
+                  >
+                    {switching ? (
+                      <div className="w-5 h-5 border-2 border-slate-900/10 border-t-slate-900 rounded-full animate-spin"></div>
+                    ) : (
+                      <>
+                        <span className="material-symbols-outlined">swap_horizontal_circle</span>
+                        {profile.role === 'worker' ? '공간 파트너로 전환하기' : '클린 파트너로 전환하기'}
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
-              <div className="flex flex-col flex-1">
-                <p className="text-[17px] font-bold leading-tight text-slate-900 dark:text-slate-100 mb-0.5">{profile.role === 'worker' ? '공간 파트너로 전환' : '클린 파트너로 전환'}</p>
-                <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">클라이언트 모드로 역할을 변경합니다</span>
-              </div>
-              <span className="material-symbols-outlined text-slate-300 dark:text-slate-600">chevron_right</span>
-            </button>
+            </div>
 
             <div className="h-px bg-slate-100 dark:bg-slate-800/80 mx-3 my-1"></div>
 

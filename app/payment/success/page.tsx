@@ -44,18 +44,31 @@ export default async function PaymentSuccessPage({ searchParams }: { searchParam
         const supabase = await createClient()
 
         if (context === 'accept' && workerId && appId) {
-            // 배정 완료로 변경
-            await supabase.from('jobs').update({ status: 'ASSIGNED', worker_id: workerId }).eq('id', jobId)
-            await supabase.from('job_applications').update({ status: 'ACCEPTED' }).eq('id', appId)
-            await supabase.from('job_applications').update({ status: 'REJECTED' }).eq('job_id', jobId).neq('id', appId)
+            // 배정 완료로 변경 (Concurrency Guard)
+            const { data: updateData, error: updateError } = await supabase
+                .from('jobs')
+                .update({ status: 'ASSIGNED', worker_id: workerId })
+                .eq('id', jobId)
+                .eq('status', 'OPEN')
+                .select()
 
-            // 알림
-            await supabase.rpc('notify_user', {
-                p_user_id: workerId,
-                p_title: '🎉 매칭 확정!',
-                p_message: '결제가 완료되어 일감이 확정되었습니다. 일정을 확인해주세요!',
-                p_url: `/clean/job/${jobId}`
-            })
+            if (updateError || !updateData || updateData.length === 0) {
+                // 이미 배정되었거나 상태가 변경된 경우
+                isSuccess = false
+                errorMessage = '이미 다른 파트너에게 매칭된 일감입니다. 결제가 자동으로 취소(환불)될 예정입니다. 관리자에게 문의해주세요.'
+                // TODO: 실제 토스 환불 API 연동 (Cancel)
+            } else {
+                await supabase.from('job_applications').update({ status: 'ACCEPTED' }).eq('id', appId)
+                await supabase.from('job_applications').update({ status: 'REJECTED' }).eq('job_id', jobId).neq('id', appId)
+
+                // 알림
+                await supabase.rpc('notify_user', {
+                    p_user_id: workerId,
+                    p_title: '🎉 매칭 확정!',
+                    p_message: '결제가 완료되어 일감이 확정되었습니다. 일정을 확인해주세요!',
+                    p_url: `/clean/job/${jobId}`
+                })
+            }
         } else if (context === 'extra') {
             // 추가 결제 완료 (즉시 승인)
             await supabase.from('jobs').update({ status: 'APPROVED' }).eq('id', jobId)

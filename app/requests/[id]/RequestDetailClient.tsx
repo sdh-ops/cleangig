@@ -30,6 +30,8 @@ export default function RequestDetailClient({ job, photos, payment, applications
     const [disputing, setDisputing] = useState(false)
     const [disputeReason, setDisputeReason] = useState('')
     const [showDispute, setShowDispute] = useState(false)
+    const [recleanInstructions, setRecleanInstructions] = useState('')
+    const [showRecleanModal, setShowRecleanModal] = useState(false)
     const [isFavorite, setIsFavorite] = useState(initialIsFavorite)
     const [togglingFav, setTogglingFav] = useState(false)
     const [currentJob, setCurrentJob] = useState(job)
@@ -140,7 +142,8 @@ export default function RequestDetailClient({ job, photos, payment, applications
         const { error } = await supabase.from('jobs').update({
             status: 'IN_PROGRESS',
             dispute_resolved: false,
-            extra_charge_amount: 0
+            extra_charge_amount: 0,
+            reclean_instructions: recleanInstructions
         }).eq('id', currentJob.id)
 
         if (!error) {
@@ -151,6 +154,7 @@ export default function RequestDetailClient({ job, photos, payment, applications
                 p_url: `/clean/job/${currentJob.id}`
             })
             alert('재청소가 요청되었습니다.')
+            setShowRecleanModal(false)
             router.refresh()
         }
     }
@@ -463,7 +467,7 @@ export default function RequestDetailClient({ job, photos, payment, applications
                         </div>
                         <div className="flex flex-col gap-3">
                             <button
-                                onClick={handleReCleaningRequest}
+                                onClick={() => setShowRecleanModal(true)}
                                 className="w-full bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 font-bold py-4 rounded-xl shadow-sm flex items-center justify-center gap-2"
                             >
                                 <span className="material-symbols-outlined">restart_alt</span>
@@ -519,6 +523,29 @@ export default function RequestDetailClient({ job, photos, payment, applications
                             disabled={!disputeReason.trim()}
                         >
                             신고 접수하기
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {showRecleanModal && (
+                <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 backdrop-blur-sm p-4 sm:items-center" onClick={() => setShowRecleanModal(false)}>
+                    <div className="bg-white dark:bg-slate-900 w-full max-w-md rounded-2xl p-6 shadow-xl transform transition-all" onClick={e => e.stopPropagation()}>
+                        <div className="w-12 h-1.5 bg-slate-200 mx-auto rounded-full mb-6"></div>
+                        <h3 className="font-bold text-xl mb-4">재청소 지시사항</h3>
+                        <p className="text-sm text-slate-500 mb-4">클린파트너가 보완해야 할 구체적인 내용을 작성해주세요.</p>
+                        <textarea
+                            className="w-full h-32 p-4 border border-slate-300 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800 text-sm focus:ring-2 focus:ring-primary outline-none resize-none mb-6"
+                            placeholder="예: 안방 창틀에 먼지가 남았습니다. 주방 배수구 거름망을 다시 확인해주세요."
+                            value={recleanInstructions}
+                            onChange={e => setRecleanInstructions(e.target.value)}
+                        />
+                        <button
+                            className="w-full h-14 bg-primary text-white rounded-xl font-bold text-base disabled:opacity-50"
+                            onClick={handleReCleaningRequest}
+                            disabled={!recleanInstructions.trim()}
+                        >
+                            재청소 요청 발송
                         </button>
                     </div>
                 </div>

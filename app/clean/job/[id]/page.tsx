@@ -346,6 +346,20 @@ export default function JobDetailPage() {
                     </div>
                 )}
 
+                {/* Re-cleaning Instructions */}
+                {job.reclean_instructions && (
+                    <div className="px-4 mt-2 mb-4">
+                        <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 p-4 rounded-xl">
+                            <h3 className="font-bold text-amber-700 dark:text-amber-500 text-sm mb-2 flex items-center gap-1">
+                                <span className="material-symbols-outlined text-base">info</span> 호스트 재청소 요청 사항
+                            </h3>
+                            <div className="bg-white dark:bg-slate-800 p-3 rounded-lg border border-amber-100 dark:border-amber-900/50 text-xs text-slate-700 dark:text-slate-200 leading-relaxed font-medium">
+                                {job.reclean_instructions}
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 {/* Work Conditions (Always show) */}
                 <div className="px-4 mt-2 mb-4">
                     <h3 className="text-lg font-bold leading-tight tracking-tight pb-3 border-b border-primary/10 dark:border-primary/20">작업 조건 요약</h3>
