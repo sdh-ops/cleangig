@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
+import { isPlatformAdmin } from '@/lib/admin'
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
     const supabase = await createClient()
@@ -12,11 +13,11 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
     const { data: profile } = await supabase
         .from('users')
-        .select('is_admin')
+        .select('is_admin, email, role')
         .eq('id', user.id)
         .single()
 
-    if (!profile?.is_admin) {
+    if (!profile || !isPlatformAdmin(profile.email, profile.role)) {
         redirect('/')
     }
 
