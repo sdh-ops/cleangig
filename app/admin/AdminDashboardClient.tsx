@@ -58,6 +58,18 @@ export default function AdminDashboardClient({ stats, recentJobs, dailyStats }: 
         return new Intl.NumberFormat('ko-KR', { style: 'currency', currency: 'KRW' }).format(amount);
     };
 
+    if (!stats) {
+        return (
+            <div className="flex flex-col items-center justify-center p-20 text-center">
+                <AlertCircle size={48} className="text-slate-300 mb-4" />
+                <h3 className="text-lg font-bold">통계 데이터를 불러올 수 없습니다.</h3>
+            </div>
+        );
+    }
+
+    const safeDailyStats = Array.isArray(dailyStats) ? dailyStats : [];
+    const maxRevenue = Math.max(...safeDailyStats.map(x => x.revenue || 0), 0) || 1;
+
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
             {/* Real-time Notifications Toast */}
@@ -74,7 +86,7 @@ export default function AdminDashboardClient({ stats, recentJobs, dailyStats }: 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <StatCard
                     title="누적 매출"
-                    value={formatCurrency(stats.totalRevenue)}
+                    value={formatCurrency(stats.totalRevenue || 0)}
                     trend="+12.5%"
                     isUp={true}
                     icon={<DollarSign className="text-emerald-500" />}
@@ -82,7 +94,7 @@ export default function AdminDashboardClient({ stats, recentJobs, dailyStats }: 
                 />
                 <StatCard
                     title="플랫폼 수익 (수수료)"
-                    value={formatCurrency(stats.totalFees)}
+                    value={formatCurrency(stats.totalFees || 0)}
                     trend="+8.2%"
                     isUp={true}
                     icon={<TrendingUp className="text-blue-500" />}
@@ -90,19 +102,19 @@ export default function AdminDashboardClient({ stats, recentJobs, dailyStats }: 
                 />
                 <StatCard
                     title="전체 사용자"
-                    value={`${stats.totalUsers.toLocaleString()}명`}
-                    trend={stats.workerUsers > stats.opUsers ? "파트너 우세" : "호스트 우세"}
+                    value={`${(stats.totalUsers || 0).toLocaleString()}명`}
+                    trend={(stats.workerUsers || 0) > (stats.opUsers || 0) ? "파트너 우세" : "호스트 우세"}
                     isUp={true}
                     icon={<Users className="text-purple-500" />}
                     color="bg-purple-50"
                 />
                 <StatCard
                     title="대기 중인 분쟁"
-                    value={`${stats.disputedJobs}건`}
-                    trend={stats.disputedJobs > 0 ? "즉시 확인 필요" : "안정적"}
-                    isUp={stats.disputedJobs === 0}
-                    icon={<AlertCircle className={stats.disputedJobs > 0 ? "text-red-500" : "text-slate-400"} />}
-                    color={stats.disputedJobs > 0 ? "bg-red-50" : "bg-slate-50"}
+                    value={`${stats.disputedJobs || 0}건`}
+                    trend={(stats.disputedJobs || 0) > 0 ? "즉시 확인 필요" : "안정적"}
+                    isUp={(stats.disputedJobs || 0) === 0}
+                    icon={<AlertCircle className={(stats.disputedJobs || 0) > 0 ? "text-red-500" : "text-slate-400"} />}
+                    color={(stats.disputedJobs || 0) > 0 ? "bg-red-50" : "bg-slate-50"}
                     link="/admin/disputes"
                 />
             </div>
@@ -124,19 +136,21 @@ export default function AdminDashboardClient({ stats, recentJobs, dailyStats }: 
                         </div>
 
                         <div className="h-64 w-full flex items-end justify-between gap-4 px-2">
-                            {dailyStats.map((d, i) => (
+                            {safeDailyStats.length > 0 ? safeDailyStats.map((d, i) => (
                                 <div key={i} className="flex-1 flex flex-col items-center gap-3 group">
                                     <div
                                         className="w-full bg-primary/20 hover:bg-primary transition-all rounded-t-lg relative"
-                                        style={{ height: `${(d.revenue / (Math.max(...dailyStats.map(x => x.revenue)) || 1)) * 100}%` }}
+                                        style={{ height: `${((d.revenue || 0) / maxRevenue) * 100}%` }}
                                     >
                                         <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] py-1 px-2 rounded opacity-0 group-hover:opacity-100 mt-2 transition-opacity whitespace-nowrap">
-                                            {formatCurrency(d.revenue)}
+                                            {formatCurrency(d.revenue || 0)}
                                         </div>
                                     </div>
                                     <span className="text-[10px] font-bold text-slate-400">{d.label}</span>
                                 </div>
-                            ))}
+                            )) : (
+                                <div className="w-full flex items-center justify-center h-full text-slate-400 text-sm">통계 데이터가 없습니다</div>
+                            )}
                         </div>
                     </div>
 
@@ -159,11 +173,11 @@ export default function AdminDashboardClient({ stats, recentJobs, dailyStats }: 
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {recentJobs.map((job) => (
+                                    {recentJobs && recentJobs.length > 0 ? recentJobs.map((job) => (
                                         <tr key={job.id} className="border-t border-slate-50 dark:border-slate-800 hover:bg-slate-50/50 transition-colors">
                                             <td className="px-8 py-4">
-                                                <div className="font-bold text-sm">{job.spaces?.name}</div>
-                                                <div className="text-xs text-slate-400 mt-0.5">{job.operator?.name}</div>
+                                                <div className="font-bold text-sm">{job.spaces?.name || '정보 없음'}</div>
+                                                <div className="text-xs text-slate-400 mt-0.5">{job.operator?.name || '익명'}</div>
                                             </td>
                                             <td className="px-8 py-4">
                                                 {job.worker ? (
@@ -183,9 +197,13 @@ export default function AdminDashboardClient({ stats, recentJobs, dailyStats }: 
                                                     {job.status}
                                                 </span>
                                             </td>
-                                            <td className="px-8 py-4 font-bold text-sm">{formatCurrency(job.price)}</td>
+                                            <td className="px-8 py-4 font-bold text-sm">{formatCurrency(job.price || 0)}</td>
                                         </tr>
-                                    ))}
+                                    )) : (
+                                        <tr>
+                                            <td colSpan={4} className="px-8 py-20 text-center text-slate-400">최근 청소 내역이 없습니다.</td>
+                                        </tr>
+                                    )}
                                 </tbody>
                             </table>
                         </div>
@@ -203,19 +221,19 @@ export default function AdminDashboardClient({ stats, recentJobs, dailyStats }: 
                             <ActionItem
                                 icon={<AlertCircle size={18} className="text-red-400" />}
                                 title="해결되지 않은 분쟁"
-                                count={stats.disputedJobs}
+                                count={stats.disputedJobs || 0}
                                 link="/admin/disputes"
                             />
                             <ActionItem
                                 icon={<Clock size={18} className="text-amber-400" />}
                                 title="24시간 내 배정 필요"
-                                count={stats.openJobs}
+                                count={stats.openJobs || 0}
                                 link="/admin/jobs"
                             />
                             <ActionItem
                                 icon={<CheckCircle2 size={18} className="text-emerald-400" />}
                                 title="정산 대기 중"
-                                count={stats.completedJobs}
+                                count={stats.completedJobs || 0}
                                 link="/admin/jobs?status=APPROVED"
                             />
                         </div>

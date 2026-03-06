@@ -203,7 +203,7 @@ export default function ProfileClient({ profile, totalCompletedJobs }: Props) {
             <div className="px-0 py-2 space-y-1">
               <button
                 className="w-full flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-xl transition-colors"
-                onClick={() => router.push('/earnings')}
+                onClick={() => router.push(profile.role === 'worker' ? '/earnings' : '/payments')}
               >
                 <div className="flex items-center gap-3">
                   <div className="size-10 flex items-center justify-center bg-slate-100 dark:bg-slate-800 rounded-lg text-slate-500">
@@ -211,28 +211,32 @@ export default function ProfileClient({ profile, totalCompletedJobs }: Props) {
                   </div>
                   <div className="text-left">
                     <p className="text-sm font-bold">계좌 및 정산 관리</p>
-                    <p className="text-[10px] text-slate-400">수익금 확인 및 출금 신청</p>
+                    <p className="text-[10px] text-slate-400">
+                      {profile.role === 'worker' ? '수익금 확인 및 출금 신청' : '나의 결제 내역 및 지출 관리'}
+                    </p>
                   </div>
                 </div>
                 <span className="material-symbols-outlined text-slate-400">chevron_right</span>
               </button>
 
-              {/* 운영자 대시보드 (디버깅/운영 용 임시 노출) */}
-              <button
-                className="w-full flex items-center justify-between p-4 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-xl transition-colors"
-                onClick={() => router.push('/admin')}
-              >
-                <div className="flex items-center gap-3">
-                  <div className="size-10 flex items-center justify-center bg-blue-100 dark:bg-blue-900/30 rounded-lg text-blue-500">
-                    <span className="material-symbols-outlined">admin_panel_settings</span>
+              {/* 운영자 대시보드 (어드민 전용) */}
+              {profile.role === 'admin' && (
+                <button
+                  className="w-full flex items-center justify-between p-4 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-xl transition-colors"
+                  onClick={() => router.push('/admin')}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="size-10 flex items-center justify-center bg-blue-100 dark:bg-blue-900/30 rounded-lg text-blue-500">
+                      <span className="material-symbols-outlined">admin_panel_settings</span>
+                    </div>
+                    <div className="text-left">
+                      <p className="text-sm font-bold text-blue-600">운영자 대시보드</p>
+                      <p className="text-[10px] text-blue-400">플랫폼 전체 현황 관리</p>
+                    </div>
                   </div>
-                  <div className="text-left">
-                    <p className="text-sm font-bold text-blue-600">운영자 대시보드</p>
-                    <p className="text-[10px] text-blue-400">플랫폼 전체 현황 관리</p>
-                  </div>
-                </div>
-                <span className="material-symbols-outlined text-blue-400">chevron_right</span>
-              </button>
+                  <span className="material-symbols-outlined text-blue-400">chevron_right</span>
+                </button>
+              )}
 
               <button
                 className="w-full flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-xl transition-colors"
