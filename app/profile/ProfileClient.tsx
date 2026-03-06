@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import BottomNav from '@/components/layout/BottomNav';
+import { isPlatformAdmin } from '@/lib/admin';
 
 const TIER_CONFIG: Record<string, { label: string; color: string; next: string; desc: string }> = {
   STARTER: { label: '🌱 스타터', color: '#94A3B8', next: '실버 (10건 완료)', desc: '수수료 10%' },
@@ -68,96 +69,105 @@ export default function ProfileClient({ profile, totalCompletedJobs }: Props) {
   };
 
   const handleLogout = async () => {
+    if (!confirm('로그아웃 하시겠습니까?')) return;
     const supabase = createClient();
     await supabase.auth.signOut();
-    router.push('/');
+    router.push('/login');
   };
 
   return (
-    <div className="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 min-h-screen flex flex-col justify-center w-full">
-      <div className="relative flex h-full min-h-screen w-full flex-col max-w-md mx-auto bg-white dark:bg-slate-900 shadow-xl overflow-x-hidden border-x border-slate-200 dark:border-slate-800">
+    <div className="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display min-h-screen">
+      <div className="relative flex h-auto min-h-screen w-full flex-col group/design-root overflow-x-hidden max-w-md mx-auto border-x border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xl antialiased">
 
-        {/* Header */}
-        <header className="flex items-center justify-between p-4 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm sticky top-0 z-10 border-b border-slate-100 dark:border-slate-800">
-          <div className="w-10"></div>
-          <h1 className="text-lg font-bold leading-tight tracking-tight flex-1 text-center text-slate-900 dark:text-slate-100">마이페이지</h1>
-          <button onClick={() => setEditing(!editing)} className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 transition-colors">
-            <span className="material-symbols-outlined">{editing ? 'close' : 'settings'}</span>
+        {/* Header - Profile Title and Settings */}
+        <div className="flex items-center p-4 pb-2 justify-between sticky top-0 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm z-10">
+          <button onClick={() => router.back()} className="flex size-10 items-center justify-center text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors">
+            <span className="material-symbols-outlined text-2xl">arrow_back</span>
           </button>
-        </header>
+          <h2 className="text-lg font-bold leading-tight tracking-tight">프로필 설정</h2>
+          <button onClick={handleLogout} className="flex size-10 items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-full transition-all">
+            <span className="material-symbols-outlined text-2xl">logout</span>
+          </button>
+        </div>
 
-        <main className="flex-1 overflow-y-auto pb-24">
-          {/* Profile Section */}
-          <div className="flex flex-col items-center p-6 gap-4">
-            <div className="relative">
-              <div
-                className="bg-slate-100 dark:bg-slate-800 aspect-square rounded-full w-28 h-28 bg-cover bg-center border-4 border-white dark:border-slate-900 shadow-sm flex items-center justify-center overflow-hidden"
-                style={profile.profile_image ? { backgroundImage: `url('${profile.profile_image}')` } : {}}
-              >
-                {!profile.profile_image && <span className="text-4xl font-black text-primary/80">{profile.name[0]}</span>}
+        <div className="flex-1 overflow-y-auto pb-24">
+          {/* Profile Basic Info Card */}
+          <div className="p-6">
+            <div className="flex flex-col items-center mb-10">
+              <div className="relative group">
+                <div className="absolute -inset-1 bg-gradient-to-r from-primary to-blue-600 rounded-full blur opacity-25 group-hover:opacity-40 transition duration-1000 group-hover:duration-200" />
+                <div className="relative size-32 rounded-full border-4 border-white dark:border-slate-800 bg-slate-100 dark:bg-slate-800 overflow-hidden shadow-2xl">
+                  <img
+                    src={profile.profile_image || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.id}`}
+                    alt={profile.name}
+                    className="w-full h-full object-cover"
+                  />
+                  {!editing && (
+                    <button className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                      <span className="material-symbols-outlined text-white text-3xl">photo_camera</span>
+                    </button>
+                  )}
+                </div>
+                {!editing && (
+                  <div className="absolute -bottom-1 -right-1 bg-primary text-white p-2 rounded-full border-4 border-white dark:border-slate-900 shadow-lg">
+                    <span className="material-symbols-outlined text-base">verified</span>
+                  </div>
+                )}
               </div>
 
-              {profile.is_verified && (
-                <div className="absolute bottom-0 right-0 bg-primary text-white rounded-full p-1.5 shadow-md flex items-center justify-center">
-                  <span className="material-symbols-outlined text-[18px]">verified</span>
+              {!editing ? (
+                <>
+                  <h3 className="text-2xl font-black mt-6 text-slate-900 dark:text-white">{profile.name}</h3>
+                  <div className="flex items-center gap-2 mt-2">
+                    <span className="px-3 py-1 bg-slate-100 dark:bg-slate-800 rounded-full text-[11px] font-bold text-slate-500 uppercase tracking-widest border border-slate-200 dark:border-slate-700">
+                      ID: {profile.id.substring(0, 8)}
+                    </span>
+                    <span className="px-3 py-1 bg-primary/10 rounded-full text-[11px] font-bold text-primary uppercase tracking-widest border border-primary/20">
+                      {profile.role === 'worker' ? 'Clean Partner' : 'Space Partner'}
+                    </span>
+                  </div>
+                  <p className="mt-4 text-center text-slate-500 dark:text-slate-400 text-sm max-w-[80%] leading-relaxed font-medium">
+                    {profile.bio || '자기소개를 등록해보세요.'}
+                  </p>
+                  <button
+                    onClick={() => setEditing(true)}
+                    className="mt-6 px-6 py-2.5 bg-slate-900 dark:bg-white dark:text-slate-900 text-white rounded-2xl text-xs font-bold hover:scale-105 active:scale-95 transition-all shadow-xl"
+                  >
+                    프로필 수정하기
+                  </button>
+                </>
+              ) : (
+                <div className="w-full space-y-4 mt-8 bg-slate-50 dark:bg-slate-800/50 p-6 rounded-3xl border border-slate-100 dark:border-slate-800">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">이름</label>
+                    <input
+                      className="w-full px-4 py-3.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-primary/20 outline-none transition-all font-bold"
+                      value={name}
+                      onChange={e => setName(e.target.value)}
+                      placeholder="성함을 입력하세요"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">한 줄 소개</label>
+                    <textarea
+                      className="w-full px-4 py-3.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-primary/20 outline-none transition-all font-medium resize-none"
+                      value={bio}
+                      onChange={e => setBio(e.target.value)}
+                      placeholder="자기소개를 간단히 작성해주세요"
+                      rows={2}
+                    />
+                  </div>
+                  <button
+                    className="w-full mt-2 bg-primary hover:bg-primary/90 text-white rounded-xl h-14 font-bold shadow-sm transition-colors active:scale-[0.98] flex items-center justify-center gap-2"
+                    onClick={handleSave}
+                    disabled={saving}
+                  >
+                    {saving && <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>}
+                    {saving ? '저장 중...' : '프로필 수정 완료'}
+                  </button>
                 </div>
               )}
             </div>
-
-            {!editing ? (
-              <div className="flex flex-col items-center gap-1">
-                <h2 className="text-[22px] font-bold leading-tight tracking-tight text-slate-900 dark:text-slate-100">{profile.name}님</h2>
-                <div className="flex items-center gap-2 mt-1">
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400">
-                    <span className="material-symbols-outlined text-[14px] mr-1">military_tech</span> {tierInfo.label.replace(/[^가-힣a-zA-Z\s]/g, '').trim()} 등급
-                  </span>
-                  <span className="text-slate-300 dark:text-slate-600 text-sm">|</span>
-                  <span className="text-primary font-bold text-sm">평점 {profile.avg_rating?.toFixed(1) || '5.0'}</span>
-                </div>
-                {profile.bio && <p className="text-sm text-slate-500 dark:text-slate-400 mt-2 text-center max-w-[80%] leading-relaxed">{profile.bio}</p>}
-              </div>
-            ) : (
-              <div className="flex flex-col w-full gap-3 mt-2 animate-in fade-in slide-in-from-top-2 duration-300">
-                <input
-                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700/50 rounded-xl px-4 py-3.5 text-[15px] font-bold text-center placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all shadow-sm"
-                  value={name}
-                  onChange={e => setName(e.target.value)}
-                  placeholder="이름 (실명) 입력"
-                />
-                <input
-                  type="tel"
-                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700/50 rounded-xl px-4 py-3.5 text-[15px] text-center placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all shadow-sm"
-                  value={phone}
-                  onChange={e => setPhone(e.target.value)}
-                  placeholder="휴대폰 번호 (- 없이 입력)"
-                />
-                <div className="flex gap-2 w-full">
-                  <input
-                    className="w-1/3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700/50 rounded-xl px-4 py-3.5 text-[15px] text-center placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all shadow-sm"
-                    value={bankName}
-                    onChange={e => setBankName(e.target.value)}
-                    placeholder="은행명"
-                  />
-                  <input
-                    className="flex-1 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700/50 rounded-xl px-4 py-3.5 text-[15px] text-center placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all shadow-sm"
-                    value={accountNumber}
-                    onChange={e => setAccountNumber(e.target.value)}
-                    placeholder="계좌번호 (- 없이 입력)"
-                  />
-                </div>
-                <textarea
-                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700/50 rounded-xl px-4 py-3.5 text-[15px] resize-none placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all shadow-sm"
-                  value={bio}
-                  onChange={e => setBio(e.target.value)}
-                  placeholder="자기소개를 간단히 작성해주세요"
-                  rows={2}
-                />
-                <button className="w-full mt-2 bg-primary hover:bg-primary/90 text-white rounded-xl h-14 font-bold shadow-sm transition-colors active:scale-[0.98] flex items-center justify-center gap-2" onClick={handleSave} disabled={saving}>
-                  {saving && <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>}
-                  {saving ? '저장 중...' : '프로필 수정 완료'}
-                </button>
-              </div>
-            )}
           </div>
 
           <div className="h-2 bg-slate-50 dark:bg-slate-800/50 w-full"></div>
@@ -219,8 +229,8 @@ export default function ProfileClient({ profile, totalCompletedJobs }: Props) {
                 <span className="material-symbols-outlined text-slate-400">chevron_right</span>
               </button>
 
-              {/* 운영자 대시보드 (어드민 전용) */}
-              {profile.role === 'admin' && (
+              {/* 운영자 대시보드 (어드민 화이트리스트 전용) */}
+              {isPlatformAdmin(profile.email) && (
                 <button
                   className="w-full flex items-center justify-between p-4 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-xl transition-colors"
                   onClick={() => router.push('/admin')}
@@ -248,6 +258,7 @@ export default function ProfileClient({ profile, totalCompletedJobs }: Props) {
                   </div>
                   <div className="text-left">
                     <p className="text-sm font-bold">공지사항</p>
+                    <p className="text-[10px] text-slate-400">새로운 소식과 업데이트</p>
                   </div>
                 </div>
                 <span className="material-symbols-outlined text-slate-400">chevron_right</span>
@@ -255,32 +266,23 @@ export default function ProfileClient({ profile, totalCompletedJobs }: Props) {
 
               <button
                 className="w-full flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-xl transition-colors"
-                onClick={() => alert('카카오톡 상담 채널로 연결 중입니다...')}
+                onClick={() => alert('준비 중인 기능입니다.')}
               >
                 <div className="flex items-center gap-3">
                   <div className="size-10 flex items-center justify-center bg-slate-100 dark:bg-slate-800 rounded-lg text-slate-500">
-                    <span className="material-symbols-outlined">headset_mic</span>
+                    <span className="material-symbols-outlined">support_agent</span>
                   </div>
                   <div className="text-left">
                     <p className="text-sm font-bold">고객센터</p>
+                    <p className="text-[10px] text-slate-400">도움이 필요하신가요?</p>
                   </div>
                 </div>
                 <span className="material-symbols-outlined text-slate-400">chevron_right</span>
               </button>
-
-              <button className="w-full flex items-center justify-between p-4 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-colors" onClick={handleLogout}>
-                <div className="flex items-center gap-3">
-                  <div className="size-10 flex items-center justify-center bg-red-100 dark:bg-red-900/30 rounded-lg text-red-500">
-                    <span className="material-symbols-outlined">logout</span>
-                  </div>
-                  <div className="text-left">
-                    <p className="text-sm font-bold text-red-500">로그아웃</p>
-                  </div>
-                </div>
-              </button>
             </div>
           </div>
-        </main>
+        </div>
+
         <BottomNav />
       </div>
     </div>

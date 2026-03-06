@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import AdminDashboardClient from './AdminDashboardClient';
+import { isPlatformAdmin } from '@/lib/admin';
 
 export default async function AdminDashboardPage() {
     const supabase = await createClient();
@@ -13,12 +14,12 @@ export default async function AdminDashboardPage() {
 
     const { data: profile } = await supabase
         .from('users')
-        .select('role')
+        .select('role, email')
         .eq('id', user.id)
         .single();
 
-    // admin 또는 operator 권한이 있는 경우만 접근 허용 (상용 시에는 더 엄격하게 분리 가능)
-    if (!profile || (profile.role !== 'admin' && profile.role !== 'operator')) {
+    // admin 또는 operator 권한이 있으면서 화이트리스트에 있는 이메일만 허용
+    if (!profile || !isPlatformAdmin(profile.email)) {
         redirect('/profile');
     }
 
