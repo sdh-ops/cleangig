@@ -44,7 +44,7 @@ export default async function AdminUsersPage() {
                                     </span>
                                 </td>
                                 <td style={{ padding: '16px 20px', color: '#64748B' }}>{user.phone || '-'}</td>
-                                <td style={{ padding: '16px 20px', color: '#E11D48', fontWeight: 800 }}>{user.manner_temperature ? `${user.manner_temperature}°C` : '-'}</td>
+                                <td style={{ padding: '16px 20px', color: '#E11D48', fontWeight: 800 }}>{user.sparkle_score ? `${user.sparkle_score.toFixed(1)}점` : '-'}</td>
                                 <td style={{ padding: '16px 20px', color: '#64748B' }}>{new Date(user.created_at).toLocaleDateString('ko-KR')}</td>
                                 <td style={{ padding: '16px 20px', textAlign: 'center' }}>
                                     {/* TODO: 계정 정지 기능은 API 확장 시 추가 */}

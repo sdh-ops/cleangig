@@ -14,11 +14,11 @@ const TIER_CONFIG: Record<string, { label: string; color: string; next: string; 
   MASTER: { label: '👑 마스터', color: '#8B5CF6', next: '최고 등급!', desc: '수수료 7%' },
 };
 
-const SPARKLE_DESC = "친절도, 응답 속도, 청소 매너를 종합한 점수입니다. 99.9℃에 도전해보세요!";
+const SPARKLE_DESC = "친절도, 응답 속도, 청소 매너를 종합한 점수입니다. 100점에 도전해보세요!";
 const RATING_DESC = "청소 완료 후 공간 운영자가 남긴 별점 평균입니다. 서비스 품질의 지표가 됩니다.";
 
 interface Props {
-  profile: { id: string; name: string; email?: string; phone?: string; profile_image?: string; role: string; tier?: string; avg_rating?: number; total_jobs?: number; bio?: string; bank_account?: any; is_verified?: boolean; manner_temperature?: number };
+  profile: { id: string; name: string; email?: string; phone?: string; profile_image?: string; role: string; tier?: string; avg_rating?: number; total_jobs?: number; bio?: string; bank_account?: any; is_verified?: boolean; sparkle_score?: number };
   totalCompletedJobs: number;
 }
 
@@ -186,9 +186,9 @@ export default function ProfileClient({ profile, totalCompletedJobs }: Props) {
             <div className="flex-1 flex flex-col items-center justify-center py-4 px-2 rounded-2xl bg-white dark:bg-slate-900 border border-primary/20 dark:border-primary/30 shadow-sm relative overflow-hidden transition-shadow hover:shadow-md group">
               <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent dark:from-primary/10" />
               <span className="text-xs text-primary font-bold mb-1.5 relative z-10 flex items-center gap-1">
-                스파클 온도 <span className="material-symbols-outlined text-[14px]">thermometer</span>
+                스파클 점수 <span className="material-symbols-outlined text-[14px]">auto_awesome</span>
               </span>
-              <span className="text-xl font-black text-primary relative z-10 tracking-tight">{profile.manner_temperature ? profile.manner_temperature.toFixed(1) : '36.5'}℃</span>
+              <span className="text-xl font-black text-primary relative z-10 tracking-tight">{profile.sparkle_score ? profile.sparkle_score.toFixed(1) : '50.0'}점</span>
               <div className="absolute bottom-full mb-2 hidden group-hover:block w-48 p-2 bg-primary text-white text-[10px] rounded-lg shadow-xl z-30 text-center leading-tight">
                 {SPARKLE_DESC}
               </div>

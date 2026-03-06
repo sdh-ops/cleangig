@@ -20,7 +20,7 @@ interface Job {
 }
 
 interface Props {
-  profile: { id: string; name: string; avg_rating: number; tier: string; total_jobs: number; manner_temperature?: number };
+  profile: { id: string; name: string; avg_rating: number; tier: string; total_jobs: number; sparkle_score?: number };
   activeJob: Job | null;
   weekEarnings: number;
   pendingCount: number;
@@ -119,7 +119,7 @@ export default function CleanMainClient({ profile, activeJob, weekEarnings, pend
                 <span className="material-symbols-outlined text-[100px]">verified</span>
               </div>
               <p className="font-bold text-sm mb-1 italic">PRO TIP</p>
-              <h4 className="font-bold text-[15px] mb-1">스파클 온도가 높을수록 우선 배정!</h4>
+              <h4 className="font-bold text-[15px] mb-1">스파클 점수가 높을수록 우선 배정!</h4>
               <p className="text-[11px] opacity-90 leading-relaxed">
                 매칭 대기 시 상단에 노출되어 일감을 더 빨리 받을 수 있고,<br />
                 골드 등급 이상 시 수수료 추가 감면 혜택이 적용됩니다.
@@ -136,11 +136,11 @@ export default function CleanMainClient({ profile, activeJob, weekEarnings, pend
             <div className="grid grid-cols-2 gap-3">
               <div className="bg-green-500/10 dark:bg-green-500/20 rounded-xl p-4 shadow-sm border border-green-500/20 flex flex-col items-center justify-center text-center gap-2">
                 <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center">
-                  <span className="material-symbols-outlined text-green-600 dark:text-green-400">thermometer</span>
+                  <span className="material-symbols-outlined text-green-600 dark:text-green-400">auto_awesome</span>
                 </div>
                 <div>
-                  <p className="text-xl font-bold text-text-primary-light dark:text-text-primary-dark">{profile.manner_temperature || 36.5}℃</p>
-                  <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark font-bold text-green-600 dark:text-green-400">스파클 온도</p>
+                  <p className="text-xl font-bold text-text-primary-light dark:text-text-primary-dark">{profile.sparkle_score || 50.0}점</p>
+                  <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark font-bold text-green-600 dark:text-green-400">스파클 점수</p>
                 </div>
               </div>
               <div className="bg-primary/10 dark:bg-primary/20 rounded-xl p-4 shadow-sm border border-primary/20 flex flex-col items-center justify-center text-center gap-2">

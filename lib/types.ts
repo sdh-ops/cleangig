@@ -18,6 +18,7 @@ export interface User {
     tier?: WorkerTier
     total_jobs?: number
     avg_rating?: number
+    sparkle_score?: number
     bio?: string
     bank_account?: { bank_name: string; account_number: string; account_holder: string }
     business_name?: string

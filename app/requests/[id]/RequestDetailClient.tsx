@@ -193,7 +193,7 @@ export default function RequestDetailClient({ job, photos, payment, applications
         })
         if (notifyError) console.error(notifyError)
 
-        alert('소중한 리뷰가 등록되었습니다. 스파클 온도가 반영됩니다!')
+        alert('소중한 리뷰가 등록되었습니다. 스파클 점수가 반영됩니다!')
         setReviewSubmitted(true)
         setReviewModalOpen(false)
         setSubmittingReview(false)
@@ -263,7 +263,7 @@ export default function RequestDetailClient({ job, photos, payment, applications
                                 <div className="flex flex-col">
                                     <div className="font-bold text-base">{worker.name}</div>
                                     <div className="flex items-center text-xs font-medium mt-1">
-                                        <span className="text-rose-500 font-bold mr-2 flex items-center gap-0.5"><span className="material-symbols-outlined text-[14px]">device_thermostat</span>{worker.manner_temperature || 36.5}°C</span>
+                                        <span className="text-rose-500 font-bold mr-2 flex items-center gap-0.5"><span className="material-symbols-outlined text-[14px]">auto_awesome</span>{worker.sparkle_score || 50.0}점</span>
                                         <span className="text-amber-500 flex items-center gap-0.5 mr-2"><span className="material-symbols-outlined text-[14px]">star</span>{worker.avg_rating?.toFixed(1) || '-'}</span>
                                         <span className="text-slate-500">{worker.tier}</span>
                                     </div>
@@ -490,14 +490,14 @@ export default function RequestDetailClient({ job, photos, payment, applications
                         <div className="bg-gradient-to-br from-rose-50 to-rose-100 dark:from-rose-900/30 dark:to-rose-800/30 border border-rose-200 dark:border-rose-700/50 p-5 rounded-2xl shadow-sm">
                             <div className="flex justify-between items-center mb-2">
                                 <h3 className="font-bold text-[16px] text-rose-700 dark:text-rose-400">⭐ 파트너님은 어떠셨나요?</h3>
-                                <span className="text-3xl">🌡️</span>
+                                <span className="text-3xl">✨</span>
                             </div>
-                            <p className="text-xs text-rose-600/80 dark:text-rose-300/80 mb-4 leading-relaxed">작업에 대한 솔직한 리뷰를 남겨주시면<br />해당 클린파트너의 스파클 온도가 쑥쑥 올라갑니다!</p>
+                            <p className="text-xs text-rose-600/80 dark:text-rose-300/80 mb-4 leading-relaxed">작업에 대한 솔직한 리뷰를 남겨주시면<br />해당 클린파트너의 스파클 점수가 쑥쑥 올라갑니다!</p>
                             <button
                                 className="w-full h-12 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl text-sm transition-colors shadow-sm"
                                 onClick={() => setReviewModalOpen(true)}
                             >
-                                리뷰 남기고 스파클 온도 올리기
+                                리뷰 남기고 스파클 점수 올리기
                             </button>
                         </div>
                     </div>
