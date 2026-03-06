@@ -38,11 +38,12 @@ export default async function LandingPage() {
           </div>
         </div>
       </div>
-      <div className="px-6 pb-6 pt-8 flex flex-col gap-6">
+      <div className="px-6 pb-10 pt-8 flex flex-col items-center gap-6">
+        <img src="/appicon.png" alt="CleanGig" className="w-16 h-16 rounded-2xl shadow-lg mb-2" />
         <h1 className="text-[28px] font-bold leading-[1.2] tracking-[-0.015em] text-center text-slate-900 dark:text-slate-100">
           공간의 가치를 높이는<br />클리닝 서비스, 클린긱
         </h1>
-        <p className="text-center text-slate-600 dark:text-slate-400 text-sm">
+        <p className="text-center text-slate-600 dark:text-slate-400 text-sm font-medium">
           검증된 파트너와 함께하는<br />맞춤형 청소 서비스를 경험해보세요.
         </p>
         <div className="flex mt-4">
