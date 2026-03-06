@@ -14,9 +14,9 @@ export default function LandingClient() {
                     initial={{ scale: 0.5, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     transition={{ delay: 0.2, duration: 0.8, type: "spring", stiffness: 100 }}
-                    src="/appicon.png"
+                    src="/logo_en_new.png"
                     alt="CleanGig"
-                    className="w-24 h-24 rounded-[32px] shadow-2xl mb-12 z-10 border-4 border-white dark:border-slate-800"
+                    className="w-32 h-auto mb-12 z-10"
                 />
 
                 {/* Headlines */}
@@ -64,7 +64,7 @@ export default function LandingClient() {
                             }}
                             className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-24"
                         />
-                        <span className="relative z-10">시작하기</span>
+                        <span className="relative z-10">클린긱 시작하기</span>
                     </Link>
                 </motion.div>
             </div>
