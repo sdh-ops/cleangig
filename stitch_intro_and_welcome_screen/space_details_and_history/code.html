@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="ko"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Space Details and History</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#355873",
+                        "background-light": "#f6f7f7",
+                        "background-dark": "#15191d",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "Noto Sans KR", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700&amp;family=Noto+Sans+KR:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        body {
+            font-family: 'Manrope', 'Noto Sans KR', sans-serif;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display min-h-screen">
+<div class="relative flex h-auto min-h-screen w-full flex-col group/design-root overflow-x-hidden max-w-md mx-auto bg-white dark:bg-[#1c2227] shadow-lg">
+<!-- Header -->
+<div class="flex items-center p-4 pb-2 justify-between sticky top-0 bg-white dark:bg-[#1c2227] z-10 border-b border-slate-200 dark:border-slate-800">
+<button class="flex size-12 shrink-0 items-center justify-center text-slate-600 dark:text-slate-400 hover:text-primary dark:hover:text-primary transition-colors">
+<span class="material-symbols-outlined">arrow_back</span>
+</button>
+<h2 class="text-lg font-bold leading-tight tracking-[-0.015em] flex-1 text-center pr-12">공간 상세 정보</h2>
+</div>
+<!-- Main Content -->
+<div class="flex-1 overflow-y-auto pb-24">
+<!-- Gallery -->
+<div class="grid grid-cols-2 gap-2 p-4">
+<div class="col-span-2">
+<div class="w-full bg-center bg-no-repeat aspect-video bg-cover rounded-lg" data-alt="Modern premium residence living room interior" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuD99pCe-LqqbpByS41so2ML_4IbchXYRGFi9gI2kT-XZMAICNdJ95eRXPqJ1Bq9pf64km5da56YjeVoSJPnQusqyg9RA60dU1Dn-Ksv7UoP84VG0aGEgTS_SNrHq36ZZtSxkKStauo1nhq4BjRScbOx-VPYULBJ-hvFmfE5NU8U2iUY6I8NLF1xNSs7XflzjBLuVQEYBveVIGtGSsBY0qyUzDPo6HffX-7cg6wX_FW5jRSNP17CcJF39qr0iEkvCu4zOjArQVVYG6w");'></div>
+</div>
+<div>
+<div class="w-full bg-center bg-no-repeat aspect-square bg-cover rounded-lg" data-alt="Clean minimal office space interior" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuA5GheA58C30uoazAf_fiIvQP8q3KFLSDLQxL-VjMGuEb_ddLr6MFUuusKQygicG1RIG336AMqY74hPeidHP2dlRAHn4U1xWercNn4PH8EwM0eGVHI7d9GuWEj1_LZxxVPV1PQfTY0W23O9xUcv6lVe03vIrGLuwxy0JTMaVyDD51QqdJoCdNydyP19diLBmVWxkE8f3fyjH-jWxe9kOnPCNyAhujN7gJM400H1aygSN4cTqQrwaydATwtRRGgwDZs34QRpWE2T77M");'></div>
+</div>
+<div>
+<div class="w-full bg-center bg-no-repeat aspect-square bg-cover rounded-lg relative" data-alt="Bright spacious bedroom interior" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAn85qz8lL2ek3pjt6I36tLP_n68Pp-g0KoKJrSfB2mXU2NGN5Z6JMgb1ehHuxEPzLoVgSi237W9lwqlEH9L_G4EzZaVZVOiV6LcHL2WDi7mv6Y4489kalV8AyREiCxpNP8cf1MEV1n1e81_9BX6k-2YLvLnYi6TUJAVFbapHRL9I3v0D3AaA68h6uSz23DlWV-bCfJhMRM2BS3oneg-xcPi7bV4iu2GdJZP09c6-khopKDCc6V15zDYGyKtklButixWjhRcR2uzgs");'>
+<div class="absolute inset-0 bg-black/40 rounded-lg flex items-center justify-center cursor-pointer">
+<span class="text-white font-medium text-sm">+3 더보기</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Space Info -->
+<div class="flex p-4 flex-col gap-6">
+<div class="flex flex-col gap-2">
+<div class="flex items-start justify-between">
+<div>
+<h1 class="text-[22px] font-bold leading-tight tracking-[-0.015em] mb-1">프리미엄 레지던스 A</h1>
+<p class="text-slate-500 dark:text-slate-400 text-sm font-medium leading-normal flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">location_on</span> 서울시 강남구 테헤란로 123
+                            </p>
+</div>
+<span class="bg-primary/10 text-primary text-xs font-bold px-2 py-1 rounded-full">프리미엄</span>
+</div>
+</div>
+<!-- Quick Stats -->
+<div class="grid grid-cols-2 gap-3">
+<div class="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-100 dark:border-slate-800 flex flex-col gap-1">
+<span class="text-slate-500 dark:text-slate-400 text-xs font-medium">최근 청소 완료</span>
+<span class="text-sm font-bold">3일 전 (10.24)</span>
+</div>
+<div class="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-100 dark:border-slate-800 flex flex-col gap-1">
+<span class="text-slate-500 dark:text-slate-400 text-xs font-medium">다음 예정 청소</span>
+<span class="text-sm font-bold">내일 (10.28)</span>
+</div>
+</div>
+<!-- Actions -->
+<div class="flex w-full gap-3">
+<button class="flex items-center justify-center overflow-hidden rounded-lg h-12 px-4 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-sm font-bold leading-normal tracking-[0.015em] flex-1 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+<span class="material-symbols-outlined mr-2 text-[20px]">edit_document</span>
+<span class="truncate">가이드라인 수정</span>
+</button>
+<button class="flex items-center justify-center overflow-hidden rounded-lg h-12 px-4 bg-primary text-white text-sm font-bold leading-normal tracking-[0.015em] flex-1 hover:bg-primary/90 transition-colors shadow-sm shadow-primary/20">
+<span class="material-symbols-outlined mr-2 text-[20px]">calendar_add_on</span>
+<span class="truncate">청소 예약하기</span>
+</button>
+</div>
+</div>
+<!-- Divider -->
+<div class="h-2 bg-slate-50 dark:bg-[#15191d] w-full"></div>
+<!-- Cleaning History -->
+<div class="p-4">
+<div class="flex justify-between items-center mb-4">
+<h3 class="text-lg font-bold leading-tight tracking-[-0.015em]">청소 내역</h3>
+<button class="text-sm text-primary font-medium">전체보기</button>
+</div>
+<div class="flex flex-col gap-4">
+<!-- History Item 1 -->
+<div class="flex gap-4 p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#1c2227] shadow-sm">
+<div class="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-primary">check_circle</span>
+</div>
+<div class="flex-1 flex flex-col justify-center">
+<div class="flex justify-between items-start mb-1">
+<span class="font-bold text-sm">정기 청소 완료</span>
+<span class="text-xs text-slate-500 dark:text-slate-400">10.24 (목)</span>
+</div>
+<p class="text-xs text-slate-500 dark:text-slate-400">담당 파트너: 김청소</p>
+</div>
+</div>
+<!-- History Item 2 -->
+<div class="flex gap-4 p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#1c2227] shadow-sm">
+<div class="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-primary">check_circle</span>
+</div>
+<div class="flex-1 flex flex-col justify-center">
+<div class="flex justify-between items-start mb-1">
+<span class="font-bold text-sm">입실 전 특별 청소</span>
+<span class="text-xs text-slate-500 dark:text-slate-400">10.17 (목)</span>
+</div>
+<p class="text-xs text-slate-500 dark:text-slate-400">담당 파트너: 이깔끔</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Bottom Navigation -->
+<div class="fixed bottom-0 w-full max-w-md bg-white dark:bg-[#1c2227] border-t border-slate-200 dark:border-slate-800 pb-safe pt-2 px-4 flex justify-between z-20">
+<a class="flex flex-1 flex-col items-center justify-end gap-1 text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-primary transition-colors py-2" href="#">
+<span class="material-symbols-outlined text-[24px]">home</span>
+<p class="text-[10px] font-medium leading-normal">홈</p>
+</a>
+<a class="flex flex-1 flex-col items-center justify-end gap-1 text-primary py-2" href="#">
+<span class="material-symbols-outlined text-[24px] font-variation-settings-'FILL'1">calendar_month</span>
+<p class="text-[10px] font-medium leading-normal">예약 내역</p>
+</a>
+<a class="flex flex-1 flex-col items-center justify-end gap-1 text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-primary transition-colors py-2" href="#">
+<span class="material-symbols-outlined text-[24px]">chat</span>
+<p class="text-[10px] font-medium leading-normal">메시지</p>
+</a>
+<a class="flex flex-1 flex-col items-center justify-end gap-1 text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-primary transition-colors py-2" href="#">
+<span class="material-symbols-outlined text-[24px]">person</span>
+<p class="text-[10px] font-medium leading-normal">마이페이지</p>
+</a>
+</div>
+</div>
+</body></html>

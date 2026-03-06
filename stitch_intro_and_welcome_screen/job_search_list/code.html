@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>CleanGig Premium - Find Jobs</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#355773",
+                        "background-light": "#f6f7f7",
+                        "background-dark": "#15191d",
+                        "surface-light": "#ffffff",
+                        "surface-dark": "#1e2329",
+                        "text-main-light": "#1a242c",
+                        "text-main-dark": "#e2e8f0",
+                        "text-muted-light": "#546e82",
+                        "text-muted-dark": "#94a3b8",
+                        "border-light": "#e2e8f0",
+                        "border-dark": "#334155"
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display text-text-main-light dark:text-text-main-dark antialiased">
+<div class="relative flex h-auto min-h-screen w-full flex-col max-w-md mx-auto bg-background-light dark:bg-background-dark shadow-xl overflow-x-hidden">
+<!-- Header & Search -->
+<div class="sticky top-0 z-10 bg-background-light/90 dark:bg-background-dark/90 backdrop-blur-md border-b border-border-light dark:border-border-dark pb-2">
+<div class="flex items-center p-4 pb-2 justify-between">
+<h2 class="text-xl font-bold leading-tight tracking-tight flex-1">Find Jobs</h2>
+</div>
+<div class="px-4 py-2">
+<label class="flex flex-col min-w-40 h-12 w-full">
+<div class="flex w-full flex-1 items-stretch rounded-xl h-full bg-surface-light dark:bg-surface-dark shadow-sm border border-border-light dark:border-border-dark focus-within:ring-2 focus-within:ring-primary/50 transition-shadow">
+<div class="text-text-muted-light dark:text-text-muted-dark flex items-center justify-center pl-4 rounded-l-xl">
+<span class="material-symbols-outlined text-2xl">search</span>
+</div>
+<input class="flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-r-xl text-text-main-light dark:text-text-main-dark focus:outline-none bg-transparent placeholder:text-text-muted-light dark:placeholder:text-text-muted-dark px-3 text-base font-normal leading-normal" placeholder="Search by area or zip" value=""/>
+</div>
+</label>
+</div>
+<!-- Filters -->
+<div class="flex gap-2 px-4 py-2 overflow-x-auto no-scrollbar pb-3">
+<button class="flex h-8 shrink-0 items-center justify-center gap-x-1 rounded-full bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark px-4 shadow-sm hover:bg-border-light dark:hover:bg-border-dark transition-colors">
+<p class="text-sm font-medium">Area</p>
+<span class="material-symbols-outlined text-[20px]">expand_more</span>
+</button>
+<button class="flex h-8 shrink-0 items-center justify-center gap-x-1 rounded-full bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark px-4 shadow-sm hover:bg-border-light dark:hover:bg-border-dark transition-colors">
+<p class="text-sm font-medium">Price</p>
+<span class="material-symbols-outlined text-[20px]">expand_more</span>
+</button>
+<button class="flex h-8 shrink-0 items-center justify-center gap-x-1 rounded-full bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark px-4 shadow-sm hover:bg-border-light dark:hover:bg-border-dark transition-colors">
+<p class="text-sm font-medium">Time</p>
+<span class="material-symbols-outlined text-[20px]">expand_more</span>
+</button>
+</div>
+</div>
+<!-- Job List -->
+<div class="flex-1 overflow-y-auto px-4 py-4 space-y-4 pb-24">
+<!-- Job Card 1 -->
+<div class="bg-surface-light dark:bg-surface-dark rounded-xl p-4 shadow-sm border border-border-light dark:border-border-dark flex gap-4 active:scale-[0.98] transition-transform cursor-pointer hover:shadow-md">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-lg size-[80px] shrink-0" data-alt="Modern office interior space" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDKQLoBe4PugVwmYPr8sJgp4czLmOvRa9gEjxzcO34Eknp4Q0yFqowlxu37aAR1R1_isJKEfyboXmt7xTvwIIZDqzuMQex5WzXQtGFy5WaKdeIJ8H20vj4N0SfU21THdFLID6HsQjTo1c1lLAJSXrdvt6FBVz6DacxqSMusUUOXwaDMN0Dlkp-HikEmDy6xrUkBbHae-Ukr0fw9VzZFi6tEuAdEdB2sEm_Sbrbg1jV6KheOE7AkMFlyZIjVl4FIJ8k6KJ13ZZ2XJ-U");'></div>
+<div class="flex flex-1 flex-col justify-between py-1">
+<div>
+<h3 class="text-base font-bold leading-tight mb-1">Downtown Office Suite</h3>
+<div class="flex items-center gap-1 text-text-muted-light dark:text-text-muted-dark mb-1">
+<span class="material-symbols-outlined text-[16px]">location_on</span>
+<p class="text-xs font-medium">Financial District • 2.1 mi</p>
+</div>
+<div class="flex items-center gap-1 text-text-muted-light dark:text-text-muted-dark">
+<span class="material-symbols-outlined text-[16px]">schedule</span>
+<p class="text-xs font-medium">3 hours required • Today, 6PM</p>
+</div>
+</div>
+<div class="flex justify-between items-end mt-2">
+<span class="inline-flex items-center rounded-md bg-primary/10 px-2 py-1 text-xs font-medium text-primary ring-1 ring-inset ring-primary/20">Premium</span>
+<p class="text-primary dark:text-primary font-bold text-lg">$120</p>
+</div>
+</div>
+</div>
+<!-- Job Card 2 -->
+<div class="bg-surface-light dark:bg-surface-dark rounded-xl p-4 shadow-sm border border-border-light dark:border-border-dark flex gap-4 active:scale-[0.98] transition-transform cursor-pointer hover:shadow-md">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-lg size-[80px] shrink-0" data-alt="Luxury residential home living room" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDmEyN9pc1fpnNXCJdvt3tlLL6vlTdgrc7kFPrHoPOaT4tYvaCah6bKo0RxW3tVjw2UxTRtrAeKBGbA51-GSyd-iBanb329t_At8EHm225VPDVixcvRyROvDPDm7MDPrKc9yfakNS7m20VLb5oSC8C12zKb5z2Nw_LnMCCoIRxK-G52M3dGdxq3YwSLsHGYBfMKf2daE0RXgMpJMF2WJHE4gNttF4mYh9_2W-CGAKaXbuC6jh_H-61CZmcm6_tEF18GD_8ecVoofJM");'></div>
+<div class="flex flex-1 flex-col justify-between py-1">
+<div>
+<h3 class="text-base font-bold leading-tight mb-1">Luxury Condo Cleaning</h3>
+<div class="flex items-center gap-1 text-text-muted-light dark:text-text-muted-dark mb-1">
+<span class="material-symbols-outlined text-[16px]">location_on</span>
+<p class="text-xs font-medium">Waterfront • 4.5 mi</p>
+</div>
+<div class="flex items-center gap-1 text-text-muted-light dark:text-text-muted-dark">
+<span class="material-symbols-outlined text-[16px]">schedule</span>
+<p class="text-xs font-medium">4 hours required • Tomorrow, 9AM</p>
+</div>
+</div>
+<div class="flex justify-between items-end mt-2">
+<span class="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">Standard</span>
+<p class="text-primary dark:text-primary font-bold text-lg">$85</p>
+</div>
+</div>
+</div>
+<!-- Job Card 3 -->
+<div class="bg-surface-light dark:bg-surface-dark rounded-xl p-4 shadow-sm border border-border-light dark:border-border-dark flex gap-4 active:scale-[0.98] transition-transform cursor-pointer hover:shadow-md">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-lg size-[80px] shrink-0" data-alt="Commercial kitchen stainless steel prep" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBNBTK9OlOBdSMyjX3FnL3fds0D-3oLgDXCphdHbL4w1JU9fI_ILfx50RR61LSmlBaEaAUaWK53LB2ENcAfXkmJVRIAZplHn8jhuBhA00DTyqzsqLil43Q3yJxxGk3o7OYL6Ac8xPB2Lib5Ol7qu4XkNaHl5c-l0J7BbSTa-FBXAEMK6EK3stEhCviN2IuvLBPCu6eW3sWxXGp2ybysum19OlyXaZ6SgDcwCgqDG7qD43WSHQnyLpu7UYMzuQsdIhCNFLx6NxjzmhE");'></div>
+<div class="flex flex-1 flex-col justify-between py-1">
+<div>
+<h3 class="text-base font-bold leading-tight mb-1">Restaurant Deep Clean</h3>
+<div class="flex items-center gap-1 text-text-muted-light dark:text-text-muted-dark mb-1">
+<span class="material-symbols-outlined text-[16px]">location_on</span>
+<p class="text-xs font-medium">Midtown • 1.2 mi</p>
+</div>
+<div class="flex items-center gap-1 text-text-muted-light dark:text-text-muted-dark">
+<span class="material-symbols-outlined text-[16px]">schedule</span>
+<p class="text-xs font-medium">5 hours required • Tonight, 11PM</p>
+</div>
+</div>
+<div class="flex justify-between items-end mt-2">
+<span class="inline-flex items-center rounded-md bg-orange-50 px-2 py-1 text-xs font-medium text-orange-700 ring-1 ring-inset ring-orange-600/20">Urgent</span>
+<p class="text-primary dark:text-primary font-bold text-lg">$200</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Bottom Navigation -->
+<div class="fixed bottom-0 w-full max-w-md bg-surface-light dark:bg-surface-dark border-t border-border-light dark:border-border-dark pb-safe pt-2 px-4 pb-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-20">
+<div class="flex justify-between items-center h-14">
+<a class="flex flex-1 flex-col items-center justify-center gap-1 text-text-muted-light dark:text-text-muted-dark hover:text-primary dark:hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined text-2xl">home</span>
+<p class="text-[10px] font-semibold tracking-wide">Home</p>
+</a>
+<a class="flex flex-1 flex-col items-center justify-center gap-1 text-primary dark:text-primary" href="#">
+<div class="relative">
+<span class="material-symbols-outlined text-2xl drop-shadow-sm">work</span>
+<span class="absolute -top-1 -right-1 flex h-3 w-3 items-center justify-center rounded-full bg-red-500 text-[8px] text-white font-bold ring-2 ring-surface-light dark:ring-surface-dark">3</span>
+</div>
+<p class="text-[10px] font-semibold tracking-wide">Jobs</p>
+</a>
+<a class="flex flex-1 flex-col items-center justify-center gap-1 text-text-muted-light dark:text-text-muted-dark hover:text-primary dark:hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined text-2xl">calendar_month</span>
+<p class="text-[10px] font-semibold tracking-wide">Schedule</p>
+</a>
+<a class="flex flex-1 flex-col items-center justify-center gap-1 text-text-muted-light dark:text-text-muted-dark hover:text-primary dark:hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined text-2xl">person</span>
+<p class="text-[10px] font-semibold tracking-wide">My</p>
+</a>
+</div>
+</div>
+</div>
+<style>
+        /* iOS safe area padding support */
+        @supports (padding-bottom: env(safe-area-inset-bottom)) {
+            .pb-safe {
+                padding-bottom: calc(1rem + env(safe-area-inset-bottom));
+            }
+        }
+        /* Hide scrollbar for clean horizontal scrolling */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</body></html>

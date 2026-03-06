@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+
+<html lang="ko"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Real-time Chat Room</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#137fec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101922",
+                    },
+                    fontFamily: {
+                        "display": ["Plus Jakarta Sans", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.5rem", "lg": "1rem", "xl": "1.5rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display">
+<div class="relative flex h-auto min-h-screen w-full flex-col group/design-root overflow-x-hidden max-w-md mx-auto bg-[#F7F8F0] dark:bg-slate-900 border-x border-slate-200 dark:border-slate-800">
+<!-- Header -->
+<div class="sticky top-0 z-10 flex items-center bg-[#F7F8F0]/90 dark:bg-slate-900/90 backdrop-blur-sm p-4 pb-3 border-b border-slate-200 dark:border-slate-800 justify-between">
+<button class="flex items-center justify-center p-2 text-slate-900 dark:text-slate-100 mr-2 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors">
+<span class="material-symbols-outlined">arrow_back_ios_new</span>
+</button>
+<div class="flex items-center gap-3 flex-1">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 shadow-sm" data-alt="Profile picture of Jimin Kim" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBhRcLG20e_2e8ncSovccnKgJfq0DOWOnRtj1BfHTS98OeNdToKMfp6I1ZJuu3oZkdg1N-TrFk2aQ_Rt0m5gJWVYmfgWcB2TUl_4crZVk4XYVnPPnNifq-PceYOI5AgK7loLHO-OkrvSwlG58rSCert9Eu_3Lbkx39wTNnSJwGSHMSJHfc5mRaapcOS-Mwe7YHMA_B7Txg06s2lpn4FJrYzh8ueV89X5FycaCXkCqxuD9f-orcohZkkQ-XQ1ws0CAIIUJpJTmvupBM");'></div>
+<div>
+<h2 class="text-slate-900 dark:text-slate-100 text-lg font-bold leading-tight">김지민 파트너</h2>
+<p class="text-slate-500 dark:text-slate-400 text-xs">최근 접속: 5분 전</p>
+</div>
+</div>
+<button class="flex items-center justify-center p-2 text-slate-900 dark:text-slate-100 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+<!-- Chat Area -->
+<div class="flex-1 overflow-y-auto p-4 flex flex-col gap-6">
+<!-- Date Divider -->
+<div class="flex justify-center my-2">
+<span class="text-xs font-medium bg-slate-200/50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 px-3 py-1 rounded-full">2023년 10월 24일 화요일</span>
+</div>
+<!-- Partner Message -->
+<div class="flex items-end gap-3">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full w-8 h-8 shrink-0 shadow-sm" data-alt="Profile picture of Jimin Kim" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuANfMzIn13ZnWlXZVozDJO1YBDFRJcQcGLVtPbntaq_h15XaJYHsmflAOeFSyAqhn7yCmjuF6pQjvNCdF3v6Kv8xjemtuoZOpuIAqqbh4GwBdKibLDXJpLOt7CHrM3huxyCHI9StgW9EmGeL1RfDjt7VLJcYXd-EtZ_1EEpMxwPbfVxuU-FU5ZPU-Okpc9vwrmpL8UgfK9a8YXgXMEJJkGzHI2j1iiNknDqnYCdQAm7Eh4Xao_aG-Y--0V1vGyjWBZmArIMaVjNs5U");'></div>
+<div class="flex flex-1 flex-col gap-1 items-start">
+<p class="text-slate-500 dark:text-slate-400 text-xs font-medium ml-1">김지민 파트너</p>
+<div class="flex items-end gap-2">
+<p class="text-[15px] font-normal leading-relaxed max-w-[280px] rounded-2xl rounded-bl-sm px-4 py-3 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 shadow-sm border border-slate-100 dark:border-slate-700">
+                        안녕하세요! 오늘 오후 2시에 방문할 예정입니다. 혹시 특별히 신경 써주셨으면 하는 부분이 있으신가요?
+                    </p>
+<span class="text-[11px] text-slate-400 dark:text-slate-500 mb-1">오전 9:15</span>
+</div>
+</div>
+</div>
+<!-- My Message -->
+<div class="flex items-end gap-3 justify-end mt-2">
+<div class="flex flex-1 flex-col gap-1 items-end">
+<div class="flex items-end gap-2">
+<span class="text-[11px] text-slate-400 dark:text-slate-500 mb-1">오전 9:20</span>
+<p class="text-[15px] font-normal leading-relaxed max-w-[280px] rounded-2xl rounded-br-sm px-4 py-3 bg-primary text-white shadow-md shadow-primary/20">
+                        안녕하세요. 거실 창틀 청소를 특히 부탁드리고 싶습니다. 사진 첨부해 드려요.
+                    </p>
+</div>
+</div>
+</div>
+<!-- My Image Message -->
+<div class="flex items-end gap-3 justify-end mt-[-16px]">
+<div class="flex flex-1 flex-col gap-1 items-end">
+<div class="flex items-end gap-2">
+<span class="text-[11px] text-slate-400 dark:text-slate-500 mb-1">오전 9:21</span>
+<div class="bg-center bg-no-repeat aspect-video bg-cover rounded-2xl w-full max-w-[240px] shadow-sm border border-slate-200 dark:border-slate-700" data-alt="Photo of a dirty window sill" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAYkr_D1OJ5e_BxWfK9OhF2kvrHYsbLQX-5fW3IAgy5A9flQlbKSYvfLLTdgHKTsW00f3hvjzeK7RVkaVv3YuMLnohIH-GCSrJtfvxJWmyiTeTaOXRlgUVFTTFow22UbIZ3tY730pkVsr7eQvyzaNv1cYbApf2YoL92o68LeLah4-8LxnkwBvPn0qYYLbJAdUNy2OE-Gr4VhgZHnoiagavxWwbXvsMvrN-Qy7JWzaTSIb7818WscWX2J_evN0ThyIAaS8i2Kd30nlE");'></div>
+</div>
+</div>
+</div>
+<!-- Partner Message -->
+<div class="flex items-end gap-3 mt-2">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full w-8 h-8 shrink-0 shadow-sm" data-alt="Profile picture of Jimin Kim" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAhy_W6CYlX0ClKIPROh3jigFNQcHjzRLnpuyPjS8DZSiNDtRjG2KdgNumo-GgfWF_VL2saJV9uijn-McMvXf6EpDUOZ0p6VTRMA_62bA6oYO2SMWHxADbFTPGW2-UdVuAHk_ofrMxTO1fjoPt0R-L2qWMhisvyJx9Wz8I0ncMoVGDzHtvjx6_e9QviNSuZGT_FKGoEuSeMWXs7YqAuWJWeiJAMyqaA462fTCjH93wEvLnO2xhnl2R6DET-5TLpHIVeMb6pcyI9W34");'></div>
+<div class="flex flex-1 flex-col gap-1 items-start">
+<p class="text-slate-500 dark:text-slate-400 text-xs font-medium ml-1">김지민 파트너</p>
+<div class="flex items-end gap-2">
+<p class="text-[15px] font-normal leading-relaxed max-w-[280px] rounded-2xl rounded-bl-sm px-4 py-3 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 shadow-sm border border-slate-100 dark:border-slate-700">
+                        네, 확인했습니다! 창틀 먼지 꼼꼼하게 제거해 드리겠습니다. 도착 후 다시 연락드릴게요. 😊
+                    </p>
+<span class="text-[11px] text-slate-400 dark:text-slate-500 mb-1">오전 9:25</span>
+</div>
+</div>
+</div>
+<!-- Map Sharing Example -->
+<div class="flex items-end gap-3 mt-2">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full w-8 h-8 shrink-0 shadow-sm opacity-0" data-alt="Placeholder"></div>
+<div class="flex flex-1 flex-col gap-1 items-start">
+<div class="flex items-end gap-2">
+<div class="max-w-[280px] rounded-2xl rounded-bl-sm bg-white dark:bg-slate-800 overflow-hidden shadow-sm border border-slate-100 dark:border-slate-700">
+<div class="h-32 bg-slate-200 dark:bg-slate-700 bg-cover bg-center" data-alt="Map showing current location" data-location="Seoul, South Korea" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCmNoBeUqeMClA9MgbftxwVXrkcIdd4UMFEnm_BFcBnz0OqprnGhc4rZ4AOzzeLBMSpOVSxOWRlgiD72utsq9mF1sjD4cT2SfNTlQqH2hytic1m14U_GGxgpSC15zmpii_yOgofNjq0nhJ_TQ3kXfiPrYK25Q6gW0dOyXTyQWQrdqlfCkB4KLgfAPt5-UDXmPBxV5sgd2m3y9HKSyHkV9bXZfr9Y4iDbnnfnFLbr3pJnW5-VO4raBeG7V7aOejgK0TnO7XmBKYckmU');"></div>
+<div class="p-3 flex items-center justify-between">
+<div>
+<p class="text-sm font-bold text-slate-900 dark:text-slate-100">현재 위치 공유</p>
+<p class="text-xs text-slate-500 dark:text-slate-400">도착까지 약 15분 남았습니다.</p>
+</div>
+<span class="material-symbols-outlined text-primary">navigation</span>
+</div>
+</div>
+<span class="text-[11px] text-slate-400 dark:text-slate-500 mb-1">오후 1:45</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Input Area -->
+<div class="sticky bottom-0 bg-[#F7F8F0] dark:bg-slate-900 p-3 pb-8 border-t border-slate-200 dark:border-slate-800">
+<div class="flex items-end gap-2">
+<button class="flex items-center justify-center p-2 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-sm shrink-0 h-[42px] w-[42px]">
+<span class="material-symbols-outlined">add</span>
+</button>
+<div class="flex-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl flex items-end shadow-sm overflow-hidden min-h-[42px]">
+<textarea class="w-full bg-transparent border-none focus:ring-0 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 py-2.5 px-4 resize-none max-h-32 text-[15px]" placeholder="메시지를 입력하세요..." rows="1" style="min-height: 42px;"></textarea>
+<button class="flex items-center justify-center p-2 m-1 rounded-xl bg-primary/10 text-primary hover:bg-primary hover:text-white transition-colors shrink-0">
+<span class="material-symbols-outlined text-[20px]">send</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</body></html>

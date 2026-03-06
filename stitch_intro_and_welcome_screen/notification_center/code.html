@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+
+<html lang="ko"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>알림 센터 - CleanGig Premium</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#138aec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101a22",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="font-display bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen flex flex-col antialiased selection:bg-primary/30">
+<!-- Header -->
+<header class="flex items-center justify-between px-4 py-4 bg-background-light dark:bg-background-dark sticky top-0 z-10 border-b border-slate-200 dark:border-slate-800">
+<button aria-label="뒤로가기" class="w-10 h-10 flex items-center justify-center text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors">
+<span class="material-symbols-outlined text-2xl">arrow_back_ios_new</span>
+</button>
+<h1 class="text-lg font-bold">알림</h1>
+<button aria-label="설정" class="w-10 h-10 flex items-center justify-center text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors">
+<span class="material-symbols-outlined text-2xl">settings</span>
+</button>
+</header>
+<!-- Content -->
+<main class="flex-1 overflow-y-auto pb-20">
+<!-- Filter/Tabs (Optional but good for UX) -->
+<div class="px-4 py-3 flex gap-2 overflow-x-auto no-scrollbar border-b border-slate-200 dark:border-slate-800">
+<button class="px-4 py-1.5 rounded-full bg-slate-800 dark:bg-slate-200 text-white dark:text-slate-900 text-sm font-medium whitespace-nowrap">전체</button>
+<button class="px-4 py-1.5 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-sm font-medium whitespace-nowrap hover:bg-slate-300 dark:hover:bg-slate-700 transition-colors">매칭</button>
+<button class="px-4 py-1.5 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-sm font-medium whitespace-nowrap hover:bg-slate-300 dark:hover:bg-slate-700 transition-colors">작업</button>
+<button class="px-4 py-1.5 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-sm font-medium whitespace-nowrap hover:bg-slate-300 dark:hover:bg-slate-700 transition-colors">결제</button>
+</div>
+<!-- Notification List -->
+<div class="flex flex-col">
+<!-- Group: Today -->
+<div class="px-4 py-3 bg-slate-100 dark:bg-slate-900/50">
+<h2 class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">오늘</h2>
+</div>
+<!-- Item 1: Matching Complete -->
+<div class="flex items-start gap-4 px-4 py-4 bg-background-light dark:bg-background-dark border-b border-slate-100 dark:border-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors cursor-pointer relative">
+<div class="flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 text-primary shrink-0">
+<span class="material-symbols-outlined">handshake</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-baseline mb-1">
+<p class="text-sm font-medium text-slate-900 dark:text-slate-100 truncate pr-2">매칭 완료: 청담동 오피스</p>
+<span class="text-xs text-slate-500 dark:text-slate-400 shrink-0">1시간 전</span>
+</div>
+<p class="text-sm text-slate-600 dark:text-slate-400 line-clamp-2 leading-snug">
+                        '김클린' 파트너님과 매칭이 완료되었습니다. 작업 상세 내용을 확인해주세요.
+                    </p>
+</div>
+<!-- Unread Indicator -->
+<div class="absolute top-4 right-4 w-2.5 h-2.5 rounded-full bg-primary shadow-[0_0_0_2px_#f6f7f8] dark:shadow-[0_0_0_2px_#101a22]"></div>
+</div>
+<!-- Item 2: Work Started -->
+<div class="flex items-start gap-4 px-4 py-4 bg-background-light dark:bg-background-dark border-b border-slate-100 dark:border-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors cursor-pointer relative">
+<div class="flex items-center justify-center w-12 h-12 rounded-full bg-amber-500/10 text-amber-500 shrink-0">
+<span class="material-symbols-outlined">play_circle</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-baseline mb-1">
+<p class="text-sm font-medium text-slate-900 dark:text-slate-100 truncate pr-2">작업 시작: 역삼동 스튜디오</p>
+<span class="text-xs text-slate-500 dark:text-slate-400 shrink-0">2시간 전</span>
+</div>
+<p class="text-sm text-slate-600 dark:text-slate-400 line-clamp-2 leading-snug">
+                        예정된 청소 작업이 시작되었습니다. 작업 완료 후 알림을 드릴 예정입니다.
+                    </p>
+</div>
+<div class="absolute top-4 right-4 w-2.5 h-2.5 rounded-full bg-primary shadow-[0_0_0_2px_#f6f7f8] dark:shadow-[0_0_0_2px_#101a22]"></div>
+</div>
+<!-- Group: Yesterday -->
+<div class="px-4 py-3 bg-slate-100 dark:bg-slate-900/50 mt-2">
+<h2 class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">어제</h2>
+</div>
+<!-- Item 3: Payment Complete -->
+<div class="flex items-start gap-4 px-4 py-4 bg-background-light dark:bg-background-dark border-b border-slate-100 dark:border-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors cursor-pointer">
+<div class="flex items-center justify-center w-12 h-12 rounded-full bg-emerald-500/10 text-emerald-500 shrink-0">
+<span class="material-symbols-outlined">credit_card</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-baseline mb-1">
+<p class="text-sm font-medium text-slate-900 dark:text-slate-100 truncate pr-2">결제 완료: 삼성동 아파트</p>
+<span class="text-xs text-slate-500 dark:text-slate-400 shrink-0">1일 전</span>
+</div>
+<p class="text-sm text-slate-600 dark:text-slate-400 line-clamp-2 leading-snug">
+                        청소 서비스 비용 120,000원이 정상적으로 결제되었습니다. 영수증을 확인하실 수 있습니다.
+                    </p>
+</div>
+</div>
+<!-- Item 4: Review Request -->
+<div class="flex items-start gap-4 px-4 py-4 bg-background-light dark:bg-background-dark border-b border-slate-100 dark:border-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors cursor-pointer">
+<div class="flex items-center justify-center w-12 h-12 rounded-full bg-purple-500/10 text-purple-500 shrink-0">
+<span class="material-symbols-outlined">rate_review</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-baseline mb-1">
+<p class="text-sm font-medium text-slate-900 dark:text-slate-100 truncate pr-2">리뷰 작성 요청</p>
+<span class="text-xs text-slate-500 dark:text-slate-400 shrink-0">1일 전</span>
+</div>
+<p class="text-sm text-slate-600 dark:text-slate-400 line-clamp-2 leading-snug">
+                        '삼성동 아파트' 청소 서비스는 어떠셨나요? 소중한 리뷰를 남겨주세요.
+                    </p>
+</div>
+</div>
+</div>
+</main>
+<!-- Bottom Navigation -->
+<nav class="fixed bottom-0 w-full flex bg-background-light dark:bg-background-dark border-t border-slate-200 dark:border-slate-800 pb-safe z-50">
+<a class="flex flex-1 flex-col items-center justify-center py-3 text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined text-2xl mb-1">home</span>
+<span class="text-[10px] font-medium">홈</span>
+</a>
+<a class="flex flex-1 flex-col items-center justify-center py-3 text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined text-2xl mb-1">calendar_month</span>
+<span class="text-[10px] font-medium">예약</span>
+</a>
+<a class="flex flex-1 flex-col items-center justify-center py-3 text-primary relative" href="#">
+<span class="material-symbols-outlined text-2xl mb-1" style="font-variation-settings: 'FILL' 1;">notifications</span>
+<span class="text-[10px] font-medium">알림</span>
+<span class="absolute top-3 right-[calc(50%-10px)] w-2 h-2 rounded-full bg-red-500 border border-background-light dark:border-background-dark"></span>
+</a>
+<a class="flex flex-1 flex-col items-center justify-center py-3 text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined text-2xl mb-1">person</span>
+<span class="text-[10px] font-medium">내 정보</span>
+</a>
+</nav>
+<!-- Safe area padding for iOS -->
+<style>
+        .pb-safe { padding-bottom: env(safe-area-inset-bottom, 20px); }
+        /* Hide scrollbar for clean look */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</body></html>

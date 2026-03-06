@@ -3,441 +3,199 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
 import { createClient } from '@/lib/supabase/client';
-import Header from '@/components/layout/Header';
 import BottomNav from '@/components/layout/BottomNav';
 
 const TIER_CONFIG: Record<string, { label: string; color: string; next: string; desc: string }> = {
-    STARTER: { label: '🌱 스타터', color: '#94A3B8', next: '실버 (10건 완료)', desc: '수수료 10%' },
-    SILVER: { label: '🥈 실버', color: '#94A3B8', next: '골드 (50건 완료)', desc: '수수료 9%' },
-    GOLD: { label: '🥇 골드', color: '#F59E0B', next: '마스터 (200건 완료)', desc: '수수료 8%' },
-    MASTER: { label: '👑 마스터', color: '#8B5CF6', next: '최고 등급!', desc: '수수료 7%' },
+  STARTER: { label: '🌱 스타터', color: '#94A3B8', next: '실버 (10건 완료)', desc: '수수료 10%' },
+  SILVER: { label: '🥈 실버', color: '#94A3B8', next: '골드 (50건 완료)', desc: '수수료 9%' },
+  GOLD: { label: '🥇 골드', color: '#F59E0B', next: '마스터 (200건 완료)', desc: '수수료 8%' },
+  MASTER: { label: '👑 마스터', color: '#8B5CF6', next: '최고 등급!', desc: '수수료 7%' },
 };
 
 interface Props {
-    profile: { id: string; name: string; email?: string; phone?: string; profile_image?: string; role: string; tier?: string; avg_rating?: number; total_jobs?: number; bio?: string; bank_account?: any; is_verified?: boolean; manner_temperature?: number };
-    totalCompletedJobs: number;
+  profile: { id: string; name: string; email?: string; phone?: string; profile_image?: string; role: string; tier?: string; avg_rating?: number; total_jobs?: number; bio?: string; bank_account?: any; is_verified?: boolean; manner_temperature?: number };
+  totalCompletedJobs: number;
 }
 
 export default function ProfileClient({ profile, totalCompletedJobs }: Props) {
-    const router = useRouter();
-    const [editing, setEditing] = useState(false);
-    const [name, setName] = useState(profile.name);
-    const [bio, setBio] = useState(profile.bio || '');
-    const [saving, setSaving] = useState(false);
-    const [switching, setSwitching] = useState(false);
+  const router = useRouter();
+  const [editing, setEditing] = useState(false);
+  const [name, setName] = useState(profile.name);
+  const [bio, setBio] = useState(profile.bio || '');
+  const [saving, setSaving] = useState(false);
+  const [switching, setSwitching] = useState(false);
 
-    const tierInfo = TIER_CONFIG[profile.tier || 'STARTER'];
+  const tierInfo = TIER_CONFIG[profile.tier || 'STARTER'];
 
-    const handleSave = async () => {
-        setSaving(true);
-        const supabase = createClient();
-        await supabase.from('users').update({ name, bio }).eq('id', profile.id);
-        setSaving(false);
-        setEditing(false);
-        router.refresh();
-    };
+  const handleSave = async () => {
+    setSaving(true);
+    const supabase = createClient();
+    await supabase.from('users').update({ name, bio }).eq('id', profile.id);
+    setSaving(false);
+    setEditing(false);
+    router.refresh();
+  };
 
-    const handleRoleSwitch = async () => {
-        const nextRole = profile.role === 'worker' ? 'operator' : 'worker';
-        const roleName = nextRole === 'worker' ? '클린파트너' : '공간파트너';
+  const handleRoleSwitch = async () => {
+    const nextRole = profile.role === 'worker' ? 'operator' : 'worker';
+    const roleName = nextRole === 'worker' ? '클린파트너' : '공간파트너';
 
-        if (!confirm(`${roleName}(으)로 역할을 전환하시겠습니까?`)) return;
+    if (!confirm(`${roleName}(으)로 역할을 전환하시겠습니까?`)) return;
 
-        setSwitching(true);
-        try {
-            const supabase = createClient();
-            const { error } = await supabase.from('users').update({ role: nextRole }).eq('id', profile.id);
-            if (error) throw error;
-            router.push(nextRole === 'worker' ? '/clean' : '/dashboard');
-            router.refresh();
-        } catch (e) {
-            alert('역할 전환 중 오류가 발생했습니다.');
-            setSwitching(false);
-        }
-    };
+    setSwitching(true);
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.from('users').update({ role: nextRole }).eq('id', profile.id);
+      if (error) throw error;
+      router.push(nextRole === 'worker' ? '/clean' : '/dashboard');
+      router.refresh();
+    } catch (e) {
+      alert('역할 전환 중 오류가 발생했습니다.');
+      setSwitching(false);
+    }
+  };
 
-    const handleLogout = async () => {
-        const supabase = createClient();
-        await supabase.auth.signOut();
-        router.push('/');
-    };
+  const handleLogout = async () => {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.push('/');
+  };
 
-    return (
-        <div className="page-container bg-premium-v2">
-            <Header />
+  return (
+    <div className="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 min-h-screen flex flex-col justify-center w-full">
+      <div className="relative flex h-full min-h-screen w-full flex-col max-w-md mx-auto bg-white dark:bg-slate-900 shadow-xl overflow-x-hidden border-x border-slate-200 dark:border-slate-800">
 
-            <main className="page-content">
-                {/* Profile Card */}
-                <section className="profile-section">
-                    <div className="profile-card-premium card">
-                        <div className="profile-top">
-                            <div className="avatar-large">
-                                {profile.profile_image ? (
-                                    <img src={profile.profile_image} alt="" />
-                                ) : (
-                                    <span className="initial">{profile.name[0]}</span>
-                                )}
-                                <button className="edit-btn" onClick={() => setEditing(!editing)}>
-                                    {editing ? '✓' : '⚙️'}
-                                </button>
-                            </div>
-                            <div className="profile-info">
-                                <div className="badges">
-                                    <span className="role-badge">{profile.role === 'worker' ? '클린 파트너' : '공간 파트너'}</span>
-                                    {profile.is_verified && <span className="verified-badge">인증됨</span>}
-                                </div>
-                                {editing ? (
-                                    <input
-                                        className="name-input"
-                                        value={name}
-                                        onChange={e => setName(e.target.value)}
-                                        autoFocus
-                                    />
-                                ) : (
-                                    <h2 className="profile-name">{profile.name}님</h2>
-                                )}
-                                <p className="profile-email text-tertiary">{profile.email}</p>
-                            </div>
-                        </div>
+        {/* Header */}
+        <header className="flex items-center justify-between p-4 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm sticky top-0 z-10 border-b border-slate-100 dark:border-slate-800">
+          <div className="w-10"></div>
+          <h1 className="text-lg font-bold leading-tight tracking-tight flex-1 text-center text-slate-900 dark:text-slate-100">마이페이지</h1>
+          <button onClick={() => setEditing(!editing)} className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 transition-colors">
+            <span className="material-symbols-outlined">{editing ? 'close' : 'settings'}</span>
+          </button>
+        </header>
 
-                        {editing && (
-                            <motion.div
-                                initial={{ opacity: 0, height: 0 }}
-                                animate={{ opacity: 1, height: 'auto' }}
-                                className="edit-area"
-                            >
-                                <textarea
-                                    className="bio-input"
-                                    placeholder="자기소개를 입력해 주세요"
-                                    value={bio}
-                                    onChange={e => setBio(e.target.value)}
-                                    rows={3}
-                                />
-                                <button className="btn-save" onClick={handleSave} disabled={saving}>
-                                    {saving ? '저장 중...' : '프로필 수정 완료'}
-                                </button>
-                            </motion.div>
-                        )}
-                    </div>
-                </section>
+        <main className="flex-1 overflow-y-auto pb-24">
+          {/* Profile Section */}
+          <div className="flex flex-col items-center p-6 gap-4">
+            <div className="relative">
+              <div
+                className="bg-slate-100 dark:bg-slate-800 aspect-square rounded-full w-28 h-28 bg-cover bg-center border-4 border-white dark:border-slate-900 shadow-sm flex items-center justify-center overflow-hidden"
+                style={profile.profile_image ? { backgroundImage: `url('${profile.profile_image}')` } : {}}
+              >
+                {!profile.profile_image && <span className="text-4xl font-black text-primary/80">{profile.name[0]}</span>}
+              </div>
 
-                {/* Stats Grid (V2 Bento Style) */}
-                <section className="stats-section">
-                    <div className="stats-row">
-                        <div className="stat-item card">
-                            <span className="label">완료한 청소</span>
-                            <span className="value">{totalCompletedJobs}건</span>
-                        </div>
-                        <div className="stat-item card">
-                            <span className="label">평균 별점</span>
-                            <span className="value">⭐ {profile.avg_rating?.toFixed(1) || '5.0'}</span>
-                        </div>
-                    </div>
-                    <div className="sparkle-stats card-premium">
-                        <div className="sparkle-header">
-                            <span className="label">신뢰도 (스파클 점수)</span>
-                            <span className="score">98%</span>
-                        </div>
-                        <div className="progress-bar-v2">
-                            <div className="progress" style={{ width: '98%' }} />
-                        </div>
-                        <p className="detail">상위 2%의 우수한 파트너입니다! ✨</p>
-                    </div>
-                </section>
+              {profile.is_verified && (
+                <div className="absolute bottom-0 right-0 bg-primary text-white rounded-full p-1.5 shadow-md flex items-center justify-center">
+                  <span className="material-symbols-outlined text-[18px]">verified</span>
+                </div>
+              )}
+            </div>
 
-                {/* Menu List */}
-                <section className="menu-section">
-                    <div className="menu-group card">
-                        <button className="menu-item role-switch" onClick={handleRoleSwitch} disabled={switching}>
-                            <div className="icon-box role-icon">
-                                {profile.role === 'worker' ? '🏠' : '🧹'}
-                            </div>
-                            <div className="menu-text">
-                                <span className="title">{profile.role === 'worker' ? '공간 파트너로 전환' : '클린 파트너로 전환'}</span>
-                                <span className="desc">클라이언트 모드로 역할을 변경합니다.</span>
-                            </div>
-                            <span className="arrow">›</span>
-                        </button>
-
-                        {[
-                            { icon: '🏦', title: '내 계좌 및 수익 분석', desc: '정산 정보와 세부 수익을 확인하세요' },
-                            { icon: '🔔', title: '알림 및 활동 알림', desc: '새로운 일감 및 채팅 알림 설정' },
-                            { icon: '🛡️', title: '보안 및 약관 관리', desc: '비밀번호 변경 및 서비스 정책' },
-                            { icon: '📞', title: '1:1 고객 센터', sub: '도움이 필요하신가요?' },
-                        ].map((item, i) => (
-                            <div key={i} className="menu-item">
-                                <div className="icon-box">{item.icon}</div>
-                                <div className="menu-text">
-                                    <span className="title">{item.title}</span>
-                                    <span className="desc">{item.desc}</span>
-                                </div>
-                                <span className="arrow">›</span>
-                            </div>
-                        ))}
-                    </div>
-                </section>
-
-                <button className="logout-btn-premium" onClick={handleLogout}>
-                    로그아웃
+            {!editing ? (
+              <div className="flex flex-col items-center gap-1">
+                <h2 className="text-[22px] font-bold leading-tight tracking-tight text-slate-900 dark:text-slate-100">{profile.name}님</h2>
+                <div className="flex items-center gap-2 mt-1">
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400">
+                    <span className="material-symbols-outlined text-[14px] mr-1">military_tech</span> {tierInfo.label.replace(/[^가-힣a-zA-Z\s]/g, '').trim()} 등급
+                  </span>
+                  <span className="text-slate-300 dark:text-slate-600 text-sm">|</span>
+                  <span className="text-primary font-bold text-sm">평점 {profile.avg_rating?.toFixed(1) || '5.0'}</span>
+                </div>
+                {profile.bio && <p className="text-sm text-slate-500 dark:text-slate-400 mt-2 text-center max-w-[80%] leading-relaxed">{profile.bio}</p>}
+              </div>
+            ) : (
+              <div className="flex flex-col w-full gap-3 mt-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                <input
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700/50 rounded-xl px-4 py-3.5 text-lg font-bold text-center placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all shadow-sm"
+                  value={name}
+                  onChange={e => setName(e.target.value)}
+                  placeholder="이름을 입력하세요"
+                />
+                <textarea
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700/50 rounded-xl px-4 py-3.5 text-[15px] resize-none placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all shadow-sm"
+                  value={bio}
+                  onChange={e => setBio(e.target.value)}
+                  placeholder="자기소개를 입력하세요"
+                  rows={3}
+                />
+                <button className="w-full bg-primary hover:bg-primary/90 text-white rounded-xl h-14 font-bold shadow-sm transition-colors active:scale-[0.98] flex items-center justify-center gap-2" onClick={handleSave} disabled={saving}>
+                  {saving && <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>}
+                  {saving ? '저장 중...' : '프로필 수정 완료'}
                 </button>
-            </main>
+              </div>
+            )}
+          </div>
 
-            <BottomNav />
+          <div className="h-2 bg-slate-50 dark:bg-slate-800/50 w-full"></div>
 
-            <style jsx>{`
-        .bg-premium-v2 {
-          background-color: var(--color-bg);
-          min-height: 100vh;
-        }
-        .page-content {
-          padding: 24px 20px 120px;
-        }
-        .profile-section {
-          margin-bottom: 24px;
-        }
-        .profile-card-premium {
-          padding: 32px 24px;
-        }
-        .profile-top {
-          display: flex;
-          align-items: center;
-          gap: 24px;
-        }
-        .avatar-large {
-          position: relative;
-          width: 88px;
-          height: 88px;
-          border-radius: 50%;
-          background: var(--color-primary-soft);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          flex-shrink: 0;
-          overflow: visible;
-          border: 1px solid var(--color-border-light);
-        }
-        .avatar-large img {
-          width: 100%;
-          height: 100%;
-          border-radius: 50%;
-          object-fit: cover;
-        }
-        .avatar-large .initial {
-          font-size: 32px;
-          font-weight: 800;
-          color: var(--color-primary);
-        }
-        .edit-btn {
-          position: absolute;
-          bottom: 0;
-          right: 0;
-          width: 32px;
-          height: 32px;
-          background: #FFFFFF;
-          border: 1px solid var(--color-border-light);
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 16px;
-          box-shadow: var(--shadow-sm);
-        }
-        .badges {
-          display: flex;
-          gap: 6px;
-          margin-bottom: 8px;
-        }
-        .role-badge {
-          background: var(--color-primary-soft);
-          color: var(--color-primary);
-          font-size: 11px;
-          font-weight: 800;
-          padding: 4px 10px;
-          border-radius: 8px;
-        }
-        .verified-badge {
-          background: #E6FFFA;
-          color: #00A3BF;
-          font-size: 11px;
-          font-weight: 800;
-          padding: 4px 10px;
-          border-radius: 8px;
-        }
-        .profile-name {
-          font-size: 24px;
-          font-weight: 800;
-          color: var(--color-text-primary);
-          margin-bottom: 4px;
-        }
-        .name-input {
-          font-size: 22px;
-          font-weight: 800;
-          color: var(--color-text-primary);
-          background: #F8F9FA;
-          border: 1px solid var(--color-border-light);
-          border-radius: 8px;
-          padding: 4px 12px;
-          width: 100%;
-        }
-        .profile-email {
-          font-size: 14px;
-        }
-        .edit-area {
-          margin-top: 24px;
-          display: flex;
-          flex-direction: column;
-          gap: 12px;
-        }
-        .bio-input {
-          width: 100%;
-          background: #F8F9FA;
-          border: 1px solid var(--color-border-light);
-          border-radius: 16px;
-          padding: 16px;
-          font-size: 15px;
-          resize: none;
-        }
-        .btn-save {
-          background: var(--color-primary);
-          color: #FFF;
-          height: 52px;
-          border-radius: 16px;
-          font-weight: 700;
-          font-size: 16px;
-        }
-        .stats-section {
-          margin-bottom: 32px;
-        }
-        .stats-row {
-          display: flex;
-          gap: 12px;
-          margin-bottom: 12px;
-        }
-        .stat-item {
-          flex: 1;
-          padding: 20px;
-          text-align: center;
-        }
-        .stat-item .label {
-          font-size: 12px;
-          color: var(--color-text-tertiary);
-          font-weight: 700;
-          display: block;
-          margin-bottom: 4px;
-        }
-        .stat-item .value {
-          font-size: 18px;
-          font-weight: 800;
-          color: var(--color-text-primary);
-        }
-        .sparkle-stats {
-          padding: 24px;
-          background: linear-gradient(135deg, var(--color-primary-soft) 0%, #FFFFFF 100%);
-        }
-        .sparkle-header {
-          display: flex;
-          justify-content: space-between;
-          margin-bottom: 12px;
-          align-items: center;
-        }
-        .sparkle-header .label {
-          font-size: 14px;
-          font-weight: 700;
-          color: var(--color-text-secondary);
-        }
-        .sparkle-header .score {
-          font-size: 22px;
-          font-weight: 900;
-          color: var(--color-primary);
-        }
-        .progress-bar-v2 {
-          height: 10px;
-          background: rgba(0,0,0,0.05);
-          border-radius: 20px;
-          overflow: hidden;
-          margin-bottom: 12px;
-        }
-        .progress-bar-v2 .progress {
-          height: 100%;
-          background: var(--color-primary);
-          border-radius: 20px;
-        }
-        .sparkle-stats .detail {
-          font-size: 12px;
-          color: var(--color-primary-medium);
-          font-weight: 700;
-        }
-        .menu-section {
-          margin-bottom: 32px;
-        }
-        .menu-group {
-          padding: 8px;
-        }
-        .menu-item {
-          display: flex;
-          align-items: center;
-          padding: 16px;
-          gap: 16px;
-          border-radius: 16px;
-          transition: background 0.2s;
-          cursor: pointer;
-          background: none;
-          text-align: left;
-          width: 100%;
-          border: none;
-        }
-        .menu-item:hover {
-          background: #F8F9FA;
-        }
-        .menu-item:not(:last-child) {
-          border-bottom: 1px solid var(--color-border-light);
-        }
-        .icon-box {
-          width: 44px;
-          height: 44px;
-          background: #F1F3F5;
-          border-radius: 12px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 20px;
-          flex-shrink: 0;
-        }
-        .role-icon {
-          background: var(--color-primary-soft);
-          color: var(--color-primary);
-        }
-        .menu-text {
-          flex: 1;
-        }
-        .menu-text .title {
-          font-size: 16px;
-          font-weight: 700;
-          color: var(--color-text-primary);
-          display: block;
-        }
-        .menu-text .desc {
-          font-size: 13px;
-          color: var(--color-text-tertiary);
-          font-weight: 500;
-        }
-        .arrow {
-          font-size: 20px;
-          color: var(--color-text-disabled);
-        }
-        .logout-btn-premium {
-          width: 100%;
-          padding: 18px;
-          background: #F1F3F5;
-          color: #ADB5BD;
-          border-radius: 20px;
-          font-weight: 700;
-          font-size: 16px;
-          margin-top: 12px;
-        }
-      `}</style>
-        </div>
-    );
+          {/* Stats Area */}
+          <div className="flex px-4 py-5 gap-3">
+            <div className="flex-1 flex flex-col items-center justify-center py-4 px-2 rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm transition-shadow hover:shadow-md">
+              <span className="text-xs text-slate-500 dark:text-slate-400 font-bold mb-1.5">완료한 작업</span>
+              <span className="text-xl font-black text-slate-900 dark:text-white tracking-tight">{totalCompletedJobs}건</span>
+            </div>
+            <div className="flex-1 flex flex-col items-center justify-center py-4 px-2 rounded-2xl bg-white dark:bg-slate-900 border border-primary/20 dark:border-primary/30 shadow-sm relative overflow-hidden transition-shadow hover:shadow-md">
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent dark:from-primary/10" />
+              <span className="text-xs text-primary font-bold mb-1.5 relative z-10">스파클 점수</span>
+              <span className="text-xl font-black text-primary relative z-10 tracking-tight">{profile.manner_temperature || 98}점</span>
+            </div>
+          </div>
+
+          <div className="h-2 bg-slate-50 dark:bg-slate-800/50 w-full mb-2"></div>
+
+          {/* Menu List */}
+          <div className="flex flex-col py-2 px-3">
+            {/* 역할 전환 */}
+            <button onClick={handleRoleSwitch} disabled={switching} className="flex items-center gap-4 px-3 py-3 min-h-[64px] hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors rounded-2xl text-left w-full group mb-1">
+              <div className="flex items-center justify-center rounded-[14px] bg-primary/10 dark:bg-primary/20 text-primary shrink-0 size-12 group-active:scale-95 transition-transform">
+                <span className="material-symbols-outlined">{profile.role === 'worker' ? 'store' : 'cleaning_services'}</span>
+              </div>
+              <div className="flex flex-col flex-1">
+                <p className="text-[17px] font-bold leading-tight text-slate-900 dark:text-slate-100 mb-0.5">{profile.role === 'worker' ? '공간 파트너로 전환' : '클린 파트너로 전환'}</p>
+                <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">클라이언트 모드로 역할을 변경합니다</span>
+              </div>
+              <span className="material-symbols-outlined text-slate-300 dark:text-slate-600">chevron_right</span>
+            </button>
+
+            <div className="h-px bg-slate-100 dark:bg-slate-800/80 mx-3 my-1"></div>
+
+            <Link href="/earnings" className="flex items-center gap-4 px-3 py-3 min-h-[64px] hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors rounded-2xl">
+              <div className="flex items-center justify-center rounded-[14px] bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 shrink-0 size-12">
+                <span className="material-symbols-outlined">account_balance_wallet</span>
+              </div>
+              <p className="text-base font-bold leading-normal flex-1 text-slate-900 dark:text-slate-100">계좌 및 정산 관리</p>
+              <span className="material-symbols-outlined text-slate-300 dark:text-slate-600">chevron_right</span>
+            </Link>
+
+            <button className="flex items-center gap-4 px-3 py-3 min-h-[64px] hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors rounded-2xl w-full text-left">
+              <div className="flex items-center justify-center rounded-[14px] bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 shrink-0 size-12">
+                <span className="material-symbols-outlined">campaign</span>
+              </div>
+              <p className="text-base font-bold leading-normal flex-1 text-slate-900 dark:text-slate-100">공지사항</p>
+              <span className="material-symbols-outlined text-slate-300 dark:text-slate-600">chevron_right</span>
+            </button>
+
+            <button className="flex items-center gap-4 px-3 py-3 min-h-[64px] hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors rounded-2xl w-full text-left">
+              <div className="flex items-center justify-center rounded-[14px] bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 shrink-0 size-12">
+                <span className="material-symbols-outlined">support_agent</span>
+              </div>
+              <p className="text-base font-bold leading-normal flex-1 text-slate-900 dark:text-slate-100">고객센터</p>
+              <span className="material-symbols-outlined text-slate-300 dark:text-slate-600">chevron_right</span>
+            </button>
+
+            <button onClick={handleLogout} className="flex items-center gap-4 px-3 py-3 mt-4 min-h-[64px] hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors rounded-2xl w-full text-left group">
+              <div className="flex items-center justify-center rounded-[14px] bg-slate-100 dark:bg-slate-800 group-hover:bg-red-100 dark:group-hover:bg-red-900/30 text-slate-500 group-hover:text-red-500 shrink-0 size-12 transition-colors">
+                <span className="material-symbols-outlined">logout</span>
+              </div>
+              <p className="text-base font-bold leading-normal flex-1 text-slate-600 dark:text-slate-400 group-hover:text-red-500 transition-colors">로그아웃</p>
+            </button>
+          </div>
+        </main>
+
+        <BottomNav />
+      </div>
+    </div>
+  );
 }

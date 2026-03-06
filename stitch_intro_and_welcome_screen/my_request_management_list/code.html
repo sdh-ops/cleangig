@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+
+<html lang="ko"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>My Request Management List</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#355773",
+                        "background-light": "#f6f7f7",
+                        "background-dark": "#15191d",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "Noto Sans KR", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Manrope', 'Noto Sans KR', sans-serif;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display">
+<div class="relative flex h-auto min-h-screen w-full flex-col group/design-root overflow-x-hidden max-w-md mx-auto border-x border-slate-200 dark:border-slate-800">
+<!-- Header -->
+<div class="flex items-center p-4 pb-2 justify-between sticky top-0 bg-background-light/90 dark:bg-background-dark/90 backdrop-blur z-10">
+<h2 class="text-lg font-bold leading-tight tracking-[-0.015em] flex-1 text-center pl-12 pr-12">내 요청 내역</h2>
+</div>
+<!-- Tabs -->
+<div class="pb-3 sticky top-12 bg-background-light dark:bg-background-dark z-10 border-b border-slate-200 dark:border-slate-800">
+<div class="flex px-4 justify-between">
+<a class="flex flex-col items-center justify-center border-b-[3px] border-b-primary text-slate-900 dark:text-slate-100 pb-[13px] pt-4 flex-1" href="#">
+<p class="text-sm font-bold leading-normal tracking-[0.015em]">진행 중</p>
+</a>
+<a class="flex flex-col items-center justify-center border-b-[3px] border-b-transparent text-slate-500 dark:text-slate-400 pb-[13px] pt-4 flex-1 hover:text-slate-700 dark:hover:text-slate-300 transition-colors" href="#">
+<p class="text-sm font-bold leading-normal tracking-[0.015em]">완료</p>
+</a>
+<a class="flex flex-col items-center justify-center border-b-[3px] border-b-transparent text-slate-500 dark:text-slate-400 pb-[13px] pt-4 flex-1 hover:text-slate-700 dark:hover:text-slate-300 transition-colors" href="#">
+<p class="text-sm font-bold leading-normal tracking-[0.015em]">취소</p>
+</a>
+</div>
+</div>
+<!-- Main Content -->
+<div class="flex-1 overflow-y-auto pb-24">
+<!-- Item 1: Recruiting -->
+<div class="flex gap-4 px-4 py-4 justify-between border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer">
+<div class="flex items-start gap-4">
+<div class="text-primary flex items-center justify-center rounded-lg bg-primary/10 dark:bg-primary/20 shrink-0 size-12">
+<span class="material-symbols-outlined">cleaning_services</span>
+</div>
+<div class="flex flex-1 flex-col justify-center">
+<div class="flex items-center gap-2 mb-1">
+<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400">파트너 모집 중</span>
+</div>
+<p class="text-base font-medium leading-normal mb-1">강남 오피스 대청소</p>
+<p class="text-slate-500 dark:text-slate-400 text-sm font-normal leading-normal">서울 강남구 역삼동</p>
+<p class="text-slate-500 dark:text-slate-400 text-sm font-normal leading-normal mt-0.5">2023.10.25 (수) 오전 10:00</p>
+</div>
+</div>
+</div>
+<!-- Item 2: Matched -->
+<div class="flex gap-4 px-4 py-4 justify-between border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer">
+<div class="flex items-start gap-4">
+<div class="text-primary flex items-center justify-center rounded-lg bg-primary/10 dark:bg-primary/20 shrink-0 size-12">
+<span class="material-symbols-outlined">cleaning_services</span>
+</div>
+<div class="flex flex-1 flex-col justify-center">
+<div class="flex items-center gap-2 mb-1">
+<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400">매칭 완료</span>
+</div>
+<p class="text-base font-medium leading-normal mb-1">홍대 스튜디오 정기 청소</p>
+<p class="text-slate-500 dark:text-slate-400 text-sm font-normal leading-normal">서울 마포구 서교동</p>
+<p class="text-slate-500 dark:text-slate-400 text-sm font-normal leading-normal mt-0.5">2023.10.27 (금) 오후 2:00</p>
+</div>
+</div>
+<div class="shrink-0 flex flex-col items-end justify-between">
+<div class="flex size-7 items-center justify-center">
+<span class="material-symbols-outlined text-slate-400 text-xl">chevron_right</span>
+</div>
+<div class="mt-auto">
+<img alt="Cleaner avatar" class="size-8 rounded-full border border-slate-200 dark:border-slate-700" data-alt="Profile picture of matched cleaner" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD_L-UWY1Zk0U3aLOVOJkN3p1_2-WR9voNvsGxd9V1IUQG0U_ja6MYyW5wqGay_7d09t_Gb8OS5GfyLu9MjP3DY3ivuI7bgYlBbU_ULpYhndp-e3IUgV7obNxDpeeqq9xD7z3tPiagLXKSHmfDdCT8ms4ybQQ9j5DL9rHy-t1spAH4lPAPVUf1eCBlCPSqZ4gTx1qHrU7kH-xbrDJP6thsaWf1h6CYayIfoCCHlhlTajyJVsBkHZz9lWFKX-2o6-R-6QuFKnNxFrLI"/>
+</div>
+</div>
+</div>
+<!-- Item 3: Matched -->
+<div class="flex gap-4 px-4 py-4 justify-between border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer">
+<div class="flex items-start gap-4">
+<div class="text-primary flex items-center justify-center rounded-lg bg-primary/10 dark:bg-primary/20 shrink-0 size-12">
+<span class="material-symbols-outlined">cleaning_services</span>
+</div>
+<div class="flex flex-1 flex-col justify-center">
+<div class="flex items-center gap-2 mb-1">
+<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400">매칭 완료</span>
+</div>
+<p class="text-base font-medium leading-normal mb-1">판교 IT 밸리 사무실 청소</p>
+<p class="text-slate-500 dark:text-slate-400 text-sm font-normal leading-normal">경기 성남시 분당구</p>
+<p class="text-slate-500 dark:text-slate-400 text-sm font-normal leading-normal mt-0.5">2023.11.02 (목) 오전 09:00</p>
+</div>
+</div>
+<div class="shrink-0 flex flex-col items-end justify-between">
+<div class="flex size-7 items-center justify-center">
+<span class="material-symbols-outlined text-slate-400 text-xl">chevron_right</span>
+</div>
+<div class="mt-auto">
+<img alt="Cleaner avatar" class="size-8 rounded-full border border-slate-200 dark:border-slate-700" data-alt="Profile picture of matched cleaner" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCd9IEeTQmmbwSUNwUI8JoniH6YKo_2yofNzMVGBAsgjIQzgn6tKBO4VXwp66VFcLFzVRDE9yighxbeiL1EFXLIewLK7yXSmXTy8uPPHm3z598A_qU-QOvgzAcpGieYJfmW1zNz9FCFDsjHKDrWSuVyDU1MOaSATg9hQDKgNNvAH-vkcKeqKKYGj9hfbCgoTSd_CtGKjUCdvwq5C7QANGtCngqMZ7USEyYdi8fGD-YfKWY4rnhclsHxid97wOlnCvtpHP-YL9io80U"/>
+</div>
+</div>
+</div>
+</div>
+<!-- Bottom Navigation Bar -->
+<div class="flex gap-2 border-t border-slate-200 dark:border-slate-800 bg-background-light dark:bg-background-dark px-4 pb-6 pt-2 fixed bottom-0 w-full max-w-md">
+<a class="flex flex-1 flex-col items-center justify-end gap-1 text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-primary transition-colors" href="#">
+<div class="flex h-8 items-center justify-center">
+<span class="material-symbols-outlined">home</span>
+</div>
+<p class="text-[10px] font-medium leading-normal tracking-[0.015em]">홈</p>
+</a>
+<a class="flex flex-1 flex-col items-center justify-end gap-1 text-primary" href="#">
+<div class="flex h-8 items-center justify-center">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">list_alt</span>
+</div>
+<p class="text-[10px] font-medium leading-normal tracking-[0.015em]">요청 내역</p>
+</a>
+<a class="flex flex-1 flex-col items-center justify-end gap-1 text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-primary transition-colors" href="#">
+<div class="flex h-8 items-center justify-center">
+<span class="material-symbols-outlined">chat</span>
+</div>
+<p class="text-[10px] font-medium leading-normal tracking-[0.015em]">채팅</p>
+</a>
+<a class="flex flex-1 flex-col items-center justify-end gap-1 text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-primary transition-colors" href="#">
+<div class="flex h-8 items-center justify-center">
+<span class="material-symbols-outlined">person</span>
+</div>
+<p class="text-[10px] font-medium leading-normal tracking-[0.015em]">내 정보</p>
+</a>
+</div>
+</div>
+</body></html>

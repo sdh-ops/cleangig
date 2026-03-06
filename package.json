@@ -10,6 +10,7 @@
   "dependencies": {
     "@supabase/ssr": "^0.9.0",
     "@supabase/supabase-js": "^2.98.0",
+    "@tailwindcss/postcss": "^4.2.1",
     "@tosspayments/payment-widget-sdk": "^0.12.1",
     "framer-motion": "^12.35.0",
     "lucide-react": "^0.577.0",
@@ -22,7 +23,10 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "autoprefixer": "^10.4.27",
     "babel-plugin-react-compiler": "1.0.0",
+    "postcss": "^8.5.8",
+    "tailwindcss": "^4.2.1",
     "typescript": "^5"
   }
 }

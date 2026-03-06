@@ -1,3 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 :root {
   /* =============================================
      CleanGig Premium v2 컬러 팔레트 (Stitch 명세)

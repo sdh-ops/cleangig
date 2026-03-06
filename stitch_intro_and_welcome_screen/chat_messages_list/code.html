@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Chat Messages List</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#355773",
+                        "background-light": "#f6f7f7",
+                        "background-dark": "#15191d",
+                        "neutral-100": "#eff2f5",
+                        "neutral-200": "#e0e6ec",
+                        "neutral-500": "#6d8194",
+                        "neutral-800": "#1a252f",
+                        "neutral-900": "#10161c",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Manrope', sans-serif;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display flex flex-col min-h-screen text-neutral-900 dark:text-neutral-100">
+<main class="flex-1 overflow-y-auto overflow-x-hidden pb-20">
+<!-- Header -->
+<div class="sticky top-0 z-10 bg-background-light dark:bg-background-dark p-4 pb-2">
+<h2 class="text-neutral-900 dark:text-neutral-100 text-2xl font-bold leading-tight tracking-tight">Messages</h2>
+</div>
+<!-- Search -->
+<div class="px-4 py-3 sticky top-12 z-10 bg-background-light dark:bg-background-dark">
+<div class="flex w-full items-center rounded-xl bg-neutral-100 dark:bg-neutral-800 h-12 px-4 focus-within:ring-2 focus-within:ring-primary transition-shadow">
+<span class="material-symbols-outlined text-neutral-500 mr-2">search</span>
+<input class="w-full bg-transparent border-none text-neutral-900 dark:text-neutral-100 focus:ring-0 placeholder:text-neutral-500 text-base" placeholder="Search messages" type="text"/>
+</div>
+</div>
+<!-- Message List -->
+<div class="flex flex-col">
+<!-- Unread Message -->
+<a class="flex items-center gap-4 px-4 py-3 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors group cursor-pointer relative" href="#">
+<div class="relative shrink-0">
+<img alt="Sarah Jenkins profile picture" class="w-14 h-14 rounded-full object-cover border-2 border-primary" data-alt="Professional cleaner Sarah Jenkins profile picture" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCImOMzrfiViFNZWb2QkVrrw33_JZKfoRvpP5R47QkO7TO4O0PbAc53eDSXb2qq2OGsSfCmKw32BDOzkFc6ljRgggOOrYZifd198TJ5FGqDUoSF9zF0I7Z-nQwoGUWlF0LdjTIUySK6TNJX73849fZYJK4l-56QgWWWJMtovEnxjnazOssE8UmLpD9XLBUkLc0IFSpO9zS2_jUs7trjV2fWt0pyXRNdNUnVMIN_RQauhgiy2g_QsEQdlkSDhQe0lsl4HLM0Hcrppx4"/>
+<div class="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 border-2 border-background-light dark:border-background-dark rounded-full"></div>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-baseline mb-1">
+<p class="text-neutral-900 dark:text-neutral-100 text-base font-bold truncate">Sarah Jenkins</p>
+<p class="text-primary text-xs font-semibold ml-2 shrink-0">10:42 AM</p>
+</div>
+<p class="text-neutral-900 dark:text-neutral-200 text-sm font-medium truncate">Can we reschedule the deep clean for tomorrow?</p>
+</div>
+<div class="w-2.5 h-2.5 bg-primary rounded-full shrink-0"></div>
+</a>
+<!-- Unread Message 2 -->
+<a class="flex items-center gap-4 px-4 py-3 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors group cursor-pointer relative" href="#">
+<div class="relative shrink-0">
+<img alt="David Chen profile picture" class="w-14 h-14 rounded-full object-cover border-2 border-primary" data-alt="Space owner David Chen profile picture" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCS5e5bgBzZKEi1_a5CQJHK01gU96gzta6YxrAGPE4kn3slRIZEqeB4IIrNXMDGeww9WfXwsh1cak9AlQA-n-kNBwyWx8SzZBUNhgniHeZiWnEFvsJkEupkv7ox3ZovBCuGncd7UzZ62_s9bL2_eAOeykeeJlLVMYNXEG10ETvimticguli8rVFLZKnDL2PISPp4kimgULEcCv5rUX2C8u8vsvp24sEeL8TMKMLtk4t2orFfydKCJjLkDf1M1CeIlAb8cZTYy4MDxs"/>
+<div class="absolute bottom-0 right-0 w-3.5 h-3.5 bg-gray-400 border-2 border-background-light dark:border-background-dark rounded-full"></div>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-baseline mb-1">
+<p class="text-neutral-900 dark:text-neutral-100 text-base font-bold truncate">David Chen</p>
+<p class="text-primary text-xs font-semibold ml-2 shrink-0">9:15 AM</p>
+</div>
+<p class="text-neutral-900 dark:text-neutral-200 text-sm font-medium truncate">I've left the keys under the mat.</p>
+</div>
+<div class="w-2.5 h-2.5 bg-primary rounded-full shrink-0"></div>
+</a>
+<!-- Read Message 1 -->
+<a class="flex items-center gap-4 px-4 py-3 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors group cursor-pointer relative" href="#">
+<div class="relative shrink-0">
+<img alt="Mike Thompson profile picture" class="w-14 h-14 rounded-full object-cover" data-alt="Cleaning partner Mike Thompson profile picture" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD7bKGlSivdwbf03t-pcbiCG-mUyKkOnZHhaeCkFPP7R4t-DvUV6IxOoGkdbS2ZuBWfvjicqJkAwYpypxwTXq2hnIhuJeEax-46IcfQ4BOLoXrPL8umgV5_IgMpLwx-cvhJce6RBEn6NgB2MaDZvc9wAqep6jSheCeV8QFSKyroSG9QbU-c-XifOz1WGTiBJBoSTtVB9WEOPxZlVj6tGM14NrYp-ByxSZ-R8oQDrY-xq1FgRb6bAZM6I0g4gISt_UetA9olBpLBIQ8"/>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-baseline mb-1">
+<p class="text-neutral-900 dark:text-neutral-100 text-base font-medium truncate">Mike Thompson</p>
+<p class="text-neutral-500 text-xs ml-2 shrink-0">Yesterday</p>
+</div>
+<p class="text-neutral-500 text-sm truncate">Thanks for the great work on the office space!</p>
+</div>
+</a>
+<!-- Read Message 2 -->
+<a class="flex items-center gap-4 px-4 py-3 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors group cursor-pointer relative" href="#">
+<div class="relative shrink-0">
+<img alt="Emily Davis profile picture" class="w-14 h-14 rounded-full object-cover" data-alt="Space owner Emily Davis profile picture" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB6MQlCre8IzxwpKBZqpfg3hJPV4IvYvjRs_21TwFVCOc0lSV1L9PtrgAN8CRsdqaX56-hOz5vZQmH4lBkZNtoZjjQfSHfa5ZcOYN2nyV_MhMrY7FETO7F3xQVhNbQ1CYs9DM5Xaz51vDhP6xRCulLI6nHhPxlhKmY7Pu84kYKvC1SnEDmAHte9Jjyl1yCvBjTRSuCiD__Gf7FthHEeGVz-n0G8hM-VNhd9hvxox_W8UeRJGzXsVXs35s9vrK1lTzcSA4KCXZPEe-A"/>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-baseline mb-1">
+<p class="text-neutral-900 dark:text-neutral-100 text-base font-medium truncate">Emily Davis</p>
+<p class="text-neutral-500 text-xs ml-2 shrink-0">Mon</p>
+</div>
+<p class="text-neutral-500 text-sm truncate">The invoice looks correct. I'll process the payment.</p>
+</div>
+</a>
+<!-- Read Message 3 -->
+<a class="flex items-center gap-4 px-4 py-3 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors group cursor-pointer relative" href="#">
+<div class="relative shrink-0">
+<div class="w-14 h-14 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-xl">
+                        A
+                    </div>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-baseline mb-1">
+<p class="text-neutral-900 dark:text-neutral-100 text-base font-medium truncate">Alex Rodriguez</p>
+<p class="text-neutral-500 text-xs ml-2 shrink-0">Oct 12</p>
+</div>
+<p class="text-neutral-500 text-sm truncate">Are you available next Thursday afternoon?</p>
+</div>
+</a>
+</div>
+</main>
+<!-- Bottom Navigation -->
+<nav class="fixed bottom-0 w-full bg-background-light dark:bg-background-dark border-t border-neutral-200 dark:border-neutral-800 pb-safe z-50">
+<div class="flex justify-around items-center h-16 px-2">
+<a class="flex flex-col items-center justify-center w-full h-full text-neutral-500 hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined text-2xl mb-1">home</span>
+<span class="text-[10px] font-medium">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center w-full h-full text-neutral-500 hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined text-2xl mb-1">work</span>
+<span class="text-[10px] font-medium">Jobs</span>
+</a>
+<a class="flex flex-col items-center justify-center w-full h-full text-primary" href="#">
+<div class="relative">
+<span class="material-symbols-outlined text-2xl mb-1" style="font-variation-settings: 'FILL' 1;">chat</span>
+<span class="absolute -top-1 -right-1 flex h-3 w-3 items-center justify-center rounded-full bg-primary ring-2 ring-background-light dark:ring-background-dark"></span>
+</div>
+<span class="text-[10px] font-bold">Chat</span>
+</a>
+<a class="flex flex-col items-center justify-center w-full h-full text-neutral-500 hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined text-2xl mb-1">person</span>
+<span class="text-[10px] font-medium">My</span>
+</a>
+</div>
+</nav>
+</body></html>

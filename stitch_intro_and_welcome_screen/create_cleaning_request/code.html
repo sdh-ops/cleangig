@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+
+<html lang="ko"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>새로운 청소 요청</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#355773",
+                        "background-light": "#f6f7f7",
+                        "background-dark": "#15191d",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display min-h-screen antialiased flex flex-col mx-auto max-w-md w-full relative">
+<!-- TopAppBar -->
+<div class="sticky top-0 z-10 flex items-center bg-background-light dark:bg-background-dark p-4 justify-between border-b border-slate-200 dark:border-slate-800">
+<button class="flex size-12 shrink-0 items-center justify-center text-slate-900 dark:text-slate-100 focus:outline-none">
+<span class="material-symbols-outlined text-2xl">arrow_back</span>
+</button>
+<h2 class="text-lg font-bold leading-tight tracking-tight flex-1 text-center pr-12">새로운 청소 요청</h2>
+</div>
+<!-- Main Content -->
+<main class="flex-1 overflow-y-auto pb-32">
+<!-- Space Selection -->
+<div class="px-4 pt-6 pb-2">
+<h1 class="text-[22px] font-bold leading-tight tracking-tight mb-4">어떤 공간을 청소할까요?</h1>
+<label class="flex flex-col w-full">
+<span class="text-sm font-medium leading-normal mb-2 text-slate-700 dark:text-slate-300">공간 선택</span>
+<div class="relative">
+<select class="appearance-none form-input flex w-full flex-1 rounded-xl text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 h-14 px-4 text-base font-medium">
+<option disabled="" selected="" value="">공간을 선택해주세요</option>
+<option value="apt1">서울 서초구 아파트 (32평)</option>
+<option value="office1">강남구 사무실 (50평)</option>
+<option value="studio1">마포구 원룸 (10평)</option>
+</select>
+<div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-500">
+<span class="material-symbols-outlined">expand_more</span>
+</div>
+</div>
+</label>
+</div>
+<div class="h-4"></div>
+<!-- Date & Time Selection -->
+<div class="px-4 py-2">
+<h1 class="text-[22px] font-bold leading-tight tracking-tight mb-4">언제 청소가 필요하신가요?</h1>
+<div class="flex gap-4">
+<label class="flex flex-col flex-1">
+<span class="text-sm font-medium leading-normal mb-2 text-slate-700 dark:text-slate-300">날짜</span>
+<div class="relative flex items-center">
+<input class="appearance-none form-input flex w-full rounded-xl text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 h-14 px-4 pr-10 text-base font-medium" type="date"/>
+<span class="material-symbols-outlined absolute right-3 text-slate-400 pointer-events-none">calendar_today</span>
+</div>
+</label>
+<label class="flex flex-col flex-1">
+<span class="text-sm font-medium leading-normal mb-2 text-slate-700 dark:text-slate-300">시간</span>
+<div class="relative flex items-center">
+<input class="appearance-none form-input flex w-full rounded-xl text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 h-14 px-4 pr-10 text-base font-medium" type="time"/>
+<span class="material-symbols-outlined absolute right-3 text-slate-400 pointer-events-none">schedule</span>
+</div>
+</label>
+</div>
+</div>
+<div class="h-4"></div>
+<!-- Special Instructions -->
+<div class="px-4 py-2">
+<h1 class="text-[22px] font-bold leading-tight tracking-tight mb-4">요청사항이 있으신가요?</h1>
+<label class="flex flex-col w-full">
+<span class="text-sm font-medium leading-normal mb-2 text-slate-700 dark:text-slate-300">특이사항 또는 주의사항 (선택)</span>
+<textarea class="form-textarea flex w-full rounded-xl text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 text-base font-normal resize-none min-h-[120px]" placeholder="예: 고양이가 있어요. 베란다 창틀 청소도 부탁드려요."></textarea>
+</label>
+</div>
+<div class="h-8"></div>
+</main>
+<!-- Bottom Action Area -->
+<div class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 p-4 pb-8 safe-area-bottom shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+<div class="flex justify-between items-center mb-4 px-2">
+<span class="text-base font-medium text-slate-600 dark:text-slate-400">예상 결제 금액</span>
+<span class="text-2xl font-bold text-primary dark:text-primary">₩ 65,000</span>
+</div>
+<button class="w-full h-14 bg-primary text-white rounded-xl font-bold text-lg flex items-center justify-center hover:bg-primary/90 transition-colors active:scale-[0.98]">
+            요청 올리기
+        </button>
+</div>
+</body></html>

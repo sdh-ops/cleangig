@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+
+<html lang="ko"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Cleaning Partner Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#355773",
+                        "background-light": "#F7F8F0",
+                        "background-dark": "#15191d",
+                        "surface-light": "#ffffff",
+                        "surface-dark": "#1f2937",
+                        "text-primary-light": "#111517",
+                        "text-primary-dark": "#f3f4f6",
+                        "text-secondary-light": "#627484",
+                        "text-secondary-dark": "#9ca3af",
+                        "border-light": "#eaedf0",
+                        "border-dark": "#374151"
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display text-text-primary-light dark:text-text-primary-dark min-h-screen flex flex-col antialiased">
+<!-- Header -->
+<header class="flex items-center bg-surface-light dark:bg-surface-dark p-4 pb-2 justify-between sticky top-0 z-10 border-b border-border-light dark:border-border-dark">
+<h2 class="text-text-primary-light dark:text-text-primary-dark text-lg font-bold leading-tight tracking-[-0.015em] flex-1">CleanGig 파트너</h2>
+<div class="flex w-12 items-center justify-end">
+<button class="flex items-center justify-center rounded-lg h-12 w-12 bg-transparent text-text-primary-light dark:text-text-primary-dark hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
+<span class="material-symbols-outlined text-2xl">notifications</span>
+</button>
+</div>
+</header>
+<!-- Main Content -->
+<main class="flex-1 overflow-y-auto pb-24">
+<!-- Today's Earnings -->
+<section class="p-4">
+<div class="bg-surface-light dark:bg-surface-dark rounded-xl p-6 shadow-sm border border-border-light dark:border-border-dark flex flex-col gap-2">
+<div class="flex items-center justify-between">
+<p class="text-text-secondary-light dark:text-text-secondary-dark text-sm font-medium leading-normal">오늘의 수익</p>
+<span class="material-symbols-outlined text-primary text-xl">account_balance_wallet</span>
+</div>
+<p class="text-primary tracking-tight text-3xl font-bold leading-tight mt-1">₩150,000</p>
+<div class="flex items-center gap-1 mt-2 text-sm">
+<span class="material-symbols-outlined text-green-500 text-sm">trending_up</span>
+<span class="text-green-500 font-medium">+12%</span>
+<span class="text-text-secondary-light dark:text-text-secondary-dark">어제 대비</span>
+</div>
+</div>
+</section>
+<!-- Active Jobs Summary -->
+<section class="px-4 py-2">
+<div class="flex items-center justify-between mb-3">
+<h3 class="text-text-primary-light dark:text-text-primary-dark text-lg font-bold leading-tight tracking-[-0.015em]">진행 중인 일감</h3>
+<a class="text-primary text-sm font-medium hover:underline" href="#">모두 보기</a>
+</div>
+<div class="grid grid-cols-2 gap-3">
+<div class="bg-surface-light dark:bg-surface-dark rounded-xl p-4 shadow-sm border border-border-light dark:border-border-dark flex flex-col items-center justify-center text-center gap-2">
+<div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary">pending_actions</span>
+</div>
+<div>
+<p class="text-xl font-bold text-text-primary-light dark:text-text-primary-dark">2</p>
+<p class="text-xs text-text-secondary-light dark:text-text-secondary-dark">진행 예정</p>
+</div>
+</div>
+<div class="bg-surface-light dark:bg-surface-dark rounded-xl p-4 shadow-sm border border-border-light dark:border-border-dark flex flex-col items-center justify-center text-center gap-2">
+<div class="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-green-600 dark:text-green-400">check_circle</span>
+</div>
+<div>
+<p class="text-xl font-bold text-text-primary-light dark:text-text-primary-dark">1</p>
+<p class="text-xs text-text-secondary-light dark:text-text-secondary-dark">완료됨</p>
+</div>
+</div>
+</div>
+<!-- Next Job Card -->
+<div class="mt-3 bg-surface-light dark:bg-surface-dark rounded-xl p-4 shadow-sm border border-border-light dark:border-border-dark">
+<div class="flex justify-between items-start mb-3">
+<div class="bg-primary/10 text-primary text-xs font-bold px-2 py-1 rounded">다음 일정</div>
+<span class="text-text-secondary-light dark:text-text-secondary-dark text-sm">14:00 - 17:00</span>
+</div>
+<h4 class="font-bold text-base mb-1">강남구 오피스 정기청소</h4>
+<div class="flex items-center gap-1 text-text-secondary-light dark:text-text-secondary-dark text-sm mb-4">
+<span class="material-symbols-outlined text-sm">location_on</span>
+<span>서울시 강남구 테헤란로 123</span>
+</div>
+<button class="w-full bg-primary hover:bg-primary/90 text-white rounded-lg py-3 font-semibold transition-colors">일정 시작하기</button>
+</div>
+</section>
+<!-- Recommended Jobs -->
+<section class="px-4 py-6">
+<h3 class="text-text-primary-light dark:text-text-primary-dark text-lg font-bold leading-tight tracking-[-0.015em] mb-3">추천 일감</h3>
+<div class="flex flex-col gap-3">
+<!-- Job Item 1 -->
+<div class="bg-surface-light dark:bg-surface-dark rounded-xl p-4 shadow-sm border border-border-light dark:border-border-dark flex gap-4 items-center">
+<div class="w-16 h-16 rounded-lg bg-gray-200 dark:bg-gray-700 flex-shrink-0 bg-cover bg-center" data-alt="Modern living room interior" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuC1kqFcdTGwUsC5qFYjFZ00oxpeMQqVjQN18NGRKxhKKsa_JuactxoE6O9luREQtvK_DLFf-CvBoe8NbyCHcwkwzi6K9x9RZNItTadrbzcIy-JIhCG80sxRSzW03usJxdnxKmMHfNoDges4jHY4Yq4DUdCfoTTU8gsOyIQKmZ16lq8kzwejE-cEH_cYZhMf_RZHuRtCnfZpUYfw41e4aiogsY9Gw6Tu97hj3EuJDfMdCXGyiMxHsMeORuN6LIhq4QL2IkPvVhyX1V4');"></div>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-start">
+<h4 class="font-bold text-sm truncate">서초구 아파트 입주청소</h4>
+<span class="font-bold text-primary text-sm whitespace-nowrap">₩120,000</span>
+</div>
+<p class="text-xs text-text-secondary-light dark:text-text-secondary-dark mt-1 flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">calendar_today</span> 내일, 09:00</p>
+<p class="text-xs text-text-secondary-light dark:text-text-secondary-dark mt-0.5 flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">map</span> 서초구 방배동 (3km)</p>
+</div>
+</div>
+<!-- Job Item 2 -->
+<div class="bg-surface-light dark:bg-surface-dark rounded-xl p-4 shadow-sm border border-border-light dark:border-border-dark flex gap-4 items-center">
+<div class="w-16 h-16 rounded-lg bg-gray-200 dark:bg-gray-700 flex-shrink-0 bg-cover bg-center" data-alt="Clean office workspace" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCnuS-MODUZhLlcwcTanEYWDttWa26-B0whjoand34z9IMpah_ymcmh-3tGjSTnsPNT7hFe_7bMifK4JmVM3ngVw_Df1wDud_4NHm5hMEk_dOKg46pwiAGYfeR1LM4MoCoRRogJt5YiyOQRrXrwbR8gey_dbolEBm-9brfyAbhxLq0Yp5leg7EYJ6OOpwHIUomyJu12LT6FUixW1ufAhODv-gPGFwlubwBF1amODscqcvYTkSXdbG_CNx3rsfLKICMiYCy-kXXSLUE');"></div>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-start">
+<h4 class="font-bold text-sm truncate">송파구 소형 오피스</h4>
+<span class="font-bold text-primary text-sm whitespace-nowrap">₩85,000</span>
+</div>
+<p class="text-xs text-text-secondary-light dark:text-text-secondary-dark mt-1 flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">calendar_today</span> 10/25 (목), 18:00</p>
+<p class="text-xs text-text-secondary-light dark:text-text-secondary-dark mt-0.5 flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">map</span> 송파구 문정동 (5km)</p>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Bottom Navigation Bar -->
+<nav class="fixed bottom-0 left-0 right-0 flex gap-2 border-t border-border-light dark:border-border-dark bg-surface-light dark:bg-surface-dark px-4 pb-safe pt-2 z-50 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+<div class="pb-2 w-full flex">
+<a class="flex flex-1 flex-col items-center justify-end gap-1 text-primary" href="#">
+<span class="material-symbols-outlined text-2xl" style="font-variation-settings: 'FILL' 1;">home</span>
+<p class="text-[10px] font-semibold leading-normal tracking-[0.015em]">Home</p>
+</a>
+<a class="flex flex-1 flex-col items-center justify-end gap-1 text-text-secondary-light dark:text-text-secondary-dark hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined text-2xl">work</span>
+<p class="text-[10px] font-medium leading-normal tracking-[0.015em]">Jobs</p>
+</a>
+<a class="flex flex-1 flex-col items-center justify-end gap-1 text-text-secondary-light dark:text-text-secondary-dark hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined text-2xl">calendar_month</span>
+<p class="text-[10px] font-medium leading-normal tracking-[0.015em]">Schedule</p>
+</a>
+<a class="flex flex-1 flex-col items-center justify-end gap-1 text-text-secondary-light dark:text-text-secondary-dark hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined text-2xl">person</span>
+<p class="text-[10px] font-medium leading-normal tracking-[0.015em]">My</p>
+</a>
+</div>
+</nav>
+</body></html>

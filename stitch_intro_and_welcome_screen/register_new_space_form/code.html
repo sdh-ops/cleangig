@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Register New Space Form</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#355872",
+                        "primary-light": "#9CD5FF",
+                        "background-light": "#F7F8F0",
+                        "background-dark": "#15191d",
+                        "slate-900": "#111517",
+                        "slate-100": "#f1f5f9",
+                        "gray-50": "#f8fafc",
+                        "gray-300": "#d6dce1",
+                        "gray-500": "#627484"
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 min-h-screen">
+<div class="relative flex h-auto min-h-screen w-full flex-col max-w-md mx-auto bg-white dark:bg-gray-900 shadow-md">
+<!-- Top App Bar -->
+<div class="flex items-center p-4 pb-2 justify-between border-b border-gray-100 dark:border-gray-800">
+<div class="flex size-12 shrink-0 items-center text-slate-900 dark:text-slate-100 cursor-pointer">
+<span class="material-symbols-outlined text-2xl">arrow_back</span>
+</div>
+<h2 class="text-lg font-bold leading-tight tracking-[-0.015em] flex-1 text-center pr-12">Register New Space</h2>
+</div>
+<!-- Progress Indicator -->
+<div class="flex w-full flex-row items-center justify-center gap-3 py-6">
+<div class="h-2 w-8 rounded-full bg-primary-light"></div>
+<div class="h-2 w-2 rounded-full bg-gray-300 dark:bg-gray-700"></div>
+<div class="h-2 w-2 rounded-full bg-gray-300 dark:bg-gray-700"></div>
+</div>
+<!-- Content -->
+<div class="flex-1 overflow-y-auto pb-24">
+<h1 class="text-[22px] font-bold leading-tight tracking-[-0.015em] px-5 text-left pb-4">Space Details</h1>
+<div class="flex flex-col gap-5 px-5">
+<!-- Address -->
+<label class="flex flex-col flex-1">
+<p class="text-base font-medium leading-normal pb-2 text-slate-900 dark:text-slate-100">Address</p>
+<input class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-slate-900 focus:outline-0 focus:ring-1 focus:ring-primary border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 dark:text-slate-100 h-14 placeholder:text-gray-500 p-[15px] text-base font-normal leading-normal transition-colors" placeholder="Enter the address of your space" value=""/>
+</label>
+<!-- Size -->
+<label class="flex flex-col flex-1">
+<p class="text-base font-medium leading-normal pb-2 text-slate-900 dark:text-slate-100">Size (평수)</p>
+<div class="relative">
+<input class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-slate-900 focus:outline-0 focus:ring-1 focus:ring-primary border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 dark:text-slate-100 h-14 placeholder:text-gray-500 p-[15px] pr-12 text-base font-normal leading-normal transition-colors" placeholder="e.g., 20" type="number" value=""/>
+<span class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500">평</span>
+</div>
+</label>
+<!-- Space Type -->
+<label class="flex flex-col flex-1">
+<p class="text-base font-medium leading-normal pb-2 text-slate-900 dark:text-slate-100">Space Type</p>
+<div class="relative">
+<select class="form-select flex w-full min-w-0 flex-1 appearance-none rounded-lg text-slate-900 focus:outline-0 focus:ring-1 focus:ring-primary border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 dark:text-slate-100 h-14 p-[15px] text-base font-normal leading-normal transition-colors cursor-pointer">
+<option disabled="" selected="" value="">Select space type</option>
+<option value="office">Office</option>
+<option value="apartment">Apartment</option>
+<option value="studio">Studio</option>
+<option value="commercial">Commercial</option>
+</select>
+<span class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none">expand_more</span>
+</div>
+</label>
+<!-- Cleaning Guidelines -->
+<label class="flex flex-col flex-1">
+<p class="text-base font-medium leading-normal pb-2 text-slate-900 dark:text-slate-100">Cleaning Guidelines</p>
+<textarea class="form-textarea flex w-full min-w-0 flex-1 resize-y overflow-hidden rounded-lg text-slate-900 focus:outline-0 focus:ring-1 focus:ring-primary border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 dark:text-slate-100 min-h-[120px] placeholder:text-gray-500 p-[15px] text-base font-normal leading-normal transition-colors" placeholder="Any specific instructions for the cleaning partners?"></textarea>
+</label>
+</div>
+</div>
+<!-- Bottom Button -->
+<div class="absolute bottom-0 left-0 right-0 p-5 bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800">
+<button class="w-full flex h-14 items-center justify-center rounded-lg bg-primary text-white text-lg font-bold leading-normal tracking-wide active:opacity-90 transition-opacity">
+                공간 저장하기
+            </button>
+</div>
+</div>
+</body></html>

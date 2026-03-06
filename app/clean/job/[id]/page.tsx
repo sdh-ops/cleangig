@@ -2,18 +2,15 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { motion, AnimatePresence } from 'framer-motion';
 import { createClient } from '@/lib/supabase/client';
 import { Job, ChecklistItem } from '@/lib/types';
 import SecureImage from '@/components/common/SecureImage';
-import Header from '@/components/layout/Header';
-import BottomNav from '@/components/layout/BottomNav';
 
-const STATUS_FLOW: Record<string, { next: string; label: string; btnLabel: string; btnColor: string }> = {
-    ASSIGNED: { next: 'EN_ROUTE', label: '배정 완료', btnLabel: '🚗 출발하기', btnColor: 'btn-primary' },
-    EN_ROUTE: { next: 'ARRIVED', label: '이동 중', btnLabel: '📍 도착 완료', btnColor: 'btn-primary' },
-    ARRIVED: { next: 'IN_PROGRESS', label: '도착', btnLabel: '🧹 청소 시작', btnColor: 'btn-primary' },
-    IN_PROGRESS: { next: 'SUBMITTED', label: '청소 중', btnLabel: '✅ 청소 완료 제출', btnColor: 'btn-primary' },
+const STATUS_FLOW: Record<string, { next: string; label: string; btnLabel: string; btnIcon: string }> = {
+    ASSIGNED: { next: 'EN_ROUTE', label: '배정 완료', btnLabel: '현장으로 출발하기', btnIcon: 'directions_car' },
+    EN_ROUTE: { next: 'ARRIVED', label: '이동 중', btnLabel: '현장 도착 완료', btnIcon: 'location_on' },
+    ARRIVED: { next: 'IN_PROGRESS', label: '도착', btnLabel: '청소 시작하기', btnIcon: 'cleaning_services' },
+    IN_PROGRESS: { next: 'SUBMITTED', label: '청소 중', btnLabel: '작업 완료 보고', btnIcon: 'check_circle' },
 };
 
 const SPACE_TYPE_ICON: Record<string, string> = {
@@ -76,7 +73,11 @@ export default function JobDetailPage() {
     };
 
     const handleApply = async () => {
-        if (!user) return;
+        if (!user) {
+            alert('로그인이 필요합니다.');
+            router.push('/login');
+            return;
+        }
         setSubmitting(true);
         const supabase = createClient();
         const { error } = await supabase.from('job_applications').insert({
@@ -206,266 +207,374 @@ export default function JobDetailPage() {
     };
 
     if (loading) return (
-        <div className="page-container flex items-center justify-center min-h-dvh">
-            <div className="spinner" />
+        <div className="flex items-center justify-center min-h-screen bg-background-light dark:bg-background-dark">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
         </div>
     );
 
     if (!job) return (
-        <div className="page-container text-center p-3xl">
-            <p>작업을 찾을 수 없어요.</p>
-            <button className="btn btn-secondary mt-md" onClick={() => router.back()}>돌아가기</button>
+        <div className="flex flex-col items-center justify-center min-h-screen bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 p-8">
+            <span className="material-symbols-outlined text-6xl text-slate-300 mb-4">error</span>
+            <p className="text-lg font-bold mb-6">작업을 찾을 수 없어요.</p>
+            <button className="bg-primary text-white font-bold py-3 px-8 rounded-xl shadow-lg hover:bg-primary/90 transition-colors" onClick={() => router.back()}>
+                돌아가기
+            </button>
         </div>
     );
 
-    const flow = STATUS_FLOW[job.status];
     const space = job.spaces as any;
+    const flow = STATUS_FLOW[job.status];
     const completedCount = checklist.filter(c => c.completed).length;
     const progress = checklist.length > 0 ? (completedCount / checklist.length) * 100 : 0;
 
+    // DateTime format
+    const when = new Date(job.scheduled_at);
+    const dateStr = when.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' });
+    const timeStr = when.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
+
     return (
-        <div className="page-container bg-premium-v2">
-            <header className="premium-header">
-                <button className="back-btn" onClick={() => router.back()}>←</button>
-                <div className="title-box">
-                    <h1 className="space-name">{space?.name || '청소 작업'}</h1>
-                    <p className="address text-tertiary">{space?.address}</p>
-                </div>
-                <button className="cs-btn" onClick={() => router.push(`/chat/${id}`)}>
-                    💬
+        <div className="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display min-h-screen flex flex-col max-w-md mx-auto relative overflow-hidden pb-24 shadow-xl">
+            {/* App Bar */}
+            <div className="sticky top-0 z-30 flex items-center bg-background-light/90 dark:bg-background-dark/90 backdrop-blur-md p-4 pb-2 justify-between border-b border-slate-200 dark:border-slate-800">
+                <button onClick={() => router.back()} className="flex size-12 shrink-0 items-center justify-center rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors">
+                    <span className="material-symbols-outlined text-2xl">arrow_back</span>
                 </button>
-            </header>
+                <h2 className="text-lg font-bold leading-tight tracking-tight flex-1 text-center pr-12">
+                    {job.status === 'OPEN' ? '청소 일감 상세' : '진행 중인 작업'}
+                </h2>
+                {job.status !== 'OPEN' && (
+                    <button onClick={() => router.push(`/chat/${id}`)} className="absolute right-4 flex size-10 shrink-0 items-center justify-center text-primary rounded-full hover:bg-primary/10 transition-colors">
+                        <span className="material-symbols-outlined text-[24px]">chat</span>
+                    </button>
+                )}
+            </div>
 
-            <main className="page-content">
-                {/* Status Hub Card */}
-                <section className="status-hub card-premium mb-xl">
-                    <div className="hub-top">
-                        <span className="status-tag">
-                            {job.status === 'ASSIGNED' && '준비 단계'}
-                            {job.status === 'EN_ROUTE' && '이동 단계'}
-                            {job.status === 'ARRIVED' && '작업 대기'}
-                            {job.status === 'IN_PROGRESS' && '작업 중'}
-                            {['SUBMITTED', 'APPROVED', 'PAID_OUT'].includes(job.status) && '완료 확인'}
-                        </span>
-                        <div className="price-label">₩{job.price.toLocaleString()}</div>
+            <main className="flex-1 overflow-y-auto w-full">
+                {/* Header Content */}
+                <div className="px-4 pt-6 pb-4">
+                    {job.is_urgent ? (
+                        <span className="inline-block px-3 py-1 mb-3 text-xs font-bold text-rose-600 bg-rose-100 dark:bg-rose-900/30 rounded-full border border-rose-200 dark:border-rose-800">🔥 긴급 배정 작업</span>
+                    ) : (
+                        <span className="inline-block px-3 py-1 mb-3 text-xs font-bold text-primary bg-primary/10 rounded-full border border-primary/20">일반 요금 작업</span>
+                    )}
+                    <h1 className="tracking-tight text-2xl md:text-[28px] font-bold leading-tight text-left pb-2 text-slate-900 dark:text-slate-100">{space?.name || '청소 작업'}</h1>
+                    <div className="flex flex-wrap items-center text-slate-500 dark:text-slate-400 text-sm font-medium pt-1 gap-2">
+                        <div className="flex items-center gap-1">
+                            <span className="material-symbols-outlined text-[16px]">calendar_today</span>
+                            <span>{dateStr}</span>
+                        </div>
+                        <span className="mx-1 hidden sm:inline">|</span>
+                        <div className="flex items-center gap-1">
+                            <span className="material-symbols-outlined text-[16px]">schedule</span>
+                            <span>{timeStr} (예상 {job.estimated_duration}분)</span>
+                        </div>
                     </div>
-                    <h2 className="main-status-title">
-                        {job.status === 'ASSIGNED' && '🚗 지금 출발할까요?'}
-                        {job.status === 'EN_ROUTE' && '📍 현장으로 이동 중'}
-                        {job.status === 'ARRIVED' && '🏠 도착을 완료했어요'}
-                        {job.status === 'IN_PROGRESS' && '🧹 세심하게 청소 중'}
-                        {job.status === 'SUBMITTED' && '⏳ 품질 검수 대기 중'}
-                        {job.status === 'APPROVED' && '✅ 승인된 작업입니다'}
-                        {job.status === 'PAID_OUT' && '💰 정산까지 끝났어요'}
-                    </h2>
-                    <p className="status-desc text-secondary">
-                        {job.status === 'ASSIGNED' && '출발 버튼을 누르면 이동이 기록됩니다.'}
-                        {job.status === 'EN_ROUTE' && '현장에 도착하면 도착 완료를 눌러주세요.'}
-                        {job.status === 'ARRIVED' && '가이드를 숙지하고 청소를 시작해 주세요.'}
-                        {job.status === 'IN_PROGRESS' && '사진을 찍으며 체크리스트를 완성하세요.'}
-                        {job.status === 'SUBMITTED' && '최대 24시간 이내에 승인 처리가 완료됩니다.'}
-                    </p>
-                </section>
+                </div>
 
-                {/* Action Sections */}
-                {['ASSIGNED', 'EN_ROUTE', 'ARRIVED', 'IN_PROGRESS'].includes(job.status) && (
-                    <section className="guide-section mb-xl">
-                        <h3 className="section-title mb-md">📘 현장 가이드라인</h3>
+                {/* Status Hub (If not OPEN) */}
+                {job.status !== 'OPEN' && (
+                    <div className="px-4 pb-4">
+                        <div className="bg-white dark:bg-slate-800 rounded-2xl p-5 border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16 pointer-events-none"></div>
 
-                        <div className="guide-grid mb-lg">
-                            <div className="guide-item card-soft">
-                                <span className="label">🔑 출입 방법</span>
-                                <p className="value highlight">{space?.entry_code || '현장 확인'}</p>
+                            <div className="flex justify-between items-center mb-4 relative z-10">
+                                <h3 className="font-bold text-lg text-primary">현재 상태</h3>
+                                <span className="text-sm font-bold bg-slate-100 dark:bg-slate-700 px-3 py-1 rounded-full text-slate-600 dark:text-slate-300">
+                                    {job.status === 'ASSIGNED' && '준비 단계'}
+                                    {job.status === 'EN_ROUTE' && '이동 단계'}
+                                    {job.status === 'ARRIVED' && '작업 대기'}
+                                    {job.status === 'IN_PROGRESS' && '작업 중'}
+                                    {['SUBMITTED', 'APPROVED', 'PAID_OUT'].includes(job.status) && '완료/검수'}
+                                </span>
                             </div>
-                            <div className="guide-item card-soft">
-                                <span className="label">🧽 도구 위치</span>
-                                <p className="value">{space?.cleaning_tool_location || '제공 안됨'}</p>
+
+                            <h2 className="text-xl font-bold mb-2 text-slate-900 dark:text-slate-100 relative z-10">
+                                {job.status === 'ASSIGNED' && '🚗 현장으로 출발해 볼까요?'}
+                                {job.status === 'EN_ROUTE' && '📍 현장으로 이동 중입니다'}
+                                {job.status === 'ARRIVED' && '🏠 도착을 완료했어요'}
+                                {job.status === 'IN_PROGRESS' && '🧹 세심하게 청소 중'}
+                                {job.status === 'SUBMITTED' && '⏳ 품질 검수 대기 중'}
+                                {job.status === 'APPROVED' && '✅ 승인된 작업입니다'}
+                                {job.status === 'PAID_OUT' && '💰 정산까지 끝났어요'}
+                            </h2>
+
+                            {job.status === 'IN_PROGRESS' && (
+                                <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-700">
+                                    <div className="flex justify-between items-end mb-2">
+                                        <span className="text-sm font-bold text-primary">진행률 {Math.round(progress)}%</span>
+                                        <span className="text-xs font-medium text-slate-500">{completedCount} / {checklist.length} 완료</span>
+                                    </div>
+                                    <div className="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-2">
+                                        <div className="bg-primary h-2 rounded-full transition-all duration-500" style={{ width: `${progress}%` }}></div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
+
+                {/* Work Conditions (Always show) */}
+                <div className="px-4 mt-2 mb-4">
+                    <h3 className="text-lg font-bold leading-tight tracking-tight pb-3 border-b border-primary/10 dark:border-primary/20">작업 조건 요약</h3>
+                    <div className="py-2 space-y-1">
+                        <div className="flex justify-between items-center py-3 border-b border-slate-100 dark:border-slate-800 last:border-0">
+                            <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
+                                <span className="material-symbols-outlined text-[20px]">storefront</span>
+                                <p className="text-sm font-medium leading-normal">공간 유형</p>
                             </div>
-                            <div className="guide-item card-soft">
-                                <span className="label">🗑 쓰레기 처리</span>
-                                <p className="value">{space?.trash_guide || '확인 필요'}</p>
+                            <p className="text-sm font-semibold leading-normal text-right">{SPACE_TYPE_ICON[space?.type] || '🏢'} {space?.type?.toUpperCase() || '기타'}</p>
+                        </div>
+                        <div className="flex justify-between items-center py-3 border-b border-slate-100 dark:border-slate-800 last:border-0">
+                            <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
+                                <span className="material-symbols-outlined text-[20px]">payments</span>
+                                <p className="text-sm font-medium leading-normal">총 수익</p>
                             </div>
-                            <div className="guide-item card-soft">
-                                <span className="label">🗺️ 네이버 지도</span>
-                                <a href={`https://map.naver.com/v5/search/${encodeURIComponent(space?.address || '')}`} target="_blank" className="map-link">길찾기 →</a>
+                            <p className="text-sm font-bold leading-normal text-right text-primary">₩ {job.price.toLocaleString()}</p>
+                        </div>
+                        <div className="flex justify-between items-center py-3 border-b border-slate-100 dark:border-slate-800 last:border-0">
+                            <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
+                                <span className="material-symbols-outlined text-[20px]">timer</span>
+                                <p className="text-sm font-medium leading-normal">소요 시간</p>
+                            </div>
+                            <p className="text-sm font-semibold leading-normal text-right">예상 {job.estimated_duration}분</p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Work Guidelines - Only if Assigned, Arrived, etc */}
+                {['OPEN', 'ASSIGNED', 'EN_ROUTE', 'ARRIVED', 'IN_PROGRESS'].includes(job.status) && (
+                    <div className="px-4 mt-4 mb-4">
+                        <h3 className="text-lg font-bold leading-tight tracking-tight pb-3 border-b border-primary/10 dark:border-primary/20">현장 가이드라인</h3>
+
+                        <div className="mt-4 grid grid-cols-2 gap-3 mb-6">
+                            <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-4 shadow-sm flex flex-col justify-center">
+                                <span className="text-xs font-bold text-slate-500 mb-1 flex items-center gap-1"><span className="material-symbols-outlined text-[14px]">vpn_key</span> 출입 방법</span>
+                                <p className="text-sm font-bold text-primary break-all">{job.status === 'OPEN' ? '매칭 후 공개' : space?.entry_code || '별도 안내됨'}</p>
+                            </div>
+                            <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-4 shadow-sm flex flex-col justify-center">
+                                <span className="text-xs font-bold text-slate-500 mb-1 flex items-center gap-1"><span className="material-symbols-outlined text-[14px]">cleaning_bucket</span> 도구 위치</span>
+                                <p className="text-sm font-bold break-all">{space?.cleaning_tool_location || '직접 지참 요망'}</p>
+                            </div>
+                            <div className="col-span-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-4 shadow-sm flex flex-col justify-center">
+                                <span className="text-xs font-bold text-slate-500 mb-1 flex items-center gap-1"><span className="material-symbols-outlined text-[14px]">delete</span> 쓰레기 처리장 위치</span>
+                                <p className="text-sm font-bold break-all">{space?.trash_guide || '호스트 안내사항 참조'}</p>
                             </div>
                         </div>
 
                         {space?.caution_notes && (
-                            <div className="caution-box mb-lg">
-                                <strong>⚠️ 주의사항:</strong> {space.caution_notes}
+                            <div className="flex gap-3 items-start bg-rose-50 dark:bg-rose-900/10 p-4 rounded-xl border border-rose-100 dark:border-rose-900/30 mb-6">
+                                <div className="mt-0.5 w-6 h-6 rounded-full bg-rose-200 dark:bg-rose-800 flex items-center justify-center shrink-0">
+                                    <span className="material-symbols-outlined text-rose-600 dark:text-rose-300 text-[14px]">warning</span>
+                                </div>
+                                <div>
+                                    <h4 className="font-bold text-sm mb-1 text-rose-800 dark:text-rose-300">호스트 주의사항</h4>
+                                    <p className="text-sm text-rose-700 dark:text-rose-400 leading-relaxed">{space.caution_notes}</p>
+                                </div>
                             </div>
                         )}
 
                         {space?.reference_photos?.length > 0 && (
-                            <div className="ref-photos">
-                                <p className="sub-label mb-xs">✨ 청소 기준 사진</p>
-                                <div className="photo-caro no-scrollbar">
+                            <div className="mb-6">
+                                <h4 className="font-bold text-sm mb-3">📸 참고 사진</h4>
+                                <div className="flex gap-3 overflow-x-auto pb-4 scrollbar-none">
                                     {space.reference_photos.map((url: string, i: number) => (
-                                        <img key={i} src={url} alt="Reference" className="ref-img" />
+                                        <div key={i} className="w-[140px] h-[100px] shrink-0 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden relative">
+                                            <img src={url} alt={`Reference ${i}`} className="w-full h-full object-cover" />
+                                        </div>
                                     ))}
                                 </div>
                             </div>
                         )}
-                    </section>
+                    </div>
                 )}
 
-                {/* Checklist */}
-                {['IN_PROGRESS', 'ARRIVED', 'SUBMITTED', 'APPROVED', 'PAID_OUT'].includes(job.status) && checklist.length > 0 && (
-                    <section className="checklist-section mb-xl">
-                        <div className="section-header flex justify-between items-end mb-sm">
-                            <h3 className="section-title">📝 체크리스트</h3>
-                            <span className="progress-text">{completedCount}/{checklist.length} 완료</span>
-                        </div>
-                        <div className="progress-bar mb-md">
-                            <div className="bar-inner" style={{ width: `${progress}%` }} />
-                        </div>
-
-                        <div className="check-stack">
-                            {checklist.map((item, idx) => (
-                                <div key={item.id} className={`check-card ${item.completed ? 'completed' : ''}`}>
-                                    <button className="check-bullet" onClick={() => toggleChecklist(idx)} disabled={['SUBMITTED', 'APPROVED', 'PAID_OUT'].includes(job.status)}>
-                                        {item.completed && '✓'}
-                                    </button>
-                                    <div className="check-info">
-                                        <span className="check-label">{item.label}</span>
-                                        {item.required && <span className="req-badge">필수</span>}
-                                    </div>
-                                    {job.status === 'IN_PROGRESS' && (
-                                        <button className="photo-upload-btn" onClick={() => { setActiveUploadIdx(idx); fileInputRef.current?.click(); }}>
-                                            {item.photo_url ? '✨' : uploadingIdx === idx ? '⏳' : '📸'}
-                                        </button>
-                                    )}
-                                    {item.photo_url && !['IN_PROGRESS'].includes(job.status) && (
-                                        <SecureImage srcOrPath={item.photo_url} className="check-thumb" />
-                                    )}
-                                </div>
-                            ))}
-                        </div>
-                    </section>
-                )}
-
-                {/* Supplies Check */}
-                {['IN_PROGRESS', 'ARRIVED', 'SUBMITTED', 'APPROVED', 'PAID_OUT'].includes(job.status) && (job.supplies_to_check as string[])?.length > 0 && (
-                    <section className="supplies-section mb-xl">
-                        <h3 className="section-title mb-xs">🚨 비품 부족 보고</h3>
-                        <p className="section-desc mb-md">부족한 비품을 선택해 주세요.</p>
-                        <div className="grid-2-col">
-                            {(job.supplies_to_check as string[]).map((item, idx) => {
-                                const isShort = supplyShortages.includes(item);
-                                return (
-                                    <button key={idx} className={`supply-btn ${isShort ? 'active' : ''}`}
-                                        onClick={() => setSupplyShortages(prev => prev.includes(item) ? prev.filter(x => x !== item) : [...prev, item])}
-                                        disabled={['SUBMITTED', 'APPROVED', 'PAID_OUT'].includes(job.status)}
-                                    >
-                                        {isShort ? '⚠️' : '📦'} {item}
-                                    </button>
-                                );
-                            })}
-                        </div>
-                    </section>
-                )}
-
-                {/* Extra Charge Form */}
-                {job.status === 'IN_PROGRESS' && (
-                    <section className="extra-charge-section card-soft mb-xl">
-                        <div className="flex justify-between items-center mb-md">
-                            <h3 className="section-title-sm">💸 특이사항 추가 비용 청구</h3>
-                            <button className="toggle-btn" onClick={() => setShowExtraCharge(!showExtraCharge)}>
-                                {showExtraCharge || extraCharge > 0 ? '접기' : '작성'}
-                            </button>
-                        </div>
-                        {(showExtraCharge || extraCharge > 0) && (
-                            <div className="extra-form">
-                                <div className="input-group mb-md">
-                                    <label>청구 금액 (원)</label>
-                                    <input type="number" value={extraCharge || ''} onChange={e => setExtraCharge(parseInt(e.target.value) || 0)} placeholder="0" />
-                                </div>
-                                <div className="input-group">
-                                    <label>청구 사유 및 내용 (필수)</label>
-                                    <textarea value={extraChargeReason} onChange={e => setExtraChargeReason(e.target.value)} placeholder="심한 오염 등 구체적 사유 작성" rows={2} />
+                {/* Map Area */}
+                {(job.status === 'OPEN' || job.status === 'ASSIGNED' || job.status === 'EN_ROUTE') && (
+                    <div className="px-4 mt-2 mb-8">
+                        <div className="h-[180px] rounded-xl bg-slate-200 dark:bg-slate-800 overflow-hidden relative border border-slate-200 dark:border-slate-700">
+                            <div className="w-full h-full bg-gradient-to-br from-slate-200 to-slate-300 dark:from-slate-700 dark:to-slate-800 flex items-center justify-center relative">
+                                <div className="absolute inset-0 bg-[url('https://maps.googleapis.com/maps/api/staticmap?center=seoul&zoom=13&size=400x400&sensor=false')] bg-cover opacity-20"></div>
+                                <div className="bg-white dark:bg-slate-800 p-2 rounded-full shadow-lg relative z-10 flex items-center justify-center">
+                                    <span className="material-symbols-outlined text-primary text-2xl">location_on</span>
                                 </div>
                             </div>
-                        )}
-                    </section>
+                        </div>
+                        <div className="flex justify-between items-center mt-3">
+                            <p className="text-sm text-slate-500 dark:text-slate-400">
+                                {job.status === 'OPEN' ? '상세 주소는 매칭 후 공개됩니다' : space?.address}
+                            </p>
+                            {job.status !== 'OPEN' && (
+                                <a href={`https://map.naver.com/v5/search/${encodeURIComponent(space?.address || '')}`} target="_blank" className="text-xs font-bold bg-green-50 text-green-600 px-3 py-1.5 rounded-lg flex items-center gap-1 border border-green-200">
+                                    네이버 지도 <span className="material-symbols-outlined text-[14px]">open_in_new</span>
+                                </a>
+                            )}
+                        </div>
+                    </div>
+                )}
+
+                {/* Checklist Interface (If In Progress or Done) */}
+                {['IN_PROGRESS', 'ARRIVED', 'SUBMITTED', 'APPROVED', 'PAID_OUT'].includes(job.status) && checklist.length > 0 && (
+                    <div className="mt-2 mb-6 border-t-[8px] border-background-light dark:border-slate-900 pt-6">
+                        <div className="px-4 flex items-center mb-4">
+                            <span className="material-symbols-outlined text-primary text-[24px] mr-2">checklist</span>
+                            <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 flex-1">현장 작업 체크리스트</h3>
+                        </div>
+
+                        <div className="space-y-3 px-4">
+                            {checklist.map((item, idx) => {
+                                const isDone = item.completed;
+                                const canEdit = job.status === 'IN_PROGRESS';
+                                return (
+                                    <div key={idx} className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden transition-all">
+                                        <div className="px-4">
+                                            <label className={`flex gap-x-3 py-4 items-start ${canEdit ? 'cursor-pointer' : ''}`}>
+                                                <div className="relative flex items-center mt-1 shrink-0">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={isDone}
+                                                        onChange={() => canEdit && toggleChecklist(idx)}
+                                                        disabled={!canEdit}
+                                                        className="peer h-6 w-6 cursor-pointer appearance-none rounded border-2 border-slate-300 dark:border-slate-600 bg-transparent checked:border-primary checked:bg-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all disabled:opacity-70"
+                                                    />
+                                                    <span className="material-symbols-outlined absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-[18px] text-white opacity-0 peer-checked:opacity-100 pointer-events-none transition-opacity font-bold">check</span>
+                                                </div>
+                                                <div className="flex-1">
+                                                    <div className="flex items-center gap-2 mb-1">
+                                                        <p className={`text-[15px] font-bold leading-normal transition-all ${isDone ? 'text-slate-400 dark:text-slate-500 line-through' : 'text-slate-900 dark:text-slate-100'}`}>
+                                                            {item.label}
+                                                        </p>
+                                                        {item.required && <span className="bg-rose-50 text-rose-600 border border-rose-200 text-[10px] px-2 py-0.5 rounded font-bold">필수</span>}
+                                                    </div>
+                                                </div>
+                                            </label>
+                                        </div>
+
+                                        {/* Photo Upload Section for Checklist */}
+                                        {canEdit && (
+                                            <div className="px-14 pb-4">
+                                                {item.photo_url ? (
+                                                    <div className="mt-2 relative">
+                                                        <SecureImage srcOrPath={item.photo_url} className="w-full h-32 object-cover rounded-xl border border-slate-200 dark:border-slate-700" />
+                                                        <button
+                                                            onClick={(e) => { e.preventDefault(); setActiveUploadIdx(idx); fileInputRef.current?.click(); }}
+                                                            className="absolute top-2 right-2 bg-black/50 backdrop-blur-sm text-white p-2 rounded-full hover:bg-black/70 transition-colors"
+                                                        >
+                                                            <span className="material-symbols-outlined text-[16px]">edit</span>
+                                                        </button>
+                                                    </div>
+                                                ) : (
+                                                    <button
+                                                        onClick={() => { setActiveUploadIdx(idx); fileInputRef.current?.click(); }}
+                                                        className="flex items-center gap-2 text-sm font-bold text-primary bg-primary/5 hover:bg-primary/10 border border-primary/20 border-dashed px-4 py-3 rounded-xl transition-colors w-full justify-center"
+                                                    >
+                                                        <span className="material-symbols-outlined text-[20px]">add_a_photo</span>
+                                                        {uploadingIdx === idx ? '업로드 중...' : '완료 사진 전송하기 (선택)'}
+                                                    </button>
+                                                )}
+                                            </div>
+                                        )}
+                                        {!canEdit && item.photo_url && (
+                                            <div className="px-14 pb-4">
+                                                <SecureImage srcOrPath={item.photo_url} className="w-[120px] h-[80px] object-cover rounded-xl border border-slate-200 dark:border-slate-700 opacity-80" />
+                                            </div>
+                                        )}
+                                    </div>
+                                )
+                            })}
+                        </div>
+                    </div>
+                )}
+
+                {/* Supplies Checklist */}
+                {['IN_PROGRESS', 'ARRIVED', 'SUBMITTED', 'APPROVED', 'PAID_OUT'].includes(job.status) && (job.supplies_to_check as string[])?.length > 0 && (
+                    <div className="border-t-[8px] border-background-light dark:border-slate-900 pt-6 mb-8">
+                        <div className="px-4 flex items-center mb-4">
+                            <span className="material-symbols-outlined text-primary text-[24px] mr-2">inventory_2</span>
+                            <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 flex-1">비품 점검</h3>
+                        </div>
+                        <div className="px-4 space-y-3">
+                            {(job.supplies_to_check as string[]).map((item, idx) => {
+                                const isShort = supplyShortages.includes(item);
+                                const canEdit = job.status === 'IN_PROGRESS';
+                                return (
+                                    <div key={idx} className="flex justify-between items-center bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
+                                        <span className="font-bold text-[15px]">{item}</span>
+                                        <div className="flex items-center gap-2">
+                                            <button
+                                                onClick={() => canEdit && setSupplyShortages(prev => prev.filter(x => x !== item))}
+                                                disabled={!canEdit}
+                                                className={`px-3 py-1.5 rounded-lg text-sm font-bold transition-colors ${!isShort ? 'bg-primary text-white shadow-sm' : 'bg-slate-100 text-slate-500 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-400'}`}
+                                            >충분함</button>
+                                            <button
+                                                onClick={() => canEdit && setSupplyShortages(prev => [...prev, item])}
+                                                disabled={!canEdit}
+                                                className={`px-3 py-1.5 rounded-lg text-sm font-bold transition-colors ${isShort ? 'bg-rose-500 text-white shadow-sm' : 'bg-slate-100 text-slate-500 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-400'}`}
+                                            >부족함</button>
+                                        </div>
+                                    </div>
+                                )
+                            })}
+                        </div>
+                    </div>
                 )}
             </main>
 
-            {/* Floating Action Button */}
-            {flow && job.status !== 'OPEN' && (
-                <div className="fab-container">
-                    <button className="fab-btn" onClick={handleStatusNext} disabled={submitting || (extraCharge > 0 && !extraChargeReason.trim())}>
-                        {submitting ? '처리 중...' : flow.btnLabel}
+            {/* Bottom Action Bar */}
+            <div className="fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 p-4 max-w-md mx-auto z-40 pb-safe shadow-[0_-4px_15px_-3px_rgba(0,0,0,0.1)]">
+                {job.status === 'OPEN' ? (
+                    <div className="flex flex-col gap-3">
+                        <div className="flex items-center justify-between px-1">
+                            <span className="text-sm font-bold text-slate-500 dark:text-slate-400">예상 작업 수익</span>
+                            <span className="text-2xl font-black text-primary">₩ {job.price.toLocaleString()}</span>
+                        </div>
+                        {application ? (
+                            <button disabled className="w-full bg-slate-200 text-slate-500 font-bold py-4 rounded-xl shadow-sm cursor-not-allowed">
+                                지원 완료. 매칭 결과를 기다리는 중입니다.
+                            </button>
+                        ) : (
+                            <button
+                                onClick={handleApply}
+                                disabled={submitting}
+                                className="w-full bg-primary hover:bg-primary/90 text-white font-bold py-4 rounded-xl shadow-lg shadow-primary/30 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                            >
+                                {submitting ? (
+                                    <span>처리 중...</span>
+                                ) : (
+                                    <><span>지원서 제출하기</span><span className="material-symbols-outlined text-[18px]">send</span></>
+                                )}
+                            </button>
+                        )}
+                    </div>
+                ) : flow ? (
+                    <button
+                        onClick={handleStatusNext}
+                        disabled={submitting}
+                        className="w-full bg-primary hover:bg-primary/90 text-white font-bold py-4 rounded-xl shadow-lg shadow-primary/30 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                    >
+                        {submitting ? (
+                            <span>처리 중...</span>
+                        ) : (
+                            <><span>{flow.btnLabel}</span><span className="material-symbols-outlined text-[20px]">{flow.btnIcon}</span></>
+                        )}
                     </button>
-                </div>
-            )}
+                ) : (
+                    <button disabled className="w-full bg-slate-100 text-slate-400 font-bold py-4 rounded-xl shadow-sm cursor-not-allowed flex items-center justify-center gap-2">
+                        <span>모든 절차가 완료되었습니다</span><span className="material-symbols-outlined text-[18px]">check_circle</span>
+                    </button>
+                )}
+            </div>
 
-            {/* Inputs */}
+            {/* Hidden Photo Inputs */}
             <input ref={fileInputRef} type="file" accept="image/*" capture="environment" className="hidden"
                 onChange={e => { const file = e.target.files?.[0]; if (file && activeUploadIdx !== null) handlePhotoUpload(file, activeUploadIdx); e.target.value = ''; }} />
             <input ref={damagePhotoInputRef} type="file" accept="image/*" capture="environment" className="hidden"
                 onChange={e => { const file = e.target.files?.[0]; if (file) handleDamageReportUpload(file); e.target.value = ''; }} />
 
             <style jsx>{`
-        .bg-premium-v2 { background: var(--color-bg); min-height: 100vh; }
-        .premium-header {
-           position: sticky; top: 0; z-index: 100;
-           background: #FFFFFF; padding: 20px 20px 14px;
-           display: flex; align-items: center; gap: 16px;
-           border-bottom: 1px solid var(--color-border-light);
-        }
-        .back-btn { width: 40px; height: 40px; border-radius: 12px; background: #F8F9FA; border: none; font-size: 20px; }
-        .title-box { flex: 1; overflow: hidden; }
-        .title-box .space-name { font-size: 17px; font-weight: 800; line-height: 1.2; word-break: break-all; }
-        .title-box .address { font-size: 12px; }
-        .cs-btn { width: 44px; height: 44px; border-radius: 14px; background: var(--color-primary-soft); border: none; font-size: 20px; }
-        
-        .page-content { padding: 24px 20px 120px; }
-        .card-premium { background: var(--color-primary); color: #FFFFFF; padding: 28px; border-radius: 28px; box-shadow: var(--shadow-md); }
-        .status-tag { background: rgba(255,255,255,0.2); color: #fff; padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 800; }
-        .price-label { font-size: 20px; font-weight: 900; }
-        .hub-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .main-status-title { font-size: 22px; font-weight: 900; margin-bottom: 8px; }
-        .status-desc { font-size: 14px; color: rgba(255,255,255,0.8) !important; line-height: 1.5; }
-        
-        .section-title { font-size: 18px; font-weight: 800; }
-        .guide-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .card-soft { background: #FFFFFF; border: 1px solid var(--color-border-light); border-radius: 20px; padding: 16px; }
-        .guide-item .label { font-size: 11px; color: var(--color-text-tertiary); font-weight: 700; display: block; margin-bottom: 4px; }
-        .guide-item .value { font-size: 14px; font-weight: 800; }
-        .guide-item .value.highlight { color: var(--color-primary); }
-        .map-link { color: #03C75A; font-weight: 800; font-size: 13px; text-decoration: none; }
-        .caution-box { background: #FFF1F2; color: #E11D48; padding: 16px; border-radius: 16px; font-size: 13px; }
-        
-        .photo-caro { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 4px; }
-        .ref-img { width: 140px; height: 100px; border-radius: 16px; object-fit: cover; border: 1px solid var(--color-border-light); flex-shrink: 0; }
-        
-        .progress-bar { height: 8px; background: var(--color-border-light); border-radius: 4px; overflow: hidden; }
-        .bar-inner { height: 100%; background: var(--color-primary); transition: width 0.3s; }
-        .check-stack { display: flex; flex-direction: column; gap: 10px; }
-        .check-card { display: flex; align-items: center; gap: 12px; padding: 16px; border-radius: 18px; background: #FFFFFF; border: 1px solid var(--color-border-light); }
-        .check-card.completed { background: #F8FAFC; border-color: #E2E8F0; opacity: 0.8; }
-        .check-bullet { width: 28px; height: 28px; border-radius: 50%; border: 2px solid #D1D8E0; background: #fff; display: flex; alignItems: center; justifyContent: center; color: var(--color-primary); font-weight: 900; }
-        .check-card.completed .check-bullet { background: var(--color-primary); border-color: var(--color-primary); color: #fff; }
-        .check-info { flex: 1; display: flex; align-items: center; gap: 6px; }
-        .check-label { font-size: 15px; font-weight: 700; }
-        .req-badge { font-size: 10px; background: #FFF1F2; color: #E11D48; padding: 1px 4px; border-radius: 4px; font-weight: 800; }
-        .photo-upload-btn { width: 40px; height: 40px; border-radius: 12px; background: #F8F9FA; border: 1px solid var(--color-border-light); font-size: 18px; }
-        .check-thumb { width: 40px; height: 40px; border-radius: 8px; object-fit: cover; }
-        
-        .grid-2-col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .supply-btn { padding: 16px; border-radius: 18px; background: #FFFFFF; border: 1px solid var(--color-border-light); font-size: 14px; font-weight: 800; color: #4E5968; }
-        .supply-btn.active { background: #FFF1F2; border-color: #FECDD3; color: #E11D48; }
-        
-        .input-group label { display: block; font-size: 12px; font-weight: 800; color: var(--color-text-tertiary); margin-bottom: 6px; }
-        .input-group input, .input-group textarea { width: 100%; padding: 14px; border-radius: 14px; border: 1px solid var(--color-border-light); background: #F8F9FA; font-size: 14px; font-weight: 700; outline: none; }
-        .toggle-btn { color: var(--color-primary); font-weight: 800; font-size: 13px; background: none; border: none; }
-        
-        .fab-container { position: fixed; bottom: 0; left: 0; right: 0; padding: 20px; background: rgba(255,255,255,0.8); backdrop-filter: blur(10px); z-index: 200; }
-        .fab-btn { width: 100%; height: 60px; border-radius: 20px; background: var(--color-primary); color: #fff; border: none; font-size: 18px; font-weight: 900; box-shadow: 0 10px 20px rgba(49, 130, 246, 0.3); }
-        .hidden { display: none; }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-      `}</style>
+                .pb-safe { padding-bottom: calc(1rem + env(safe-area-inset-bottom)); }
+                .scrollbar-none::-webkit-scrollbar { display: none; }
+                .scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
+            `}</style>
         </div>
     );
 }

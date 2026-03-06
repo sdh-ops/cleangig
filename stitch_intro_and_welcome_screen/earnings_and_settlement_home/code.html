@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+
+<html class="light" lang="ko"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>수익 및 정산 홈</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        colors: {
+          "primary": "#355873",
+          "background-light": "#f6f7f7",
+          "background-dark": "#15191d",
+          "surface-light": "#ffffff",
+          "surface-dark": "#1e2329",
+          "text-primary-light": "#111517",
+          "text-primary-dark": "#f0f2f4",
+          "text-secondary-light": "#627584",
+          "text-secondary-dark": "#9aaebb",
+          "border-light": "#eaeef0",
+          "border-dark": "#2d353f"
+        },
+        fontFamily: {
+          "display": ["Manrope", "Noto Sans", "sans-serif"]
+        },
+        borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+      },
+    },
+  }
+</script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700&amp;family=Noto+Sans+KR:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+  body {
+    background-color: #F7F8F0; /* Override background to match request */
+  }
+</style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="font-display text-text-primary-light dark:text-text-primary-dark overflow-x-hidden antialiased">
+<div class="relative flex min-h-screen w-full flex-col mx-auto max-w-md bg-[#F7F8F0] dark:bg-background-dark shadow-sm">
+<!-- Header -->
+<div class="flex items-center p-4 justify-between bg-surface-light dark:bg-surface-dark sticky top-0 z-10 border-b border-border-light dark:border-border-dark">
+<div class="flex size-12 shrink-0 items-center justify-center cursor-pointer">
+<span class="material-symbols-outlined text-text-primary-light dark:text-text-primary-dark">arrow_back</span>
+</div>
+<h2 class="text-lg font-bold leading-tight tracking-[-0.015em] flex-1 text-center">수익 및 정산 홈</h2>
+<div class="size-12 shrink-0"></div>
+</div>
+<!-- Total Balance -->
+<div class="flex flex-col items-center justify-center pt-8 pb-4 bg-[#F7F8F0] dark:bg-surface-dark">
+<p class="text-text-secondary-light dark:text-text-secondary-dark text-sm font-medium mb-1">총 잔액</p>
+<h1 class="text-primary tracking-tight text-[36px] font-bold leading-tight">₩1,250,000</h1>
+</div>
+<!-- Actions -->
+<div class="flex px-4 py-3 bg-[#F7F8F0] dark:bg-surface-dark">
+<button class="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-14 px-5 flex-1 bg-primary text-white text-base font-bold leading-normal tracking-[0.015em] shadow-sm hover:bg-primary/90 transition-colors">
+<span class="truncate">출금 신청</span>
+</button>
+</div>
+<!-- Tabs -->
+<div class="flex px-4 py-4 bg-[#F7F8F0] dark:bg-surface-dark">
+<div class="flex h-12 flex-1 items-center justify-center rounded-xl bg-surface-light dark:bg-border-dark p-1 shadow-sm border border-border-light dark:border-transparent">
+<label class="flex cursor-pointer h-full grow items-center justify-center rounded-lg px-2 has-[:checked]:bg-primary has-[:checked]:text-white text-text-secondary-light dark:text-text-secondary-dark text-sm font-bold transition-colors">
+<span class="truncate">주간</span>
+<input checked="" class="invisible w-0" name="period-tab" type="radio" value="주간"/>
+</label>
+<label class="flex cursor-pointer h-full grow items-center justify-center rounded-lg px-2 has-[:checked]:bg-primary has-[:checked]:text-white text-text-secondary-light dark:text-text-secondary-dark text-sm font-bold transition-colors">
+<span class="truncate">월간</span>
+<input class="invisible w-0" name="period-tab" type="radio" value="월간"/>
+</label>
+</div>
+</div>
+<!-- Chart Area Placeholder -->
+<div class="px-4 py-2 bg-[#F7F8F0] dark:bg-surface-dark">
+<div class="bg-surface-light dark:bg-border-dark rounded-xl h-48 flex items-center justify-center border border-border-light dark:border-transparent shadow-sm">
+<p class="text-text-secondary-light dark:text-text-secondary-dark text-sm">차트 영역 (이번 주 수익 추이)</p>
+</div>
+</div>
+<!-- Transaction History -->
+<div class="flex-1 bg-surface-light dark:bg-surface-dark mt-4 rounded-t-2xl shadow-[0_-4px_10px_rgba(0,0,0,0.05)] pt-6 px-4 pb-24">
+<div class="flex items-center justify-between mb-4">
+<h3 class="text-lg font-bold text-text-primary-light dark:text-text-primary-dark">내역</h3>
+<button class="text-sm font-medium text-primary flex items-center">
+        전체 보기
+        <span class="material-symbols-outlined text-[18px]">chevron_right</span>
+</button>
+</div>
+<div class="flex flex-col gap-4">
+<!-- Item 1 -->
+<div class="flex items-center justify-between py-2 border-b border-border-light dark:border-border-dark pb-4">
+<div class="flex items-center gap-3">
+<div class="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
+<span class="material-symbols-outlined">cleaning_services</span>
+</div>
+<div class="flex flex-col">
+<p class="text-base font-bold text-text-primary-light dark:text-text-primary-dark">강남구 오피스텔 청소</p>
+<p class="text-xs text-text-secondary-light dark:text-text-secondary-dark">10월 24일 · 정산 완료</p>
+</div>
+</div>
+<p class="text-base font-bold text-text-primary-light dark:text-text-primary-dark">+₩85,000</p>
+</div>
+<!-- Item 2 -->
+<div class="flex items-center justify-between py-2 border-b border-border-light dark:border-border-dark pb-4">
+<div class="flex items-center gap-3">
+<div class="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
+<span class="material-symbols-outlined">cleaning_services</span>
+</div>
+<div class="flex flex-col">
+<p class="text-base font-bold text-text-primary-light dark:text-text-primary-dark">서초동 아파트 입주 청소</p>
+<p class="text-xs text-text-secondary-light dark:text-text-secondary-dark">10월 22일 · 정산 완료</p>
+</div>
+</div>
+<p class="text-base font-bold text-text-primary-light dark:text-text-primary-dark">+₩240,000</p>
+</div>
+<!-- Item 3 -->
+<div class="flex items-center justify-between py-2 border-b border-border-light dark:border-border-dark pb-4">
+<div class="flex items-center gap-3">
+<div class="flex h-12 w-12 items-center justify-center rounded-full bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400">
+<span class="material-symbols-outlined">account_balance</span>
+</div>
+<div class="flex flex-col">
+<p class="text-base font-bold text-text-primary-light dark:text-text-primary-dark">계좌 출금</p>
+<p class="text-xs text-text-secondary-light dark:text-text-secondary-dark">10월 20일 · 출금 완료</p>
+</div>
+</div>
+<p class="text-base font-bold text-text-primary-light dark:text-text-primary-dark">-₩500,000</p>
+</div>
+</div>
+</div>
+<!-- Bottom Nav -->
+<div class="fixed bottom-0 left-0 right-0 mx-auto max-w-md bg-surface-light dark:bg-surface-dark border-t border-border-light dark:border-border-dark flex px-2 py-2 z-20">
+<a class="flex flex-1 flex-col items-center justify-center gap-1 text-text-secondary-light dark:text-text-secondary-dark py-2" href="#">
+<span class="material-symbols-outlined text-[24px]">home</span>
+<p class="text-[10px] font-bold">홈</p>
+</a>
+<a class="flex flex-1 flex-col items-center justify-center gap-1 text-text-secondary-light dark:text-text-secondary-dark py-2" href="#">
+<span class="material-symbols-outlined text-[24px]">task_alt</span>
+<p class="text-[10px] font-bold">내 작업</p>
+</a>
+<a class="flex flex-1 flex-col items-center justify-center gap-1 text-primary py-2" href="#">
+<span class="material-symbols-outlined text-[24px]" style="font-variation-settings: 'FILL' 1">account_balance_wallet</span>
+<p class="text-[10px] font-bold">수익</p>
+</a>
+<a class="flex flex-1 flex-col items-center justify-center gap-1 text-text-secondary-light dark:text-text-secondary-dark py-2" href="#">
+<span class="material-symbols-outlined text-[24px]">person</span>
+<p class="text-[10px] font-bold">프로필</p>
+</a>
+</div>
+</div>
+</body></html>

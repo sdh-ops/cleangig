@@ -63,35 +63,63 @@ export default async function PaymentSuccessPage({ searchParams }: { searchParam
     }
 
     return (
-        <div style={{ padding: '60px 20px', textAlign: 'center', maxWidth: 400, margin: '0 auto', fontFamily: 'Pretendard, sans-serif' }}>
-            {isSuccess ? (
-                <>
-                    <div style={{ fontSize: 60, marginBottom: 20 }}>✅</div>
-                    <h1 style={{ fontSize: 24, fontWeight: 800, marginBottom: 12, color: '#10B981' }}>안전 결제 완료</h1>
-                    <p style={{ color: '#64748B', lineHeight: 1.5, marginBottom: 32 }}>
-                        대금이 안전하게 에스크로에 보관되었습니다.<br />
-                        클린파트너가 작업을 완료하면 정산됩니다.
-                    </p>
-                    <div style={{ background: '#F8FAFC', padding: 20, borderRadius: 12, border: '1px solid #E2E8F0', marginBottom: 32, textAlign: 'left' }}>
-                        <div style={{ fontSize: 13, color: '#64748B', marginBottom: 4 }}>결제 금액</div>
-                        <div style={{ fontSize: 24, fontWeight: 800, color: '#0F172A' }}>{amount.toLocaleString()}원</div>
-                        <div style={{ marginTop: 12, fontSize: 13, color: '#64748B' }}>주문번호: {orderId}</div>
-                    </div>
-                </>
-            ) : (
-                <>
-                    <div style={{ fontSize: 60, marginBottom: 20 }}>❌</div>
-                    <h1 style={{ fontSize: 24, fontWeight: 800, marginBottom: 12, color: '#EF4444' }}>결제 실패</h1>
-                    <p style={{ color: '#64748B', lineHeight: 1.5, marginBottom: 32 }}>
-                        {errorMessage}
-                    </p>
-                </>
-            )}
+        <div className="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 antialiased min-h-screen flex justify-center">
+            <div className="relative flex h-full min-h-screen w-full max-w-md flex-col bg-background-light dark:bg-background-dark shadow-xl overflow-x-hidden border-x border-slate-200 dark:border-slate-800">
+                {/* Top App Bar */}
+                <header className="flex items-center px-4 py-3 justify-between sticky top-0 bg-background-light/90 dark:bg-background-dark/90 backdrop-blur-sm z-10 border-b border-slate-200 dark:border-slate-800">
+                    <Link href={jobId ? `/requests/${jobId}` : '/dashboard'} className="flex size-10 shrink-0 items-center justify-center text-slate-900 dark:text-slate-100 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors focus:outline-none">
+                        <span className="material-symbols-outlined text-[24px]">close</span>
+                    </Link>
+                    <h1 className="text-slate-900 dark:text-slate-100 text-lg font-bold leading-tight flex-1 text-center pr-10">
+                        {isSuccess ? '결제 완료' : '결제 실패'}
+                    </h1>
+                </header>
 
-            <Link href={jobId ? `/requests/${jobId}` : '/dashboard'}
-                style={{ display: 'block', padding: '16px', background: '#0F172A', color: '#fff', textDecoration: 'none', borderRadius: 8, fontWeight: 700 }}>
-                {isSuccess ? '상세 페이지로 돌아가기' : '다시 확인하기'}
-            </Link>
+                <main className="flex-1 flex flex-col overflow-y-auto">
+                    {/* Status Animation/Icon Area */}
+                    <div className="flex flex-col px-6 py-10 items-center justify-center">
+                        <div className={`w-24 h-24 rounded-full flex items-center justify-center mb-6 
+                            ${isSuccess ? 'bg-primary/20 animate-pulse' : 'bg-rose-500/20'}
+                        `}>
+                            <span className={`material-symbols-outlined text-[48px] ${isSuccess ? 'text-primary' : 'text-rose-500'}`}>
+                                {isSuccess ? 'check_circle' : 'error'}
+                            </span>
+                        </div>
+                        <div className="flex flex-col items-center gap-2 text-center">
+                            <h2 className="text-slate-900 dark:text-slate-100 text-2xl font-bold leading-tight">
+                                {isSuccess ? '안전 결제 완료' : '결제 실패'}
+                            </h2>
+                            <p className="text-slate-600 dark:text-slate-400 text-sm font-medium leading-relaxed mt-2" dangerouslySetInnerHTML={{ __html: isSuccess ? '대금이 안전하게 에스크로에 보관되었습니다.<br/>클린파트너가 작업을 완료하면 정산됩니다.' : errorMessage }} />
+                        </div>
+                    </div>
+
+                    {isSuccess && (
+                        /* Transaction Details Card */
+                        <div className="px-4 pb-6">
+                            <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 p-5">
+                                <h3 className="text-slate-900 dark:text-slate-100 text-base font-bold mb-4 border-b border-slate-100 dark:border-slate-800 pb-3">결제 정보</h3>
+                                <div className="space-y-4">
+                                    <div className="flex justify-between items-center gap-x-4">
+                                        <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">결제 금액</p>
+                                        <p className="text-primary text-lg font-black tracking-tight">{amount.toLocaleString()}원</p>
+                                    </div>
+                                    <div className="flex justify-between items-center gap-x-4">
+                                        <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">주문 번호</p>
+                                        <p className="text-slate-900 dark:text-slate-100 text-sm font-semibold">{orderId}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </main>
+
+                {/* Bottom Action Button */}
+                <footer className="p-4 bg-background-light dark:bg-background-dark border-t border-slate-200 dark:border-slate-800 sticky bottom-0 z-10 pb-8">
+                    <Link href={jobId ? `/requests/${jobId}` : '/dashboard'} className="w-full flex items-center justify-center rounded-xl h-14 bg-slate-900 dark:bg-slate-100 hover:opacity-90 text-white dark:text-slate-900 text-base font-bold shadow-sm transition-opacity">
+                        <span>{isSuccess ? '상세 페이지로 돌아가기' : '다시 확인하기'}</span>
+                    </Link>
+                </footer>
+            </div>
         </div>
     )
 }

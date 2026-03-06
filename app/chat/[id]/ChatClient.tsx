@@ -57,21 +57,38 @@ export default function ChatClient({ jobId, userId, receiverId, spaceName }: Pro
     };
 
     return (
-        <div className="chat-container bg-premium-v2">
-            <header className="chat-header">
-                <button className="back-btn" onClick={() => router.back()}>←</button>
-                <div className="title-box">
-                    <h1 className="chat-title">{spaceName}</h1>
-                    <p className="chat-status">{receiverId ? '파트너와 연결됨' : '대기 중'}</p>
+        <div className="bg-[#F7F8F0] dark:bg-slate-900 font-display flex flex-col min-h-[100dvh] text-slate-900 dark:text-slate-100 max-w-md mx-auto shadow-xl relative border-x border-slate-200 dark:border-slate-800">
+            {/* Header */}
+            <div className="sticky top-0 z-20 flex items-center bg-[#F7F8F0]/90 dark:bg-slate-900/90 backdrop-blur-md p-4 pb-3 border-b border-slate-200 dark:border-slate-800 justify-between">
+                <button onClick={() => router.back()} className="flex items-center justify-center p-2 text-slate-900 dark:text-slate-100 mr-2 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors">
+                    <span className="material-symbols-outlined">arrow_back_ios_new</span>
+                </button>
+                <div className="flex items-center gap-3 flex-1">
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-lg shadow-sm border border-primary/20 shrink-0">
+                        {spaceName ? spaceName.charAt(0) : '방'}
+                    </div>
+                    <div>
+                        <h2 className="text-slate-900 dark:text-slate-100 text-lg font-bold leading-tight truncate max-w-[200px]">{spaceName || '채팅방'}</h2>
+                        <p className={`text-xs ${receiverId ? 'text-green-600 dark:text-green-400 font-bold' : 'text-slate-500 dark:text-slate-400 font-medium'}`}>
+                            {receiverId ? '파트너와 연결됨' : '대기 중'}
+                        </p>
+                    </div>
                 </div>
-                <button className="info-btn">ⓘ</button>
-            </header>
+                <button className="flex items-center justify-center p-2 text-slate-900 dark:text-slate-100 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors">
+                    <span className="material-symbols-outlined">more_vert</span>
+                </button>
+            </div>
 
-            <main className="chat-messages no-scrollbar">
+            {/* Chat Area */}
+            <main className="flex-1 overflow-y-auto p-4 flex flex-col gap-6" style={{ scrollBehavior: 'smooth' }}>
                 {messages.length === 0 && (
-                    <div className="empty-state">
-                        <div className="icon">👋</div>
-                        <p className="txt">파트너와 대화를 시작해 보세요.<br />청소 관련 문의나 특이사항을 주고받을 수 있습니다.</p>
+                    <div className="flex flex-col items-center justify-center h-full text-slate-400 space-y-4">
+                        <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center border border-slate-200 dark:border-slate-700">
+                            <span className="material-symbols-outlined text-[32px] text-slate-300 dark:text-slate-600">chat_bubble</span>
+                        </div>
+                        <p className="text-sm font-bold text-center">
+                            대화를 시작해 보세요.<br />청소 관련 문의나 특이사항을 주고받을 수 있습니다.
+                        </p>
                     </div>
                 )}
 
@@ -80,79 +97,93 @@ export default function ChatClient({ jobId, userId, receiverId, spaceName }: Pro
                         const isMine = msg.sender_id === userId;
                         const showsTime = idx === messages.length - 1 ||
                             new Date(messages[idx + 1].created_at).getTime() - new Date(msg.created_at).getTime() > 60000;
+                        const showsDate = idx === 0 || new Date(messages[idx - 1].created_at).getDate() !== new Date(msg.created_at).getDate();
 
                         return (
-                            <motion.div key={msg.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-                                className={`message-row ${isMine ? 'mine' : 'theirs'}`}>
-                                {!isMine && <div className="avatar">👤</div>}
-                                <div className="bubble-group">
-                                    <div className="bubble">{msg.content}</div>
-                                    {showsTime && (
-                                        <span className="time">
-                                            {new Date(msg.created_at).toLocaleTimeString('ko-KR', { hour: 'numeric', minute: '2-digit', hour12: true })}
+                            <React.Fragment key={msg.id}>
+                                {showsDate && (
+                                    <div className="flex justify-center my-2">
+                                        <span className="text-xs font-medium bg-slate-200/50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 px-3 py-1 rounded-full">
+                                            {new Date(msg.created_at).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' })}
                                         </span>
+                                    </div>
+                                )}
+                                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                                    className={`flex items-end gap-3 ${isMine ? 'justify-end mt-2' : ''}`}
+                                >
+                                    {!isMine && (
+                                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm shadow-sm border border-primary/20 shrink-0">
+                                            P
+                                        </div>
                                     )}
-                                </div>
-                            </motion.div>
+                                    <div className={`flex flex-1 flex-col gap-1 ${isMine ? 'items-end' : 'items-start'}`}>
+                                        {!isMine && (
+                                            <p className="text-slate-500 dark:text-slate-400 text-[11px] font-bold ml-1">상대방</p>
+                                        )}
+                                        <div className={`flex flex-col ${isMine ? 'items-end' : 'items-start'} gap-1`}>
+                                            <div className="flex items-end gap-2">
+                                                {isMine && showsTime && (
+                                                    <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 mb-1">
+                                                        {new Date(msg.created_at).toLocaleTimeString('ko-KR', { hour: 'numeric', minute: '2-digit', hour12: true })}
+                                                    </span>
+                                                )}
+                                                <div className={`
+                                                    text-[15px] font-medium leading-relaxed max-w-[280px] px-4 py-3 shadow-sm
+                                                    ${isMine
+                                                        ? 'bg-primary text-white rounded-[20px] rounded-br-[4px] shadow-primary/20'
+                                                        : 'bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-[20px] rounded-bl-[4px] border border-slate-100 dark:border-slate-700'
+                                                    }
+                                                `}>
+                                                    {msg.content}
+                                                </div>
+                                                {!isMine && showsTime && (
+                                                    <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 mb-1">
+                                                        {new Date(msg.created_at).toLocaleTimeString('ko-KR', { hour: 'numeric', minute: '2-digit', hour12: true })}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            </React.Fragment>
                         );
                     })}
                 </AnimatePresence>
                 <div ref={scrollRef} style={{ height: 1 }} />
             </main>
 
-            <form className="chat-input-row" onSubmit={handleSend}>
-                <div className="input-wrap">
-                    <button type="button" className="plus-btn">+</button>
-                    <input placeholder="메시지 보내기..." value={input} onChange={e => setInput(e.target.value)} disabled={!receiverId} />
-                    <button type="submit" className="send-btn" disabled={!input.trim() || sending}>
-                        {sending ? '...' : '전송'}
+            {/* Input Area */}
+            <form className="sticky bottom-0 bg-[#F7F8F0] dark:bg-slate-900 p-3 pb-safe border-t border-slate-200 dark:border-slate-800 z-10" onSubmit={handleSend}>
+                <div className="flex items-end gap-2">
+                    <button type="button" className="flex items-center justify-center p-2 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-sm shrink-0 h-[42px] w-[42px]">
+                        <span className="material-symbols-outlined">add</span>
                     </button>
+                    <div className="flex-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl flex items-end shadow-sm overflow-hidden min-h-[42px]">
+                        <input
+                            className="w-full bg-transparent border-none focus:ring-0 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 py-2.5 px-4 text-[15px] outline-none"
+                            placeholder={receiverId ? "메시지를 입력하세요..." : "매칭된 대상이 없습니다."}
+                            value={input}
+                            onChange={e => setInput(e.target.value)}
+                            disabled={!receiverId}
+                        />
+                        <button
+                            type="submit"
+                            disabled={!input.trim() || sending}
+                            className={`flex items-center justify-center p-2 m-1 rounded-xl shrink-0 transition-colors
+                                ${(!input.trim() || sending)
+                                    ? 'bg-slate-100 dark:bg-slate-800 text-slate-400'
+                                    : 'bg-primary/10 text-primary hover:bg-primary hover:text-white'
+                                }
+                            `}
+                        >
+                            <span className="material-symbols-outlined text-[20px]">send</span>
+                        </button>
+                    </div>
                 </div>
             </form>
-
             <style jsx>{`
-        .chat-container { display: flex; flex-direction: column; height: 100dvh; background: #FFFFFF; }
-        .chat-header {
-           padding: 20px 20px 14px; display: flex; align-items: center; gap: 16px;
-           border-bottom: 1px solid var(--color-border-light); background: #fff;
-        }
-        .back-btn { width: 40px; height: 40px; border-radius: 12px; background: #F8F9FA; border: none; font-size: 20px; }
-        .title-box { flex: 1; text-align: center; }
-        .chat-title { font-size: 16px; font-weight: 800; }
-        .chat-status { font-size: 11px; font-weight: 700; color: #03C75A; margin-top: 2px; }
-        .info-btn { width: 40px; height: 40px; background: none; border: none; font-size: 20px; color: var(--color-text-tertiary); }
-        
-        .chat-messages { flex: 1; overflow-y: auto; padding: 24px 20px; display: flex; flex-direction: column; gap: 16px; }
-        .empty-state { text-align: center; margin-top: 40px; }
-        .empty-state .icon { font-size: 40px; margin-bottom: 12px; }
-        .empty-state .txt { font-size: 14px; color: var(--color-text-tertiary); line-height: 1.6; }
-        
-        .message-row { display: flex; gap: 10px; max-width: 85%; }
-        .message-row.mine { align-self: flex-end; flex-direction: row-reverse; }
-        .message-row.theirs { align-self: flex-start; }
-        
-        .avatar { width: 36px; height: 36px; border-radius: 14px; background: var(--color-primary-soft); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
-        .bubble-group { display: flex; flex-direction: column; gap: 4px; }
-        .mine .bubble-group { align-items: flex-end; }
-        
-        .bubble {
-           padding: 12px 16px; border-radius: 20px; font-size: 14px; font-weight: 600; line-height: 1.5;
-           box-shadow: 0 1px 2px rgba(0,0,0,0.05); word-break: break-all;
-        }
-        .mine .bubble { background: var(--color-primary); color: #fff; border-top-right-radius: 4px; }
-        .theirs .bubble { background: var(--color-bg); color: var(--color-text-primary); border-top-left-radius: 4px; }
-        
-        .time { font-size: 10px; color: var(--color-text-tertiary); font-weight: 600; }
-        
-        .chat-input-row { padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0)); background: #fff; border-top: 1px solid var(--color-border-light); }
-        .input-wrap { display: flex; align-items: center; gap: 8px; background: var(--color-bg); padding: 6px 6px 6px 14px; border-radius: 24px; }
-        .plus-btn { width: 32px; height: 32px; border-radius: 50%; background: #fff; border: 1px solid var(--color-border-light); font-size: 20px; font-weight: 300; line-height: 1; }
-        .input-wrap input { flex: 1; border: none; background: transparent; font-size: 15px; font-weight: 600; outline: none; padding: 6px 0; }
-        .send-btn { background: var(--color-primary); color: #fff; border: none; padding: 10px 18px; border-radius: 18px; font-size: 13px; font-weight: 800; cursor: pointer; }
-        .send-btn:disabled { background: #D1D8E0; }
-        
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-      `}</style>
+                .pb-safe { padding-bottom: calc(0.75rem + env(safe-area-inset-bottom)); }
+            `}</style>
         </div>
     );
 }

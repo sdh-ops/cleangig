@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+
+<html lang="ko"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Role Selection Onboarding</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#355773",
+                        "background-light": "#f6f7f7",
+                        "background-dark": "#15191d",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="font-display bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100">
+<div class="relative flex min-h-screen w-full flex-col group/design-root overflow-x-hidden max-w-md mx-auto bg-white dark:bg-slate-900 shadow-xl">
+<!-- Header Section -->
+<div class="flex items-center p-4 pb-2 justify-between sticky top-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md z-10">
+<button class="flex size-12 shrink-0 items-center justify-center text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors">
+<span class="material-symbols-outlined text-2xl">arrow_back</span>
+</button>
+<div class="flex-1"></div> <!-- Spacer for balancing -->
+</div>
+<!-- Main Content -->
+<div class="flex-1 px-4 py-6">
+<div class="text-center mb-10">
+<h1 class="text-3xl font-bold leading-tight mb-3">나는 어떤 파트너인가요?</h1>
+<p class="text-slate-500 dark:text-slate-400 text-base font-normal leading-normal">CleanGig Premium 서비스 이용을 위해<br/>역할을 선택해주세요.</p>
+</div>
+<div class="flex flex-col gap-6">
+<!-- Option 1: Space Partner (Selected State Example) -->
+<button class="w-full text-left group relative transition-all duration-300">
+<div class="absolute inset-0 bg-primary/5 rounded-2xl border-2 border-primary shadow-sm scale-100 transition-transform"></div>
+<div class="relative flex flex-col p-6 items-center sm:flex-row sm:items-start gap-5">
+<div class="shrink-0 size-20 rounded-full bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform duration-300">
+<span class="material-symbols-outlined text-4xl">home_work</span>
+</div>
+<div class="flex flex-col items-center sm:items-start text-center sm:text-left pt-2">
+<h3 class="text-xl font-bold text-slate-900 dark:text-slate-100 mb-2">공간 파트너</h3>
+<p class="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">내 공간을 등록하고 전문가의<br/>프리미엄 청소 서비스를 받고 싶어요.</p>
+</div>
+<div class="absolute top-4 right-4 text-primary">
+<span class="material-symbols-outlined text-3xl font-bold">check_circle</span>
+</div>
+</div>
+</button>
+<!-- Option 2: Clean Partner (Unselected State) -->
+<button class="w-full text-left group relative transition-all duration-300">
+<div class="absolute inset-0 bg-white dark:bg-slate-800 rounded-2xl border-2 border-slate-200 dark:border-slate-700 shadow-sm hover:border-primary/50 group-hover:shadow-md transition-all"></div>
+<div class="relative flex flex-col p-6 items-center sm:flex-row sm:items-start gap-5">
+<div class="shrink-0 size-20 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-slate-500 dark:text-slate-400 group-hover:bg-primary/5 group-hover:text-primary transition-colors duration-300">
+<span class="material-symbols-outlined text-4xl">cleaning_services</span>
+</div>
+<div class="flex flex-col items-center sm:items-start text-center sm:text-left pt-2">
+<h3 class="text-xl font-bold text-slate-900 dark:text-slate-100 mb-2 group-hover:text-primary transition-colors">클린 파트너</h3>
+<p class="text-slate-500 dark:text-slate-400 text-sm leading-relaxed">청소 전문가로 등록하여<br/>자유롭게 수익을 창출하고 싶어요.</p>
+</div>
+</div>
+</button>
+</div>
+</div>
+<!-- Footer Action -->
+<div class="p-4 pb-8 sticky bottom-0 bg-gradient-to-t from-white via-white to-transparent dark:from-slate-900 dark:via-slate-900 dark:to-transparent">
+<button class="w-full bg-primary hover:bg-primary/90 text-white font-bold py-4 px-6 rounded-xl text-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5">
+                다음으로
+            </button>
+</div>
+</div>
+</body></html>

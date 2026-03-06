@@ -58,7 +58,8 @@ export default function CreateRequestPage() {
         setPrice(p)
     }, [selectedSpace, form.is_urgent])
 
-    const handleSpaceSelect = (spaceId: string) => {
+    const handleSpaceSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const spaceId = e.target.value;
         const space = spaces.find(s => s.id === spaceId)
         setSelectedSpace(space || null)
         setForm(f => ({ ...f, space_id: spaceId }))
@@ -116,290 +117,281 @@ export default function CreateRequestPage() {
     const minDate = new Date().toISOString().split('T')[0]
 
     return (
-        <div className="page-container">
-            <header className="form-header">
-                <button onClick={() => router.back()} className="back-btn">←</button>
-                <h1 className="form-title">새 청소 요청</h1>
-                <div style={{ width: 40 }} />
-            </header>
+        <div className="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display min-h-screen antialiased flex flex-col mx-auto max-w-md w-full relative">
+            {/* TopAppBar */}
+            <div className="sticky top-0 z-20 flex items-center bg-background-light dark:bg-background-dark p-4 justify-between border-b border-slate-200 dark:border-slate-800">
+                <button onClick={() => router.back()} className="flex size-12 shrink-0 items-center justify-center text-slate-900 dark:text-slate-100 focus:outline-none">
+                    <span className="material-symbols-outlined text-2xl">arrow_back</span>
+                </button>
+                <h2 className="text-lg font-bold leading-tight tracking-tight flex-1 text-center pr-12">새로운 청소 요청</h2>
+            </div>
 
-            <div className="page-content">
-                {/* 공간 선택 */}
-                <div className="form-group">
-                    <label className="form-label">청소할 공간 *</label>
-                    {spaces.length === 0 ? (
-                        <div className="no-space-msg">
-                            <p>등록된 공간이 없어요</p>
-                            <a href="/spaces/create" className="btn btn-primary btn-sm">공간 먼저 등록하기</a>
-                        </div>
-                    ) : (
-                        <div className="space-select-list">
-                            {spaces.map(space => (
-                                <button
-                                    key={space.id}
-                                    className={`space-select-btn ${form.space_id === space.id ? 'selected' : ''}`}
-                                    onClick={() => handleSpaceSelect(space.id)}
-                                    id={`space-${space.id}`}
-                                >
-                                    <span className="space-type-icon">
-                                        {space.type === 'airbnb' ? '🏠' : space.type === 'partyroom' ? '🎉' : space.type === 'studio' ? '📸' : '🏢'}
-                                    </span>
-                                    <div className="space-select-info">
-                                        <div className="space-select-name">{space.name}</div>
-                                        <div className="space-select-addr">{space.address}</div>
-                                    </div>
-                                    {form.space_id === space.id && <span style={{ color: 'var(--color-primary)' }}>✓</span>}
+            {/* Main Content */}
+            <main className="flex-1 overflow-y-auto pb-40">
+                {/* Space Selection */}
+                <div className="px-4 pt-6 pb-2">
+                    <h1 className="text-[22px] font-bold leading-tight tracking-tight mb-4">어떤 공간을 청소할까요?</h1>
+                    <label className="flex flex-col w-full">
+                        <span className="text-sm font-medium leading-normal mb-2 text-slate-700 dark:text-slate-300">청소할 공간 *</span>
+                        {spaces.length === 0 ? (
+                            <div className="text-center p-6 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
+                                <p className="mb-4 text-slate-600 dark:text-slate-400">등록된 공간이 없어요</p>
+                                <button onClick={() => router.push('/spaces/create')} className="w-full h-12 bg-primary text-white rounded-lg font-bold flex items-center justify-center">
+                                    공간 먼저 등록하기
                                 </button>
-                            ))}
-                        </div>
-                    )}
+                            </div>
+                        ) : (
+                            <div className="relative">
+                                <select
+                                    className="appearance-none form-input flex w-full flex-1 rounded-xl text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 h-14 px-4 pr-10 text-base font-medium"
+                                    value={form.space_id}
+                                    onChange={handleSpaceSelect}
+                                >
+                                    <option disabled value="">공간을 선택해주세요</option>
+                                    {spaces.map(space => (
+                                        <option key={space.id} value={space.id}>
+                                            {space.type === 'airbnb' ? '🏠 ' : space.type === 'partyroom' ? '🎉 ' : space.type === 'studio' ? '📸 ' : '🏢 '}
+                                            {space.name} ({space.address})
+                                        </option>
+                                    ))}
+                                </select>
+                                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-500">
+                                    <span className="material-symbols-outlined">expand_more</span>
+                                </div>
+                            </div>
+                        )}
+                    </label>
                 </div>
 
-                {/* 일시 선택 */}
-                <div className="form-group">
-                    <label className="form-label">청소 날짜 *</label>
-                    <input className="form-input" type="date" min={minDate}
-                        value={form.scheduled_date}
-                        onChange={e => setForm(f => ({ ...f, scheduled_date: e.target.value }))} />
-                </div>
+                <div className="h-4"></div>
 
-                <div className="form-group">
-                    <label className="form-label">청소 가능 시간 (선택 범위 내 작업 완료) *</label>
-                    <div className="time-window-row">
-                        <div className="time-col">
-                            <span className="text-xs text-secondary mb-xs">시작 가능 시간</span>
-                            <input className="form-input" type="time" value={form.time_window_start}
-                                onChange={e => setForm(f => ({ ...f, time_window_start: e.target.value }))} />
+                {/* Date & Time Selection */}
+                <div className="px-4 py-2">
+                    <h1 className="text-[22px] font-bold leading-tight tracking-tight mb-4">언제 청소가 필요하신가요?</h1>
+
+                    <div className="flex flex-col mb-4">
+                        <label className="flex flex-col flex-1">
+                            <span className="text-sm font-medium leading-normal mb-2 text-slate-700 dark:text-slate-300">청소 날짜 *</span>
+                            <div className="relative flex items-center">
+                                <input
+                                    className="appearance-none form-input flex w-full rounded-xl text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 h-14 px-4 pr-10 text-base font-medium"
+                                    type="date"
+                                    min={minDate}
+                                    value={form.scheduled_date}
+                                    onChange={e => setForm(f => ({ ...f, scheduled_date: e.target.value }))}
+                                />
+                            </div>
+                        </label>
+                    </div>
+
+                    <div className="flex gap-4 items-end mb-2">
+                        <label className="flex flex-col flex-1">
+                            <span className="text-sm font-medium leading-normal mb-2 text-slate-700 dark:text-slate-300">시작 가능 시간 *</span>
+                            <div className="relative flex items-center">
+                                <input
+                                    className="appearance-none form-input flex w-full rounded-xl text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 h-14 px-4 pr-10 text-base font-medium"
+                                    type="time"
+                                    value={form.time_window_start}
+                                    onChange={e => setForm(f => ({ ...f, time_window_start: e.target.value }))}
+                                />
+                                <span className="material-symbols-outlined absolute right-3 text-slate-400 pointer-events-none">schedule</span>
+                            </div>
+                        </label>
+                        <div className="text-lg font-bold text-slate-400 pb-3">~</div>
+                        <label className="flex flex-col flex-1">
+                            <span className="text-sm font-medium leading-normal mb-2 text-slate-700 dark:text-slate-300">완료 한계 시간 *</span>
+                            <div className="relative flex items-center">
+                                <input
+                                    className="appearance-none form-input flex w-full rounded-xl text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 h-14 px-4 pr-10 text-base font-medium"
+                                    type="time"
+                                    value={form.time_window_end}
+                                    onChange={e => setForm(f => ({ ...f, time_window_end: e.target.value }))}
+                                />
+                                <span className="material-symbols-outlined absolute right-3 text-slate-400 pointer-events-none">schedule_send</span>
+                            </div>
+                        </label>
+                    </div>
+                    <p className="text-xs text-slate-500 mb-4 px-1">클린파트너가 위 시간 범위 내에 도착하여 청소를 모두 마칩니다.</p>
+
+                    {/* Recurring Config */}
+                    <div className="flex flex-col w-full bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden mt-4">
+                        <div
+                            className="flex justify-between items-center p-4 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/80 transition-colors"
+                            onClick={() => setForm(f => ({ ...f, is_recurring: !f.is_recurring }))}
+                        >
+                            <div>
+                                <div className="font-bold text-base flex items-center gap-1">🔁 정기 청소 (반복)</div>
+                                <div className="text-xs text-slate-500 mt-1">매주 정해진 요일에 자동으로 청소 요청</div>
+                            </div>
+                            <div className={`w-12 h-7 rounded-full relative transition-colors ${form.is_recurring ? 'bg-primary' : 'bg-slate-200 dark:bg-slate-600'}`}>
+                                <div className={`absolute top-1 left-1 bg-white w-5 h-5 rounded-full shadow transition-transform ${form.is_recurring ? 'translate-x-5' : 'translate-x-0'}`}></div>
+                            </div>
                         </div>
-                        <div className="time-tilde">~</div>
-                        <div className="time-col">
-                            <span className="text-xs text-secondary mb-xs">완료 한계 시간</span>
-                            <input className="form-input" type="time" value={form.time_window_end}
-                                onChange={e => setForm(f => ({ ...f, time_window_end: e.target.value }))} />
+
+                        {form.is_recurring && (
+                            <div className="p-4 pt-0 border-t border-slate-100 dark:border-slate-700">
+                                <p className="text-sm font-medium mb-3 mt-3">반복 요일 선택</p>
+                                <div className="flex gap-2 justify-between">
+                                    {['월', '화', '수', '목', '금', '토', '일'].map(day => {
+                                        const selected = form.recurring_days.includes(day)
+                                        return (
+                                            <button
+                                                key={day}
+                                                className={`w-10 h-10 rounded-full font-bold text-sm transition-all ${selected ? 'bg-primary text-white border-primary border-2 shadow-sm' : 'bg-transparent text-slate-600 dark:text-slate-300 border-2 border-slate-200 dark:border-slate-600'}`}
+                                                onClick={() => {
+                                                    setForm(f => ({
+                                                        ...f,
+                                                        recurring_days: selected
+                                                            ? f.recurring_days.filter(d => d !== day)
+                                                            : [...f.recurring_days, day]
+                                                    }))
+                                                }}
+                                            >
+                                                {day}
+                                            </button>
+                                        )
+                                    })}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Urgent Config */}
+                    <div className="flex flex-col w-full bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden mt-3">
+                        <div
+                            className="flex justify-between items-center p-4 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/80 transition-colors"
+                            onClick={() => setForm(f => ({ ...f, is_urgent: !f.is_urgent }))}
+                        >
+                            <div>
+                                <div className="font-bold text-base flex items-center gap-1 text-red-500">🔥 긴급 요청</div>
+                                <div className="text-xs text-slate-500 mt-1">+30% 요금으로 더 빠른 매칭</div>
+                            </div>
+                            <div className={`w-12 h-7 rounded-full relative transition-colors ${form.is_urgent ? 'bg-red-500' : 'bg-slate-200 dark:bg-slate-600'}`}>
+                                <div className={`absolute top-1 left-1 bg-white w-5 h-5 rounded-full shadow transition-transform ${form.is_urgent ? 'translate-x-5' : 'translate-x-0'}`}></div>
+                            </div>
                         </div>
                     </div>
-                    <p className="form-hint mt-xs">클린파트너가 위 시간 범위 내에 도착하여 청소를 모두 마칩니다.</p>
+
                 </div>
 
-                {/* 반복 청소 옵션 */}
-                <div className="urgent-toggle" onClick={() => setForm(f => ({ ...f, is_recurring: !f.is_recurring }))}>
-                    <div className="urgent-info">
-                        <div className="urgent-title">🔁 정기 청소 (반복)</div>
-                        <div className="urgent-desc">매주 정해진 요일에 자동으로 청소 요청</div>
-                    </div>
-                    <div className={`toggle ${form.is_recurring ? 'on' : ''}`}>
-                        <div className="toggle-thumb" />
-                    </div>
-                </div>
+                <div className="h-4"></div>
 
-                {form.is_recurring && (
-                    <div className="form-group slide-down">
-                        <label className="form-label">반복 요일 선택</label>
-                        <div className="day-picker">
-                            {['월', '화', '수', '목', '금', '토', '일'].map(day => {
-                                const selected = form.recurring_days.includes(day)
+                {/* Special Instructions */}
+                <div className="px-4 py-2">
+                    <h1 className="text-[22px] font-bold leading-tight tracking-tight mb-4">요청사항이 있으신가요?</h1>
+
+                    <label className="flex flex-col w-full mb-6">
+                        <span className="text-sm font-medium leading-normal mb-2 text-slate-700 dark:text-slate-300">특이사항 또는 주의사항 (선택)</span>
+                        <textarea
+                            className="form-textarea flex w-full rounded-xl text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 text-base font-normal resize-none min-h-[120px]"
+                            placeholder="예: 고양이가 있어요. 베란다 창틀 청소도 부탁드려요."
+                            value={form.special_instructions}
+                            onChange={e => setForm(f => ({ ...f, special_instructions: e.target.value }))}
+                        ></textarea>
+                    </label>
+
+                    <label className="flex flex-col w-full mb-6 relative">
+                        <span className="text-sm font-medium leading-normal mb-1 text-slate-700 dark:text-slate-300">클린파트너가 꼭 확인해야 할 비품 (선택)</span>
+                        <span className="text-xs text-slate-500 mb-3">체크해두시면 클린파트너가 수량 부족 시 알려줍니다.</span>
+                        <div className="flex flex-wrap gap-2">
+                            {['휴지', '수건', '종량제봉투', '핸드워시', '주방세제', '음료수'].map(item => {
+                                const isSelected = form.supplies_to_check.includes(item)
                                 return (
                                     <button
-                                        key={day}
-                                        className={`day-btn ${selected ? 'selected' : ''}`}
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            setForm(f => ({
-                                                ...f,
-                                                recurring_days: selected
-                                                    ? f.recurring_days.filter(d => d !== day)
-                                                    : [...f.recurring_days, day]
-                                            }))
-                                        }}
-                                    >{day}</button>
-                                )
-                            })}
-                        </div>
-                    </div>
-                )}
-
-                {/* 긴급 옵션 */}
-                <div className="urgent-toggle" onClick={() => setForm(f => ({ ...f, is_urgent: !f.is_urgent }))}>
-                    <div className="urgent-info">
-                        <div className="urgent-title">🔥 긴급 요청</div>
-                        <div className="urgent-desc">+30% 요금으로 더 빠른 매칭</div>
-                    </div>
-                    <div className={`toggle ${form.is_urgent ? 'on' : ''}`}>
-                        <div className="toggle-thumb" />
-                    </div>
-                </div>
-
-                {/* 특이사항 */}
-                <div className="form-group">
-                    <label className="form-label">특이사항 (선택)</label>
-                    <textarea className="form-input" rows={2}
-                        placeholder="클린파트너에게 전달할 내용 (예: 비밀번호 1234, 반려동물 있음)"
-                        value={form.special_instructions}
-                        onChange={e => setForm(f => ({ ...f, special_instructions: e.target.value }))} />
-                </div>
-
-                {/* 비품 체크 옵션 */}
-                <div className="form-group slide-down mt-md">
-                    <label className="form-label">클린파트너가 꼭 확인해야 할 비품 (선택)</label>
-                    <p className="form-hint mb-sm">체크해두시면 클린파트너가 수량 부족 시 알려줍니다.</p>
-                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                        {['휴지', '수건', '종량제봉투', '핸드워시', '주방세제', '음료수'].map(item => {
-                            const isSelected = form.supplies_to_check.includes(item)
-                            return (
-                                <button
-                                    key={item}
-                                    style={{
-                                        padding: '6px 14px', borderRadius: '20px', fontSize: 'var(--font-sm)',
-                                        border: `1px solid ${isSelected ? 'var(--color-primary)' : 'var(--color-border)'}`,
-                                        background: isSelected ? 'var(--color-primary-light)' : 'var(--color-surface)',
-                                        color: isSelected ? 'var(--color-primary-dark)' : 'var(--color-text-secondary)',
-                                        fontWeight: isSelected ? 700 : 500, transition: 'all .2s'
-                                    }}
-                                    onClick={() => setForm(f => ({
-                                        ...f,
-                                        supplies_to_check: isSelected
-                                            ? f.supplies_to_check.filter(x => x !== item)
-                                            : [...f.supplies_to_check, item]
-                                    }))}
-                                >
-                                    {item}
-                                </button>
-                            )
-                        })}
-                    </div>
-                </div>
-
-                {/* 단골 파트너 지정 화면 */}
-                {favoritePartners.length > 0 && (
-                    <div className="form-group slide-down mt-md p-md card" style={{ background: '#FFF7ED', border: '1px solid #FED7AA' }}>
-                        <label className="form-label" style={{ color: '#C2410C' }}>💖 단골 파트너 지정 전송 (선택)</label>
-                        <p className="form-hint mb-sm">지정한 클린파트너에게만 단독으로 알림이 가며 수락 대기 상태가 됩니다.</p>
-                        <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '8px' }}>
-                            <button
-                                style={{
-                                    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                                    padding: '12px', minWidth: '80px', borderRadius: '12px',
-                                    border: `2px solid ${form.targeted_worker_id === '' ? 'var(--color-primary)' : 'var(--color-border)'}`,
-                                    background: form.targeted_worker_id === '' ? 'var(--color-primary-light)' : '#fff',
-                                    transition: 'all .2s', flexShrink: 0
-                                }}
-                                onClick={() => setForm(f => ({ ...f, targeted_worker_id: '' }))}
-                            >
-                                <span style={{ fontSize: '24px', marginBottom: '4px' }}>📢</span>
-                                <span style={{ fontSize: '12px', fontWeight: form.targeted_worker_id === '' ? 700 : 500 }}>전체 공개</span>
-                            </button>
-
-                            {favoritePartners.map(fav => {
-                                const worker = fav.users
-                                if (!worker) return null
-                                const isSelected = form.targeted_worker_id === worker.id
-                                return (
-                                    <button
-                                        key={worker.id}
-                                        style={{
-                                            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                                            padding: '12px', minWidth: '90px', borderRadius: '12px',
-                                            border: `2px solid ${isSelected ? '#EA580C' : 'var(--color-border)'}`,
-                                            background: isSelected ? '#FFEDD5' : '#fff',
-                                            transition: 'all .2s', flexShrink: 0
-                                        }}
-                                        onClick={() => setForm(f => ({ ...f, targeted_worker_id: worker.id }))}
+                                        key={item}
+                                        className={`px-4 py-2 rounded-full text-sm transition-all ${isSelected ? 'bg-primary-light text-primary border border-primary font-bold shadow-sm' : 'bg-slate-100 dark:bg-slate-800 border-transparent border text-slate-600 dark:text-slate-300 font-medium'}`}
+                                        onClick={() => setForm(f => ({
+                                            ...f,
+                                            supplies_to_check: isSelected
+                                                ? f.supplies_to_check.filter(x => x !== item)
+                                                : [...f.supplies_to_check, item]
+                                        }))}
                                     >
-                                        <div className="avatar avatar-md mb-xs" style={{ background: '#F97316', fontSize: '14px' }}>{worker.name[0]}</div>
-                                        <span style={{ fontSize: '13px', fontWeight: isSelected ? 700 : 500, color: '#9A3412' }}>{worker.name}</span>
-                                        <span style={{ fontSize: '10px', color: '#EA580C' }}>{worker.tier}</span>
+                                        {item}
                                     </button>
                                 )
                             })}
                         </div>
-                    </div>
-                )}
+                    </label>
 
-                {/* 가격 요약 */}
+                    {/* Favorite Partner Direct Message */}
+                    {favoritePartners.length > 0 && (
+                        <div className="flex flex-col w-full bg-orange-50 dark:bg-orange-900/20 rounded-xl border border-orange-200 dark:border-orange-800/50 p-4 mb-4">
+                            <span className="text-sm font-bold leading-normal mb-1 text-orange-700 dark:text-orange-500">💖 단골 파트너 지정 전송 (선택)</span>
+                            <span className="text-xs text-orange-600/80 dark:text-orange-400/80 mb-3">지정한 파트너에게만 알림이 가며 수락 대기 상태가 됩니다.</span>
+
+                            <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none snap-x">
+                                <button
+                                    className={`snap-center flex flex-col items-center justify-center p-3 min-w-[80px] rounded-xl border-2 transition-all flex-shrink-0 ${form.targeted_worker_id === '' ? 'border-orange-500 bg-orange-100 dark:bg-orange-800/50' : 'border-transparent bg-white dark:bg-slate-800 opacity-80'}`}
+                                    onClick={() => setForm(f => ({ ...f, targeted_worker_id: '' }))}
+                                >
+                                    <span className="text-2xl mb-1">📢</span>
+                                    <span className={`text-[11px] ${form.targeted_worker_id === '' ? 'font-bold text-orange-700 dark:text-orange-300' : 'font-medium text-slate-600 dark:text-slate-400'}`}>전체 공개</span>
+                                </button>
+
+                                {favoritePartners.map(fav => {
+                                    const worker = fav.users
+                                    if (!worker) return null
+                                    const isSelected = form.targeted_worker_id === worker.id
+                                    return (
+                                        <button
+                                            key={worker.id}
+                                            className={`snap-center flex flex-col items-center justify-center p-3 min-w-[90px] rounded-xl border-2 transition-all flex-shrink-0 ${isSelected ? 'border-orange-500 bg-orange-100 dark:bg-orange-800/50' : 'border-transparent bg-white dark:bg-slate-800 opacity-80'}`}
+                                            onClick={() => setForm(f => ({ ...f, targeted_worker_id: worker.id }))}
+                                        >
+                                            <div className="w-10 h-10 rounded-full bg-orange-500 text-white flex items-center justify-center font-bold text-lg mb-1">{worker.name[0]}</div>
+                                            <span className={`text-[12px] truncate max-w-full ${isSelected ? 'font-bold text-orange-800 dark:text-orange-300' : 'font-medium text-slate-700 dark:text-slate-300'}`}>{worker.name}</span>
+                                            <span className="text-[10px] font-bold text-orange-600 dark:text-orange-400">{worker.tier}</span>
+                                        </button>
+                                    )
+                                })}
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+            </main>
+
+            {/* Bottom Action Area */}
+            <div className="fixed bottom-0 z-30 w-full max-w-md mx-auto bg-white/95 dark:bg-slate-900/95 backdrop-blur border-t border-slate-200 dark:border-slate-800 p-4 pb-8 safe-area-bottom shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
                 {selectedSpace && (
-                    <div className="price-summary">
-                        <div className="price-row">
-                            <span>기본 청소 단가</span>
+                    <div className="flex flex-col mb-3 px-1 gap-1">
+                        <div className="flex justify-between items-center text-[13px] text-slate-500">
+                            <span>기본 청소비 ({selectedSpace.estimated_duration}분 소요)</span>
                             <span>{selectedSpace.base_price.toLocaleString()}원</span>
                         </div>
                         {form.is_urgent && (
-                            <div className="price-row text-primary">
-                                <span>🔥 긴급 할증 (+30%)</span>
+                            <div className="flex justify-between items-center text-[13px] text-red-500 font-medium">
+                                <span>긴급 할증 (+30%)</span>
                                 <span>+{Math.round(selectedSpace.base_price * 0.3).toLocaleString()}원</span>
                             </div>
                         )}
-                        <div className="divider" />
-                        <div className="price-row price-total">
-                            <span>클린파트너 수령액</span>
-                            <span>{price.toLocaleString()}원</span>
+                        <div className="flex justify-between items-center text-sm text-slate-600 dark:text-slate-400 pt-1 border-t border-slate-100 dark:border-slate-800 mt-1">
+                            <span>파트너 수령액</span>
+                            <span className="font-bold">{price.toLocaleString()}원</span>
                         </div>
-                        <div className="price-row text-secondary text-sm">
-                            <span>공간파트너 결제 금액 (수수료 10%)</span>
-                            <span>{Math.round(price * 1.1).toLocaleString()}원</span>
-                        </div>
-                        <div className="price-row text-secondary text-sm">
-                            <span>예상 소요 시간</span>
-                            <span>{selectedSpace.estimated_duration}분</span>
+                        <div className="flex justify-between items-center mt-1">
+                            <span className="text-base font-bold text-slate-900 dark:text-slate-100">최종 결제 금액 (수수료 포함)</span>
+                            <span className="text-2xl font-bold text-primary">₩{Math.round(price * 1.1).toLocaleString()}</span>
                         </div>
                     </div>
                 )}
-
+                {!selectedSpace && (
+                    <div className="flex justify-between items-center mb-4 px-2">
+                        <span className="text-base font-medium text-slate-600 dark:text-slate-400">예상 결제 금액</span>
+                        <span className="text-2xl font-bold text-slate-300 dark:text-slate-700">-</span>
+                    </div>
+                )}
                 <button
-                    className="btn btn-primary btn-full btn-lg"
+                    className="w-full h-14 bg-primary text-white rounded-xl font-bold text-lg flex items-center justify-center hover:bg-primary/95 transition-all shadow-md active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100"
                     onClick={handleSubmit}
                     disabled={loading || !form.space_id || !form.scheduled_date || spaces.length === 0}
-                    id="submit-request"
                 >
-                    {loading ? <span className="spinner" /> : '✅ 청소 요청 등록하기'}
+                    {loading ? (
+                        <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    ) : '요청 올리기'}
                 </button>
             </div>
-
-            <style jsx>{`
-        .form-header {
-          display: flex; align-items: center; justify-content: space-between;
-          padding: var(--spacing-md);
-          padding-top: calc(var(--spacing-md) + env(safe-area-inset-top, 0));
-          border-bottom: 1px solid var(--color-border-light);
-          background: var(--color-surface); position: sticky; top: 0; z-index: 10;
-        }
-        .back-btn { font-size: 22px; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 50%; }
-        .back-btn:hover { background: var(--color-bg); }
-        .form-title { font-size: var(--font-lg); font-weight: 700; }
-        .no-space-msg { text-align: center; padding: var(--spacing-lg); background: var(--color-bg); border-radius: 12px; display: flex; flex-direction: column; gap: var(--spacing-sm); align-items: center; }
-        .space-select-list { display: flex; flex-direction: column; gap: var(--spacing-sm); }
-        .space-select-btn {
-          display: flex; align-items: center; gap: var(--spacing-md);
-          padding: var(--spacing-md); border-radius: 14px; text-align: left;
-          border: 2px solid var(--color-border); background: var(--color-surface);
-          cursor: pointer; transition: all var(--transition-fast); width: 100%;
-        }
-        .space-select-btn.selected { border-color: var(--color-primary); background: var(--color-primary-light); }
-        .space-type-icon { font-size: 28px; flex-shrink: 0; }
-        .space-select-info { flex: 1; }
-        .space-select-name { font-size: var(--font-md); font-weight: 700; }
-        .space-select-addr { font-size: var(--font-xs); color: var(--color-text-tertiary); }
-        .time-window-row { display: flex; align-items: flex-end; gap: var(--spacing-sm); }
-        .time-col { flex: 1; display: flex; flex-direction: column; }
-        .time-tilde { padding-bottom: 12px; font-weight: 700; color: var(--color-text-tertiary); }
-        .day-picker { display: flex; gap: 8px; justify-content: space-between; margin-top: 8px; }
-        .day-btn { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--color-border); background: var(--color-surface); font-weight: 600; font-size: 14px; cursor: pointer; transition: all .2s; }
-        .day-btn.selected { background: var(--color-primary); color: #fff; border-color: var(--color-primary); }
-        .urgent-toggle {
-          display: flex; justify-content: space-between; align-items: center;
-          padding: var(--spacing-md); border-radius: 14px;
-          border: 2px solid var(--color-border); background: var(--color-surface);
-          cursor: pointer; margin-bottom: var(--spacing-md);
-        }
-        .urgent-title { font-weight: 700; font-size: var(--font-md); }
-        .urgent-desc { font-size: var(--font-xs); color: var(--color-text-secondary); }
-        .toggle { width: 48px; height: 28px; border-radius: 999px; background: var(--color-border); position: relative; transition: background var(--transition-fast); flex-shrink: 0; }
-        .toggle.on { background: var(--color-primary); }
-        .toggle-thumb { position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: #fff; box-shadow: var(--shadow-sm); transition: transform var(--transition-fast); }
-        .toggle.on .toggle-thumb { transform: translateX(20px); }
-        .price-summary { background: var(--color-bg); border-radius: 14px; padding: var(--spacing-md); margin-bottom: var(--spacing-md); }
-        .price-row { display: flex; justify-content: space-between; align-items: center; padding: 4px 0; font-size: var(--font-sm); }
-        .price-total { font-size: var(--font-md); font-weight: 800; }
-      `}</style>
         </div>
     )
 }

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+
+<html lang="ko"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Payment Success Confirmation</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#7AAACE",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#141a1e",
+                        slate: {
+                            50: '#f0f5f8',
+                            100: '#dae8f2',
+                            200: '#bbd5e7',
+                            300: '#8ebadb',
+                            400: '#5a99ca',
+                            500: '#3e7fb5',
+                            600: '#2b6496',
+                            700: '#235079',
+                            800: '#1e4466',
+                            900: '#1b3a55',
+                            950: '#122538',
+                        }
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 antialiased h-screen flex justify-center">
+<div class="relative flex h-full min-h-screen w-full max-w-md flex-col bg-background-light dark:bg-background-dark shadow-sm overflow-x-hidden">
+<!-- Top App Bar -->
+<header class="flex items-center px-4 py-3 justify-between sticky top-0 bg-background-light dark:bg-background-dark z-10 border-b border-slate-200 dark:border-slate-800">
+<button class="flex size-10 shrink-0 items-center justify-center text-slate-900 dark:text-slate-100 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors focus:outline-none focus:ring-2 focus:ring-primary">
+<span class="material-symbols-outlined text-[24px]">arrow_back</span>
+</button>
+<h1 class="text-slate-900 dark:text-slate-100 text-lg font-bold leading-tight tracking-[-0.015em] flex-1 text-center pr-10">결제 완료</h1>
+</header>
+<main class="flex-1 flex flex-col overflow-y-auto">
+<!-- Success Animation/Icon Area -->
+<div class="flex flex-col px-6 py-10 items-center justify-center">
+<div class="w-24 h-24 rounded-full bg-primary/20 flex items-center justify-center mb-6 animate-pulse">
+<span class="material-symbols-outlined text-[48px] text-primary">check_circle</span>
+</div>
+<div class="flex flex-col items-center gap-2 text-center">
+<h2 class="text-slate-900 dark:text-slate-100 text-2xl font-bold leading-tight tracking-[-0.015em]">결제가 완료되었습니다</h2>
+<p class="text-slate-600 dark:text-slate-400 text-sm font-normal leading-relaxed">클린긱 프리미엄 서비스 예약이 정상적으로 처리되었습니다.</p>
+</div>
+</div>
+<!-- Transaction Details Card -->
+<div class="px-4 pb-6">
+<div class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 p-5">
+<h3 class="text-slate-900 dark:text-slate-100 text-base font-bold mb-4 border-b border-slate-100 dark:border-slate-800 pb-3">결제 정보</h3>
+<div class="space-y-4">
+<div class="flex justify-between items-center gap-x-4">
+<p class="text-slate-500 dark:text-slate-400 text-sm font-medium">결제 금액</p>
+<p class="text-primary text-lg font-bold">₩ 150,000</p>
+</div>
+<div class="flex justify-between items-center gap-x-4">
+<p class="text-slate-500 dark:text-slate-400 text-sm font-medium">서비스 공간</p>
+<p class="text-slate-900 dark:text-slate-100 text-sm font-semibold">깨끗한 오피스텔 (강남구)</p>
+</div>
+<div class="flex justify-between items-center gap-x-4">
+<p class="text-slate-500 dark:text-slate-400 text-sm font-medium">서비스 날짜</p>
+<p class="text-slate-900 dark:text-slate-100 text-sm font-semibold">2023년 10월 25일 14:00</p>
+</div>
+<div class="flex justify-between items-center gap-x-4">
+<p class="text-slate-500 dark:text-slate-400 text-sm font-medium">결제 수단</p>
+<p class="text-slate-900 dark:text-slate-100 text-sm font-semibold">신용카드 (**** 1234)</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Helpful Links/Info -->
+<div class="px-4 pb-8 flex justify-center">
+<button class="text-slate-500 dark:text-slate-400 text-sm flex items-center gap-1 hover:text-primary transition-colors focus:outline-none focus:ring-2 focus:ring-primary rounded px-2 py-1">
+<span class="material-symbols-outlined text-[18px]">receipt_long</span>
+                영수증 보기
+             </button>
+</div>
+</main>
+<!-- Bottom Action Button -->
+<footer class="p-4 bg-background-light dark:bg-background-dark border-t border-slate-200 dark:border-slate-800 sticky bottom-0 z-10 pb-8">
+<button class="w-full flex cursor-pointer items-center justify-center overflow-hidden rounded-xl h-14 bg-primary hover:bg-primary/90 text-white text-base font-bold leading-normal tracking-[0.015em] transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 dark:focus:ring-offset-background-dark shadow-sm">
+<span class="truncate">홈으로 이동</span>
+</button>
+</footer>
+</div>
+</body></html>

@@ -1,137 +1,103 @@
-'use client';
-
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client';
+import React from 'react';
+import { redirect } from 'next/navigation';
+import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
-import Header from '@/components/layout/Header';
-import BottomNav from '@/components/layout/BottomNav';
 
-export default function SpacesListPage() {
-  const router = useRouter();
-  const [spaces, setSpaces] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+const DEFAULT_IMAGES = [
+  "https://lh3.googleusercontent.com/aida-public/AB6AXuB3uDn4fhqpMAYj_CIzCXdhwuPcUwPe51jULnc4SZ2_huzrFhECeVJo7lGV9KxSoMQSAgQWmhyjayAENRLuBu7s3-x3fXAO1t0gNJdkIEcuIS4ePIm8QT78_FmvDeg3DOhylDeYDOdRJi2lFAFDc9mHTOzKLpUpWFt_1eAYXOnGkt6IXxpR_Ox9T7SweWVOlXL-KFpbxOYt9ojy_XyApXSjjwzE7QDqyeltgAoxzrUn2kGa7UJMiUQdJhtRb7HxZgInSoao8gtCvYs",
+  "https://lh3.googleusercontent.com/aida-public/AB6AXuAgt6s_pd-hQY0yrZWNlTNs3IJ09zlDuMg4mGrtfeaTktfiDVS_uKBuJ0cmrA4DTZTVenTaOkzq9n9IkHBnLuw20nBwBtNrEbF4bTOde2Fg63XMp59zIvoJQ5LIBEYC1Jqwr7rlFVsuOSxxyqZU_lGsQOCJS7kR3s2XiIjU5mAQ8FWvh9J_bq1fwbpuA4ndZ4f7dv1kPMDfCCU1T1px_eP6H4z2z4zNw-tqSEok5RmlV03uP0cKlVxMKQnL6--JGEuWUciBhq0l5I4",
+  "https://lh3.googleusercontent.com/aida-public/AB6AXuDFItccUc4HGU3uylR8put-DTeK4wZK0xCp02Af5VN1EX7Ez0OwyYPsreSjLveFz6nCFXfL7lBwDvNb1aOXsmPPN5MESQQNMOSKDNQmWM6KITFuKy9FI-0YyepoqTC4yYwYjeLXGVVHTMOd-PZ98cB6ALI939SWbQVgEmmzEB4offhoiejW-7ZUCLFys-De4ViZcWZwZ-cTd30zgRbvhnzUfdqZgrczXkwd5JT_oVgDXmtNB7qR1BiC1h4srs754um0qYANEzchtD8"
+];
 
-  useEffect(() => {
-    const fetchData = async () => {
-      const supabase = createClient();
-      const { data: { user: u } } = await supabase.auth.getUser();
-      if (!u) {
-        router.push('/login');
-        return;
-      }
+export default async function SpacesListPage() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
 
-      const { data: spaceData } = await supabase
-        .from('spaces')
-        .select('*')
-        .eq('operator_id', u.id)
-        .order('created_at', { ascending: false });
+  if (!user) {
+    redirect('/login');
+  }
 
-      if (spaceData) setSpaces(spaceData);
-      setLoading(false);
-    };
-    fetchData();
-  }, [router]);
+  const { data: spacesData } = await supabase
+    .from('spaces')
+    .select('*')
+    .eq('operator_id', user.id)
+    .order('created_at', { ascending: false });
 
-  const SPACE_TYPE_ICON: Record<string, string> = {
-    airbnb: '🏠', partyroom: '🎉', studio: '📸', gym: '💪',
-    unmanned_store: '🏪', study_cafe: '📚', other: '🏢'
-  };
-
-  if (loading) return <div className="loading">로딩 중...</div>;
+  const spaces = spacesData || [];
 
   return (
-    <div className="page-container bg-premium-v2">
-      <Header />
+    <div className="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen flex flex-col font-display antialiased max-w-md mx-auto relative overflow-hidden">
+      {/* Header */}
+      <header className="sticky top-0 z-10 flex items-center justify-between p-4 bg-background-light dark:bg-background-dark border-b border-slate-200 dark:border-slate-800">
+        <h1 className="text-xl font-bold tracking-tight">My Spaces</h1>
+        <Link href="/spaces/create" className="flex items-center gap-1 text-primary font-medium hover:text-primary/80 transition-colors">
+          <span className="material-symbols-outlined text-xl">add</span>
+          <span className="text-sm">새 공간 등록</span>
+        </Link>
+      </header>
 
-      <main className="page-content">
-        <section className="spaces-header">
-          <div className="flex justify-between items-end">
-            <div>
-              <h2 className="page-title">내 공간 관리</h2>
-              <p className="page-desc text-secondary">등록된 {spaces.length}개의 공간이 있습니다.</p>
-            </div>
-            <Link href="/spaces/create" className="btn-add-space">
-              <span className="plus">+</span> 등록하기
+      {/* Main Content */}
+      <main className="flex-1 p-4 space-y-4 overflow-y-auto pb-24">
+        {spaces.length === 0 ? (
+          <div className="bg-white dark:bg-slate-900 rounded-xl p-10 text-center flex flex-col items-center shadow-sm border border-slate-100 dark:border-slate-800">
+            <span className="material-symbols-outlined text-5xl text-slate-300 dark:text-slate-600 mb-4">domain</span>
+            <h3 className="text-lg font-bold mb-2">등록된 공간이 없습니다</h3>
+            <p className="text-sm text-slate-500 mb-6">첫 공간을 등록하고 프리미엄 청소 서비스를 만나보세요.</p>
+            <Link href="/spaces/create" className="bg-primary text-white px-5 py-3 rounded-xl font-bold hover:bg-primary/90 transition-colors shadow-sm">
+              공간 등록하기
             </Link>
           </div>
-        </section>
+        ) : (
+          spaces.map((space, index) => {
+            const bgImage = DEFAULT_IMAGES[index % DEFAULT_IMAGES.length];
+            // Format created_at or last_cleaned date if we had one
+            const dateObj = new Date(space.created_at);
+            const dateStr = `${dateObj.getFullYear()}.${String(dateObj.getMonth() + 1).padStart(2, '0')}.${String(dateObj.getDate()).padStart(2, '0')}`;
 
-        <section className="spaces-list-section">
-          {spaces.length === 0 ? (
-            <div className="empty-state-card card">
-              <div className="icon">🏢</div>
-              <h3>등록된 공간이 없습니다</h3>
-              <p>첫 공간을 등록하고 청소 전문가를 만나보세요.</p>
-              <Link href="/spaces/create" className="btn-premium btn-sm mt-md">공간 등록하기</Link>
-            </div>
-          ) : (
-            <div className="space-grid">
-              {spaces.map((space) => (
-                <Link href={`/spaces/${space.id}`} key={space.id} className="space-card-premium card">
-                  <div className="card-top">
-                    <div className="type-icon">
-                      {SPACE_TYPE_ICON[space.type] || '🏢'}
-                    </div>
-                    <div className="status-tag">
-                      <span className={`dot ${space.is_active ? 'active' : 'inactive'}`} />
-                      {space.is_active ? '운영 중' : '중단됨'}
+            return (
+              <Link href={`/spaces/${space.id}`} key={space.id} className="block group">
+                <article className="bg-white dark:bg-slate-900 rounded-xl p-4 shadow-sm border border-slate-100 dark:border-slate-800 flex gap-4 items-center hover:shadow-md transition-shadow">
+                  <div className="flex-1 space-y-2">
+                    <span className="inline-block px-2 py-1 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-xs font-medium rounded-full">
+                      {space.is_active ? '✅ 운영 중' : '⏸️ 중단됨'} · {dateStr} 등록
+                    </span>
+                    <div>
+                      <h2 className="text-lg font-bold text-slate-900 dark:text-white group-hover:text-primary transition-colors">{space.name}</h2>
+                      <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 flex items-center gap-1">
+                        <span className="material-symbols-outlined text-sm">location_on</span>
+                        {space.address || '주소 정보 없음'}
+                      </p>
                     </div>
                   </div>
-
-                  <div className="card-body">
-                    <h3 className="space-name">{space.name}</h3>
-                    <p className="space-address text-tertiary">{space.address}</p>
-                  </div>
-
-                  <div className="card-footer">
-                    <div className="meta">
-                      <span className="price">기본 ₩{space.base_price?.toLocaleString()}</span>
-                      <span className="divider">•</span>
-                      <span className="size">{space.size_sqm}㎡</span>
-                    </div>
-                    <span className="arrow-btn">›</span>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          )}
-        </section>
+                  <div className="w-24 h-24 rounded-lg bg-cover bg-center shrink-0 border border-slate-100 dark:border-slate-800" style={{ backgroundImage: `url('${bgImage}')` }}></div>
+                </article>
+              </Link>
+            );
+          })
+        )}
       </main>
 
-      <BottomNav />
-
-      <style jsx>{`
-        .bg-premium-v2 { background-color: var(--color-bg); min-height: 100vh; }
-        .page-content { padding: 24px 20px 120px; }
-        .spaces-header { margin-bottom: 24px; }
-        .page-title { font-size: 24px; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 4px; }
-        .page-desc { font-size: 14px; }
-        .btn-add-space { background: var(--color-primary); color: #FFF; padding: 10px 18px; border-radius: 14px; font-weight: 700; font-size: 14px; text-decoration: none; display: flex; align-items: center; gap: 6px; box-shadow: var(--shadow-sm); }
-        .btn-add-space .plus { font-size: 18px; }
-        .spaces-list-section { margin-top: 12px; }
-        .empty-state-card { padding: 60px 24px; text-align: center; display: flex; flex-direction: column; align-items: center; }
-        .empty-state-card .icon { font-size: 48px; margin-bottom: 16px; }
-        .empty-state-card h3 { font-size: 18px; font-weight: 800; margin-bottom: 8px; }
-        .empty-state-card p { font-size: 14px; color: var(--color-text-tertiary); margin-bottom: 24px; }
-        .space-grid { display: flex; flex-direction: column; gap: 16px; }
-        .space-card-premium { padding: 24px; text-decoration: none; display: block; }
-        .card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-        .type-icon { width: 48px; height: 48px; background: var(--color-bg); border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 24px; border: 1px solid var(--color-border-light); }
-        .status-tag { background: #FFFFFF; border: 1px solid var(--color-border-light); padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; display: flex; align-items: center; gap: 6px; color: var(--color-text-secondary); }
-        .dot { width: 6px; height: 6px; border-radius: 50%; }
-        .dot.active { background: #3182F6; }
-        .dot.inactive { background: #ADB5BD; }
-        .card-body { margin-bottom: 20px; }
-        .space-name { font-size: 18px; font-weight: 800; color: var(--color-text-primary); margin-bottom: 4px; }
-        .space-address { font-size: 13px; line-height: 1.4; color: var(--color-text-tertiary); }
-        .card-footer { display: flex; justify-content: space-between; align-items: center; padding-top: 16px; border-top: 1px solid var(--color-border-light); }
-        .meta { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: var(--color-text-secondary); }
-        .price { color: var(--color-primary); }
-        .divider { color: var(--color-border); }
-        .arrow-btn { font-size: 22px; color: var(--color-text-disabled); }
-        .loading { padding: 40px; text-align: center; }
-      `}</style>
+      {/* Bottom Navigation */}
+      <nav className="fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-md bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 pb-[env(safe-area-inset-bottom,20px)]">
+        <div className="flex justify-around items-center h-16">
+          <Link href="/dashboard" className="flex flex-col items-center justify-center w-full h-full text-slate-400 hover:text-primary transition-colors">
+            <span className="material-symbols-outlined text-2xl mb-1">home</span>
+            <span className="text-[10px] font-medium">Home</span>
+          </Link>
+          <Link href="/spaces" className="flex flex-col items-center justify-center w-full h-full text-primary">
+            <span className="material-symbols-outlined text-2xl mb-1" style={{ fontVariationSettings: "'FILL' 1" }}>apartment</span>
+            <span className="text-[10px] font-medium">Spaces</span>
+          </Link>
+          <Link href="/requests" className="flex flex-col items-center justify-center w-full h-full text-slate-400 hover:text-primary transition-colors">
+            <span className="material-symbols-outlined text-2xl mb-1">assignment</span>
+            <span className="text-[10px] font-medium">Requests</span>
+          </Link>
+          <Link href="/profile" className="flex flex-col items-center justify-center w-full h-full text-slate-400 hover:text-primary transition-colors">
+            <span className="material-symbols-outlined text-2xl mb-1">person</span>
+            <span className="text-[10px] font-medium">My</span>
+          </Link>
+        </div>
+      </nav>
     </div>
   );
 }

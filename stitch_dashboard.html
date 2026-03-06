@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+
+<html lang="ko"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Space Owner Dashboard - CleanGig Premium</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#355773",
+                        "background-light": "#F7F8F0",
+                        "background-dark": "#15191d",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="font-display bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 flex justify-center w-full antialiased h-screen overflow-hidden">
+<div class="relative flex h-full w-full max-w-md flex-col bg-background-light dark:bg-background-dark overflow-hidden pb-[72px]">
+<!-- Header -->
+<header class="flex items-center justify-between p-4 bg-background-light dark:bg-background-dark sticky top-0 z-10 border-b border-slate-200 dark:border-slate-800">
+<h2 class="text-xl font-bold tracking-tight">CleanGig Premium</h2>
+<button class="flex items-center justify-center p-2 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+</header>
+<!-- Main Content -->
+<main class="flex-1 overflow-y-auto px-4 py-6 space-y-6">
+<!-- Welcome Banner -->
+<div class="bg-primary text-white rounded-xl p-6 relative overflow-hidden shadow-sm">
+<div class="relative z-10">
+<h3 class="text-2xl font-bold mb-1">안녕하세요, 호스트님!</h3>
+<p class="text-primary-100 opacity-90 text-sm">오늘 1건의 청소가 진행 중입니다.</p>
+</div>
+<div class="absolute right-0 bottom-0 opacity-20 pointer-events-none transform translate-x-1/4 translate-y-1/4">
+<span class="material-symbols-outlined text-[120px]">cleaning_services</span>
+</div>
+</div>
+<!-- Stats -->
+<div class="grid grid-cols-2 gap-4">
+<div class="flex flex-col gap-1 rounded-xl bg-white dark:bg-slate-900 shadow-sm p-4 border border-slate-100 dark:border-slate-800 text-center">
+<p class="text-3xl font-bold text-primary dark:text-primary-light">3</p>
+<p class="text-slate-500 dark:text-slate-400 text-sm font-medium">등록된 공간</p>
+</div>
+<div class="flex flex-col gap-1 rounded-xl bg-white dark:bg-slate-900 shadow-sm p-4 border border-slate-100 dark:border-slate-800 text-center">
+<p class="text-3xl font-bold text-primary dark:text-primary-light">1</p>
+<p class="text-slate-500 dark:text-slate-400 text-sm font-medium">진행중인 요��</p>
+</div>
+</div>
+<!-- Active Requests -->
+<section>
+<div class="flex justify-between items-center mb-4">
+<h3 class="text-lg font-bold">진행중인 청소</h3>
+<a class="text-primary text-sm font-medium" href="#">전체보기</a>
+</div>
+<div class="space-y-3">
+<!-- Request Item -->
+<div class="flex gap-4 bg-white dark:bg-slate-900 p-4 rounded-xl shadow-sm border border-slate-100 dark:border-slate-800 items-center">
+<div class="w-16 h-16 rounded-lg bg-cover bg-center shrink-0 shadow-inner" data-alt="modern office space interior with bright light" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCwVTchqTlbyVjN1KOQKCGXmIt6I8o8bAzGJ8HEyiVDavk_umqwplPSJHc8WuIi-2VcWu8P5SumyILTkBswLF_sR6r-jUl1f4qqY1F-7lAtHGnMZTNXII1IM7OUxJ5PgQ3CBaRafmUee1WHK5zju11mxLVdaTUWobVt3JWbqwLXaBpRLO9p7AHQrUReQp8YifQAVXPBlxkIa0YvaaGL4e-VocYPLODdtZmRAvJltSDPPHZz1sy0zeKEOnW4NFzi6Xwr5170h1A5G0s');"></div>
+<div class="flex-1 min-w-0">
+<div class="flex items-center gap-2 mb-1">
+<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 border border-green-200 dark:border-green-800">청소 중</span>
+</div>
+<h4 class="font-bold text-base truncate">강남 오피스 B동</h4>
+<p class="text-slate-500 dark:text-slate-400 text-xs mt-0.5">오늘 오후 2:00 예약 · 클리너 배정완료</p>
+</div>
+</div>
+<!-- Pending Request Item -->
+<div class="flex gap-4 bg-white dark:bg-slate-900 p-4 rounded-xl shadow-sm border border-slate-100 dark:border-slate-800 items-center">
+<div class="w-16 h-16 rounded-lg bg-cover bg-center shrink-0 shadow-inner" data-alt="modern living room with comfortable sofa" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAFPQ6x8nwKugVztldkohNoud_zTQayzcUfEJbVUxboTn25En5q-jbN6B8KJmzKgJTQJANHbJgxxJY5D2wJraGuYo6hwunRunEhztpl6HB3j_gbPNqYfafWJEAZGqQoS_R9tJl5JpRApjARi8n_kNTYT30XrM_wanF60LnVu2qw1Tc2FtcALD4VX6gYMUzWWsi-1Mt2z3GViiXNTsw4aOexHu7_CKWzsuHgRDwrBm0vubV8QhPLQJK2SO3DkrwaStieszhsHrzFFiE');"></div>
+<div class="flex-1 min-w-0">
+<div class="flex items-center gap-2 mb-1">
+<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400 border border-orange-200 dark:border-orange-800">매칭 중</span>
+</div>
+<h4 class="font-bold text-base truncate">서초 레지던스 302호</h4>
+<p class="text-slate-500 dark:text-slate-400 text-xs mt-0.5">내일 오전 10:00 예약</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Quick Actions / Spaces -->
+<section class="pb-10">
+<div class="flex justify-between items-center mb-4">
+<h3 class="text-lg font-bold">내 공간</h3>
+</div>
+<div class="flex gap-3 overflow-x-auto pb-2 snap-x hide-scrollbar">
+<div class="min-w-[140px] h-[100px] bg-white dark:bg-slate-900 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 flex flex-col items-center justify-center gap-2 text-slate-500 dark:text-slate-400 snap-start cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+<span class="material-symbols-outlined text-2xl">add_business</span>
+<span class="text-sm font-medium">공간 추가</span>
+</div>
+<div class="min-w-[140px] h-[100px] bg-cover bg-center rounded-xl relative overflow-hidden snap-start group cursor-pointer" data-alt="modern office space interior" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDvUPL9hfGgn9F6g1TM4vcZwZg51COuHFtsdkcVhtPK9CYXq5I_1G1qm66L4AQUaKHPzg2IyXcjZNNLLTNbPUK_6hKvEPOQR1wptBSAgqZWz-k51AUkpuPc3Wob3_WSTuRM6RIdDlomzI4JYHrAqjc2BrSG28nthE1dF4rplWLN13tvXaoL2VUsm9ObPPqv9E7N5alMzdGxuOcSZWFiWe7K_4yOcd_ML-ayl2_Dv9KaQdgx7JB-zoD-N8pogT7_MxmQNz6fXdqID5Y');">
+<div class="absolute inset-0 bg-black/40 group-hover:bg-black/50 transition-colors"></div>
+<div class="absolute inset-0 p-3 flex flex-col justify-end text-white">
+<p class="font-bold text-sm truncate">강남 오피스 B동</p>
+<p class="text-xs opacity-80">오피스 · 50평</p>
+</div>
+</div>
+<div class="min-w-[140px] h-[100px] bg-cover bg-center rounded-xl relative overflow-hidden snap-start group cursor-pointer" data-alt="modern living room interior" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAJ2WuwR50Xo-L5mCYA2-guF51NEO21vmU5ahgWJydR4W8SlTdkHfKWvFWIeX8A-DzOwrkBu4cvvjVbXPeZMWLFWPpTkhQTnrXB49QF88rMjzaksUxUpmsXIG_eGlIycCLosA0sc_OxVpA6DXDgjBDvdPnf3Z6nScxDRjt9lfwNSohwLwO1h-jCj6s5XdDahP1VXv8z4iK9Y8TdbseC7A1e3DRnSupn5NSuUNE8684D08KNLd7-eB_HyNjk-17wl9zkWSxiqzKrXuM');">
+<div class="absolute inset-0 bg-black/40 group-hover:bg-black/50 transition-colors"></div>
+<div class="absolute inset-0 p-3 flex flex-col justify-end text-white">
+<p class="font-bold text-sm truncate">서초 레지던스</p>
+<p class="text-xs opacity-80">주거용 · 30평</p>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Floating Action Button -->
+<button class="absolute bottom-24 right-4 bg-primary text-white w-14 h-14 rounded-full shadow-lg flex items-center justify-center hover:bg-primary/90 transition-transform active:scale-95 z-20">
+<span class="material-symbols-outlined text-3xl">add</span>
+</button>
+<!-- Bottom Navigation -->
+<nav class="absolute bottom-0 w-full flex border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 pb-safe z-30">
+<a class="flex flex-1 flex-col items-center justify-center gap-1 py-3 text-primary dark:text-primary-light" href="#">
+<span class="material-symbols-outlined text-2xl" style="font-variation-settings: 'FILL' 1">home</span>
+<span class="text-[10px] font-bold">홈</span>
+</a>
+<a class="flex flex-1 flex-col items-center justify-center gap-1 py-3 text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-primary-light transition-colors" href="#">
+<span class="material-symbols-outlined text-2xl">door_open</span>
+<span class="text-[10px] font-medium">공간</span>
+</a>
+<a class="flex flex-1 flex-col items-center justify-center gap-1 py-3 text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-primary-light transition-colors" href="#">
+<span class="material-symbols-outlined text-2xl">assignment</span>
+<span class="text-[10px] font-medium">요청</span>
+</a>
+<a class="flex flex-1 flex-col items-center justify-center gap-1 py-3 text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-primary-light transition-colors" href="#">
+<span class="material-symbols-outlined text-2xl">person</span>
+<span class="text-[10px] font-medium">마이</span>
+</a>
+</nav>
+</div>
+<style>
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .pb-safe {
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+    </style>
+</body></html>

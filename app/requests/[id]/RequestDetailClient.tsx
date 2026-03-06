@@ -7,17 +7,17 @@ import { useRouter } from 'next/navigation'
 import PaymentModal from '@/components/common/PaymentModal'
 import SecureImage from '@/components/common/SecureImage'
 
-const STATUS_MAP: Record<string, { label: string; cls: string; desc: string }> = {
-    OPEN: { label: '매칭 중', cls: 'badge-open', desc: 'AI가 클린파트너를 찾고 있어요' },
-    ASSIGNED: { label: '배정 완료', cls: 'badge-assigned', desc: '클린파트너가 배정됐어요' },
-    EN_ROUTE: { label: '이동 중', cls: 'badge-assigned', desc: '클린파트너가 이동 중이에요' },
-    ARRIVED: { label: '도착', cls: 'badge-assigned', desc: '클린파트너가 도착했어요' },
-    IN_PROGRESS: { label: '청소 중', cls: 'badge-progress', desc: '청소가 진행 중이에요' },
-    SUBMITᆫ: { label: '검수 대기', cls: 'badge-submitted', desc: 'AI가 사진을 검수 중이에요' },
-    APPROVED: { label: '승인 완료', cls: 'badge-approved', desc: '청소가 완료됐어요! 정산 처리 중' },
-    DISPUTED: { label: '분쟁 중', cls: 'badge-disputed', desc: '' },
-    PAID_OUT: { label: '정산 완료', cls: 'badge-paid', desc: '정산이 완료됐어요' },
-    CANCELED: { label: '취소', cls: '', desc: '' },
+const STATUS_MAP: Record<string, { label: string; bgCls: string; textCls: string; desc: string }> = {
+    OPEN: { label: '매칭 중', bgCls: 'bg-primary-light/20', textCls: 'text-primary', desc: 'AI가 클린파트너를 찾고 있어요' },
+    ASSIGNED: { label: '배정 완료', bgCls: 'bg-emerald-100 dark:bg-emerald-900/30', textCls: 'text-emerald-700 dark:text-emerald-400', desc: '클린파트너가 배정됐어요' },
+    EN_ROUTE: { label: '이동 중', bgCls: 'bg-emerald-100 dark:bg-emerald-900/30', textCls: 'text-emerald-700 dark:text-emerald-400', desc: '클린파트너가 이동 중이에요' },
+    ARRIVED: { label: '도착', bgCls: 'bg-emerald-100 dark:bg-emerald-900/30', textCls: 'text-emerald-700 dark:text-emerald-400', desc: '클린파트너가 도착했어요' },
+    IN_PROGRESS: { label: '청소 중', bgCls: 'bg-blue-100 dark:bg-blue-900/30', textCls: 'text-blue-700 dark:text-blue-400', desc: '청소가 진행 중이에요' },
+    SUBMITTED: { label: '검수 대기', bgCls: 'bg-purple-100 dark:bg-purple-900/30', textCls: 'text-purple-700 dark:text-purple-400', desc: 'AI가 사진을 검수 중이에요' },
+    APPROVED: { label: '승인 완료', bgCls: 'bg-green-100 dark:bg-green-900/30', textCls: 'text-green-700 dark:text-green-400', desc: '청소가 완료됐어요! 정산 처리 중' },
+    DISPUTED: { label: '분쟁 중', bgCls: 'bg-red-100 dark:bg-red-900/30', textCls: 'text-red-700 dark:text-red-400', desc: '' },
+    PAID_OUT: { label: '정산 완료', bgCls: 'bg-gray-100 dark:bg-gray-800', textCls: 'text-gray-700 dark:text-gray-300', desc: '정산이 완료됐어요' },
+    CANCELED: { label: '취소', bgCls: 'bg-gray-100 dark:bg-gray-800', textCls: 'text-gray-500 dark:text-gray-400', desc: '' },
 }
 
 interface Props {
@@ -45,13 +45,12 @@ export default function RequestDetailClient({ job, photos, payment, applications
     const [paymentContext, setPaymentContext] = useState<'accept' | 'extra'>('accept')
     const [selectedApp, setSelectedApp] = useState<{ appId: string, workerId: string } | null>(null)
 
-    const st = STATUS_MAP[job.status] || { label: job.status, cls: '', desc: '' }
+    const st = STATUS_MAP[job.status] || { label: job.status, bgCls: 'bg-gray-100', textCls: 'text-gray-700', desc: '' }
     const space = job.spaces
     const worker = job.users
     const isOperator = job.operator_id === userId
     const afterPhotos = photos.filter((p: any) => p.type === 'after')
 
-    // 공간파트너: 수동 승인
     const handleApproveBtnClick = () => {
         if (job.extra_charge_amount > 0) {
             setPaymentContext('extra')
@@ -67,7 +66,6 @@ export default function RequestDetailClient({ job, photos, payment, applications
         const supabase = createClient()
         await supabase.from('jobs').update({ status: 'APPROVED', auto_approved: false }).eq('id', job.id)
 
-        // 작업자에게 실시간 알림 발송
         const { error: notifyError } = await supabase.rpc('notify_user', {
             p_user_id: job.worker_id,
             p_title: '💰 정산 완료 안내',
@@ -85,17 +83,12 @@ export default function RequestDetailClient({ job, photos, payment, applications
         setApproving(false)
     }
 
-    // 공간파트너: 지원자 선발 클릭
     const handleAcceptBtnClick = (appId: string, workerId: string) => {
         setSelectedApp({ appId, workerId })
         setPaymentContext('accept')
         setPaymentModalOpen(true)
     }
 
-    // 결제 관련 로직은 토스페이먼츠 연동(Redirect) 후 `/payment/success`에서 처리되므로
-    // 기존 가상 결제 성공 콜백(handlePaymentSuccess) 로직은 success 페이지로 이관되었습니다.
-
-    // 분쟁 신고
     const handleDispute = async () => {
         if (!disputeReason.trim()) return
         const supabase = createClient()
@@ -108,7 +101,6 @@ export default function RequestDetailClient({ job, photos, payment, applications
         router.refresh()
     }
 
-    // 단골 파트너 토글
     const handleToggleFavorite = async () => {
         if (!worker) return
         setTogglingFav(true)
@@ -127,7 +119,6 @@ export default function RequestDetailClient({ job, photos, payment, applications
         setTogglingFav(false)
     }
 
-    // 리뷰 제출
     const handleSubmitReview = async () => {
         if (!worker) return
         setSubmittingReview(true)
@@ -151,217 +142,253 @@ export default function RequestDetailClient({ job, photos, payment, applications
     }
 
     return (
-        <div className="page-container">
-            <header className="detail-header">
-                <button onClick={() => router.back()} className="back-btn">←</button>
-                <h1 className="detail-title">청소 요청 상세</h1>
-                <div style={{ width: 40 }} />
-            </header>
+        <div className="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display min-h-screen antialiased flex flex-col mx-auto max-w-md w-full relative">
+            <div className="sticky top-0 z-20 flex items-center bg-background-light dark:bg-background-dark p-4 justify-between border-b border-primary/10">
+                <button onClick={() => router.back()} className="flex size-12 shrink-0 items-center justify-center text-slate-900 dark:text-slate-100 focus:outline-none">
+                    <span className="material-symbols-outlined text-2xl">arrow_back</span>
+                </button>
+                <h2 className="text-lg font-bold leading-tight tracking-tight flex-1 text-center pr-12">청소 요청 상세</h2>
+            </div>
 
-            <div className="page-content">
-                {/* 상태 카드 */}
-                <div className="status-card card">
-                    <div className="status-card-top">
-                        <div>
-                            <h2 className="status-space">{space?.name}</h2>
-                            <p className="status-addr text-sm text-secondary">{space?.address}</p>
-                        </div>
-                        <span className={`badge ${st.cls}`}>{st.label}</span>
-                    </div>
-                    {st.desc && <p className="status-desc">{st.desc}</p>}
-                    <div className="status-meta">
-                        <span>⏰ {new Date(job.scheduled_at).toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
-                        <span className="text-primary font-bold">₩{job.price.toLocaleString()}</span>
-                    </div>
-                </div>
-
-                {/* 이동 중(EN_ROUTE) 안심 모니터링 패널 */}
-                {job.status === 'EN_ROUTE' && isOperator && (
-                    <div className="card mb-md p-md" style={{ background: '#F0F9FF', border: '1px solid #BAE6FD' }}>
-                        <div className="flex items-start gap-sm">
-                            <span style={{ fontSize: 24 }}>🚗</span>
+            <main className="flex-1 overflow-y-auto pb-32">
+                <div className="p-4 flex flex-col gap-4">
+                    {/* 상태 카드 */}
+                    <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+                        <div className="p-4 flex justify-between items-start">
                             <div>
-                                <h3 className="font-bold mb-xs" style={{ color: '#0369A1', fontSize: 15 }}>클린파트너가 이동 중입니다</h3>
-                                <p className="text-sm" style={{ color: '#0284C7', marginBottom: 12 }}>
-                                    클린파트너가 현장으로 출발했습니다. 지도 상의 이동 동선(ETA) 추적 기능은 추후 정식 연동될 예정입니다.
+                                <h2 className="text-[20px] font-bold tracking-tight">{space?.name}</h2>
+                                <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">{space?.address}</p>
+                            </div>
+                            <span className={`px-2.5 py-1 rounded-md text-xs font-bold leading-tight ${st.bgCls} ${st.textCls}`}>
+                                {st.label}
+                            </span>
+                        </div>
+                        {st.desc && (
+                            <div className="bg-slate-50 dark:bg-slate-800/50 px-4 py-3 text-sm text-slate-600 dark:text-slate-400 border-t border-b border-slate-100 dark:border-slate-700">
+                                {st.desc}
+                            </div>
+                        )}
+                        <div className="p-4 flex justify-between items-center text-sm font-medium border-t border-slate-100 dark:border-slate-700">
+                            <span className="flex items-center gap-1 text-slate-600 dark:text-slate-300">
+                                <span className="material-symbols-outlined text-base">calendar_today</span>
+                                {new Date(job.scheduled_at).toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                            </span>
+                            <span className="text-primary font-bold text-base">₩{job.price.toLocaleString()}</span>
+                        </div>
+                    </div>
+
+                    {/* 이동 중 패널 */}
+                    {job.status === 'EN_ROUTE' && isOperator && (
+                        <div className="bg-sky-50 dark:bg-sky-900/20 border border-sky-200 dark:border-sky-800 p-4 rounded-xl flex items-start gap-4">
+                            <span className="text-3xl">🚗</span>
+                            <div>
+                                <h3 className="font-bold text-sky-700 dark:text-sky-400 mb-1">클린파트너가 이동 중입니다</h3>
+                                <p className="text-xs text-sky-600 dark:text-sky-300 mb-3 leading-relaxed">
+                                    클린파트너가 현장으로 출발했습니다. 지도 상의 이동 동선(ETA) 기능은 추후 연동됩니다.
                                 </p>
-                                <div className="flex items-center gap-xs text-xs font-bold" style={{ color: '#0369A1', background: '#E0F2FE', padding: '6px 12px', borderRadius: 12, display: 'inline-flex' }}>
-                                    <span className="spinner" style={{ width: 12, height: 12, borderWidth: 2, borderColor: '#0369A1', borderRightColor: 'transparent' }} />
-                                    도착 예정 시간(ETA): 약 15~20분
+                                <div className="inline-flex items-center gap-2 text-[11px] font-bold text-sky-700 dark:text-sky-300 bg-sky-100 dark:bg-sky-800/50 px-3 py-1.5 rounded-full">
+                                    <div className="w-3 h-3 border-2 border-sky-500 border-t-transparent rounded-full animate-spin" />
+                                    도착 예정 시간: 약 15~20분
                                 </div>
                             </div>
                         </div>
-                    </div>
-                )}
+                    )}
 
-                {/* 클린파트너 정보 */}
-                {worker ? (
-                    <div className="worker-card card">
-                        <div className="worker-info" style={{ width: '100%', justifyContent: 'space-between' }}>
-                            <div className="flex gap-md items-center">
-                                <div className="avatar avatar-md" style={{ background: 'var(--color-primary)' }}>{worker.name?.[0]}</div>
-                                <div>
-                                    <div className="worker-name">{worker.name}</div>
-                                    <div className="text-sm text-secondary">
-                                        <span style={{ color: '#E11D48', fontWeight: 800 }}>{worker.manner_temperature || 36.5}°C</span> · ⭐ {worker.avg_rating?.toFixed(1) || '-'} · {worker.tier}
+                    {/* 클린파트너 정보 */}
+                    {worker ? (
+                        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4 flex justify-between items-center">
+                            <div className="flex gap-3 items-center">
+                                <div className="w-12 h-12 rounded-full bg-primary text-white flex items-center justify-center font-bold text-lg">
+                                    {worker.name?.[0]}
+                                </div>
+                                <div className="flex flex-col">
+                                    <div className="font-bold text-base">{worker.name}</div>
+                                    <div className="flex items-center text-xs font-medium mt-1">
+                                        <span className="text-rose-500 font-bold mr-2 flex items-center gap-0.5"><span className="material-symbols-outlined text-[14px]">device_thermostat</span>{worker.manner_temperature || 36.5}°C</span>
+                                        <span className="text-amber-500 flex items-center gap-0.5 mr-2"><span className="material-symbols-outlined text-[14px]">star</span>{worker.avg_rating?.toFixed(1) || '-'}</span>
+                                        <span className="text-slate-500">{worker.tier}</span>
                                     </div>
                                 </div>
                             </div>
                             <button
                                 onClick={handleToggleFavorite}
                                 disabled={togglingFav}
-                                style={{
-                                    background: isFavorite ? '#FEF2F2' : 'var(--color-surface)',
-                                    color: isFavorite ? '#DC2626' : 'var(--color-text-secondary)',
-                                    border: `1px solid ${isFavorite ? '#FCA5A5' : 'var(--color-border)'}`,
-                                    padding: '6px 12px', borderRadius: 20, fontSize: 13, fontWeight: 700,
-                                    display: 'flex', alignItems: 'center', gap: 4, transition: 'all .2s'
-                                }}
+                                className={`text-[11px] font-bold px-3 py-1.5 rounded-full border transition-colors flex items-center gap-1 ${isFavorite ? 'bg-rose-50 text-rose-600 border-rose-200 dark:bg-rose-900/30 dark:border-rose-800' : 'bg-white text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700'}`}
                             >
                                 {isFavorite ? '💖 단골 파트너' : '🤍 단골로 등록'}
                             </button>
                         </div>
-                    </div>
-                ) : job.status === 'OPEN' && (
-                    <div className="applications-section mb-md">
-                        <div className="flex items-center justify-between mb-sm pr-md">
-                            <h3 className="section-label mb-none">현재 지원자 현황</h3>
-                            <span className="text-primary text-sm font-bold">{applications.length}명 지원중</span>
-                        </div>
-                        {applications.length === 0 ? (
-                            <div className="card p-md text-center text-sm text-secondary bg-gray-50 mb-md" style={{ background: 'var(--color-surface)' }}>
-                                아직 지원한 클린파트너가 없습니다.<br />조금만 더 기다려주세요!
-                            </div>
-                        ) : (
-                            <div className="flex flex-col gap-sm">
-                                {applications.map((app: any) => (
-                                    <div key={app.id} className="card p-md" style={{ border: '1px solid var(--color-border)' }}>
-                                        <div className="flex justify-between items-start mb-sm">
-                                            <div className="flex gap-sm items-center">
-                                                <div className="avatar avatar-md bg-blue-100 text-primary font-bold">
-                                                    {app.users?.name?.[0] || 'C'}
-                                                </div>
-                                                <div>
-                                                    <div className="font-bold flex items-center gap-xs">
-                                                        {app.users?.name || '익명 파트너'}
-                                                        <span className="badge" style={{ fontSize: 10, padding: '2px 6px', background: 'var(--color-bg)', color: 'var(--color-text-secondary)' }}>
-                                                            {app.users?.tier || 'NEW'}
-                                                        </span>
-                                                    </div>
-                                                    <div className="text-xs text-secondary mt-1">
-                                                        ⭐ {app.users?.avg_rating?.toFixed(1) || '신규'} · 성공 {app.users?.jobs_completed || 0}회
-                                                    </div>
-                                                </div>
+                    ) : job.status === 'OPEN' && (
+                        /* 지원자 리뷰 UI - Stitch App 적용 */
+                        <div className="mt-2">
+                            <h3 className="text-[17px] font-bold leading-tight tracking-[-0.015em] mb-4 text-slate-900 dark:text-slate-100 flex items-center justify-between">
+                                지원한 파트너 <span className="text-primary text-sm bg-primary-light/20 px-2.5 py-0.5 rounded-full">{applications.length}</span>
+                            </h3>
+
+                            {applications.length === 0 ? (
+                                <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-8 text-center text-slate-500 dark:text-slate-400 text-sm">
+                                    <span className="material-symbols-outlined text-4xl mb-2 opacity-50">hourglass_empty</span>
+                                    <br />아직 지원한 클린파트너가 없습니다.<br />잠시만 기다려주세요!
+                                </div>
+                            ) : (
+                                <div className="flex flex-col gap-3">
+                                    {applications.map((app: any) => (
+                                        <div key={app.id} className="flex gap-4 bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
+                                            <div className="bg-primary/10 text-primary aspect-square rounded-full h-[56px] w-[56px] shrink-0 flex items-center justify-center font-bold text-xl">
+                                                {app.users?.name?.[0] || 'C'}
                                             </div>
-                                            <button
-                                                className="btn btn-primary btn-sm px-md"
-                                                onClick={() => handleAcceptBtnClick(app.id, app.worker_id)}
-                                                disabled={approving}
-                                            >
-                                                선택하기
-                                            </button>
+                                            <div className="flex flex-1 flex-col justify-center">
+                                                <div className="flex justify-between items-start mb-1">
+                                                    <div>
+                                                        <p className="text-[15px] font-bold leading-normal flex items-center gap-1">
+                                                            {app.users?.name || '익명 파트너'}
+                                                            <span className="text-[10px] bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 px-1.5 py-0.5 rounded">{app.users?.tier || 'NEW'}</span>
+                                                        </p>
+                                                        <div className="flex items-center text-xs font-medium mt-1">
+                                                            <span className="text-amber-500 flex items-center gap-0.5"><span className="material-symbols-outlined text-[14px]">star</span> {app.users?.avg_rating?.toFixed(1) || '신규'}</span>
+                                                            <span className="text-slate-500 dark:text-slate-400 ml-2 font-normal">성공 {app.users?.jobs_completed || 0}회</span>
+                                                        </div>
+                                                    </div>
+                                                    <button
+                                                        onClick={() => handleAcceptBtnClick(app.id, app.worker_id)}
+                                                        disabled={approving}
+                                                        className="flex h-8 items-center justify-center rounded-lg px-4 bg-primary text-white text-[13px] font-bold transition-colors hover:bg-primary/90 shadow-sm active:scale-95"
+                                                    >
+                                                        선택하기
+                                                    </button>
+                                                </div>
+                                                {app.message ? (
+                                                    <p className="text-slate-600 dark:text-slate-300 text-xs font-normal leading-snug line-clamp-2 mt-2 bg-slate-50 dark:bg-slate-800/50 p-2 rounded-lg italic">
+                                                        "{app.message}"
+                                                    </p>
+                                                ) : (
+                                                    <p className="text-slate-400 dark:text-slate-500 text-xs mt-2 italic">인사말이 없습니다.</p>
+                                                )}
+                                            </div>
                                         </div>
-                                        {app.message && (
-                                            <div className="text-sm mt-sm p-sm" style={{ background: 'var(--color-bg)', borderRadius: 8 }}>
-                                                "{app.message}"
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {/* 부족한 비품 */}
+                    {(job.supply_shortages as string[])?.length > 0 && (
+                        <div className="bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-800 p-4 rounded-xl mt-2">
+                            <h3 className="font-bold text-rose-600 dark:text-rose-400 text-sm mb-1 flex items-center gap-1"><span className="material-symbols-outlined text-base">warning</span> 보충이 필요한 비품</h3>
+                            <p className="text-xs text-rose-600/80 mb-3">클린파트너가 다음 비품이 현장에 부족하다고 보고했습니다.</p>
+                            <div className="flex gap-2 flex-wrap mb-3">
+                                {(job.supply_shortages as string[]).map((item, idx) => (
+                                    <span key={idx} className="bg-rose-100 dark:bg-rose-800 text-rose-700 dark:text-rose-200 px-3 py-1 rounded-full text-xs font-bold border border-rose-200 dark:border-rose-700">
+                                        {item}
+                                    </span>
+                                ))}
+                            </div>
+                            <button
+                                onClick={() => alert('장바구니 연동 준비 중입니다.')}
+                                className="w-full h-10 bg-white dark:bg-slate-800 border border-rose-300 dark:border-rose-700 text-rose-600 dark:text-rose-400 rounded-lg text-xs font-bold flex items-center justify-center gap-1 shadow-sm transition-colors hover:bg-rose-50 dark:hover:bg-slate-700"
+                            >
+                                <span className="material-symbols-outlined text-[16px]">shopping_cart</span> 바로 구매하기 (준비 중)
+                            </button>
+                        </div>
+                    )}
+
+                    {/* 추가 요금 청구 */}
+                    {job.extra_charge_amount > 0 && (
+                        <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 p-4 rounded-xl mt-2">
+                            <h3 className="font-bold text-amber-700 dark:text-amber-500 text-sm mb-2 flex items-center gap-1"><span className="material-symbols-outlined text-base">payments</span> 현장 오염도 추가 청구</h3>
+                            <div className="flex justify-between items-center mb-2">
+                                <span className="text-xs font-bold text-amber-800 dark:text-amber-400">추가 청구 금액</span>
+                                <span className="font-bold text-base text-amber-600 dark:text-amber-500">+{job.extra_charge_amount.toLocaleString()}원</span>
+                            </div>
+                            <div className="bg-white dark:bg-slate-800 p-3 rounded-lg border border-amber-100 dark:border-amber-900/50 text-xs text-slate-600 dark:text-slate-300">
+                                <span className="font-bold text-slate-800 dark:text-slate-200">청구 사유:</span> {job.extra_charge_reason}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* 청소 완료 사진 */}
+                    {afterPhotos.length > 0 && (
+                        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4 mt-2">
+                            <h3 className="text-[15px] font-bold mb-3 flex items-center gap-1"><span className="material-symbols-outlined text-[18px]">photo_camera</span>청소 완료 사진 ({afterPhotos.length}장)</h3>
+                            <div className="grid grid-cols-3 gap-2">
+                                {afterPhotos.map((p: any) => (
+                                    <div key={p.id} className="relative aspect-square rounded-lg overflow-hidden bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
+                                        <SecureImage srcOrPath={p.photo_url} className="w-full h-full object-cover" />
+                                        {p.ai_quality_score && (
+                                            <div className={`absolute bottom-1 right-1 px-1.5 py-0.5 rounded-md text-[9px] font-bold text-white shadow-sm flex items-center gap-0.5 ${p.ai_quality_score >= 80 ? 'bg-primary' : 'bg-orange-500'}`}>
+                                                <span className="material-symbols-outlined text-[10px]">smart_toy</span> {p.ai_quality_score}점
                                             </div>
                                         )}
                                     </div>
                                 ))}
                             </div>
-                        )}
-                    </div>
-                )}
-
-                {/* 부족한 비품 (있을 경우에만 노출) */}
-                {(job.supply_shortages as string[])?.length > 0 && (
-                    <div className="card mb-md" style={{ padding: 'var(--spacing-md)', border: '1px solid #FCA5A5', background: '#FEF2F2' }}>
-                        <h3 className="font-bold text-md mb-xs" style={{ color: '#DC2626' }}>🚨 보충이 필요한 비품</h3>
-                        <p className="text-sm text-secondary mb-sm" style={{ color: '#991B1B' }}>클린파트너가 다음 비품이 현장에 부족하다고 보고했습니다.</p>
-                        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                            {(job.supply_shortages as string[]).map((item, idx) => (
-                                <span key={idx} style={{ background: '#DC2626', color: '#fff', padding: '4px 10px', borderRadius: 20, fontSize: 13, fontWeight: 700 }}>
-                                    {item}
-                                </span>
-                            ))}
                         </div>
-                        <div className="mt-md" style={{ borderTop: '1px dashed #FCA5A5', paddingTop: 12 }}>
-                            <button
-                                className="btn btn-full btn-sm"
-                                style={{ background: '#fff', color: '#DC2626', border: '1px solid #FCA5A5', fontWeight: 700 }}
-                                onClick={() => alert('🛒 추후 비품 커머스 플랫폼이 연동되면 이 버튼을 통해 쿠팡/B2B 식자재몰 등에서 원클릭으로 구매 및 배송 지시가 가능해집니다!')}
-                            >
-                                🚀 부족한 비품 바로 구매하기 (준비 중)
-                            </button>
-                        </div>
-                    </div>
-                )}
+                    )}
 
-                {/* 추가 요금 청구 내역 */}
-                {job.extra_charge_amount > 0 && (
-                    <div className="card mb-md p-md" style={{ border: '1px solid #D97706', background: '#FEF3C7' }}>
-                        <h3 className="font-bold text-md mb-xs" style={{ color: '#B45309' }}>💸 현장 오염도 추가 청구</h3>
-                        <div className="flex justify-between items-center mb-sm">
-                            <span className="text-sm font-bold" style={{ color: '#92400E' }}>추가 청구 금액</span>
-                            <span className="font-bold text-lg text-primary">+{job.extra_charge_amount.toLocaleString()}원</span>
-                        </div>
-                        <p className="text-sm text-secondary p-sm bg-white rounded-md border border-yellow-200">
-                            <strong>사유:</strong> {job.extra_charge_reason}
-                        </p>
-                    </div>
-                )}
-
-                {/* 청소 완료 사진 */}
-                {afterPhotos.length > 0 && (
-                    <div className="photos-section">
-                        <h3 className="section-label">청소 완료 사진 ({afterPhotos.length}장)</h3>
-                        <div className="photo-grid">
-                            {afterPhotos.map((p: any) => (
-                                <div key={p.id} className="photo-wrapper">
-                                    <SecureImage srcOrPath={p.photo_url} className="photo-thumb" />
-                                    {p.ai_quality_score && (
-                                        <div className="ai-score" style={{ background: p.ai_quality_score >= 80 ? 'var(--color-primary)' : 'var(--color-orange)' }}>
-                                            AI {p.ai_quality_score}점
-                                        </div>
-                                    )}
+                    {/* 정산 정보 */}
+                    {payment && (
+                        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4 mt-2">
+                            <h3 className="text-[15px] font-bold mb-4 flex items-center gap-1"><span className="material-symbols-outlined text-[18px]">receipt_long</span>정산 내역</h3>
+                            <div className="flex flex-col gap-2.5 text-sm">
+                                <div className="flex justify-between items-center text-slate-600 dark:text-slate-300">
+                                    <span>기본 청소 금액</span>
+                                    <span className="font-medium text-slate-900 dark:text-slate-100">₩{job.price.toLocaleString()}</span>
                                 </div>
-                            ))}
+                                {job.extra_charge_amount > 0 && (
+                                    <div className="flex justify-between items-center text-amber-600 dark:text-amber-500 font-medium">
+                                        <span>추가 청구 금액</span>
+                                        <span>+₩{job.extra_charge_amount.toLocaleString()}</span>
+                                    </div>
+                                )}
+                                <div className="w-full h-px bg-slate-100 dark:bg-slate-700 my-1"></div>
+                                <div className="flex justify-between items-center font-bold text-slate-900 dark:text-slate-100">
+                                    <span>총 청구 금액</span>
+                                    <span>₩{(job.price + (job.extra_charge_amount || 0)).toLocaleString()}</span>
+                                </div>
+                                <div className="flex justify-between items-center text-xs text-slate-500 mt-1">
+                                    <span>플랫폼 수수료 (10%)</span>
+                                    <span>-₩{payment.platform_fee.toLocaleString()}</span>
+                                </div>
+                                <div className="flex justify-between items-center text-xs text-slate-500">
+                                    <span>원천징수 (3.3%)</span>
+                                    <span>-₩{payment.withholding_tax.toLocaleString()}</span>
+                                </div>
+                                <div className="w-full border-t border-dashed border-slate-200 dark:border-slate-700 my-1"></div>
+                                <div className="flex justify-between items-center font-bold text-primary mt-1">
+                                    <span>클린파트너 최종 수령액</span>
+                                    <span className="text-[17px]">₩{payment.worker_payout.toLocaleString()}</span>
+                                </div>
+                                <div className="flex justify-between items-center text-xs text-slate-500 mt-2 bg-slate-50 dark:bg-slate-800/50 p-2 rounded-lg border border-slate-100 dark:border-slate-700">
+                                    <span>정산 상태</span>
+                                    <span className={`px-2 py-0.5 border rounded-full font-bold ${payment.status === 'RELEASED' ? 'border-primary/30 text-primary bg-primary-light/10' : 'border-slate-300 dark:border-slate-600'}`}>{payment.status === 'HELD' ? '입금 대기 중' : payment.status === 'RELEASED' ? '정산 완료 (입금 확인)' : payment.status}</span>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                )}
-
-                {/* 정산 정보 */}
-                {payment && (
-                    <div className="payment-card card">
-                        <h3 className="section-label">정산 내역</h3>
-                        <div className="payment-rows">
-                            <div className="payment-row"><span>기본 청소 금액</span><span>₩{job.price.toLocaleString()}</span></div>
-                            {job.extra_charge_amount > 0 && (
-                                <div className="payment-row text-primary font-bold"><span>추가 청구 금액</span><span>+₩{job.extra_charge_amount.toLocaleString()}</span></div>
-                            )}
-                            <div className="divider" />
-                            <div className="payment-row"><span>총 청구 금액</span><span>₩{(job.price + (job.extra_charge_amount || 0)).toLocaleString()}</span></div>
-                            <div className="payment-row text-secondary text-sm"><span>플랫폼 수수료 (10%)</span><span>-₩{payment.platform_fee.toLocaleString()}</span></div>
-                            <div className="payment-row text-secondary text-sm"><span>원천징수 (3.3%)</span><span>-₩{payment.withholding_tax.toLocaleString()}</span></div>
-                            <div className="divider" />
-                            <div className="payment-row font-bold text-primary"><span>클린파트너 최종 수령액</span><span>₩{payment.worker_payout.toLocaleString()}</span></div>
-                            <div className="payment-row text-sm text-secondary"><span>상태</span><span className={`badge ${payment.status === 'RELEASED' ? 'badge-approved' : 'badge-open'}`}>{payment.status === 'HELD' ? '입금 대기' : payment.status === 'RELEASED' ? '입금 완료' : payment.status}</span></div>
-                        </div>
-                    </div>
-                )}
+                    )}
+                </div>
 
                 {/* 공간파트너 액션: 검수 대기 */}
                 {isOperator && job.status === 'SUBMITTED' && (
-                    <div className="action-section">
-                        <p className="text-sm text-secondary mb-md">
-                            {job.auto_approved ? '✅ AI가 자동 검수 완료했어요.' : '📸 청소 사진을 확인하고 승인해주세요.'}
-                        </p>
-                        <div className="action-btns">
-                            <button className="btn btn-primary btn-full" onClick={handleApproveBtnClick} disabled={approving} id="approve-btn">
-                                {approving ? <span className="spinner" /> : '✅ 청소 승인'}
+                    <div className="px-4 pb-6 mt-4">
+                        <div className="bg-primary-light/10 border border-primary/20 p-4 rounded-xl text-center mb-4">
+                            <span className="material-symbols-outlined text-primary text-3xl mb-1">flaky</span>
+                            <p className="text-sm text-primary font-medium">
+                                {job.auto_approved ? 'AI가 1차 검수를 완료했어요.' : '청소 사진을 확인하고 승인해주세요.'}
+                            </p>
+                        </div>
+                        <div className="flex flex-col gap-3">
+                            <button
+                                className="w-full h-14 bg-primary text-white rounded-xl font-bold text-[15px] flex items-center justify-center hover:bg-primary/95 transition-all shadow-md active:scale-95 disabled:opacity-50"
+                                onClick={handleApproveBtnClick} disabled={approving}
+                            >
+                                {approving ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> : '✅ 청소 최종 승인하기'}
                             </button>
-                            <button className="btn btn-secondary btn-full" onClick={() => setShowDispute(true)} id="dispute-btn">
-                                ⚠️ 문제 신고
+                            <button
+                                className="w-full h-12 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-sm border border-slate-300 dark:border-slate-600 rounded-xl hover:bg-slate-50 transition-colors"
+                                onClick={() => setShowDispute(true)}
+                            >
+                                ⚠️ 문제 신고 (부분 재청소 요청)
                             </button>
                         </div>
                     </div>
@@ -369,103 +396,97 @@ export default function RequestDetailClient({ job, photos, payment, applications
 
                 {/* 공간파트너 액션: 청소 완료 후 리뷰 작성 */}
                 {isOperator && ['APPROVED', 'PAID_OUT'].includes(job.status) && !reviewSubmitted && (
-                    <div className="action-section" style={{ marginTop: 'var(--spacing-lg)' }}>
-                        <div className="card p-md" style={{ background: 'linear-gradient(135deg, #FFF1F2, #FFE4E6)', border: '1px solid #FECDD3' }}>
-                            <div className="flex justify-between items-center mb-xs">
-                                <h3 className="font-bold text-md mb-none" style={{ color: '#BE123C' }}>⭐ 클린파트너는 어떠셨나요?</h3>
-                                <span style={{ fontSize: 28 }}>🌡️</span>
+                    <div className="px-4 mt-6 pb-6">
+                        <div className="bg-gradient-to-br from-rose-50 to-rose-100 dark:from-rose-900/30 dark:to-rose-800/30 border border-rose-200 dark:border-rose-700/50 p-5 rounded-2xl shadow-sm">
+                            <div className="flex justify-between items-center mb-2">
+                                <h3 className="font-bold text-[16px] text-rose-700 dark:text-rose-400">⭐ 파트너님은 어떠셨나요?</h3>
+                                <span className="text-3xl">🌡️</span>
                             </div>
-                            <p className="text-sm text-secondary mb-md" style={{ color: '#9F1239' }}>작업에 대한 솔직한 리뷰를 남겨주시면 파트너의 매너 온도가 올라갑니다!</p>
-                            <button className="btn btn-full" style={{ background: '#BE123C', color: '#fff', border: 'none' }} onClick={() => setReviewModalOpen(true)}>
-                                리뷰 작성하고 매너 온도 올리기
+                            <p className="text-xs text-rose-600/80 dark:text-rose-300/80 mb-4 leading-relaxed">작업에 대한 솔직한 리뷰를 남겨주시면<br />해당 클린파트너의 매너 온도가 쑥쑥 올라갑니다!</p>
+                            <button
+                                className="w-full h-12 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl text-sm transition-colors shadow-sm"
+                                onClick={() => setReviewModalOpen(true)}
+                            >
+                                리뷰 남기고 매너 온도 올리기
                             </button>
                         </div>
                     </div>
                 )}
+            </main>
 
-                {/* 분쟁 모달 */}
-                {showDispute && (
-                    <div className="modal-overlay" onClick={() => setShowDispute(false)}>
-                        <div className="modal-sheet" onClick={e => e.stopPropagation()}>
-                            <div className="modal-handle" />
-                            <h3 className="font-bold text-lg mb-md">문제 신고</h3>
-                            <div className="form-group">
-                                <label className="form-label">문제 내용</label>
-                                <textarea className="form-input" rows={4} placeholder="구체적으로 어떤 문제가 있었나요?"
-                                    value={disputeReason} onChange={e => setDisputeReason(e.target.value)} />
-                            </div>
-                            <button className="btn btn-danger btn-full mt-md" onClick={handleDispute} disabled={!disputeReason.trim()}>
-                                신고 접수하기
-                            </button>
-                        </div>
+            {/* Modals using Tailwind */}
+            {showDispute && (
+                <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 backdrop-blur-sm p-4 sm:items-center" onClick={() => setShowDispute(false)}>
+                    <div className="bg-white dark:bg-slate-900 w-full max-w-md rounded-2xl p-6 shadow-xl transform transition-all" onClick={e => e.stopPropagation()}>
+                        <div className="w-12 h-1.5 bg-slate-200 mx-auto rounded-full mb-6"></div>
+                        <h3 className="font-bold text-xl mb-4">문제 신고</h3>
+                        <p className="text-sm text-slate-500 mb-4">구체적으로 어떤 문제가 있었는지 작성해주세요.</p>
+                        <textarea
+                            className="w-full h-32 p-4 border border-slate-300 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800 text-sm focus:ring-2 focus:ring-primary outline-none resize-none mb-6"
+                            placeholder="예: 거실 바닥에 먼지가 그대로 남아있어요, 쓰레기통이 안 비워져 있어요."
+                            value={disputeReason}
+                            onChange={e => setDisputeReason(e.target.value)}
+                        />
+                        <button
+                            className="w-full h-14 bg-rose-600 text-white rounded-xl font-bold text-base disabled:opacity-50"
+                            onClick={handleDispute}
+                            disabled={!disputeReason.trim()}
+                        >
+                            신고 접수하기
+                        </button>
                     </div>
-                )}
+                </div>
+            )}
 
-                {/* 리뷰 모달 */}
-                {reviewModalOpen && (
-                    <div className="modal-overlay" onClick={() => setReviewModalOpen(false)}>
-                        <div className="modal-sheet" onClick={e => e.stopPropagation()}>
-                            <div className="modal-handle" />
-                            <h3 className="font-bold text-lg mb-md text-center">파트너 리뷰 남기기</h3>
-                            <div className="flex justify-center gap-xs mb-md">
-                                {[1, 2, 3, 4, 5].map(star => (
-                                    <button
-                                        key={star}
-                                        onClick={() => setReviewRating(star)}
-                                        style={{ fontSize: 32, filter: star <= reviewRating ? 'none' : 'grayscale(100%) opacity(30%)', transition: 'all 0.2s', background: 'none', border: 'none', cursor: 'pointer' }}
-                                    >
-                                        ⭐
-                                    </button>
-                                ))}
-                            </div>
-                            <div className="form-group mb-md">
-                                <textarea className="form-input" rows={4} placeholder="청소 퀄리티, 시간 준수 등 파트너에게 느낀 점을 자유롭게 적어주세요. (선택)"
-                                    value={reviewComment} onChange={e => setReviewComment(e.target.value)} />
-                            </div>
-                            <button className="btn btn-full" style={{ background: '#E11D48', color: '#fff', border: 'none' }} onClick={handleSubmitReview} disabled={submittingReview}>
-                                {submittingReview ? <span className="spinner" /> : `${reviewRating}점 리뷰 보내기`}
-                            </button>
+            {reviewModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={() => setReviewModalOpen(false)}>
+                    <div className="bg-white dark:bg-slate-900 w-full max-w-sm rounded-[24px] p-6 shadow-2xl relative" onClick={e => e.stopPropagation()}>
+                        <button className="absolute top-4 right-4 text-slate-400 hover:text-slate-600" onClick={() => setReviewModalOpen(false)}>
+                            <span className="material-symbols-outlined">close</span>
+                        </button>
+                        <div className="text-center mb-6 mt-4">
+                            <div className="w-16 h-16 bg-rose-100 rounded-full flex items-center justify-center mx-auto mb-3 text-3xl">📝</div>
+                            <h3 className="font-bold text-[18px]">클린파트너 평가하기</h3>
+                            <p className="text-xs text-slate-500 mt-1">별점을 터치하여 평가해주세요.</p>
                         </div>
+                        <div className="flex justify-center gap-2 mb-6">
+                            {[1, 2, 3, 4, 5].map(star => (
+                                <button
+                                    key={star}
+                                    onClick={() => setReviewRating(star)}
+                                    className="text-[40px] focus:outline-none transition-transform hover:scale-110 active:scale-95"
+                                    style={{ filter: star <= reviewRating ? 'drop-shadow(0 2px 4px rgba(251,191,36,0.3))' : 'grayscale(100%) opacity(20%)' }}
+                                >
+                                    ⭐
+                                </button>
+                            ))}
+                        </div>
+                        <textarea
+                            className="w-full h-24 p-4 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800 text-sm focus:ring-2 focus:ring-rose-500 outline-none resize-none mb-6 text-slate-700 dark:text-slate-200"
+                            placeholder="요청사항을 잘 지켜주셨나요? 자유롭게 후기를 남겨주세요. (선택)"
+                            value={reviewComment}
+                            onChange={e => setReviewComment(e.target.value)}
+                        />
+                        <button
+                            className="w-full h-14 bg-rose-600 hover:bg-rose-700 text-white rounded-xl font-bold text-[15px] shadow-md transition-colors"
+                            onClick={handleSubmitReview}
+                            disabled={submittingReview}
+                        >
+                            {submittingReview ? <div className="w-5 h-5 mx-auto border-2 border-white/30 border-t-white rounded-full animate-spin"></div> : '평가 완료하기'}
+                        </button>
                     </div>
-                )}
+                </div>
+            )}
 
-                <PaymentModal
-                    isOpen={paymentModalOpen}
-                    onClose={() => setPaymentModalOpen(false)}
-                    amount={paymentContext === 'accept' ? job.price : job.extra_charge_amount}
-                    jobName={space?.name ? `[${space.name}] 청소 결제` : '청소 결제'}
-                    jobId={job.id}
-                    paymentContext={paymentContext}
-                    workerId={selectedApp?.workerId}
-                />
-            </div>
-
-            <style jsx>{`
-        .detail-header { display: flex; align-items: center; justify-content: space-between; padding: var(--spacing-md); border-bottom: 1px solid var(--color-border-light); background: var(--color-surface); position: sticky; top: 0; z-index: 10; }
-        .back-btn { font-size: 22px; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 50%; }
-        .back-btn:hover { background: var(--color-bg); }
-        .detail-title { font-size: var(--font-lg); font-weight: 700; }
-        .status-card { margin-bottom: var(--spacing-md); }
-        .status-card-top { display: flex; justify-content: space-between; align-items: flex-start; padding: var(--spacing-md); }
-        .status-space { font-size: var(--font-lg); font-weight: 700; }
-        .status-addr { margin-top: 2px; }
-        .status-desc { padding: var(--spacing-sm) var(--spacing-md); font-size: var(--font-sm); color: var(--color-text-secondary); background: var(--color-bg); }
-        .status-meta { display: flex; justify-content: space-between; padding: var(--spacing-sm) var(--spacing-md); font-size: var(--font-sm); border-top: 1px solid var(--color-border-light); }
-        .worker-card { display: flex; padding: var(--spacing-md); margin-bottom: var(--spacing-md); }
-        .worker-info { display: flex; gap: var(--spacing-md); align-items: center; }
-        .worker-name { font-weight: 700; font-size: var(--font-md); }
-        .photos-section { margin-bottom: var(--spacing-md); }
-        .section-label { font-size: var(--font-sm); font-weight: 700; color: var(--color-text-secondary); margin-bottom: var(--spacing-sm); }
-        .photo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--spacing-sm); }
-        .photo-wrapper { position: relative; aspect-ratio: 1; }
-        .photo-thumb { width: 100%; height: 100%; object-fit: cover; border-radius: 12px; }
-        .ai-score { position: absolute; bottom: 4px; left: 4px; padding: 2px 6px; border-radius: 6px; font-size: 11px; font-weight: 700; color: #fff; }
-        .payment-card { margin-bottom: var(--spacing-md); padding: var(--spacing-md); }
-        .payment-rows { display: flex; flex-direction: column; gap: var(--spacing-xs); }
-        .payment-row { display: flex; justify-content: space-between; padding: 4px 0; font-size: var(--font-sm); }
-        .action-section { margin-bottom: calc(var(--spacing-lg) + env(safe-area-inset-bottom, 0)); }
-        .action-btns { display: flex; flex-direction: column; gap: var(--spacing-sm); }
-      `}</style>
+            <PaymentModal
+                isOpen={paymentModalOpen}
+                onClose={() => setPaymentModalOpen(false)}
+                amount={paymentContext === 'accept' ? job.price : job.extra_charge_amount}
+                jobName={space?.name ? `[${space.name}] 청소 결제` : '청소 결제'}
+                jobId={job.id}
+                paymentContext={paymentContext}
+                workerId={selectedApp?.workerId}
+            />
         </div>
     )
 }
