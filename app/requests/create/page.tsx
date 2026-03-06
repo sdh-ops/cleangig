@@ -19,7 +19,10 @@ export default function CreateRequestPage() {
         recurring_days: [] as string[],
         special_instructions: '',
         supplies_to_check: [] as string[],
-        targeted_worker_id: ''
+        targeted_worker_id: '',
+        custom_price: '',
+        custom_duration: '60',
+        custom_difficulty: '보통'
     })
     const [selectedSpace, setSelectedSpace] = useState<Space | null>(null)
     const [loading, setLoading] = useState(false)
@@ -53,16 +56,22 @@ export default function CreateRequestPage() {
 
     useEffect(() => {
         if (!selectedSpace) return
-        let p = selectedSpace.base_price
+        let p = form.custom_price ? parseInt(form.custom_price) : selectedSpace.base_price
         if (form.is_urgent) p = Math.round(p * 1.3)
         setPrice(p)
-    }, [selectedSpace, form.is_urgent])
+    }, [selectedSpace, form.is_urgent, form.custom_price])
 
     const handleSpaceSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const spaceId = e.target.value;
         const space = spaces.find(s => s.id === spaceId)
         setSelectedSpace(space || null)
-        setForm(f => ({ ...f, space_id: spaceId }))
+        setForm(f => ({
+            ...f,
+            space_id: spaceId,
+            custom_price: space?.base_price.toString() || '',
+            custom_duration: space?.estimated_duration.toString() || '60',
+            custom_difficulty: space?.cleaning_difficulty || '보통'
+        }))
     }
 
     const handleSubmit = async () => {
@@ -81,10 +90,10 @@ export default function CreateRequestPage() {
             scheduled_at: scheduledAt,
             time_window_start: form.time_window_start,
             time_window_end: form.time_window_end,
-            estimated_duration: selectedSpace?.estimated_duration || 60,
+            estimated_duration: parseInt(form.custom_duration) || selectedSpace?.estimated_duration || 60,
             price,
             price_breakdown: {
-                base: selectedSpace?.base_price || 0,
+                base: form.custom_price ? parseInt(form.custom_price) : selectedSpace?.base_price || 0,
                 urgency_multiplier: form.is_urgent ? 1.3 : 1.0,
             },
             checklist: selectedSpace?.checklist_template || [],
@@ -94,6 +103,7 @@ export default function CreateRequestPage() {
             recurring_config: form.is_recurring ? { days: form.recurring_days } : null,
             supplies_to_check: form.supplies_to_check,
             targeted_worker_id: form.targeted_worker_id || null,
+            cleaning_difficulty: form.custom_difficulty
         }).select().single()
 
         if (!error && job) {
@@ -211,7 +221,54 @@ export default function CreateRequestPage() {
                             </div>
                         </label>
                     </div>
-                    <p className="text-xs text-slate-500 mb-4 px-1">클린파트너가 위 시간 범위 내에 도착하여 청소를 모두 마칩니다.</p>
+
+                    {/* Job Details Overrides */}
+                    {selectedSpace && (
+                        <div className="mt-6 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700">
+                            <h3 className="text-sm font-bold mb-4 flex items-center gap-1">⚙️ 상세 조건 수정 (공간 기본값 기반)</h3>
+
+                            <div className="grid grid-cols-2 gap-3 mb-4">
+                                <label className="flex flex-col">
+                                    <span className="text-[11px] font-bold text-slate-500 mb-1.5 ml-1">청소 비용 (원)</span>
+                                    <input
+                                        type="number"
+                                        className="h-11 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 text-sm font-medium focus:ring-2 focus:ring-primary focus:outline-none"
+                                        value={form.custom_price}
+                                        onChange={e => setForm(f => ({ ...f, custom_price: e.target.value }))}
+                                    />
+                                </label>
+                                <label className="flex flex-col">
+                                    <span className="text-[11px] font-bold text-slate-500 mb-1.5 ml-1">소요 시간 (분)</span>
+                                    <input
+                                        type="number"
+                                        className="h-11 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 text-sm font-medium focus:ring-2 focus:ring-primary focus:outline-none"
+                                        value={form.custom_duration}
+                                        onChange={e => setForm(f => ({ ...f, custom_duration: e.target.value }))}
+                                    />
+                                </label>
+                            </div>
+
+                            <label className="flex flex-col">
+                                <span className="text-[11px] font-bold text-slate-500 mb-1.5 ml-1">청소 난이도</span>
+                                <div className="flex gap-2">
+                                    {['쉬움', '보통', '어려움', '특수'].map(level => {
+                                        const isSelected = form.custom_difficulty === level;
+                                        return (
+                                            <button
+                                                key={level}
+                                                className={`flex-1 h-10 rounded-lg text-xs font-bold transition-all ${isSelected ? 'bg-primary text-white' : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500'}`}
+                                                onClick={() => setForm(f => ({ ...f, custom_difficulty: level }))}
+                                            >
+                                                {level}
+                                            </button>
+                                        )
+                                    })}
+                                </div>
+                            </label>
+                        </div>
+                    )}
+
+                    <p className="text-xs text-slate-500 my-4 px-1 leading-relaxed">클린파트너가 위 시간 범위 내에 도착하여 청소를 모두 마칩니다.</p>
 
                     {/* Recurring Config */}
                     <div className="flex flex-col w-full bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden mt-4">

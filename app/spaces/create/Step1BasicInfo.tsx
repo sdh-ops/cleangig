@@ -77,7 +77,31 @@ export default function Step1BasicInfo({ form, setForm, handleAddressCheck, mapL
             <div className="flex gap-3">
                 <label className="flex flex-col flex-1">
                     <p className="text-base font-medium leading-normal pb-2 text-slate-900 dark:text-slate-100">면적 (㎡)</p>
-                    <input type="number" className={commonInputClass} placeholder="0" value={form.size_sqm} onChange={e => setForm((f: any) => ({ ...f, size_sqm: e.target.value }))} />
+                    <input
+                        type="number"
+                        className={commonInputClass}
+                        placeholder="0"
+                        value={form.size_sqm}
+                        onChange={e => {
+                            const sqm = e.target.value;
+                            const pyeong = sqm ? (parseFloat(sqm) / 3.305785).toFixed(1) : '';
+                            setForm((f: any) => ({ ...f, size_sqm: sqm, size_pyeong: pyeong }));
+                        }}
+                    />
+                </label>
+                <label className="flex flex-col flex-1">
+                    <p className="text-base font-medium leading-normal pb-2 text-slate-900 dark:text-slate-100">면적 (평)</p>
+                    <input
+                        type="number"
+                        className={commonInputClass}
+                        placeholder="0"
+                        value={form.size_pyeong || ''}
+                        onChange={e => {
+                            const pyeong = e.target.value;
+                            const sqm = pyeong ? Math.round(parseFloat(pyeong) * 3.305785).toString() : '';
+                            setForm((f: any) => ({ ...f, size_pyeong: pyeong, size_sqm: sqm }));
+                        }}
+                    />
                 </label>
                 <label className="flex flex-col flex-1">
                     <p className="text-base font-medium leading-normal pb-2 text-slate-900 dark:text-slate-100">소요 시간(분)</p>

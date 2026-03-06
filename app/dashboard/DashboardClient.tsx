@@ -60,7 +60,7 @@ export default function DashboardClient({ profile, todayJobs, spaces, monthTotal
 
         {/* Header */}
         <header className="flex items-center justify-between p-4 bg-background-light dark:bg-background-dark sticky top-0 z-10 border-b border-slate-200 dark:border-slate-800">
-          <h2 className="text-xl font-bold tracking-tight">CleanGig Premium</h2>
+          <h2 className="text-xl font-bold tracking-tight">CleanGig</h2>
           <button className="flex items-center justify-center p-2 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors">
             <span className="material-symbols-outlined">notifications</span>
           </button>

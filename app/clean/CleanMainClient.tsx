@@ -20,7 +20,7 @@ interface Job {
 }
 
 interface Props {
-  profile: { id: string; name: string; avg_rating: number; tier: string; total_jobs: number };
+  profile: { id: string; name: string; avg_rating: number; tier: string; total_jobs: number; manner_temperature?: number };
   activeJob: Job | null;
   weekEarnings: number;
   pendingCount: number;
@@ -112,6 +112,21 @@ export default function CleanMainClient({ profile, activeJob, weekEarnings, pend
             </div>
           </section>
 
+          {/* Sparkle Benefit Banner */}
+          <section className="px-4 pb-4">
+            <div className="bg-gradient-to-r from-primary to-emerald-500 rounded-2xl p-4 text-white shadow-lg overflow-hidden relative">
+              <div className="absolute right-[-20px] top-[-20px] opacity-10">
+                <span className="material-symbols-outlined text-[100px]">verified</span>
+              </div>
+              <p className="font-bold text-sm mb-1 italic">PRO TIP</p>
+              <h4 className="font-bold text-[15px] mb-1">스파클 온도가 높을수록 우선 배정!</h4>
+              <p className="text-[11px] opacity-90 leading-relaxed">
+                매칭 대기 시 상단에 노출되어 일감을 더 빨리 받을 수 있고,<br />
+                골드 등급 이상 시 수수료 추가 감면 혜택이 적용됩니다.
+              </p>
+            </div>
+          </section>
+
           {/* Active Jobs Summary */}
           <section className="px-4 py-2">
             <div className="flex items-center justify-between mb-3">
@@ -119,22 +134,22 @@ export default function CleanMainClient({ profile, activeJob, weekEarnings, pend
               <Link href="/clean/jobs/active" className="text-primary text-sm font-medium hover:underline">모두 보기</Link>
             </div>
             <div className="grid grid-cols-2 gap-3">
-              <div className="bg-surface-light dark:bg-surface-dark rounded-xl p-4 shadow-sm border border-border-light dark:border-border-dark flex flex-col items-center justify-center text-center gap-2">
-                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                  <span className="material-symbols-outlined text-primary">pending_actions</span>
+              <div className="bg-green-500/10 dark:bg-green-500/20 rounded-xl p-4 shadow-sm border border-green-500/20 flex flex-col items-center justify-center text-center gap-2">
+                <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center">
+                  <span className="material-symbols-outlined text-green-600 dark:text-green-400">thermometer</span>
                 </div>
                 <div>
-                  <p className="text-xl font-bold text-text-primary-light dark:text-text-primary-dark">{activeJob ? 1 : 0}</p>
-                  <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark">진행 예정</p>
+                  <p className="text-xl font-bold text-text-primary-light dark:text-text-primary-dark">{profile.manner_temperature || 36.5}℃</p>
+                  <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark font-bold text-green-600 dark:text-green-400">스파클 온도</p>
                 </div>
               </div>
-              <div className="bg-surface-light dark:bg-surface-dark rounded-xl p-4 shadow-sm border border-border-light dark:border-border-dark flex flex-col items-center justify-center text-center gap-2">
-                <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center">
-                  <span className="material-symbols-outlined text-green-600 dark:text-green-400">check_circle</span>
+              <div className="bg-primary/10 dark:bg-primary/20 rounded-xl p-4 shadow-sm border border-primary/20 flex flex-col items-center justify-center text-center gap-2">
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                  <span className="material-symbols-outlined text-primary">priority_high</span>
                 </div>
                 <div>
-                  <p className="text-xl font-bold text-text-primary-light dark:text-text-primary-dark">{profile.total_jobs}</p>
-                  <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark">완료됨</p>
+                  <p className="text-xl font-bold text-text-primary-light dark:text-text-primary-dark">우선순위</p>
+                  <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark">높음</p>
                 </div>
               </div>
             </div>

@@ -21,7 +21,7 @@ export default async function AdminUsersPage() {
                             <th style={{ padding: '16px 20px', fontWeight: 600, color: '#475569' }}>이메일</th>
                             <th style={{ padding: '16px 20px', fontWeight: 600, color: '#475569' }}>역할</th>
                             <th style={{ padding: '16px 20px', fontWeight: 600, color: '#475569' }}>연락처</th>
-                            <th style={{ padding: '16px 20px', fontWeight: 600, color: '#475569' }}>매너 온도</th>
+                            <th style={{ padding: '16px 20px', fontWeight: 600, color: '#475569' }}>스파클 온도</th>
                             <th style={{ padding: '16px 20px', fontWeight: 600, color: '#475569' }}>가입일</th>
                             <th style={{ padding: '16px 20px', fontWeight: 600, color: '#475569', textAlign: 'center' }}>상태/관리</th>
                         </tr>

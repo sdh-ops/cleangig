@@ -167,7 +167,7 @@ export default function ProfileClient({ profile, totalCompletedJobs }: Props) {
             </div>
             <div className="flex-1 flex flex-col items-center justify-center py-4 px-2 rounded-2xl bg-white dark:bg-slate-900 border border-primary/20 dark:border-primary/30 shadow-sm relative overflow-hidden transition-shadow hover:shadow-md">
               <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent dark:from-primary/10" />
-              <span className="text-xs text-primary font-bold mb-1.5 relative z-10">스파클 점수</span>
+              <span className="text-xs text-primary font-bold mb-1.5 relative z-10">스파클 온도</span>
               <span className="text-xl font-black text-primary relative z-10 tracking-tight">{profile.manner_temperature || 98}점</span>
             </div>
           </div>
@@ -190,39 +190,66 @@ export default function ProfileClient({ profile, totalCompletedJobs }: Props) {
 
             <div className="h-px bg-slate-100 dark:bg-slate-800/80 mx-3 my-1"></div>
 
-            <Link href="/earnings" className="flex items-center gap-4 px-3 py-3 min-h-[64px] hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors rounded-2xl">
-              <div className="flex items-center justify-center rounded-[14px] bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 shrink-0 size-12">
-                <span className="material-symbols-outlined">account_balance_wallet</span>
-              </div>
-              <p className="text-base font-bold leading-normal flex-1 text-slate-900 dark:text-slate-100">계좌 및 정산 관리</p>
-              <span className="material-symbols-outlined text-slate-300 dark:text-slate-600">chevron_right</span>
-            </Link>
+            {/* Settings Menu */}
+            <div className="px-0 py-2 space-y-1">
+              <button
+                className="w-full flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-xl transition-colors"
+                onClick={() => router.push('/earnings')}
+              >
+                <div className="flex items-center gap-3">
+                  <div className="size-10 flex items-center justify-center bg-slate-100 dark:bg-slate-800 rounded-lg text-slate-500">
+                    <span className="material-symbols-outlined">payments</span>
+                  </div>
+                  <div className="text-left">
+                    <p className="text-sm font-bold">계좌 및 정산 관리</p>
+                  </div>
+                </div>
+                <span className="material-symbols-outlined text-slate-400">chevron_right</span>
+              </button>
 
-            <button className="flex items-center gap-4 px-3 py-3 min-h-[64px] hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors rounded-2xl w-full text-left">
-              <div className="flex items-center justify-center rounded-[14px] bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 shrink-0 size-12">
-                <span className="material-symbols-outlined">campaign</span>
-              </div>
-              <p className="text-base font-bold leading-normal flex-1 text-slate-900 dark:text-slate-100">공지사항</p>
-              <span className="material-symbols-outlined text-slate-300 dark:text-slate-600">chevron_right</span>
-            </button>
+              <button
+                className="w-full flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-xl transition-colors"
+                onClick={() => alert('준비 중인 기능입니다.')}
+              >
+                <div className="flex items-center gap-3">
+                  <div className="size-10 flex items-center justify-center bg-slate-100 dark:bg-slate-800 rounded-lg text-slate-500">
+                    <span className="material-symbols-outlined">campaign</span>
+                  </div>
+                  <div className="text-left">
+                    <p className="text-sm font-bold">공지사항</p>
+                  </div>
+                </div>
+                <span className="material-symbols-outlined text-slate-400">chevron_right</span>
+              </button>
 
-            <button className="flex items-center gap-4 px-3 py-3 min-h-[64px] hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors rounded-2xl w-full text-left">
-              <div className="flex items-center justify-center rounded-[14px] bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 shrink-0 size-12">
-                <span className="material-symbols-outlined">support_agent</span>
-              </div>
-              <p className="text-base font-bold leading-normal flex-1 text-slate-900 dark:text-slate-100">고객센터</p>
-              <span className="material-symbols-outlined text-slate-300 dark:text-slate-600">chevron_right</span>
-            </button>
+              <button
+                className="w-full flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-xl transition-colors"
+                onClick={() => alert('카카오톡 상담 채널로 연결 중입니다...')}
+              >
+                <div className="flex items-center gap-3">
+                  <div className="size-10 flex items-center justify-center bg-slate-100 dark:bg-slate-800 rounded-lg text-slate-500">
+                    <span className="material-symbols-outlined">headset_mic</span>
+                  </div>
+                  <div className="text-left">
+                    <p className="text-sm font-bold">고객센터</p>
+                  </div>
+                </div>
+                <span className="material-symbols-outlined text-slate-400">chevron_right</span>
+              </button>
 
-            <button onClick={handleLogout} className="flex items-center gap-4 px-3 py-3 mt-4 min-h-[64px] hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors rounded-2xl w-full text-left group">
-              <div className="flex items-center justify-center rounded-[14px] bg-slate-100 dark:bg-slate-800 group-hover:bg-red-100 dark:group-hover:bg-red-900/30 text-slate-500 group-hover:text-red-500 shrink-0 size-12 transition-colors">
-                <span className="material-symbols-outlined">logout</span>
-              </div>
-              <p className="text-base font-bold leading-normal flex-1 text-slate-600 dark:text-slate-400 group-hover:text-red-500 transition-colors">로그아웃</p>
-            </button>
+              <button className="w-full flex items-center justify-between p-4 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-colors" onClick={handleLogout}>
+                <div className="flex items-center gap-3">
+                  <div className="size-10 flex items-center justify-center bg-red-100 dark:bg-red-900/30 rounded-lg text-red-500">
+                    <span className="material-symbols-outlined">logout</span>
+                  </div>
+                  <div className="text-left">
+                    <p className="text-sm font-bold text-red-500">로그아웃</p>
+                  </div>
+                </div>
+              </button>
+            </div>
           </div>
         </main>
-
         <BottomNav />
       </div>
     </div>

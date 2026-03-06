@@ -10,7 +10,6 @@ import Step3Checklist from './Step3Checklist';
 import Step4BizInfo from './Step4BizInfo';
 
 const DEFAULT_CHECKLISTS: Record<string, { id: string; label: string; required: boolean }[]> = {
-    // defaults...
     airbnb: [
         { id: '1', label: '침구 교체 및 정리', required: true },
         { id: '2', label: '화장실 청소 (변기·세면대·샤워기)', required: true },
@@ -26,7 +25,55 @@ const DEFAULT_CHECKLISTS: Record<string, { id: string; label: string; required: 
         { id: '3', label: '바닥 청소기 + 걸레질', required: true },
         { id: '4', label: '화장실 청소', required: true },
         { id: '5', label: '주방 설거지', required: true },
-        { id: '6', label: '환기', required: false },
+        { id: '6', label: '환기 및 냄새 제거', required: false },
+    ],
+    studio: [
+        { id: '1', label: '촬영 소품 제자리 배치', required: true },
+        { id: '2', label: '바닥 먼지 제거 (찍찍이/청소기)', required: true },
+        { id: '3', label: '거울 및 유리창 얼룩 제거', required: true },
+        { id: '4', label: '쓰레기 수거', required: true },
+        { id: '5', label: '탈의실 정리', required: false },
+    ],
+    gym: [
+        { id: '1', label: '운동 기구 기구 소독 및 닦기', required: true },
+        { id: '2', label: '바닥 청소기 + 살균 걸레질', required: true },
+        { id: '3', label: '샤워실 및 탈의실 청소', required: true },
+        { id: '4', label: '정수기 및 공용 공간 정리', required: true },
+        { id: '5', label: '수건 수거 및 세탁 준비', required: false },
+    ],
+    unmanned_store: [
+        { id: '1', label: '매대 먼지 닦기', required: true },
+        { id: '2', label: '진열대 상품 열 맞추기', required: true },
+        { id: '3', label: '바닥 청소 및 얼룩 제거', required: true },
+        { id: '4', label: '키오스크 지문 닦기', required: true },
+        { id: '5', label: '쓰레기통 비우기', required: true },
+    ],
+    study_cafe: [
+        { id: '1', label: '개인 좌석 테이블 닦기', required: true },
+        { id: '2', label: '바닥 소음 없는 청소 (정숙)', required: true },
+        { id: '3', label: '휴게실 커피머신 주변 정리', required: true },
+        { id: '4', label: '사물함 먼지 제거', required: false },
+        { id: '5', label: '분리수거 및 분쇄기 비우기', required: true },
+    ],
+    practice_room: [
+        { id: '1', label: '거울 지문 및 습기 제거', required: true },
+        { id: '2', label: '바닥 송진/먼지 청소', required: true },
+        { id: '3', label: '앰프 및 전자기기 주변 정리', required: true },
+        { id: '4', label: '의자 및 악보대 정돈', required: true },
+        { id: '5', label: '쓰레기 수거', required: true },
+    ],
+    workspace: [
+        { id: '1', label: '개별 데스크 위 먼지 제거', required: true },
+        { id: '2', label: '바닥 청소기 + 물걸레', required: true },
+        { id: '3', label: '공용 탕비실 정리', required: true },
+        { id: '4', label: '화이트보드 지우기', required: false },
+        { id: '5', label: '쓰레기 비우기', required: true },
+    ],
+    other: [
+        { id: '1', label: '바닥 청소', required: true },
+        { id: '2', label: '창틀 및 선반 먼지 제거', required: true },
+        { id: '3', label: '화장실 청소', required: true },
+        { id: '4', label: '쓰레기 배출', required: true },
     ]
 };
 
@@ -35,11 +82,18 @@ export default function CreateSpacePage() {
     const [form, setForm] = useState({
         name: '', type: 'airbnb' as SpaceType, address: '', address_detail: '',
         entry_code: '', cleaning_tool_location: '', parking_guide: '', trash_guide: '',
-        caution_notes: '', size_sqm: '', base_price: '30000', estimated_duration: '60',
+        caution_notes: '', size_sqm: '', size_pyeong: '', base_price: '30000', estimated_duration: '60',
         description: '', is_parking_available: false, cleaning_difficulty: '보통',
         biz_type: 'INDIVIDUAL' as 'BUSINESS' | 'INDIVIDUAL', biz_reg_number: '', biz_email: '', cash_receipt_number: '',
     });
     const [checklist, setChecklist] = useState(DEFAULT_CHECKLISTS['airbnb']);
+
+    // 공간 유형 변경 시 체크리스트 자동 업데이트
+    React.useEffect(() => {
+        if (DEFAULT_CHECKLISTS[form.type]) {
+            setChecklist(DEFAULT_CHECKLISTS[form.type]);
+        }
+    }, [form.type]);
     const [referencePhotos, setReferencePhotos] = useState<File[]>([]);
     const [photoPreviewUrls, setPhotoPreviewUrls] = useState<string[]>([]);
     const [bizRegPhoto, setBizRegPhoto] = useState<File | null>(null);
@@ -80,25 +134,48 @@ export default function CreateSpacePage() {
     const handleAddressCheck = async () => {
         if (!form.address) return alert('주소를 먼저 입력해주세요.');
         try {
-            const naver = (window as any).naver;
-            if (naver && naver.maps && naver.maps.Service) {
-                naver.maps.Service.geocode({ query: form.address }, (status: any, response: any) => {
-                    if (status === naver.maps.Service.Status.OK && response.v2.addresses.length > 0) {
-                        const lat = parseFloat(response.v2.addresses[0].y);
-                        const lng = parseFloat(response.v2.addresses[0].x);
-                        setMapLocation({ lat, lng });
-                        setTimeout(() => {
-                            if (mapRef.current) {
-                                const map = new naver.maps.Map(mapRef.current, { center: new naver.maps.LatLng(lat, lng), zoom: 16 });
-                                new naver.maps.Marker({ position: new naver.maps.LatLng(lat, lng), map });
-                            }
-                        }, 100);
-                    } else {
-                        alert('주소를 찾을 수 없습니다. 도로명 주소로 입력해보세요.');
-                    }
-                });
+            const res = await fetch(`/api/geocode?query=${encodeURIComponent(form.address)}`);
+            const data = await res.json();
+
+            if (data && data.addresses && data.addresses.length > 0) {
+                const addr = data.addresses[0];
+                const lat = parseFloat(addr.y);
+                const lng = parseFloat(addr.x);
+                setMapLocation({ lat, lng });
+                setForm(f => ({ ...f, address: addr.roadAddress || addr.jibunAddress }));
+
+                // 지도 표시 (SDK가 로드된 경우에만)
+                const naver = (window as any).naver;
+                if (naver && naver.maps && mapRef.current) {
+                    const map = new naver.maps.Map(mapRef.current, {
+                        center: new naver.maps.LatLng(lat, lng),
+                        zoom: 16
+                    });
+                    new naver.maps.Marker({
+                        position: new naver.maps.LatLng(lat, lng),
+                        map: map
+                    });
+                }
+            } else {
+                // SDK fallback (API route fails or no results)
+                const naver = (window as any).naver;
+                if (naver && naver.maps && naver.maps.Service) {
+                    naver.maps.Service.geocode({ query: form.address }, (status: any, response: any) => {
+                        if (status === naver.maps.Service.Status.OK && response.v2.addresses.length > 0) {
+                            const addr = response.v2.addresses[0];
+                            const lat = parseFloat(addr.y);
+                            const lng = parseFloat(addr.x);
+                            setMapLocation({ lat, lng });
+                            setForm(f => ({ ...f, address: addr.roadAddress || addr.jibunAddress }));
+                        }
+                    });
+                } else {
+                    alert('주소 검색에 실패했습니다. 도로명 주소를 정확히 입력해주세요.');
+                }
             }
-        } catch (e) { console.error(e); }
+        } catch (e) {
+            console.error('Geocode fallback error:', e);
+        }
     };
 
     const handleBizRegPhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -123,7 +200,10 @@ export default function CreateSpacePage() {
             const fileName = `${Date.now()}_${Math.random()}.${fileExt}`;
             const filePath = `${user.id}/${fileName}`;
             const { error: uploadError } = await supabase.storage.from('photos').upload(filePath, file);
-            if (!uploadError) uploadedPhotoUrls.push(supabase.storage.from('photos').getPublicUrl(filePath).data.publicUrl);
+            if (!uploadError) {
+                const { data } = supabase.storage.from('photos').getPublicUrl(filePath);
+                uploadedPhotoUrls.push(data.publicUrl);
+            }
         }
 
         let uploadedBizRegUrl = null;
@@ -132,26 +212,48 @@ export default function CreateSpacePage() {
             const fileName = `biz_${Date.now()}.${fileExt}`;
             const filePath = `${user.id}/${fileName}`;
             const { error: uploadError } = await supabase.storage.from('photos').upload(filePath, bizRegPhoto);
-            if (!uploadError) uploadedBizRegUrl = supabase.storage.from('photos').getPublicUrl(filePath).data.publicUrl;
+            if (!uploadError) {
+                const { data } = supabase.storage.from('photos').getPublicUrl(filePath);
+                uploadedBizRegUrl = data.publicUrl;
+            }
         }
 
         const { data, error } = await supabase.from('spaces').insert({
             operator_id: user.id,
-            name: form.name, type: form.type, address: form.address, address_detail: form.address_detail,
-            entry_code: form.entry_code, cleaning_tool_location: form.cleaning_tool_location, parking_guide: form.parking_guide,
-            trash_guide: form.trash_guide, caution_notes: form.caution_notes, size_sqm: form.size_sqm ? parseInt(form.size_sqm) : null,
-            base_price: parseInt(form.base_price), estimated_duration: parseInt(form.estimated_duration), description: form.description,
-            is_parking_available: form.is_parking_available, cleaning_difficulty: form.cleaning_difficulty, checklist_template: checklist,
-            reference_photos: uploadedPhotoUrls, is_active: true, biz_type: form.biz_type,
-            biz_reg_number: form.biz_type === 'BUSINESS' ? form.biz_reg_number : null, biz_email: form.biz_type === 'BUSINESS' ? form.biz_email : null,
-            biz_reg_image: form.biz_type === 'BUSINESS' ? uploadedBizRegUrl : null, cash_receipt_number: form.biz_type === 'INDIVIDUAL' ? form.cash_receipt_number : null,
-            lat: mapLocation?.lat || null, lng: mapLocation?.lng || null
+            name: form.name,
+            type: form.type,
+            address: form.address,
+            address_detail: form.address_detail,
+            entry_code: form.entry_code,
+            cleaning_tool_location: form.cleaning_tool_location,
+            parking_guide: form.parking_guide,
+            trash_guide: form.trash_guide,
+            caution_notes: form.caution_notes,
+            size_sqm: form.size_sqm ? parseInt(form.size_sqm) : null,
+            size_pyeong: form.size_pyeong ? parseFloat(form.size_pyeong) : null,
+            base_price: parseInt(form.base_price),
+            estimated_duration: parseInt(form.estimated_duration),
+            description: form.description,
+            is_parking_available: form.is_parking_available,
+            cleaning_difficulty: form.cleaning_difficulty,
+            checklist_template: checklist,
+            reference_photos: uploadedPhotoUrls,
+            photos: uploadedPhotoUrls, // Ensure both are populated for safety
+            is_active: true,
+            biz_type: form.biz_type,
+            biz_reg_number: form.biz_type === 'BUSINESS' ? form.biz_reg_number : null,
+            biz_email: form.biz_type === 'BUSINESS' ? form.biz_email : null,
+            biz_reg_image: form.biz_type === 'BUSINESS' ? uploadedBizRegUrl : null,
+            cash_receipt_number: form.biz_type === 'INDIVIDUAL' ? form.cash_receipt_number : null,
+            lat: mapLocation?.lat || null,
+            lng: mapLocation?.lng || null
         }).select().single();
 
         if (!error && data) {
             router.push(`/spaces/${data.id}?created=1`);
         } else {
-            alert('공간 등록에 실패했어요.');
+            console.error('Space creation error:', error);
+            alert(`공간 등록에 실패했어요: ${error?.message || '알 수 없는 오류'}`);
             setLoading(false);
         }
     };

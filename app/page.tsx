@@ -29,18 +29,18 @@ export default async function LandingPage() {
         <div className="flex size-12 shrink-0 items-center justify-center text-slate-900 dark:text-slate-100 cursor-pointer">
           <span className="material-symbols-outlined text-[24px]">arrow_back</span>
         </div>
-        <h2 className="text-lg font-bold leading-tight tracking-[-0.015em] flex-1 text-center pr-12">CleanGig Premium</h2>
+        <h2 className="text-xl font-bold tracking-tight">CleanGig</h2>
       </div>
       <div className="@container flex-1 flex flex-col">
         <div className="@[480px]:px-4 @[480px]:py-3 flex-1 flex flex-col">
-          <div className="w-full bg-center bg-no-repeat bg-cover flex flex-col justify-end overflow-hidden @[480px]:rounded-lg flex-1 min-h-[320px] shadow-sm relative" data-alt="Clean minimalist room with soft lighting" style={{ backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuAiUdrOhxD_5NpgTm8pMqZ6sbQlZ_4uD5m6GrwX-UXB_1VLarE_KvB1YziAEa-kKW6HlGAsrNW5AxMC7bXeVOyN5pRqCUixRwldihGcLyXABncNNDFJZRe7hLbxodkV09_OuYYgW3BxZ2dh5HjbvmQcQUR-GkrraYMQKk55Ii2OJ5YIGgH-XyzzLNPk8lQPeeAGAG52KJe2xxPp8Bjt-HY8z423a9_sFq_o0WM1WOom8zq9GJB8UNEf-rAR2-eRfA9QQRuOR-KQjOA")' }}>
+          <div className="w-full bg-center bg-no-repeat bg-cover flex flex-col justify-end overflow-hidden @[480px]:rounded-lg flex-1 min-h-[320px] shadow-sm relative" data-alt="Clean minimalist room with soft lighting" style={{ backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuAiUdrOhxD_5NpgTm8pMqZ6sbQlZ_4uD5m6GrwX-UXB_1VLarE_KvB1YziAEa-kKW6HlGAsrNW5AxMC7bXeVOyN5pRqCUixRwldihGcLyXABncNNDFJZRe7hLbxodkV09_OuYYgW3BxZ2dh5HjbvmQcQUR-GkrraYMQKk55Ii2OJ5YIGgH-XyzzLNPk8lQPeeAGAG52KJe2xxPp8Bjt-HY8z423a9_sFq_o0WM1WOom8zq9GJB3UNEf-rAR2-eRfA9QQRuOR-KQjOA")' }}>
             <div className="absolute inset-0 bg-gradient-to-t from-background-light/80 dark:from-background-dark/80 to-transparent"></div>
           </div>
         </div>
       </div>
       <div className="px-6 pb-6 pt-8 flex flex-col gap-6">
         <h1 className="text-[28px] font-bold leading-[1.2] tracking-[-0.015em] text-center text-slate-900 dark:text-slate-100">
-          공간의 가치를 높이는<br />프리미엄 클리닝, 클린긱
+          공간의 가치를 높이는<br />클리닝 서비스, 클린긱
         </h1>
         <p className="text-center text-slate-600 dark:text-slate-400 text-sm">
           검증된 파트너와 함께하는<br />맞춤형 청소 서비스를 경험해보세요.

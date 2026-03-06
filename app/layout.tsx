@@ -26,6 +26,8 @@ export const viewport: Viewport = {
   themeColor: '#00C471',
 }
 
+import NotificationOverlay from '@/components/common/NotificationOverlay'
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ko">
@@ -38,6 +40,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Script strategy="beforeInteractive" type="text/javascript" src={`https://oapi.map.naver.com/openapi/v3/maps.js?ncpClientId=${process.env.NEXT_PUBLIC_NAVER_MAP_CLIENT_ID}&submodules=geocoder`} />
       </head>
       <body className="antialiased font-pretendard">
+        <NotificationOverlay />
         {children}
       </body>
     </html>

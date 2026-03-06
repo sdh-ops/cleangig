@@ -36,9 +36,14 @@ export default function RequestDetailClient({ job, photos, payment, applications
     // 리뷰 상태
     const [reviewModalOpen, setReviewModalOpen] = useState(false)
     const [reviewRating, setReviewRating] = useState(5)
+    const [selectedTags, setSelectedTags] = useState<string[]>([])
     const [reviewComment, setReviewComment] = useState('')
     const [reviewSubmitted, setReviewSubmitted] = useState(false)
     const [submittingReview, setSubmittingReview] = useState(false)
+
+    const REVIEW_TAGS = [
+        "✨ 청결해요", "🤝 친절해요", "⚡ 빨라요", "⏱️ 시간을 잘 지켜요", "📋 요청사항을 잘 지켜요"
+    ]
 
     // 결제 모달 상태
     const [paymentModalOpen, setPaymentModalOpen] = useState(false)
@@ -125,7 +130,8 @@ export default function RequestDetailClient({ job, photos, payment, applications
         const supabase = createClient()
         await supabase.from('reviews').insert({
             job_id: job.id, reviewer_id: userId, reviewee_id: worker.id,
-            rating: reviewRating, comment: reviewComment
+            rating: reviewRating, comment: reviewComment,
+            tags: selectedTags
         })
 
         const { error: notifyError } = await supabase.rpc('notify_user', {
@@ -134,7 +140,7 @@ export default function RequestDetailClient({ job, photos, payment, applications
         })
         if (notifyError) console.error(notifyError)
 
-        alert('소중한 리뷰가 등록되었습니다. 매너 온도가 반영됩니다!')
+        alert('소중한 리뷰가 등록되었습니다. 스파클 온도가 반영됩니다!')
         setReviewSubmitted(true)
         setReviewModalOpen(false)
         setSubmittingReview(false)
@@ -402,12 +408,12 @@ export default function RequestDetailClient({ job, photos, payment, applications
                                 <h3 className="font-bold text-[16px] text-rose-700 dark:text-rose-400">⭐ 파트너님은 어떠셨나요?</h3>
                                 <span className="text-3xl">🌡️</span>
                             </div>
-                            <p className="text-xs text-rose-600/80 dark:text-rose-300/80 mb-4 leading-relaxed">작업에 대한 솔직한 리뷰를 남겨주시면<br />해당 클린파트너의 매너 온도가 쑥쑥 올라갑니다!</p>
+                            <p className="text-xs text-rose-600/80 dark:text-rose-300/80 mb-4 leading-relaxed">작업에 대한 솔직한 리뷰를 남겨주시면<br />해당 클린파트너의 스파클 온도가 쑥쑥 올라갑니다!</p>
                             <button
                                 className="w-full h-12 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl text-sm transition-colors shadow-sm"
                                 onClick={() => setReviewModalOpen(true)}
                             >
-                                리뷰 남기고 매너 온도 올리기
+                                리뷰 남기고 스파클 온도 올리기
                             </button>
                         </div>
                     </div>
@@ -449,7 +455,7 @@ export default function RequestDetailClient({ job, photos, payment, applications
                             <h3 className="font-bold text-[18px]">클린파트너 평가하기</h3>
                             <p className="text-xs text-slate-500 mt-1">별점을 터치하여 평가해주세요.</p>
                         </div>
-                        <div className="flex justify-center gap-2 mb-6">
+                        <div className="flex justify-center gap-2 mb-4">
                             {[1, 2, 3, 4, 5].map(star => (
                                 <button
                                     key={star}
@@ -458,6 +464,23 @@ export default function RequestDetailClient({ job, photos, payment, applications
                                     style={{ filter: star <= reviewRating ? 'drop-shadow(0 2px 4px rgba(251,191,36,0.3))' : 'grayscale(100%) opacity(20%)' }}
                                 >
                                     ⭐
+                                </button>
+                            ))}
+                        </div>
+
+                        <div className="flex flex-wrap justify-center gap-2 mb-6">
+                            {REVIEW_TAGS.map(tag => (
+                                <button
+                                    key={tag}
+                                    onClick={() => setSelectedTags(prev =>
+                                        prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
+                                    )}
+                                    className={`px-3 py-1.5 rounded-full text-[11px] font-bold transition-all border ${selectedTags.includes(tag)
+                                        ? 'bg-rose-500 text-white border-rose-500 shadow-sm scale-105'
+                                        : 'bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:border-rose-300'
+                                        }`}
+                                >
+                                    {tag}
                                 </button>
                             ))}
                         </div>

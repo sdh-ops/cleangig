@@ -2,6 +2,7 @@ import React from 'react';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
+import BottomNav from '@/components/layout/BottomNav';
 
 export default async function RequestsPage(props: { searchParams?: Promise<{ tab?: string }> }) {
   const searchParams = await props.searchParams;
@@ -49,8 +50,8 @@ export default async function RequestsPage(props: { searchParams?: Promise<{ tab
   const getTabClass = (tabName: string) => {
     const isActive = currentTab === tabName;
     return `flex flex-col items-center justify-center border-b-[3px] pb-[13px] pt-4 flex-1 transition-colors ${isActive
-        ? 'border-b-primary text-slate-900 dark:text-slate-100'
-        : 'border-b-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
+      ? 'border-b-primary text-slate-900 dark:text-slate-100'
+      : 'border-b-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
       }`;
   };
 
@@ -140,33 +141,7 @@ export default async function RequestsPage(props: { searchParams?: Promise<{ tab
           )}
         </div>
 
-        {/* Bottom Navigation Bar */}
-        <div className="flex gap-2 border-t border-slate-200 dark:border-slate-800 bg-background-light dark:bg-background-dark px-4 pb-[env(safe-area-inset-bottom,24px)] pt-2 fixed bottom-0 w-full max-w-md">
-          <Link href="/dashboard" className="flex flex-1 flex-col items-center justify-end gap-1 text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-primary transition-colors">
-            <div className="flex h-8 items-center justify-center">
-              <span className="material-symbols-outlined">home</span>
-            </div>
-            <p className="text-[10px] font-medium leading-normal tracking-[0.015em]">홈</p>
-          </Link>
-          <Link href="/requests" className="flex flex-1 flex-col items-center justify-end gap-1 text-primary">
-            <div className="flex h-8 items-center justify-center">
-              <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>list_alt</span>
-            </div>
-            <p className="text-[10px] font-medium leading-normal tracking-[0.015em]">요청 내역</p>
-          </Link>
-          <Link href="/chat" className="flex flex-1 flex-col items-center justify-end gap-1 text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-primary transition-colors">
-            <div className="flex h-8 items-center justify-center">
-              <span className="material-symbols-outlined">chat</span>
-            </div>
-            <p className="text-[10px] font-medium leading-normal tracking-[0.015em]">채팅</p>
-          </Link>
-          <Link href="/profile" className="flex flex-1 flex-col items-center justify-end gap-1 text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-primary transition-colors">
-            <div className="flex h-8 items-center justify-center">
-              <span className="material-symbols-outlined">person</span>
-            </div>
-            <p className="text-[10px] font-medium leading-normal tracking-[0.015em]">내 정보</p>
-          </Link>
-        </div>
+        <BottomNav />
       </div>
     </div>
   );

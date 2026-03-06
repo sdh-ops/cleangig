@@ -38,6 +38,7 @@ export interface Space {
     address_detail?: string
     location?: unknown
     size_sqm?: number
+    size_pyeong?: number
     floor_count?: number
     cleaning_tool_location?: string
     parking_guide?: string
@@ -46,6 +47,7 @@ export interface Space {
     checklist_template: ChecklistItem[]
     base_price: number
     estimated_duration: number
+    cleaning_difficulty: string
     photos: string[]
     is_active: boolean
     biz_type?: 'BUSINESS' | 'INDIVIDUAL'
@@ -92,7 +94,8 @@ export interface Job {
     extra_charge_amount?: number
     extra_charge_reason?: string
     checklist_completed?: ChecklistItem[]
-    preferred_worker_id?: string
+    targeted_worker_id?: string
+    cleaning_difficulty?: string
     created_at: string
     updated_at: string
     // 조인된 데이터

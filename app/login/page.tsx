@@ -47,7 +47,7 @@ function LoginContent() {
           간편하게 시작하세요
         </h1>
         <p className="text-slate-600 dark:text-slate-300 text-base font-normal leading-normal pb-8 px-4 text-center">
-          CleanGig Premium에 오신 것을 환영합니다.
+          CleanGig에 오신 것을 환영합니다.
         </p>
 
         <div className="flex flex-col gap-4 px-4 w-full max-w-sm mx-auto">

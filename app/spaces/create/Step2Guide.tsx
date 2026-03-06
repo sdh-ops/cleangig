@@ -45,7 +45,7 @@ export default function Step2Guide({ form, setForm }: any) {
                 <p className="text-base font-medium leading-normal pb-2 text-slate-900 dark:text-slate-100">주의사항 및 세부 가이드 (선택)</p>
                 <textarea
                     className={`${commonInputClass} min-h-[120px] resize-y`}
-                    placeholder="Any specific instructions for the cleaning partners?"
+                    placeholder="클린 파트너에게 전달할 주의사항이나 상세 가이드를 입력해 주세요."
                     value={form.caution_notes}
                     onChange={e => setForm((f: any) => ({ ...f, caution_notes: e.target.value }))}
                 />

@@ -2,6 +2,7 @@ import React from 'react';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
+import BottomNav from '@/components/layout/BottomNav';
 
 const DEFAULT_IMAGES = [
   "https://lh3.googleusercontent.com/aida-public/AB6AXuB3uDn4fhqpMAYj_CIzCXdhwuPcUwPe51jULnc4SZ2_huzrFhECeVJo7lGV9KxSoMQSAgQWmhyjayAENRLuBu7s3-x3fXAO1t0gNJdkIEcuIS4ePIm8QT78_FmvDeg3DOhylDeYDOdRJi2lFAFDc9mHTOzKLpUpWFt_1eAYXOnGkt6IXxpR_Ox9T7SweWVOlXL-KFpbxOYt9ojy_XyApXSjjwzE7QDqyeltgAoxzrUn2kGa7UJMiUQdJhtRb7HxZgInSoao8gtCvYs",
@@ -29,7 +30,7 @@ export default async function SpacesListPage() {
     <div className="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen flex flex-col font-display antialiased max-w-md mx-auto relative overflow-hidden">
       {/* Header */}
       <header className="sticky top-0 z-10 flex items-center justify-between p-4 bg-background-light dark:bg-background-dark border-b border-slate-200 dark:border-slate-800">
-        <h1 className="text-xl font-bold tracking-tight">My Spaces</h1>
+        <h1 className="text-xl font-bold tracking-tight">내 공간</h1>
         <Link href="/spaces/create" className="flex items-center gap-1 text-primary font-medium hover:text-primary/80 transition-colors">
           <span className="material-symbols-outlined text-xl">add</span>
           <span className="text-sm">새 공간 등록</span>
@@ -77,27 +78,7 @@ export default async function SpacesListPage() {
         )}
       </main>
 
-      {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-md bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 pb-[env(safe-area-inset-bottom,20px)]">
-        <div className="flex justify-around items-center h-16">
-          <Link href="/dashboard" className="flex flex-col items-center justify-center w-full h-full text-slate-400 hover:text-primary transition-colors">
-            <span className="material-symbols-outlined text-2xl mb-1">home</span>
-            <span className="text-[10px] font-medium">Home</span>
-          </Link>
-          <Link href="/spaces" className="flex flex-col items-center justify-center w-full h-full text-primary">
-            <span className="material-symbols-outlined text-2xl mb-1" style={{ fontVariationSettings: "'FILL' 1" }}>apartment</span>
-            <span className="text-[10px] font-medium">Spaces</span>
-          </Link>
-          <Link href="/requests" className="flex flex-col items-center justify-center w-full h-full text-slate-400 hover:text-primary transition-colors">
-            <span className="material-symbols-outlined text-2xl mb-1">assignment</span>
-            <span className="text-[10px] font-medium">Requests</span>
-          </Link>
-          <Link href="/profile" className="flex flex-col items-center justify-center w-full h-full text-slate-400 hover:text-primary transition-colors">
-            <span className="material-symbols-outlined text-2xl mb-1">person</span>
-            <span className="text-[10px] font-medium">My</span>
-          </Link>
-        </div>
-      </nav>
+      <BottomNav />
     </div>
   );
 }
