@@ -75,7 +75,7 @@ export default function JobsListPage() {
       {/* Header & Search */}
       <div className="sticky top-0 z-20 bg-background-light/90 dark:bg-background-dark/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 pb-2">
         <div className="flex items-center p-4 pb-2 justify-between">
-          <h2 className="text-xl font-bold leading-tight tracking-tight flex-1">일감 찾기</h2>
+          <h2 className="text-xl font-bold leading-tight tracking-tight flex-1">청소요청 찾기</h2>
         </div>
 
         <div className="px-4 py-2">
@@ -138,7 +138,7 @@ export default function JobsListPage() {
       <main className="flex-1 overflow-y-auto px-4 py-4 space-y-4 pb-24">
         <div className="flex items-center gap-2 mb-2 px-1">
           <span className="w-2 h-2 bg-primary rounded-full animate-pulse"></span>
-          <span className="text-[13px] font-bold text-primary">실시간 신규 일감 업데이트 중 ({filtered.length})</span>
+          <span className="text-[13px] font-bold text-primary">실시간 신규 청소요청 업데이트 중 ({filtered.length})</span>
         </div>
 
         {loading ? (
@@ -151,7 +151,7 @@ export default function JobsListPage() {
         ) : filtered.length === 0 ? (
           <div className="bg-white dark:bg-slate-800 rounded-xl p-8 text-center text-slate-500 shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col items-center">
             <span className="material-symbols-outlined text-4xl mb-3 opacity-50">search_off</span>
-            <h3 className="font-bold text-base mb-1 text-slate-700 dark:text-slate-300">조건에 맞는 일감이 없습니다</h3>
+            <h3 className="font-bold text-base mb-1 text-slate-700 dark:text-slate-300">조건에 맞는 청소요청이 없습니다</h3>
             <p className="text-sm text-slate-400">필터를 변경하거나 잠시만 기다려주세요!</p>
           </div>
         ) : viewMode === 'map' ? (

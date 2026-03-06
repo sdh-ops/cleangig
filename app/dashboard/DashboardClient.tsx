@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import BottomNav from '@/components/layout/BottomNav';
 
 interface Props {
   profile: { name: string; email?: string; profile_image?: string };
@@ -130,7 +131,7 @@ export default function DashboardClient({ profile, todayJobs, spaces, monthTotal
               <h3 className="text-lg font-bold">내 공간</h3>
             </div>
             <div className="flex gap-3 overflow-x-auto pb-2 snap-x hide-scrollbar">
-              <Link href="/spaces/new" className="min-w-[140px] h-[100px] bg-white dark:bg-slate-900 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 flex flex-col items-center justify-center gap-2 text-slate-500 dark:text-slate-400 snap-start cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shrink-0">
+              <Link href="/spaces/create" className="min-w-[140px] h-[100px] bg-white dark:bg-slate-900 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 flex flex-col items-center justify-center gap-2 text-slate-500 dark:text-slate-400 snap-start cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shrink-0">
                 <span className="material-symbols-outlined text-2xl">add_business</span>
                 <span className="text-sm font-medium">공간 추가</span>
               </Link>
@@ -151,29 +152,11 @@ export default function DashboardClient({ profile, todayJobs, spaces, monthTotal
         </main>
 
         {/* Floating Action Button */}
-        <Link href="/request" className="absolute bottom-24 right-4 bg-primary text-white w-14 h-14 rounded-full shadow-lg flex items-center justify-center hover:bg-primary/90 transition-transform active:scale-95 z-20">
+        <Link href="/requests/create" className="absolute bottom-24 right-4 bg-primary text-white w-14 h-14 rounded-full shadow-lg flex items-center justify-center hover:bg-primary/90 transition-transform active:scale-95 z-20">
           <span className="material-symbols-outlined text-3xl">add</span>
         </Link>
 
-        {/* Bottom Navigation */}
-        <nav className="absolute bottom-0 w-full flex border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 pb-safe z-30">
-          <Link href="/dashboard" className="flex flex-1 flex-col items-center justify-center gap-1 py-3 text-primary dark:text-primary-light">
-            <span className="material-symbols-outlined text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>home</span>
-            <span className="text-[10px] font-bold">홈</span>
-          </Link>
-          <Link href="/spaces" className="flex flex-1 flex-col items-center justify-center gap-1 py-3 text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-primary-light transition-colors">
-            <span className="material-symbols-outlined text-2xl">door_open</span>
-            <span className="text-[10px] font-medium">공간</span>
-          </Link>
-          <Link href="/requests" className="flex flex-1 flex-col items-center justify-center gap-1 py-3 text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-primary-light transition-colors">
-            <span className="material-symbols-outlined text-2xl">assignment</span>
-            <span className="text-[10px] font-medium">요청</span>
-          </Link>
-          <Link href="/profile" className="flex flex-1 flex-col items-center justify-center gap-1 py-3 text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-primary-light transition-colors">
-            <span className="material-symbols-outlined text-2xl">person</span>
-            <span className="text-[10px] font-medium">마이</span>
-          </Link>
-        </nav>
+        <BottomNav />
       </div>
 
       <style jsx global>{`

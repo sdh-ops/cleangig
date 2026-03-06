@@ -240,7 +240,7 @@ export default function JobDetailPage() {
                     <span className="material-symbols-outlined text-2xl">arrow_back</span>
                 </button>
                 <h2 className="text-lg font-bold leading-tight tracking-tight flex-1 text-center pr-12">
-                    {job.status === 'OPEN' ? '청소 일감 상세' : '진행 중인 작업'}
+                    {job.status === 'OPEN' ? '청소요청 상세' : '진행 중인 작업'}
                 </h2>
                 {job.status !== 'OPEN' && (
                     <button onClick={() => router.push(`/chat/${id}`)} className="absolute right-4 flex size-10 shrink-0 items-center justify-center text-primary rounded-full hover:bg-primary/10 transition-colors">

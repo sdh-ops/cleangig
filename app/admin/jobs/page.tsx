@@ -4,7 +4,7 @@ import Link from 'next/link'
 export default async function AdminJobsPage() {
     const supabase = await createClient()
 
-    // 일감 목록 (요청일 기준 내림차순 정렬)
+    // 청소요청 목록 (요청일 기준 내림차순 정렬)
     const { data: jobs } = await supabase
         .from('jobs')
         .select(`

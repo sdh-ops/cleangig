@@ -11,12 +11,12 @@ export default function AdminDisputesClient({ initialJobs }: { initialJobs: any[
     const router = useRouter()
 
     const handleResolve = async (jobId: string, action: 'APPROVED' | 'CANCELED') => {
-        if (!confirm(`이 일감을 ${action === 'APPROVED' ? '강제 승인' : '환불(취소)'} 처리하시겠습니까? 돌이킬 수 없습니다.`)) return
+        if (!confirm(`이 청소요청을 ${action === 'APPROVED' ? '강제 승인' : '환불(취소)'} 처리하시겠습니까? 돌이킬 수 없습니다.`)) return
 
         setLoadingId(jobId)
         const supabase = createClient()
 
-        // 일감 상태 변경
+        // 청소요청 상태 변경
         const { error } = await supabase.from('jobs').update({ status: action }).eq('id', jobId)
 
         if (!error) {

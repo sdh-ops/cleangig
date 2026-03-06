@@ -92,7 +92,7 @@ export default function ChatListPage() {
                                 <span className="material-symbols-outlined text-[32px] text-slate-300 dark:text-slate-600">chat_bubble</span>
                             </div>
                             <h3 className="text-base font-bold text-slate-700 dark:text-slate-300 mb-1">진행 중인 대화가 없습니다</h3>
-                            <p className="text-sm">매칭된 일감에서 파트너와 대화를 시작할 수 있습니다.</p>
+                            <p className="text-sm">매칭된 청소요청에서 파트너와 대화를 시작할 수 있습니다.</p>
                         </div>
                     ) : filteredChats.length === 0 ? (
                         <div className="px-4 py-12 text-center text-slate-400">

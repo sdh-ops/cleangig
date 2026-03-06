@@ -34,7 +34,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
                         가입자 관리
                     </Link>
                     <Link href="/admin/jobs" style={{ padding: '12px', borderRadius: 8, color: '#CBD5E1', textDecoration: 'none', fontWeight: 600, display: 'block' }}>
-                        일감 현황
+                        청소요청 현황
                     </Link>
                     <Link href="/admin/disputes" style={{ padding: '12px', borderRadius: 8, color: '#F87171', textDecoration: 'none', fontWeight: 600, display: 'block' }}>
                         🚨 분쟁 관리

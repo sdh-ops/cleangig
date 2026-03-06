@@ -23,6 +23,9 @@ export default function ProfileClient({ profile, totalCompletedJobs }: Props) {
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(profile.name);
   const [bio, setBio] = useState(profile.bio || '');
+  const [phone, setPhone] = useState(profile.phone || '');
+  const [bankName, setBankName] = useState(profile.bank_account?.bankName || '');
+  const [accountNumber, setAccountNumber] = useState(profile.bank_account?.accountNumber || '');
   const [saving, setSaving] = useState(false);
   const [switching, setSwitching] = useState(false);
 
@@ -31,7 +34,12 @@ export default function ProfileClient({ profile, totalCompletedJobs }: Props) {
   const handleSave = async () => {
     setSaving(true);
     const supabase = createClient();
-    await supabase.from('users').update({ name, bio }).eq('id', profile.id);
+    await supabase.from('users').update({
+      name,
+      bio,
+      phone,
+      bank_account: { bankName, accountNumber }
+    }).eq('id', profile.id);
     setSaving(false);
     setEditing(false);
     router.refresh();
@@ -108,19 +116,40 @@ export default function ProfileClient({ profile, totalCompletedJobs }: Props) {
             ) : (
               <div className="flex flex-col w-full gap-3 mt-2 animate-in fade-in slide-in-from-top-2 duration-300">
                 <input
-                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700/50 rounded-xl px-4 py-3.5 text-lg font-bold text-center placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all shadow-sm"
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700/50 rounded-xl px-4 py-3.5 text-[15px] font-bold text-center placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all shadow-sm"
                   value={name}
                   onChange={e => setName(e.target.value)}
-                  placeholder="이름을 입력하세요"
+                  placeholder="이름 (실명) 입력"
                 />
+                <input
+                  type="tel"
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700/50 rounded-xl px-4 py-3.5 text-[15px] text-center placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all shadow-sm"
+                  value={phone}
+                  onChange={e => setPhone(e.target.value)}
+                  placeholder="휴대폰 번호 (- 없이 입력)"
+                />
+                <div className="flex gap-2 w-full">
+                  <input
+                    className="w-1/3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700/50 rounded-xl px-4 py-3.5 text-[15px] text-center placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all shadow-sm"
+                    value={bankName}
+                    onChange={e => setBankName(e.target.value)}
+                    placeholder="은행명"
+                  />
+                  <input
+                    className="flex-1 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700/50 rounded-xl px-4 py-3.5 text-[15px] text-center placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all shadow-sm"
+                    value={accountNumber}
+                    onChange={e => setAccountNumber(e.target.value)}
+                    placeholder="계좌번호 (- 없이 입력)"
+                  />
+                </div>
                 <textarea
                   className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700/50 rounded-xl px-4 py-3.5 text-[15px] resize-none placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all shadow-sm"
                   value={bio}
                   onChange={e => setBio(e.target.value)}
-                  placeholder="자기소개를 입력하세요"
-                  rows={3}
+                  placeholder="자기소개를 간단히 작성해주세요"
+                  rows={2}
                 />
-                <button className="w-full bg-primary hover:bg-primary/90 text-white rounded-xl h-14 font-bold shadow-sm transition-colors active:scale-[0.98] flex items-center justify-center gap-2" onClick={handleSave} disabled={saving}>
+                <button className="w-full mt-2 bg-primary hover:bg-primary/90 text-white rounded-xl h-14 font-bold shadow-sm transition-colors active:scale-[0.98] flex items-center justify-center gap-2" onClick={handleSave} disabled={saving}>
                   {saving && <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>}
                   {saving ? '저장 중...' : '프로필 수정 완료'}
                 </button>

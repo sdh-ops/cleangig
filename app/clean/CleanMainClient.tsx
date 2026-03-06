@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
+import BottomNav from '@/components/layout/BottomNav';
 
 interface Job {
   id: string;
@@ -114,7 +115,7 @@ export default function CleanMainClient({ profile, activeJob, weekEarnings, pend
           {/* Active Jobs Summary */}
           <section className="px-4 py-2">
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-text-primary-light dark:text-text-primary-dark text-lg font-bold leading-tight tracking-[-0.015em]">진행 중인 일감</h3>
+              <h3 className="text-text-primary-light dark:text-text-primary-dark text-lg font-bold leading-tight tracking-[-0.015em]">진행 중인 청소요청</h3>
               <Link href="/clean/jobs/active" className="text-primary text-sm font-medium hover:underline">모두 보기</Link>
             </div>
             <div className="grid grid-cols-2 gap-3">
@@ -161,14 +162,14 @@ export default function CleanMainClient({ profile, activeJob, weekEarnings, pend
 
           {/* Recommended Jobs */}
           <section className="px-4 py-6">
-            <h3 className="text-text-primary-light dark:text-text-primary-dark text-lg font-bold leading-tight tracking-[-0.015em] mb-3">추천 일감</h3>
+            <h3 className="text-text-primary-light dark:text-text-primary-dark text-lg font-bold leading-tight tracking-[-0.015em] mb-3">추천 청소요청</h3>
             {loading ? (
               <div className="flex justify-center p-4">
                 <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
               </div>
             ) : nearbyJobs.length === 0 ? (
               <div className="text-center py-8 text-slate-500 text-sm border-t border-slate-100 dark:border-slate-800">
-                주변에 추천할 만한 일감이 없습니다.
+                주변에 추천할 만한 청소요청이 없습니다.
               </div>
             ) : (
               <div className="flex flex-col gap-3">
@@ -179,7 +180,7 @@ export default function CleanMainClient({ profile, activeJob, weekEarnings, pend
                       <div className="w-16 h-16 rounded-lg bg-gray-200 dark:bg-gray-700 flex-shrink-0 bg-cover bg-center" style={{ backgroundImage: `url('${bgImage}')` }}></div>
                       <div className="flex-1 min-w-0">
                         <div className="flex justify-between items-start">
-                          <h4 className="font-bold text-sm truncate">{job.space_name || (job.spaces as any)?.name || '일감'}</h4>
+                          <h4 className="font-bold text-sm truncate">{job.space_name || (job.spaces as any)?.name || '청소요청'}</h4>
                           <span className="font-bold text-primary text-sm whitespace-nowrap group-hover:underline">₩{(job.price || 0).toLocaleString()}</span>
                         </div>
                         <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark mt-1 flex items-center gap-1">
@@ -199,27 +200,7 @@ export default function CleanMainClient({ profile, activeJob, weekEarnings, pend
           </section>
         </main>
 
-        {/* Bottom Navigation Bar */}
-        <nav className="fixed bottom-0 max-w-md w-full flex gap-2 border-t border-border-light dark:border-border-dark bg-surface-light dark:bg-surface-dark px-4 pb-[env(safe-area-inset-bottom,20px)] pt-2 z-50 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
-          <div className="pb-2 w-full flex">
-            <Link href="/clean" className="flex flex-1 flex-col items-center justify-end gap-1 text-primary">
-              <span className="material-symbols-outlined text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>home</span>
-              <p className="text-[10px] font-semibold leading-normal tracking-[0.015em]">Home</p>
-            </Link>
-            <Link href="/clean/jobs" className="flex flex-1 flex-col items-center justify-end gap-1 text-text-secondary-light dark:text-text-secondary-dark hover:text-primary transition-colors">
-              <span className="material-symbols-outlined text-2xl">work</span>
-              <p className="text-[10px] font-medium leading-normal tracking-[0.015em]">Jobs</p>
-            </Link>
-            <Link href="/clean/jobs/active" className="flex flex-1 flex-col items-center justify-end gap-1 text-text-secondary-light dark:text-text-secondary-dark hover:text-primary transition-colors">
-              <span className="material-symbols-outlined text-2xl">calendar_month</span>
-              <p className="text-[10px] font-medium leading-normal tracking-[0.015em]">Schedule</p>
-            </Link>
-            <Link href="/profile" className="flex flex-1 flex-col items-center justify-end gap-1 text-text-secondary-light dark:text-text-secondary-dark hover:text-primary transition-colors">
-              <span className="material-symbols-outlined text-2xl">person</span>
-              <p className="text-[10px] font-medium leading-normal tracking-[0.015em]">My</p>
-            </Link>
-          </div>
-        </nav>
+        <BottomNav />
       </div>
     </div>
   );
