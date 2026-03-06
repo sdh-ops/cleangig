@@ -281,7 +281,7 @@ export default function ProfileClient({ profile, totalCompletedJobs }: Props) {
 
               <button
                 className="w-full flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-xl transition-colors"
-                onClick={() => alert('준비 중인 기능입니다.')}
+                onClick={() => router.push('/notices')}
               >
                 <div className="flex items-center gap-3">
                   <div className="size-10 flex items-center justify-center bg-slate-100 dark:bg-slate-800 rounded-lg text-slate-500">
@@ -297,7 +297,7 @@ export default function ProfileClient({ profile, totalCompletedJobs }: Props) {
 
               <button
                 className="w-full flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-xl transition-colors"
-                onClick={() => alert('준비 중인 기능입니다.')}
+                onClick={() => router.push('/support')}
               >
                 <div className="flex items-center gap-3">
                   <div className="size-10 flex items-center justify-center bg-slate-100 dark:bg-slate-800 rounded-lg text-slate-500">

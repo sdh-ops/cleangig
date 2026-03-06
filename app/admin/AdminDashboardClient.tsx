@@ -19,9 +19,22 @@ import {
     UserPlus,
     UserMinus,
     Shield,
-    ShieldAlert
+    ShieldAlert,
+    Plus,
+    Send
 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { isPlatformAdmin } from '@/lib/admin';
+
+const formatDate = (date: string | Date) => {
+    return new Date(date).toLocaleDateString('ko-KR', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+};
 
 interface Props {
     stats: {
@@ -42,27 +55,108 @@ interface Props {
 }
 
 export default function AdminDashboardClient({ stats, recentJobs, dailyStats, allUsers: initialUsers }: Props) {
-    const [activeTab, setActiveTab] = useState<'overview' | 'revenue' | 'activity' | 'users'>('overview');
+    const [activeTab, setActiveTab] = useState<'overview' | 'revenue' | 'activity' | 'users' | 'notices' | 'inquiries'>('overview');
     const [notifications, setNotifications] = useState<any[]>([]);
     const [users, setUsers] = useState<any[]>(initialUsers || []);
     const [searchTerm, setSearchTerm] = useState('');
     const [updatingUserId, setUpdatingUserId] = useState<string | null>(null);
+
+    // New management states
+    const [notices, setNotices] = useState<any[]>([]);
+    const [inquiries, setInquiries] = useState<any[]>([]);
+    const [isNoticeModalOpen, setIsNoticeModalOpen] = useState(false);
+    const [currentNotice, setCurrentNotice] = useState<any>(null);
+    const [isInquiryModalOpen, setIsInquiryModalOpen] = useState(false);
+    const [currentInquiry, setCurrentInquiry] = useState<any>(null);
+    const [replyText, setReplyText] = useState('');
+    const [saving, setSaving] = useState(false);
 
     // 실시간 알림 구독
     useEffect(() => {
         const supabase = createClient();
         const channel = supabase
             .channel('admin-dashboard')
+            // 새로운 청소 요청 알림
             .on('postgres_changes', { event: 'INSERT', table: 'jobs', schema: 'public' }, (payload) => {
-                setNotifications(prev => [{ id: Date.now(), message: '새로운 청소 요청이 등록되었습니다!' }, ...prev]);
-                setTimeout(() => setNotifications(prev => prev.slice(0, -1)), 5000);
+                setNotifications(prev => [{ id: Date.now(), message: '🆕 새로운 청소 요청이 등록되었습니다!' }, ...prev]);
+                setTimeout(() => setNotifications(prev => prev.slice(1)), 5000);
+            })
+            // 새로운 고객 문의 알림
+            .on('postgres_changes', { event: 'INSERT', table: 'support_inquiries', schema: 'public' }, (payload) => {
+                setNotifications(prev => [{ id: Date.now(), message: '✉️ 새로운 고객 문의가 도착했습니다!' }, ...prev]);
+                setTimeout(() => setNotifications(prev => prev.slice(1)), 5000);
+                if (activeTab === 'inquiries') fetchInquiries();
             })
             .subscribe();
 
         return () => {
             supabase.removeChannel(channel);
         };
-    }, []);
+    }, [activeTab]);
+
+    useEffect(() => {
+        if (activeTab === 'notices') fetchNotices();
+        if (activeTab === 'inquiries') fetchInquiries();
+    }, [activeTab]);
+
+    const fetchNotices = async () => {
+        const supabase = createClient();
+        const { data } = await supabase.from('notices').select('*').order('created_at', { ascending: false });
+        setNotices(data || []);
+    };
+
+    const fetchInquiries = async () => {
+        const supabase = createClient();
+        const { data } = await supabase
+            .from('support_inquiries')
+            .select('*, users(name, email)')
+            .order('created_at', { ascending: false });
+        setInquiries(data || []);
+    };
+
+    const handleSaveNotice = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setSaving(true);
+        const supabase = createClient();
+        const noticeData = {
+            title: currentNotice.title,
+            content: currentNotice.content,
+            is_important: currentNotice.is_important
+        };
+
+        if (currentNotice.id) {
+            await supabase.from('notices').update(noticeData).eq('id', currentNotice.id);
+        } else {
+            await supabase.from('notices').insert(noticeData);
+        }
+
+        await fetchNotices();
+        setIsNoticeModalOpen(false);
+        setSaving(false);
+    };
+
+    const handleDeleteNotice = async (id: string) => {
+        if (!confirm('정말 삭제하시겠습니까?')) return;
+        const supabase = createClient();
+        await supabase.from('notices').delete().eq('id', id);
+        fetchNotices();
+    };
+
+    const handleReplyInquiry = async () => {
+        if (!replyText.trim()) return;
+        setSaving(true);
+        const supabase = createClient();
+        await supabase.from('support_inquiries').update({
+            reply: replyText,
+            status: 'CLOSED',
+            responded_at: new Date().toISOString()
+        }).eq('id', currentInquiry.id);
+
+        await fetchInquiries();
+        setIsInquiryModalOpen(false);
+        setReplyText('');
+        setSaving(false);
+    };
 
     const formatCurrency = (amount: number) => {
         return new Intl.NumberFormat('ko-KR', { style: 'currency', currency: 'KRW' }).format(amount);
@@ -119,21 +213,23 @@ export default function AdminDashboardClient({ stats, recentJobs, dailyStats, al
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
             {/* Real-time Notifications Toast */}
-            <div className="fixed top-4 right-4 z-[100] flex flex-col gap-2">
+            <div className="fixed top-20 right-4 z-[100] flex flex-col gap-2">
                 {notifications.map(n => (
-                    <div key={n.id} className="bg-primary text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3 animate-in slide-in-from-right duration-300">
-                        <AlertCircle size={20} />
-                        <span className="font-bold">{n.message}</span>
+                    <div key={n.id} className="bg-slate-900 text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3 animate-in slide-in-from-right duration-300 border border-white/10 backdrop-blur-md">
+                        <div className="size-2 bg-primary rounded-full animate-ping" />
+                        <span className="font-bold text-sm tracking-tight">{n.message}</span>
                     </div>
                 ))}
             </div>
 
             {/* Top Tab Navigation */}
-            <div className="flex items-center gap-1 p-1 bg-slate-100 dark:bg-slate-800 w-fit rounded-2xl">
+            <div className="flex items-center gap-1 p-1 bg-slate-100 dark:bg-slate-800 w-fit rounded-2xl overflow-x-auto max-w-full no-scrollbar">
                 <TabButton active={activeTab === 'overview'} onClick={() => setActiveTab('overview')} label="개요" />
-                <TabButton active={activeTab === 'users'} onClick={() => setActiveTab('users')} label="사용자 관리" />
-                <TabButton active={activeTab === 'revenue'} onClick={() => setActiveTab('revenue')} label="수익 지표" />
-                <TabButton active={activeTab === 'activity'} onClick={() => setActiveTab('activity')} label="활동 로그" />
+                <TabButton active={activeTab === 'users'} onClick={() => setActiveTab('users')} label="사용자" />
+                <TabButton active={activeTab === 'notices'} onClick={() => setActiveTab('notices')} label="공지 관리" />
+                <TabButton active={activeTab === 'inquiries'} onClick={() => setActiveTab('inquiries')} label="문의 답변" />
+                <TabButton active={activeTab === 'revenue'} onClick={() => setActiveTab('revenue')} label="수익" />
+                <TabButton active={activeTab === 'activity'} onClick={() => setActiveTab('activity')} label="로그" />
             </div>
 
             {activeTab === 'overview' && (
@@ -369,8 +465,8 @@ export default function AdminDashboardClient({ stats, recentJobs, dailyStats, al
                                             </td>
                                             <td className="px-8 py-6">
                                                 <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tight ${user.role === 'admin' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30' :
-                                                        user.role === 'operator' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30' :
-                                                            'bg-slate-100 text-slate-700 dark:bg-slate-800'
+                                                    user.role === 'operator' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30' :
+                                                        'bg-slate-100 text-slate-700 dark:bg-slate-800'
                                                     }`}>
                                                     {user.role}
                                                 </span>
@@ -410,15 +506,237 @@ export default function AdminDashboardClient({ stats, recentJobs, dailyStats, al
                                 })}
                             </tbody>
                         </table>
-                        {filteredUsers.length === 0 && (
-                            <div className="py-32 text-center">
-                                <Search size={48} className="mx-auto text-slate-200 mb-4" />
-                                <p className="text-slate-400 font-bold">해당하는 사용자를 찾을 수 없습니다.</p>
-                            </div>
-                        )}
                     </div>
                 </div>
             )}
+
+            {activeTab === 'notices' && (
+                <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-500">
+                    <div className="flex justify-between items-center bg-white dark:bg-slate-900 p-8 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm">
+                        <div>
+                            <h3 className="text-2xl font-black">공지사항 관리</h3>
+                            <p className="text-slate-500 text-sm mt-1 font-medium">플랫폼 전체 사용자에게 노출되는 공지를 관리합니다.</p>
+                        </div>
+                        <button
+                            onClick={() => { setCurrentNotice({ title: '', content: '', is_important: false }); setIsNoticeModalOpen(true); }}
+                            className="bg-primary text-white px-6 py-3 rounded-2xl text-sm font-black shadow-lg shadow-primary/20 flex items-center gap-2 active:scale-95 transition-all"
+                        >
+                            <Plus size={18} /> 새 공지 작성
+                        </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-4">
+                        {notices.map(notice => (
+                            <div key={notice.id} className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-100 dark:border-slate-800 flex items-center justify-between hover:shadow-md transition-all">
+                                <div className="flex items-center gap-6">
+                                    <div className={`p-4 rounded-2xl ${notice.is_important ? 'bg-amber-50 text-amber-500' : 'bg-slate-50 text-slate-400'}`}>
+                                        <AlertCircle size={24} />
+                                    </div>
+                                    <div>
+                                        <div className="flex items-center gap-2 mb-1">
+                                            {notice.is_important && <span className="text-[10px] font-black text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">IMPORTANT</span>}
+                                            <span className="text-xs text-slate-400 font-bold">{new Date(notice.created_at).toLocaleDateString()}</span>
+                                        </div>
+                                        <h4 className="font-black text-slate-900 dark:text-white">{notice.title}</h4>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        onClick={() => { setCurrentNotice(notice); setIsNoticeModalOpen(true); }}
+                                        className="p-3 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 rounded-xl transition-colors"
+                                    >
+                                        <ChevronRight size={18} className="text-slate-400" />
+                                    </button>
+                                    <button
+                                        onClick={() => handleDeleteNotice(notice.id)}
+                                        className="p-3 bg-red-50 hover:bg-red-100 text-red-500 rounded-xl transition-colors"
+                                    >
+                                        <UserMinus size={18} />
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {activeTab === 'inquiries' && (
+                <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-500">
+                    <div className="bg-white dark:bg-slate-900 p-8 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm">
+                        <h3 className="text-2xl font-black">고객 문의 답변</h3>
+                        <p className="text-slate-500 text-sm mt-1 font-medium">사용자들의 1:1 문의에 답변하고 상태를 관리합니다.</p>
+                    </div>
+
+                    <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden">
+                        <table className="w-full text-left border-collapse">
+                            <thead>
+                                <tr className="bg-slate-50 dark:bg-slate-800/50">
+                                    <th className="px-8 py-5 text-xs font-bold text-slate-500 uppercase tracking-wider">문의자</th>
+                                    <th className="px-8 py-5 text-xs font-bold text-slate-500 uppercase tracking-wider">제목</th>
+                                    <th className="px-8 py-5 text-xs font-bold text-slate-500 uppercase tracking-wider">상태</th>
+                                    <th className="px-8 py-5 text-xs font-bold text-slate-500 uppercase tracking-wider">접수일</th>
+                                    <th className="px-8 py-5 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">관리</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {inquiries.map(inq => (
+                                    <tr key={inq.id} className="border-t border-slate-50 dark:border-slate-800 hover:bg-slate-50/50 transition-colors">
+                                        <td className="px-8 py-6">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-8 h-8 rounded-full bg-slate-100 overflow-hidden">
+                                                    <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${inq.user_id}`} alt="User" />
+                                                </div>
+                                                <div>
+                                                    <div className="text-sm font-black">{inq.users?.name || '익명'}</div>
+                                                    <div className="text-[10px] text-slate-400 font-bold">{inq.users?.email}</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="px-8 py-6">
+                                            <span className="text-sm font-bold text-slate-700 dark:text-slate-300">{inq.title}</span>
+                                        </td>
+                                        <td className="px-8 py-6">
+                                            <span className={`px-2 py-1 rounded-lg text-[10px] font-black ${inq.status === 'CLOSED' ? 'bg-emerald-100 text-emerald-700' : 'bg-primary/10 text-primary animate-pulse'}`}>
+                                                {inq.status === 'CLOSED' ? '답변완료' : '접수됨'}
+                                            </span>
+                                        </td>
+                                        <td className="px-8 py-6 text-xs text-slate-400 font-medium">
+                                            {formatDate(inq.created_at)}
+                                        </td>
+                                        <td className="px-8 py-6 text-right">
+                                            <button
+                                                onClick={() => { setCurrentInquiry(inq); setIsInquiryModalOpen(true); }}
+                                                className="bg-slate-900 dark:bg-white dark:text-slate-900 text-white px-4 py-2 rounded-xl text-xs font-black hover:opacity-90 active:scale-95 transition-all"
+                                            >
+                                                {inq.status === 'CLOSED' ? '답변 보기' : '답변 하기'}
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            )}
+
+            {/* Notice Form Modal */}
+            <AnimatePresence>
+                {isNoticeModalOpen && (
+                    <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md animate-in fade-in duration-300">
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.9, opacity: 0 }}
+                            className="bg-white dark:bg-slate-900 w-full max-w-lg rounded-[32px] overflow-hidden shadow-2xl"
+                        >
+                            <div className="p-8 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
+                                <h3 className="text-xl font-black">공지사항 {currentNotice?.id ? '수정' : '작성'}</h3>
+                                <button onClick={() => setIsNoticeModalOpen(false)} className="text-slate-400 hover:text-slate-900 transition-colors">
+                                    <span className="material-symbols-outlined">close</span>
+                                </button>
+                            </div>
+                            <form onSubmit={handleSaveNotice} className="p-8 space-y-6">
+                                <div className="space-y-2">
+                                    <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">제목</label>
+                                    <input
+                                        required
+                                        value={currentNotice?.title || ''}
+                                        onChange={e => setCurrentNotice({ ...currentNotice, title: e.target.value })}
+                                        className="w-full bg-slate-50 dark:bg-slate-800 rounded-2xl p-4 font-bold border-none outline-none focus:ring-4 focus:ring-primary/10 transition-all"
+                                        placeholder="공지 제목을 입력하세요"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">내용</label>
+                                    <textarea
+                                        required
+                                        value={currentNotice?.content || ''}
+                                        onChange={e => setCurrentNotice({ ...currentNotice, content: e.target.value })}
+                                        className="w-full bg-slate-50 dark:bg-slate-800 rounded-2xl p-4 font-bold border-none outline-none focus:ring-4 focus:ring-primary/10 h-48 resize-none"
+                                        placeholder="공지 상세 내용을 입력하세요"
+                                    />
+                                </div>
+                                <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-800 p-4 rounded-2xl">
+                                    <input
+                                        type="checkbox"
+                                        id="is_important"
+                                        checked={currentNotice?.is_important || false}
+                                        onChange={e => setCurrentNotice({ ...currentNotice, is_important: e.target.checked })}
+                                        className="size-5 accent-primary rounded-md"
+                                    />
+                                    <label htmlFor="is_important" className="text-sm font-black text-slate-700 dark:text-slate-200">중요 공지로 표시</label>
+                                </div>
+                                <button
+                                    type="submit"
+                                    disabled={saving}
+                                    className="w-full bg-primary text-white h-16 rounded-2xl font-black shadow-xl shadow-primary/20 hover:opacity-90 active:scale-95 transition-all disabled:opacity-50"
+                                >
+                                    {saving ? '저장 중...' : '저장하기'}
+                                </button>
+                            </form>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            {/* Inquiry Response Modal */}
+            <AnimatePresence>
+                {isInquiryModalOpen && (
+                    <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md animate-in fade-in duration-300">
+                        <motion.div
+                            initial={{ y: 20, opacity: 0 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            exit={{ y: 20, opacity: 0 }}
+                            className="bg-white dark:bg-slate-900 w-full max-w-lg rounded-[32px] overflow-hidden shadow-2xl"
+                        >
+                            <div className="p-8 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
+                                <div>
+                                    <h3 className="text-xl font-black">문의 본문</h3>
+                                    <p className="text-xs text-slate-500 font-bold mt-1">{currentInquiry?.users?.name} ({currentInquiry?.users?.email})</p>
+                                </div>
+                                <button onClick={() => setIsInquiryModalOpen(false)} className="text-slate-400 hover:text-slate-900 transition-colors">
+                                    <span className="material-symbols-outlined">close</span>
+                                </button>
+                            </div>
+                            <div className="p-8 max-h-[60vh] overflow-y-auto space-y-8">
+                                <div className="bg-slate-50 dark:bg-slate-800/50 p-6 rounded-3xl border border-slate-100 dark:border-slate-800">
+                                    <h4 className="font-black text-lg mb-3">{currentInquiry?.title}</h4>
+                                    <p className="text-sm font-medium text-slate-600 dark:text-slate-400 whitespace-pre-wrap leading-relaxed">{currentInquiry?.content}</p>
+                                </div>
+
+                                {currentInquiry?.status === 'OPEN' ? (
+                                    <div className="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+                                        <label className="text-xs font-black text-primary uppercase tracking-widest ml-1">나의 답변 작성</label>
+                                        <textarea
+                                            value={replyText}
+                                            onChange={e => setReplyText(e.target.value)}
+                                            className="w-full bg-primary/5 dark:bg-primary/10 border-2 border-primary/10 rounded-2xl p-6 font-bold text-slate-800 dark:text-white outline-none focus:border-primary transition-all h-48 resize-none shadow-inner"
+                                            placeholder="여기에 답변을 입력하세요..."
+                                        />
+                                        <button
+                                            onClick={handleReplyInquiry}
+                                            disabled={saving || !replyText.trim()}
+                                            className="w-full bg-primary text-white h-16 rounded-2xl font-black shadow-xl shadow-primary/20 hover:opacity-90 active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                                        >
+                                            <Send size={18} /> {saving ? '답변 전송 중...' : '답변 전송하기'}
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+                                        <label className="text-xs font-black text-emerald-500 uppercase tracking-widest ml-1">작성된 답변</label>
+                                        <div className="bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-900/30 rounded-3xl p-6 text-sm font-bold text-emerald-700 dark:text-emerald-400 whitespace-pre-wrap leading-relaxed">
+                                            {currentInquiry?.reply}
+                                            <div className="text-[10px] opacity-60 mt-4 flex items-center gap-1">
+                                                <CheckCircle2 size={12} /> {new Date(currentInquiry?.responded_at).toLocaleString()} 에 전송됨
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }
@@ -428,8 +746,8 @@ function TabButton({ active, onClick, label }: any) {
         <button
             onClick={onClick}
             className={`px-6 py-2.5 rounded-xl text-xs font-black transition-all ${active
-                    ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm'
-                    : 'text-slate-500 hover:text-slate-900 hover:bg-white/50 dark:hover:bg-slate-700/50'
+                ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm'
+                : 'text-slate-500 hover:text-slate-900 hover:bg-white/50 dark:hover:bg-slate-700/50'
                 }`}
         >
             {label}
@@ -460,8 +778,8 @@ function StatCard({ title, value, trend, isUp, icon, color, link }: any) {
 function ActionItem({ icon, title, count, link, urgent }: any) {
     return (
         <Link href={link} className={`flex items-center justify-between p-5 rounded-2xl transition-all border group ${urgent
-                ? 'bg-red-500/10 border-red-500/20 hover:bg-red-500/20'
-                : 'bg-white/5 border-white/10 hover:bg-white/10'
+            ? 'bg-red-500/10 border-red-500/20 hover:bg-red-500/20'
+            : 'bg-white/5 border-white/10 hover:bg-white/10'
             }`}>
             <div className="flex items-center gap-4">
                 <div className={`p-2.5 rounded-xl ${urgent ? 'bg-red-500 text-white' : 'bg-white/10 text-white'}`}>
