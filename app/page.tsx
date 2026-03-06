@@ -29,7 +29,7 @@ export default async function LandingPage() {
         <div className="flex size-12 shrink-0 items-center justify-center text-slate-900 dark:text-slate-100 cursor-pointer">
           <span className="material-symbols-outlined text-[24px]">arrow_back</span>
         </div>
-        <h2 className="text-xl font-bold tracking-tight">CleanGig</h2>
+        <img src="/logo_kr.png" alt="CleanGig" className="h-6 w-auto object-contain" />
       </div>
       <div className="@container flex-1 flex flex-col">
         <div className="@[480px]:px-4 @[480px]:py-3 flex-1 flex flex-col">

@@ -19,7 +19,7 @@ const Header: React.FC<HeaderProps> = ({ title, showBack }) => {
           </button>
         ) : (
           <Link href="/" className="logo">
-            <span className="logo-sparkle">✨</span> CleanGig
+            <img src="/logo_en.png" alt="CleanGig" className="h-8 w-auto object-contain" />
           </Link>
         )}
       </div>

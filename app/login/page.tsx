@@ -43,6 +43,9 @@ function LoginContent() {
           </div>
         )}
 
+        <div className="flex justify-center pt-8">
+          <img src="/logo_kr.png" alt="CleanGig" className="w-32 h-auto object-contain" />
+        </div>
         <h1 className="text-primary dark:text-slate-100 tracking-tight text-[32px] font-bold leading-tight px-4 text-center pb-3 pt-6">
           간편하게 시작하세요
         </h1>
