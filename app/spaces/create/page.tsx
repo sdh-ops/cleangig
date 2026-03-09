@@ -86,6 +86,7 @@ export default function CreateSpacePage() {
         caution_notes: '', size_sqm: '', size_pyeong: '', base_price: '30000', estimated_duration: '60',
         description: '', is_parking_available: false, cleaning_difficulty: '보통',
         biz_type: 'INDIVIDUAL' as 'BUSINESS' | 'INDIVIDUAL', biz_reg_number: '', biz_email: '', cash_receipt_number: '',
+        has_toilet: false, has_kitchen: false, has_bed: false, has_balcony: false,
     });
     const [checklist, setChecklist] = useState(DEFAULT_CHECKLISTS['airbnb']);
 
@@ -104,17 +105,6 @@ export default function CreateSpacePage() {
 
     const [mapLocation, setMapLocation] = useState<{ lat: number, lng: number } | null>(null);
     const mapRef = useRef<HTMLDivElement>(null);
-
-    const calculateRecommendedPrice = () => {
-        const duration = parseInt(form.estimated_duration) || 60;
-        const sqm = parseInt(form.size_sqm) || 30;
-        const diffRate = form.cleaning_difficulty === '특수' ? 1.5 : form.cleaning_difficulty === '어려움' ? 1.2 : form.cleaning_difficulty === '쉬움' ? 0.9 : 1.0;
-        const hourlyBase = 15000 * (duration / 60);
-        const sizeBase = (sqm / 33) * 2000;
-        const rawPrice = (hourlyBase + sizeBase) * diffRate;
-        return Math.round(rawPrice / 1000) * 1000;
-    };
-    const recommendedPrice = calculateRecommendedPrice();
 
     const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (!e.target.files) return;
@@ -267,7 +257,11 @@ export default function CreateSpacePage() {
             biz_reg_image: form.biz_type === 'BUSINESS' ? uploadedBizRegUrl : null,
             cash_receipt_number: form.biz_type === 'INDIVIDUAL' ? form.cash_receipt_number : null,
             lat: mapLocation?.lat || null,
-            lng: mapLocation?.lng || null
+            lng: mapLocation?.lng || null,
+            has_toilet: form.has_toilet,
+            has_kitchen: form.has_kitchen,
+            has_bed: form.has_bed,
+            has_balcony: form.has_balcony
         }).select().single();
 
         if (!error && data) {
@@ -302,7 +296,7 @@ export default function CreateSpacePage() {
                 <div className="flex-1 overflow-x-hidden pb-32">
                     <Script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js" strategy="afterInteractive" />
                     <div className="transition-all duration-300 transform" key={step}>
-                        {step === 1 && <Step1BasicInfo form={form} setForm={setForm} handleAddressCheck={handleAddressCheck} handleAddressSearch={handleAddressSearch} mapLocation={mapLocation} mapRef={mapRef} recommendedPrice={recommendedPrice} />}
+                        {step === 1 && <Step1BasicInfo form={form} setForm={setForm} handleAddressCheck={handleAddressCheck} handleAddressSearch={handleAddressSearch} mapLocation={mapLocation} mapRef={mapRef} />}
                         {step === 2 && <Step2Guide form={form} setForm={setForm} />}
                         {step === 3 && <Step3Checklist checklist={checklist} setChecklist={setChecklist} photoPreviewUrls={photoPreviewUrls} removePhoto={removePhoto} handlePhotoChange={handlePhotoChange} />}
                         {step === 4 && <Step4BizInfo form={form} setForm={setForm} bizRegPhotoUrl={bizRegPhotoUrl} bizRegPhoto={bizRegPhoto} setBizRegPhoto={setBizRegPhoto} setBizRegPhotoUrl={setBizRegPhotoUrl} handleBizRegPhotoChange={handleBizRegPhotoChange} />}

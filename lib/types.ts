@@ -56,6 +56,10 @@ export interface Space {
     biz_email?: string
     biz_reg_image?: string
     cash_receipt_number?: string
+    has_toilet?: boolean
+    has_kitchen?: boolean
+    has_bed?: boolean
+    has_balcony?: boolean
     created_at: string
     updated_at: string
 }

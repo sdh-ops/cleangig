@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Job, ChecklistItem } from '@/lib/types';
 import SecureImage from '@/components/common/SecureImage';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const STATUS_FLOW: Record<string, { next: string; label: string; btnLabel: string; btnIcon: string }> = {
     ASSIGNED: { next: 'EN_ROUTE', label: '배정 완료', btnLabel: '현장으로 출발하기', btnIcon: 'directions_car' },
@@ -38,6 +39,13 @@ export default function JobDetailPage() {
     const [user, setUser] = useState<any>(null);
     const [application, setApplication] = useState<any>(null);
     const [applyMessage, setApplyMessage] = useState('');
+    const [showConsentModal, setShowConsentModal] = useState(false);
+    const [consentChecked, setConsentChecked] = useState({
+        freelancer: false,
+        noshow: false,
+        as: false
+    });
+    const [userProfile, setUserProfile] = useState<any>(null);
 
     useEffect(() => {
         fetchJob();
@@ -67,6 +75,9 @@ export default function JobDetailPage() {
                 const { data: appData } = await supabase.from('job_applications')
                     .select('*').eq('job_id', id).eq('worker_id', u.id).single();
                 setApplication(appData);
+
+                const { data: profile } = await supabase.from('users').select('*').eq('id', u.id).single();
+                setUserProfile(profile);
             }
         }
         setLoading(false);
@@ -78,6 +89,19 @@ export default function JobDetailPage() {
             router.push('/login');
             return;
         }
+
+        if (!userProfile?.is_verified) {
+            if (confirm('신원 인증이 필요한 기능입니다. 인증 페이지로 이동하시겠습니까?')) {
+                router.push('/profile/verification');
+            }
+            return;
+        }
+
+        if (!consentChecked.freelancer || !consentChecked.noshow || !consentChecked.as) {
+            setShowConsentModal(true);
+            return;
+        }
+
         setSubmitting(true);
         const supabase = createClient();
         const { error } = await supabase.from('job_applications').insert({
@@ -87,6 +111,7 @@ export default function JobDetailPage() {
         });
         if (!error) {
             alert('지원이 완료되었습니다. 공간파트너의 승낙을 기다려주세요.');
+            setShowConsentModal(false);
             fetchJob();
         } else {
             alert('지원에 실패했습니다.');
@@ -127,6 +152,24 @@ export default function JobDetailPage() {
             ...(flow.next === 'SUBMITTED' ? { completed_at: new Date().toISOString() } : {}),
         }).eq('id', id);
 
+        // Notifications for Host
+        if (flow.next === 'EN_ROUTE' && job.operator_id) {
+            await supabase.rpc('notify_user', {
+                p_user_id: job.operator_id,
+                p_title: '🚗 파트너 출동!',
+                p_message: '클린파트너가 현장으로 출발했습니다. 도착 예정 시간 확인 바랍니다.',
+                p_url: `/requests/${id}`
+            });
+        }
+        if (flow.next === 'ARRIVED' && job.operator_id) {
+            await supabase.rpc('notify_user', {
+                p_user_id: job.operator_id,
+                p_title: '🏠 파트너 도착 완료',
+                p_message: '클린파트너가 현장에 도착했습니다. 이제 청소가 시작됩니다.',
+                p_url: `/requests/${id}`
+            });
+        }
+
         if (flow.next === 'SUBMITTED') {
             fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/quality-agent`, {
                 method: 'POST',
@@ -136,6 +179,16 @@ export default function JobDetailPage() {
                 },
                 body: JSON.stringify({ job_id: id })
             }).catch(console.error);
+
+            // Manual fallback notification to host if edge function is just a placeholder
+            if (job.operator_id) {
+                await supabase.rpc('notify_user', {
+                    p_user_id: job.operator_id,
+                    p_title: '🧹 청소 완료 및 검수 요청',
+                    p_message: '클린파트너가 작업을 완료했습니다. 사진과 체크리스트를 확인하고 승인해주세요!',
+                    p_url: `/requests/${id}`
+                });
+            }
         }
 
         await fetchJob();
@@ -542,7 +595,7 @@ export default function JobDetailPage() {
                                             </div>
                                         )}
                                     </div>
-                                )
+                                );
                             })}
                         </div>
                     </div>
@@ -575,7 +628,7 @@ export default function JobDetailPage() {
                                             >부족함</button>
                                         </div>
                                     </div>
-                                )
+                                );
                             })}
                         </div>
                     </div>
@@ -583,15 +636,33 @@ export default function JobDetailPage() {
             </main>
 
             {/* Bottom Action Bar */}
-            <div className="fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 p-4 max-w-md mx-auto z-40 pb-safe shadow-[0_-4px_15px_-3px_rgba(0,0,0,0.1)]">
+            <div className="fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 p-4 max-w-md mx-auto z-40 pb-safe shadow-[0_-4px_15_px_-3px_rgba(0,0,0,0.1)]">
                 {job.status === 'OPEN' ? (
                     <div className="flex flex-col gap-3">
-                        <div className="flex items-center justify-between px-1">
-                            <span className="text-sm font-bold text-slate-500 dark:text-slate-400">예상 작업 수익</span>
-                            <span className="text-2xl font-black text-primary">₩ {job.price.toLocaleString()}</span>
+                        <div className="flex flex-col gap-1.5 mb-4">
+                            <p className="text-[11px] font-black text-slate-400 uppercase tracking-wider mb-1">빠른 메시지 태그</p>
+                            <div className="flex flex-wrap gap-2">
+                                {['바로 출발 가능해요!', '전문 장비 보유 중입니다.', '주변에 거주 중이에요.', '리뷰가 많은 베테랑입니다.', '꼼꼼하게 청소해드려요.'].map(tag => (
+                                    <button
+                                        key={tag}
+                                        onClick={() => setApplyMessage(prev => prev ? `${prev} ${tag}` : tag)}
+                                        className="px-3 py-1.5 rounded-full bg-slate-100 dark:bg-slate-800 text-[11px] font-bold text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:border-primary/40 hover:text-primary transition-all"
+                                    >
+                                        +{tag}
+                                    </button>
+                                ))}
+                            </div>
                         </div>
+
+                        <textarea
+                            className="w-full h-32 p-4 border border-slate-200 dark:border-slate-700 rounded-2xl bg-slate-50 dark:bg-slate-800 text-sm focus:ring-2 focus:ring-primary/50 outline-none resize-none mb-6 font-medium placeholder:text-slate-400"
+                            placeholder="공간파트너에게 전달할 메시지를 입력해주세요 (예: 경험이 많습니다. 깨끗하게 해드릴게요!)"
+                            value={applyMessage}
+                            onChange={e => setApplyMessage(e.target.value)}
+                        />
+
                         {application ? (
-                            <button disabled className="w-full bg-slate-200 text-slate-500 font-bold py-4 rounded-xl shadow-sm cursor-not-allowed">
+                            <button disabled className="w-full bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-600 font-bold py-4 rounded-xl shadow-sm cursor-not-allowed">
                                 지원 완료. 매칭 결과를 기다리는 중입니다.
                             </button>
                         ) : (
@@ -632,6 +703,87 @@ export default function JobDetailPage() {
                 onChange={e => { const file = e.target.files?.[0]; if (file && activeUploadIdx !== null) handlePhotoUpload(file, activeUploadIdx); e.target.value = ''; }} />
             <input ref={damagePhotoInputRef} type="file" accept="image/*" capture="environment" className="hidden"
                 onChange={e => { const file = e.target.files?.[0]; if (file) handleDamageReportUpload(file); e.target.value = ''; }} />
+
+            {/* Consent Modal for Partner Application */}
+            <AnimatePresence>
+                {showConsentModal && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+                    >
+                        <motion.div
+                            initial={{ scale: 0.9, y: 20 }}
+                            animate={{ scale: 1, y: 0 }}
+                            exit={{ scale: 0.9, y: 20 }}
+                            className="bg-white dark:bg-slate-800 w-full max-w-sm rounded-[24px] overflow-hidden shadow-2xl flex flex-col"
+                        >
+                            <div className="p-6 pb-2">
+                                <h3 className="text-[20px] font-black leading-tight tracking-tight mb-1">필수 동의 및 파트너 정책</h3>
+                                <p className="text-secondary text-xs">안전하고 신뢰받는 클린긱을 위한 약구입니다.</p>
+                            </div>
+
+                            <div className="p-6 pt-4 flex-1 flex flex-col gap-4">
+                                <label className="flex items-start gap-3 cursor-pointer group">
+                                    <input
+                                        type="checkbox"
+                                        className="w-5 h-5 rounded border-slate-200 text-primary focus:ring-primary mt-0.5"
+                                        checked={consentChecked.freelancer}
+                                        onChange={e => setConsentChecked(prev => ({ ...prev, freelancer: e.target.checked }))}
+                                    />
+                                    <div className="flex-1">
+                                        <p className="text-[14px] font-bold leading-snug group-hover:text-primary transition-colors">독립 계약자(프리랜서) 지위 동의</p>
+                                        <p className="text-[11px] text-slate-500 leading-tight mt-1">본인은 플랫폼에 고용된 근로자가 아닌 독립된 파트너로서 업무를 수행함에 동리합니다.</p>
+                                    </div>
+                                </label>
+
+                                <label className="flex items-start gap-3 cursor-pointer group">
+                                    <input
+                                        type="checkbox"
+                                        className="w-5 h-5 rounded border-slate-200 text-primary focus:ring-primary mt-0.5"
+                                        checked={consentChecked.noshow}
+                                        onChange={e => setConsentChecked(prev => ({ ...prev, noshow: e.target.checked }))}
+                                    />
+                                    <div className="flex-1">
+                                        <p className="text-[14px] font-bold leading-snug group-hover:text-primary transition-colors">당일 노쇼 페널티 동의</p>
+                                        <p className="text-[11px] text-slate-500 leading-tight mt-1">정당한 사유 없는 당일 노쇼 발생 시 매칭 제한 및 계정 정지 처분을 받을 수 있습니다.</p>
+                                    </div>
+                                </label>
+
+                                <label className="flex items-start gap-3 cursor-pointer group">
+                                    <input
+                                        type="checkbox"
+                                        className="w-5 h-5 rounded border-slate-200 text-primary focus:ring-primary mt-0.5"
+                                        checked={consentChecked.as}
+                                        onChange={e => setConsentChecked(prev => ({ ...prev, as: e.target.checked }))}
+                                    />
+                                    <div className="flex-1">
+                                        <p className="text-[14px] font-bold leading-snug group-hover:text-primary transition-colors">무상 A/S 및 보상 정책 동의</p>
+                                        <p className="text-[11px] text-slate-500 leading-tight mt-1">청소 불량에 대한 정당한 이의 제기 시 24시간 내 무상 재청소 의무를 가집니다.</p>
+                                    </div>
+                                </label>
+                            </div>
+
+                            <div className="p-6 pt-2 flex flex-col gap-2">
+                                <button
+                                    onClick={handleApply}
+                                    disabled={!consentChecked.freelancer || !consentChecked.noshow || !consentChecked.as}
+                                    className="w-full bg-primary disabled:bg-slate-200 disabled:text-slate-400 text-white font-bold py-4 rounded-xl shadow-lg shadow-primary/20 transition-all active:scale-95"
+                                >
+                                    동의하고 지원하기
+                                </button>
+                                <button
+                                    onClick={() => setShowConsentModal(false)}
+                                    className="w-full py-2 text-slate-400 text-xs font-bold hover:text-slate-600 transition-colors"
+                                >
+                                    취소하기
+                                </button>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             <style jsx>{`
                 .pb-safe { padding-bottom: calc(1rem + env(safe-area-inset-bottom)); }

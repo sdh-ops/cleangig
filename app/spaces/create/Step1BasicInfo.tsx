@@ -13,7 +13,8 @@ const SPACE_TYPES: { value: SpaceType; label: string; icon: string }[] = [
     { value: 'other', label: '기타', icon: '🏢' },
 ];
 
-export default function Step1BasicInfo({ form, setForm, handleAddressSearch, mapLocation, mapRef, recommendedPrice }: any) {
+export default function Step1BasicInfo({ form, setForm, handleAddressSearch, mapLocation, mapRef }: any) {
+    const [areaUnit, setAreaUnit] = React.useState<'sqm' | 'pyeong'>('sqm');
     const commonInputClass = "flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-slate-900 focus:outline-0 focus:ring-1 focus:ring-primary border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 dark:text-slate-100 h-14 placeholder:text-gray-500 p-[15px] text-base font-normal leading-normal transition-colors";
 
     return (
@@ -80,52 +81,81 @@ export default function Step1BasicInfo({ form, setForm, handleAddressSearch, map
                 <div ref={mapRef} className={`w-full overflow-hidden transition-all duration-300 rounded-lg border-gray-300 dark:border-gray-700 ${mapLocation ? 'h-40 mt-3 border' : 'h-0'}`} />
             </label>
 
-            <div className="flex gap-3">
-                <label className="flex flex-col flex-1">
-                    <p className="text-base font-medium leading-normal pb-2 text-slate-900 dark:text-slate-100">면적 (㎡)</p>
+            <div className="flex flex-col gap-2">
+                <p className="text-base font-medium leading-normal text-slate-900 dark:text-slate-100">공간 면적</p>
+                <div className="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-xl mb-1">
+                    <button
+                        className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${areaUnit === 'sqm' ? 'bg-white dark:bg-slate-700 text-primary shadow-sm' : 'text-gray-500'}`}
+                        onClick={() => setAreaUnit('sqm')}
+                    >
+                        ㎡ (제곱미터)
+                    </button>
+                    <button
+                        className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${areaUnit === 'pyeong' ? 'bg-white dark:bg-slate-700 text-primary shadow-sm' : 'text-gray-500'}`}
+                        onClick={() => setAreaUnit('pyeong')}
+                    >
+                        평
+                    </button>
+                </div>
+
+                {areaUnit === 'sqm' ? (
                     <input
                         type="number"
                         className={commonInputClass}
-                        placeholder="0"
+                        placeholder="면적을 입력하세요 (㎡)"
                         value={form.size_sqm}
                         onChange={e => {
                             const sqm = e.target.value;
-                            const pyeong = sqm ? (parseFloat(sqm) / 3.305785).toFixed(1) : '';
+                            const pyeong = sqm ? (parseFloat(sqm) / 3.3).toFixed(1) : '';
                             setForm((f: any) => ({ ...f, size_sqm: sqm, size_pyeong: pyeong }));
                         }}
                     />
-                </label>
-                <label className="flex flex-col flex-1">
-                    <p className="text-base font-medium leading-normal pb-2 text-slate-900 dark:text-slate-100">면적 (평)</p>
+                ) : (
                     <input
                         type="number"
                         className={commonInputClass}
-                        placeholder="0"
+                        placeholder="면적을 입력하세요 (평)"
                         value={form.size_pyeong || ''}
                         onChange={e => {
                             const pyeong = e.target.value;
-                            const sqm = pyeong ? Math.round(parseFloat(pyeong) * 3.305785).toString() : '';
+                            const sqm = pyeong ? Math.round(parseFloat(pyeong) * 3.3).toString() : '';
                             setForm((f: any) => ({ ...f, size_pyeong: pyeong, size_sqm: sqm }));
                         }}
                     />
-                </label>
-                <label className="flex flex-col flex-1">
-                    <p className="text-base font-medium leading-normal pb-2 text-slate-900 dark:text-slate-100">소요 시간(분)</p>
-                    <input type="number" className={commonInputClass} placeholder="60" value={form.estimated_duration} onChange={e => setForm((f: any) => ({ ...f, estimated_duration: e.target.value }))} />
-                </label>
+                )}
+                <p className="text-[11px] text-gray-500 px-1">
+                    {areaUnit === 'sqm' && form.size_sqm ? `약 ${form.size_pyeong}평` : areaUnit === 'pyeong' && form.size_pyeong ? `약 ${form.size_sqm}㎡` : ''}
+                </p>
             </div>
 
-            <label className="flex flex-col flex-1">
-                <p className="text-base font-medium leading-normal pb-2 text-slate-900 dark:text-slate-100">기본 1회 청소 비용 (원)</p>
-                <input type="number" className={commonInputClass} value={form.base_price} onChange={e => setForm((f: any) => ({ ...f, base_price: e.target.value }))} />
-                <div className="mt-3 p-4 bg-primary-light/20 dark:bg-primary/20 border border-primary-light/50 dark:border-primary/50 rounded-xl flex items-center justify-between">
-                    <div>
-                        <span className="text-[10px] font-bold text-primary bg-white dark:bg-slate-800 px-2 py-0.5 rounded px-1.5 mb-1.5 inline-block">AI 추천 단가</span>
-                        <p className="text-xs text-slate-700 dark:text-slate-300 font-medium">현재 공간 기준 적정가는 <strong className="text-primary dark:text-primary-light">₩{recommendedPrice.toLocaleString()}</strong> 입니다.</p>
-                    </div>
-                    <button className="text-xs font-bold bg-primary text-white px-3 py-1.5 rounded-lg shrink-0" onClick={() => setForm((f: any) => ({ ...f, base_price: recommendedPrice.toString() }))}>적용</button>
+            <div className="flex flex-col gap-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700">
+                <p className="text-base font-bold text-slate-900 dark:text-slate-100 mb-1">공간 세부 시설</p>
+                <div className="grid grid-cols-2 gap-3">
+                    {[
+                        { id: 'has_toilet', label: '화장실 🚽', desc: '세면대/변기 청소' },
+                        { id: 'has_kitchen', label: '주방 🍳', desc: '설거지/싱크대' },
+                        { id: 'has_bed', label: '침대 🛏️', desc: '침구 교체/정리' },
+                        { id: 'has_balcony', label: '테라스 🌿', desc: '창틀/바닥 먼지' },
+                    ].map(item => (
+                        <button
+                            key={item.id}
+                            type="button"
+                            className={`flex flex-col items-start p-3 rounded-xl border-2 transition-all ${form[item.id] ? 'border-primary bg-primary/5' : 'border-transparent bg-white dark:bg-gray-700'}`}
+                            onClick={() => setForm((f: any) => ({ ...f, [item.id]: !f[item.id] }))}
+                        >
+                            <span className="text-sm font-bold mb-1">{item.label}</span>
+                            <span className="text-[10px] text-gray-500">{item.desc}</span>
+                        </button>
+                    ))}
                 </div>
-            </label>
+            </div>
+
+            <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 mt-2">
+                <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">
+                    <span className="material-symbols-outlined text-[16px] align-middle mr-1 text-primary">info</span>
+                    청소 비용과 소요 시간은 나중에 <strong>청소 요청을 생성할 때</strong> 각 상황에 맞춰 직접 입력하실 수 있습니다.
+                </p>
+            </div>
         </div>
     );
 }

@@ -111,6 +111,24 @@ export default function PaymentModal({ isOpen, onClose, amount, jobName, jobId, 
                     >
                         {isProcessing ? <span className="spinner" style={{ borderColor: '#fff', borderTopColor: 'transparent' }} /> : `${amount.toLocaleString()}원 결제하기`}
                     </button>
+
+                    <button
+                        className="btn btn-full"
+                        onClick={() => {
+                            const originURL = typeof window !== 'undefined' ? window.location.origin : ''
+                            const successUrl = new URL(`${originURL}/payment/success`)
+                            successUrl.searchParams.append('context', paymentContext)
+                            successUrl.searchParams.append('jobId', jobId)
+                            if (workerId) successUrl.searchParams.append('workerId', workerId)
+                            if (appId) successUrl.searchParams.append('appId', appId)
+                            successUrl.searchParams.append('status', 'DONE') // Mock status
+                            window.location.href = successUrl.toString()
+                        }}
+                        style={{ height: 48, fontSize: 14, marginTop: 12, backgroundColor: '#EFF6FF', color: '#2563EB', border: '1px dashed #BFDBFE' }}
+                    >
+                        ⚡ [테스트] 결제 없이 즉시 매칭 완료
+                    </button>
+
                     <div style={{ fontSize: 13, color: '#64748B', textAlign: 'center', marginTop: 12 }}>
                         클린긱 에스크로 안전 결제 연동 테스트
                     </div>

@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import PaymentModal from '@/components/common/PaymentModal'
@@ -80,6 +81,9 @@ export default function RequestDetailClient({ job, photos, payment, applications
     const [paymentModalOpen, setPaymentModalOpen] = useState(false)
     const [paymentContext, setPaymentContext] = useState<'accept' | 'extra'>('accept')
     const [selectedApp, setSelectedApp] = useState<{ appId: string, workerId: string } | null>(null)
+
+    // 비교 모달 상태
+    const [showComparison, setShowComparison] = useState(false)
 
     const st = STATUS_MAP[currentJob.status] || { label: currentJob.status, bgCls: 'bg-gray-100', textCls: 'text-gray-700', desc: '' }
     const space = currentJob.spaces
@@ -253,6 +257,26 @@ export default function RequestDetailClient({ job, photos, payment, applications
                         </div>
                     )}
 
+                    {/* 호스트 왓치독: 작업 지연 알림 */}
+                    {currentJob.status === 'ASSIGNED' && isOperator && new Date(currentJob.scheduled_at) < new Date() && (
+                        <div className="bg-rose-50 dark:bg-rose-900/20 border-2 border-rose-500 p-5 rounded-2xl shadow-lg animate-pulse">
+                            <div className="flex items-center gap-3 mb-2">
+                                <span className="material-symbols-outlined text-rose-600 font-black">warning</span>
+                                <h3 className="font-black text-rose-600 text-[16px]">작업 시작 지연 알림</h3>
+                            </div>
+                            <p className="text-[13px] text-rose-700 dark:text-rose-300 font-bold mb-4 leading-snug">
+                                예약된 시간이 경과했지만 작업이 시작되지 않았습니다.<br />파트너님께 연락하여 상황을 확인해보세요.
+                            </p>
+                            <button
+                                onClick={() => router.push(`/chat/${currentJob.id}`)}
+                                className="w-full bg-rose-600 text-white font-black py-3 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-rose-200 dark:shadow-none"
+                            >
+                                <span className="material-symbols-outlined">chat</span>
+                                파트너에게 즉시 채팅하기
+                            </button>
+                        </div>
+                    )}
+
                     {/* 클린파트너 정보 */}
                     {worker ? (
                         <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4 flex justify-between items-center">
@@ -302,10 +326,21 @@ export default function RequestDetailClient({ job, photos, payment, applications
                                                         <p className="text-[15px] font-bold leading-normal flex items-center gap-1">
                                                             {app.users?.name || '익명 파트너'}
                                                             <span className="text-[10px] bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 px-1.5 py-0.5 rounded">{app.users?.tier || 'NEW'}</span>
+                                                            {(app.users?.sparkle_score >= 80 || app.users?.avg_rating >= 4.8) && (
+                                                                <span className="text-[9px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded font-black border border-amber-200 ml-1 flex items-center gap-0.5">
+                                                                    <span className="material-symbols-outlined text-[10px]">workspace_premium</span> 강력추천
+                                                                </span>
+                                                            )}
                                                         </p>
                                                         <div className="flex items-center text-xs font-medium mt-1">
                                                             <span className="text-amber-500 flex items-center gap-0.5"><span className="material-symbols-outlined text-[14px]">star</span> {app.users?.avg_rating?.toFixed(1) || '신규'}</span>
                                                             <span className="text-slate-500 dark:text-slate-400 ml-2 font-normal">성공 {app.users?.jobs_completed || 0}회</span>
+                                                            {/* 단골 배지 (데이터가 있다면 조건부 표시) */}
+                                                            {app.users?.is_favorite && (
+                                                                <span className="ml-2 text-[10px] font-bold text-rose-500 flex items-center gap-0.5">
+                                                                    <span className="material-symbols-outlined text-[12px]">favorite</span> 단골
+                                                                </span>
+                                                            )}
                                                         </div>
                                                     </div>
                                                     <button
@@ -369,7 +404,15 @@ export default function RequestDetailClient({ job, photos, payment, applications
                     {/* 청소 완료 사진 */}
                     {afterPhotos.length > 0 && (
                         <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4 mt-2">
-                            <h3 className="text-[15px] font-bold mb-3 flex items-center gap-1"><span className="material-symbols-outlined text-[18px]">photo_camera</span>청소 완료 사진 ({afterPhotos.length}장)</h3>
+                            <div className="flex justify-between items-center mb-3">
+                                <h3 className="text-[15px] font-bold flex items-center gap-1"><span className="material-symbols-outlined text-[18px]">photo_camera</span>청소 완료 사진 ({afterPhotos.length}장)</h3>
+                                <button
+                                    onClick={() => setShowComparison(true)}
+                                    className="text-[11px] font-black text-primary bg-primary/10 px-2.5 py-1.5 rounded-lg border border-primary/20 flex items-center gap-1 hover:bg-primary/20 transition-colors"
+                                >
+                                    <span className="material-symbols-outlined text-[14px]">compare</span> 비포/애프터 비교
+                                </button>
+                            </div>
                             <div className="grid grid-cols-3 gap-2">
                                 {afterPhotos.map((p: any) => (
                                     <div key={p.id} className="relative aspect-square rounded-lg overflow-hidden bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
@@ -617,6 +660,81 @@ export default function RequestDetailClient({ job, photos, payment, applications
                 paymentContext={paymentContext}
                 workerId={selectedApp?.workerId}
             />
+
+            {/* Before & After Comparison Modal */}
+            <AnimatePresence>
+                {showComparison && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md p-4" onClick={() => setShowComparison(false)}>
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.9, opacity: 0 }}
+                            className="bg-white dark:bg-slate-900 w-full max-w-lg rounded-[32px] overflow-hidden shadow-2xl flex flex-col max-h-[90vh]"
+                            onClick={e => e.stopPropagation()}
+                        >
+                            <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-white dark:bg-slate-900 sticky top-0 z-10">
+                                <div>
+                                    <h3 className="text-xl font-bold tracking-tight">Before & After 비교</h3>
+                                    <p className="text-xs text-slate-500 mt-0.5">표준 사진과 완료 사진을 대조해보세요.</p>
+                                </div>
+                                <button onClick={() => setShowComparison(false)} className="size-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                                    <span className="material-symbols-outlined text-slate-600 dark:text-slate-400">close</span>
+                                </button>
+                            </div>
+
+                            <div className="flex-1 overflow-y-auto p-6 space-y-8">
+                                <section>
+                                    <h4 className="text-[13px] font-black text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+                                        공간 표준 (Before)
+                                    </h4>
+                                    <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none">
+                                        {space?.reference_photos?.map((url: string, i: number) => (
+                                            <div key={i} className="w-[200px] h-[150px] shrink-0 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm">
+                                                <img src={url} className="w-full h-full object-cover" alt="Before" />
+                                            </div>
+                                        )) || <p className="text-xs text-slate-400 italic">등록된 표준 사진이 없습니다.</p>}
+                                    </div>
+                                </section>
+
+                                <span className="flex items-center gap-3">
+                                    <div className="flex-1 h-px bg-slate-100 dark:bg-slate-800"></div>
+                                    <span className="material-symbols-outlined text-primary text-2xl">compare_arrows</span>
+                                    <div className="flex-1 h-px bg-slate-100 dark:bg-slate-800"></div>
+                                </span>
+
+                                <section>
+                                    <h4 className="text-[13px] font-black text-primary uppercase tracking-widest mb-3 flex items-center gap-2">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
+                                        청소 결과 (After)
+                                    </h4>
+                                    <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none">
+                                        {afterPhotos.map((p: any) => (
+                                            <div key={p.id} className="w-[200px] h-[150px] shrink-0 rounded-2xl border border-primary/20 dark:border-slate-700 overflow-hidden shadow-md relative">
+                                                <SecureImage srcOrPath={p.photo_url} className="w-full h-full object-cover" />
+                                                {p.ai_quality_score && (
+                                                    <div className="absolute top-2 right-2 px-2 py-1 bg-primary text-white text-[9px] font-bold rounded-lg shadow-lg">
+                                                        AI {p.ai_quality_score}점
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </section>
+                            </div>
+
+                            <div className="p-6 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-800">
+                                <button
+                                    onClick={() => setShowComparison(false)}
+                                    className="w-full py-4 bg-slate-900 dark:bg-white dark:text-slate-900 text-white font-black rounded-2xl shadow-xl hover:scale-[1.02] transition-transform"
+                                >
+                                    검수 완료
+                                </button>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </div>
     )
 }

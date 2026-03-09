@@ -168,7 +168,7 @@ export default function JobsListPage() {
         </div>
 
         {/* Filters */}
-        <div className="flex gap-2 px-4 py-2 overflow-x-auto scrollbar-none pb-3 justify-between items-center">
+        <div className="flex gap-2 px-4 py-2 overflow-x-auto scrollbar-none pb-3 justify-start items-center">
           <div className="flex gap-2">
             <button
               className={`flex h-8 shrink-0 items-center justify-center gap-x-1 rounded-full px-4 shadow-sm transition-colors border ${filter === 'nearby' ? 'bg-primary text-white border-primary' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'}`}
@@ -240,42 +240,76 @@ export default function JobsListPage() {
               const hourlyRate = Math.round(job.price / (job.estimated_duration / 60));
 
               return (
-                <Link href={`/clean/job/${job.id}`} key={job.id} className="block bg-white dark:bg-slate-800 rounded-xl p-4 shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col gap-4 active:scale-[0.98] transition-transform cursor-pointer hover:shadow-md">
-                  <div className="flex gap-4">
+                <Link
+                  href={`/clean/job/${job.id}`}
+                  key={job.id}
+                  className={`block rounded-[24px] p-5 shadow-sm border transition-all active:scale-[0.98] cursor-pointer hover:shadow-xl relative overflow-hidden ${job.is_urgent
+                      ? 'bg-rose-50/50 dark:bg-rose-950/20 border-rose-200 dark:border-rose-800 shadow-rose-100 dark:shadow-none'
+                      : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700'
+                    }`}
+                >
+                  {/* SOS Glow Effect for Urgent Jobs */}
+                  {job.is_urgent && (
+                    <motion.div
+                      animate={{ opacity: [0.1, 0.3, 0.1] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                      className="absolute inset-0 bg-rose-500/10 pointer-events-none"
+                    />
+                  )}
+
+                  <div className="flex gap-4 relative z-10">
                     {space?.reference_photos?.[0] ? (
                       <div
-                        className="bg-center bg-no-repeat aspect-square bg-cover rounded-lg w-[80px] h-[80px] shrink-0 border border-slate-100 dark:border-slate-700"
+                        className="bg-center bg-no-repeat aspect-square bg-cover rounded-2xl w-[88px] h-[88px] shrink-0 border border-slate-100 dark:border-slate-700 shadow-sm"
                         style={{ backgroundImage: `url("${space.reference_photos[0]}")` }}
-                      />
+                      >
+                        {job.is_urgent && (
+                          <div className="absolute top-(-2) left-(-2) bg-rose-600 text-white text-[10px] font-black px-2 py-1 rounded-lg shadow-lg animate-bounce">
+                            SOS
+                          </div>
+                        )}
+                      </div>
                     ) : (
-                      <div className="w-[80px] h-[80px] shrink-0 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-3xl border border-slate-200 dark:border-slate-700">
+                      <div className="w-[88px] h-[88px] shrink-0 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-3xl border border-slate-200 dark:border-slate-700 relative shadow-sm">
                         {SPACE_TYPE_ICON[space?.type] || '🏢'}
+                        {job.is_urgent && (
+                          <div className="absolute -top-2 -left-2 bg-rose-600 text-white text-[10px] font-black px-2 py-1 rounded-lg shadow-lg animate-bounce">
+                            SOS
+                          </div>
+                        )}
                       </div>
                     )}
-                    <div className="flex flex-1 flex-col justify-between py-1 overflow-hidden">
+                    <div className="flex flex-1 flex-col justify-between py-0.5 overflow-hidden">
                       <div>
-                        <h3 className="text-base font-bold leading-tight mb-1 truncate text-slate-900 dark:text-slate-100">{space?.name}</h3>
+                        <div className="flex justify-between items-start">
+                          <h3 className="text-[17px] font-black leading-tight mb-1 truncate text-slate-900 dark:text-slate-100 tracking-tight">{space?.name}</h3>
+                          {job.is_urgent && (
+                            <span className="flex h-2 w-2 rounded-full bg-rose-500 animate-ping"></span>
+                          )}
+                        </div>
                         <div className="flex items-center gap-1 text-slate-500 mb-1">
-                          <span className="material-symbols-outlined text-[14px]">location_on</span>
-                          <p className="text-xs font-medium truncate">{space?.address}</p>
+                          <span className="material-symbols-outlined text-[16px] opacity-70">location_on</span>
+                          <p className="text-[13px] font-bold truncate tracking-tight">{space?.address}</p>
                         </div>
                         <div className="flex items-center gap-1 text-slate-500">
-                          <span className="material-symbols-outlined text-[14px]">schedule</span>
-                          <p className="text-[11px] font-medium truncate">{timeStr} ({job.estimated_duration}분)</p>
+                          <span className="material-symbols-outlined text-[16px] opacity-70">schedule</span>
+                          <p className="text-[12px] font-bold truncate">{timeStr} ({job.estimated_duration}분)</p>
                         </div>
                       </div>
                     </div>
                   </div>
-                  <div className="flex justify-between items-end border-t border-slate-100 dark:border-slate-700 pt-3">
+                  <div className="flex justify-between items-end border-t border-slate-100 dark:border-slate-700 mt-4 pt-4 relative z-10">
                     <div className="flex items-center gap-2">
                       {job.is_urgent ? (
-                        <span className="inline-flex items-center rounded-md bg-rose-50 px-2 py-1 text-[10px] font-bold text-rose-600 border border-rose-200 dark:bg-rose-900/30 dark:border-rose-800">🔥 긴급 배정</span>
+                        <span className="inline-flex items-center rounded-lg bg-rose-600 px-3 py-1.5 text-[11px] font-black text-white shadow-lg shadow-rose-200 dark:shadow-none animate-pulse">🔥 긴급 배정</span>
                       ) : (
-                        <span className="inline-flex items-center rounded-md bg-primary-light/10 px-2 py-1 text-[10px] font-bold text-primary border border-primary/20">일반 요금</span>
+                        <span className="inline-flex items-center rounded-lg bg-slate-100 dark:bg-slate-700 px-3 py-1.5 text-[11px] font-black text-slate-600 dark:text-slate-300">일반 청소</span>
                       )}
-                      <span className="text-[11px] font-bold text-slate-400">시급 {hourlyRate.toLocaleString()}원</span>
+                      <span className="text-[12px] font-black text-slate-400">시급 {hourlyRate.toLocaleString()}원</span>
                     </div>
-                    <p className="text-primary font-bold text-lg leading-none">₩{job.price.toLocaleString()}</p>
+                    <div className="text-right">
+                      <p className="text-primary font-black text-xl leading-none tracking-tight">₩{job.price.toLocaleString()}</p>
+                    </div>
                   </div>
                 </Link>
               );

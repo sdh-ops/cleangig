@@ -56,10 +56,58 @@ export default function CreateRequestPage() {
 
     useEffect(() => {
         if (!selectedSpace) return
-        let p = form.custom_price ? parseInt(form.custom_price) : selectedSpace.base_price
-        if (form.is_urgent) p = Math.round(p * 1.3)
-        setPrice(p)
-    }, [selectedSpace, form.is_urgent, form.custom_price])
+
+        // Multi-factor Smart Estimation Logic
+        const calculateSmartEstimation = () => {
+            const size = selectedSpace.size_sqm || 0;
+
+            // 1. Base Price & Time Calculation
+            let estimatedPrice = size * 1500; // 1,500 KRW per m2
+            let estimatedTime = size * 2;     // 2 mins per m2
+
+            // 2. Space Type Multipliers
+            const typeMultipliers: Record<string, number> = {
+                airbnb: 1.2,
+                partyroom: 1.1,
+                gym: 1.1,
+                studio: 1.05,
+            };
+            const typeMult = typeMultipliers[selectedSpace.type] || 1.0;
+            estimatedPrice *= typeMult;
+            estimatedTime *= typeMult;
+
+            // 3. Facility Add-ons
+            if (selectedSpace.has_toilet) { estimatedPrice += 5000; estimatedTime += 15; }
+            if (selectedSpace.has_kitchen) { estimatedPrice += 5000; estimatedTime += 15; }
+            if (selectedSpace.has_bed) { estimatedPrice += 3000; estimatedTime += 10; }
+            if (selectedSpace.has_balcony) { estimatedPrice += 2000; estimatedTime += 10; }
+
+            // 4. Difficulty Multiplier (Calculated based on custom_difficulty)
+            const difficultyMultipliers: Record<string, number> = {
+                '쉬움': 0.8,
+                '보통': 1.0,
+                '어려움': 1.3,
+                '특수': 1.6,
+            };
+            const diffMult = difficultyMultipliers[form.custom_difficulty] || 1.0;
+
+            const finalPrice = Math.round(estimatedPrice * diffMult);
+            const finalDuration = Math.round(estimatedTime * diffMult);
+
+            return { finalPrice, finalDuration };
+        };
+
+        const { finalPrice, finalDuration } = calculateSmartEstimation();
+
+        // Update price calculation with urgency
+        let p = form.custom_price ? parseInt(form.custom_price) : finalPrice;
+        if (form.is_urgent) p = Math.round(p * 1.3);
+        setPrice(p);
+
+        // Auto-update custom duration if it hasn't been manually tweaked (simplified)
+        // If the user hasn't touched it, we keep it in sync with our smart suggestion
+        setForm(f => ({ ...f, custom_duration: f.custom_duration ? f.custom_duration : finalDuration.toString() }));
+    }, [selectedSpace, form.is_urgent, form.custom_price, form.custom_difficulty])
 
     const handleSpaceSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const spaceId = e.target.value;
@@ -68,8 +116,6 @@ export default function CreateRequestPage() {
         setForm(f => ({
             ...f,
             space_id: spaceId,
-            custom_price: space?.base_price.toString() || '',
-            custom_duration: space?.estimated_duration.toString() || '60',
             custom_difficulty: space?.cleaning_difficulty || '보통'
         }))
     }

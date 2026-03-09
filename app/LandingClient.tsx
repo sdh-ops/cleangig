@@ -20,7 +20,7 @@ export default function LandingClient() {
                 />
 
                 {/* Headlines */}
-                <div className="space-y-8 mb-16">
+                <div className="space-y-8 mb-16 break-keep">
                     <motion.h1
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -28,7 +28,7 @@ export default function LandingClient() {
                         className="text-[26px] font-black leading-[1.4] tracking-tight text-slate-900 dark:text-white"
                     >
                         공간 운영의 청소 걱정은 줄이고<br />
-                        <span className="text-primary italic">누군가에겐 새로운 수익 기회를 만듭니다.</span>
+                        <span className="text-primary italic">누군가에게는 새로운 수익 기회를 제공합니다.</span>
                     </motion.h1>
 
                     <motion.p

@@ -27,6 +27,7 @@ export const viewport: Viewport = {
 }
 
 import NotificationOverlay from '@/components/common/NotificationOverlay'
+import PageTransition from '@/components/common/PageTransition'
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -41,7 +42,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="antialiased font-pretendard">
         <NotificationOverlay />
-        {children}
+        <PageTransition>
+          {children}
+        </PageTransition>
       </body>
     </html>
   )
