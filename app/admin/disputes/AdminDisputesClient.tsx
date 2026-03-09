@@ -26,7 +26,7 @@ export default function AdminDisputesClient({ initialJobs }: { initialJobs: any[
             await supabase.from('disputes').update({
                 status: 'RESOLVED',
                 final_verdict: `Admin Decision: ${action}`,
-                updated_at: new Error().toISOString() // Or just let server handle
+                updated_at: new Date().toISOString() // Or just let server handle
             }).eq('job_id', jobId);
 
             // 3. Send Notifications

@@ -7,6 +7,7 @@ import BottomNav from '@/components/layout/BottomNav';
 import JobsMap from './JobsMap';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Filter, X, ChevronDown, Calendar, Clock, DollarSign, Sparkles } from 'lucide-react';
+import { maskAddress } from '@/lib/utils';
 
 interface Job {
   id: string;
@@ -244,8 +245,8 @@ export default function JobsListPage() {
                   href={`/clean/job/${job.id}`}
                   key={job.id}
                   className={`block rounded-[24px] p-5 shadow-sm border transition-all active:scale-[0.98] cursor-pointer hover:shadow-xl relative overflow-hidden ${job.is_urgent
-                      ? 'bg-rose-50/50 dark:bg-rose-950/20 border-rose-200 dark:border-rose-800 shadow-rose-100 dark:shadow-none'
-                      : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700'
+                    ? 'bg-rose-50/50 dark:bg-rose-950/20 border-rose-200 dark:border-rose-800 shadow-rose-100 dark:shadow-none'
+                    : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700'
                     }`}
                 >
                   {/* SOS Glow Effect for Urgent Jobs */}
@@ -289,7 +290,7 @@ export default function JobsListPage() {
                         </div>
                         <div className="flex items-center gap-1 text-slate-500 mb-1">
                           <span className="material-symbols-outlined text-[16px] opacity-70">location_on</span>
-                          <p className="text-[13px] font-bold truncate tracking-tight">{space?.address}</p>
+                          <p className="text-[13px] font-bold truncate tracking-tight">{maskAddress(space?.address || '')}</p>
                         </div>
                         <div className="flex items-center gap-1 text-slate-500">
                           <span className="material-symbols-outlined text-[16px] opacity-70">schedule</span>

@@ -31,7 +31,12 @@ export default async function PaymentSuccessPage({ searchParams }: { searchParam
 
         if (!response.ok) {
             const errObj = await response.json()
-            errorMessage = errObj.message || '결제 승인 중 오류가 발생했습니다.'
+            // Handle refresh: if already processed, it's effectively success for us
+            if (errObj.code === 'ALREADY_PROCESSED_PAYMENT') {
+                isSuccess = true
+            } else {
+                errorMessage = errObj.message || '결제 승인 중 오류가 발생했습니다.'
+            }
         } else {
             isSuccess = true
         }
@@ -70,8 +75,8 @@ export default async function PaymentSuccessPage({ searchParams }: { searchParam
                 })
             }
         } else if (context === 'extra') {
-            // 추가 결제 완료 (즉시 승인)
-            await supabase.from('jobs').update({ status: 'APPROVED' }).eq('id', jobId)
+            // 추가 결제 완료 (즉시 승인) - Guard against redundant updates
+            await supabase.from('jobs').update({ status: 'APPROVED' }).eq('id', jobId).neq('status', 'APPROVED')
         }
     }
 

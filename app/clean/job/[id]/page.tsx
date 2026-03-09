@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client';
 import { Job, ChecklistItem } from '@/lib/types';
 import SecureImage from '@/components/common/SecureImage';
 import { motion, AnimatePresence } from 'framer-motion';
+import { maskAddress } from '@/lib/utils';
 
 const STATUS_FLOW: Record<string, { next: string; label: string; btnLabel: string; btnIcon: string }> = {
     ASSIGNED: { next: 'EN_ROUTE', label: '배정 완료', btnLabel: '현장으로 출발하기', btnIcon: 'directions_car' },
@@ -118,6 +119,26 @@ export default function JobDetailPage() {
         }
         setSubmitting(false);
     };
+
+    const handleWithdraw = async () => {
+        if (!application || !user) return;
+        if (!confirm('지원을 취소하시겠습니까?')) return;
+
+        setSubmitting(true);
+        const supabase = createClient();
+        const { error } = await supabase.from('job_applications')
+            .delete()
+            .eq('id', application.id);
+
+        if (!error) {
+            alert('지원이 취소되었습니다.');
+            setApplication(null);
+            fetchJob();
+        } else {
+            alert('지원 취소에 실패했습니다.');
+        }
+        setSubmitting(false);
+    }
 
     const handleStatusNext = async () => {
         if (!job) return;
@@ -318,6 +339,9 @@ export default function JobDetailPage() {
     const dateStr = when.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' });
     const timeStr = when.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
 
+    const isMatched = user && job && job.worker_id === user.id;
+    const displayAddress = isMatched ? (space?.address || '') : maskAddress(space?.address || '');
+
     return (
         <div className="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display min-h-screen flex flex-col max-w-md mx-auto relative overflow-hidden pb-24 shadow-xl">
             {/* App Bar */}
@@ -343,15 +367,21 @@ export default function JobDetailPage() {
                     ) : (
                         <span className="inline-block px-3 py-1 mb-3 text-xs font-bold text-primary bg-primary/10 rounded-full border border-primary/20">일반 요금 작업</span>
                     )}
-                    <h1 className="tracking-tight text-2xl md:text-[28px] font-bold leading-tight text-left pb-2 text-slate-900 dark:text-slate-100">{space?.name || '청소 작업'}</h1>
-                    <div className="flex flex-wrap items-center text-slate-500 dark:text-slate-400 text-sm font-medium pt-1 gap-2">
+                    <h1 className="tracking-tight text-2xl md:text-[28px] font-bold leading-tight text-left pb-1 text-slate-900 dark:text-slate-100">{space?.name || '청소 작업'}</h1>
+                    <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 mb-2">
+                        <span className="material-symbols-outlined text-[18px]">location_on</span>
+                        <p className="text-[14px] font-bold">{displayAddress}</p>
+                        {!isMatched && (
+                            <span className="text-[10px] text-primary/70 bg-primary/5 px-2 py-0.5 rounded-md font-bold border border-primary/10">매칭 시 공개</span>
+                        )}
+                    </div>
+                    <div className="flex flex-wrap items-center text-slate-400 dark:text-slate-500 text-[12px] font-medium gap-2">
                         <div className="flex items-center gap-1">
-                            <span className="material-symbols-outlined text-[16px]">calendar_today</span>
+                            <span className="material-symbols-outlined text-[14px]">calendar_today</span>
                             <span>{dateStr}</span>
                         </div>
-                        <span className="mx-1 hidden sm:inline">|</span>
                         <div className="flex items-center gap-1">
-                            <span className="material-symbols-outlined text-[16px]">schedule</span>
+                            <span className="material-symbols-outlined text-[14px]">schedule</span>
                             <span>{timeStr} (예상 {job.estimated_duration}분)</span>
                         </div>
                     </div>
@@ -478,11 +508,19 @@ export default function JobDetailPage() {
                                 <h4 className="font-bold text-sm mb-3">📸 참고 사진</h4>
                                 <div className="flex gap-3 overflow-x-auto pb-4 scrollbar-none">
                                     {space.reference_photos.map((url: string, i: number) => (
-                                        <div key={i} className="w-[140px] h-[100px] shrink-0 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden relative">
+                                        <div key={i} className={`w-[140px] h-[100px] shrink-0 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden relative ${!isMatched ? 'blur-[4px]' : ''}`}>
                                             <img src={url} alt={`Reference ${i}`} className="w-full h-full object-cover" />
+                                            {!isMatched && (
+                                                <div className="absolute inset-0 flex items-center justify-center bg-black/10">
+                                                    <span className="material-symbols-outlined text-white text-2xl drop-shadow-md">lock</span>
+                                                </div>
+                                            )}
                                         </div>
                                     ))}
                                 </div>
+                                {!isMatched && (
+                                    <p className="text-[11px] text-slate-400 text-center font-bold">상세 사진과 주소는 매칭 확정 파트너에게만 공개됩니다.</p>
+                                )}
                             </div>
                         )}
                     </div>
@@ -662,9 +700,18 @@ export default function JobDetailPage() {
                         />
 
                         {application ? (
-                            <button disabled className="w-full bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-600 font-bold py-4 rounded-xl shadow-sm cursor-not-allowed">
-                                지원 완료. 매칭 결과를 기다리는 중입니다.
-                            </button>
+                            <div className="space-y-3">
+                                <button disabled className="w-full bg-slate-100 dark:bg-slate-800 text-slate-400 font-bold py-4 rounded-xl shadow-sm cursor-not-allowed">
+                                    지원 완료. 매칭 결과를 기다리는 중입니다.
+                                </button>
+                                <button
+                                    onClick={handleWithdraw}
+                                    disabled={submitting}
+                                    className="w-full py-2 text-[12px] font-bold text-slate-400 hover:text-rose-500 transition-colors"
+                                >
+                                    지원 취소하기
+                                </button>
+                            </div>
                         ) : (
                             <button
                                 onClick={handleApply}

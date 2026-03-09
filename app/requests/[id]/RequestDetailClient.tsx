@@ -36,6 +36,7 @@ export default function RequestDetailClient({ job, photos, payment, applications
     const [isFavorite, setIsFavorite] = useState(initialIsFavorite)
     const [togglingFav, setTogglingFav] = useState(false)
     const [currentJob, setCurrentJob] = useState(job)
+    const [reportingNoShow, setReportingNoShow] = useState(false)
 
     // 리얼타임 상태 동기화
     useEffect(() => {
@@ -204,6 +205,48 @@ export default function RequestDetailClient({ job, photos, payment, applications
         router.refresh()
     }
 
+    const handleNoShowReport = async () => {
+        if (!worker) return
+        if (!window.confirm('파트너가 현장에 도착하지 않았나요? 노쇼 신고 시 해당 작업은 즉시 취소되며 파트너의 스파클 점수가 크게 하락합니다.')) return
+
+        setReportingNoShow(true)
+        const supabase = createClient()
+
+        try {
+            // 1. 작업 취소 처리
+            const { error: jobError } = await supabase.from('jobs').update({
+                status: 'CANCELED',
+                cancellation_reason: 'HOST_REPORTED_NOSHOW'
+            }).eq('id', currentJob.id)
+
+            if (jobError) throw jobError
+
+            // 2. 파트너 점수 삭감 (노쇼 페널티 -15점)
+            const newScore = Math.max(0, (worker.sparkle_score || 50) - 15)
+            const { error: scoreError } = await supabase.from('users').update({
+                sparkle_score: newScore
+            }).eq('id', worker.id)
+
+            if (scoreError) throw scoreError
+
+            // 3. 알림 발송
+            await supabase.rpc('notify_user', {
+                p_user_id: worker.id,
+                p_title: '🚫 노쇼 신고 및 페널티 안내',
+                p_message: '호스트가 노쇼를 보고했습니다. 작업이 취소되었으며 스파클 점수 -15점 페널티가 부여되었습니다.',
+                p_url: '/profile'
+            })
+
+            alert('노쇼 신고가 접수되었습니다. 해당 청소 요청은 취소 처리되었습니다.')
+            router.refresh()
+        } catch (err) {
+            console.error('No-show report error:', err)
+            alert('신고 처리 중 오류가 발생했습니다.')
+        } finally {
+            setReportingNoShow(false)
+        }
+    }
+
     return (
         <div className="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display min-h-screen antialiased flex flex-col mx-auto max-w-md w-full relative">
             <div className="sticky top-0 z-20 flex items-center bg-background-light dark:bg-background-dark p-4 justify-between border-b border-primary/10">
@@ -273,6 +316,14 @@ export default function RequestDetailClient({ job, photos, payment, applications
                             >
                                 <span className="material-symbols-outlined">chat</span>
                                 파트너에게 즉시 채팅하기
+                            </button>
+                            <button
+                                onClick={handleNoShowReport}
+                                disabled={reportingNoShow}
+                                className="w-full mt-3 py-2.5 text-xs font-bold text-rose-400 hover:text-rose-600 transition-colors flex items-center justify-center gap-1.5"
+                            >
+                                <span className="material-symbols-outlined text-[14px]">block</span>
+                                {reportingNoShow ? '신고 처리 중...' : '파트너 노쇼(No-show) 신고하기'}
                             </button>
                         </div>
                     )}
