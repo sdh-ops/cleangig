@@ -1,321 +1,506 @@
-'use client';
+'use client'
 
-import React, { useState, useRef } from 'react';
-import { useRouter } from 'next/navigation';
-import Script from 'next/script';
-import { createClient } from '@/lib/supabase/client';
-import { SpaceType } from '@/lib/types';
-import Step1BasicInfo from './Step1BasicInfo';
-import Step2Guide from './Step2Guide';
-import Step3Checklist from './Step3Checklist';
-import Step4BizInfo from './Step4BizInfo';
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
+import type { SpaceType } from '@/lib/types'
+import { motion, AnimatePresence } from 'framer-motion'
+import {
+  ChevronLeft,
+  ChevronRight,
+  Loader2,
+  MapPin,
+  Check,
+  Plus,
+  X,
+  Info,
+  Search,
+} from 'lucide-react'
+import ImageUploader from '@/components/common/ImageUploader'
+import NaverMap from '@/components/common/NaverMap'
+import { makeChecklist, DEFAULT_CHECKLISTS } from '@/lib/checklists'
+import { BASE_PRICE_BY_TYPE } from '@/lib/pricing'
+import { spaceTypeLabel, rid } from '@/lib/utils'
+import { geocode } from '@/lib/naver'
 
-const DEFAULT_CHECKLISTS: Record<string, { id: string; label: string; required: boolean }[]> = {
-    airbnb: [
-        { id: '1', label: '침구 교체 및 정리', required: true },
-        { id: '2', label: '화장실 청소 (변기·세면대·샤워기)', required: true },
-        { id: '3', label: '주방 설거지 및 싱크대 닦기', required: true },
-        { id: '4', label: '바닥 청소기 + 걸레질', required: true },
-        { id: '5', label: '쓰레기 분리수거', required: true },
-        { id: '6', label: '어메니티 보충', required: false },
-        { id: '7', label: '냉장고 정리', required: false },
-    ],
-    partyroom: [
-        { id: '1', label: '쓰레기 전체 수거', required: true },
-        { id: '2', label: '테이블·의자 닦기', required: true },
-        { id: '3', label: '바닥 청소기 + 걸레질', required: true },
-        { id: '4', label: '화장실 청소', required: true },
-        { id: '5', label: '주방 설거지', required: true },
-        { id: '6', label: '환기 및 냄새 제거', required: false },
-    ],
-    studio: [
-        { id: '1', label: '촬영 소품 제자리 배치', required: true },
-        { id: '2', label: '바닥 먼지 제거 (찍찍이/청소기)', required: true },
-        { id: '3', label: '거울 및 유리창 얼룩 제거', required: true },
-        { id: '4', label: '쓰레기 수거', required: true },
-        { id: '5', label: '탈의실 정리', required: false },
-    ],
-    gym: [
-        { id: '1', label: '운동 기구 기구 소독 및 닦기', required: true },
-        { id: '2', label: '바닥 청소기 + 살균 걸레질', required: true },
-        { id: '3', label: '샤워실 및 탈의실 청소', required: true },
-        { id: '4', label: '정수기 및 공용 공간 정리', required: true },
-        { id: '5', label: '수건 수거 및 세탁 준비', required: false },
-    ],
-    unmanned_store: [
-        { id: '1', label: '매대 먼지 닦기', required: true },
-        { id: '2', label: '진열대 상품 열 맞추기', required: true },
-        { id: '3', label: '바닥 청소 및 얼룩 제거', required: true },
-        { id: '4', label: '키오스크 지문 닦기', required: true },
-        { id: '5', label: '쓰레기통 비우기', required: true },
-    ],
-    study_cafe: [
-        { id: '1', label: '개인 좌석 테이블 닦기', required: true },
-        { id: '2', label: '바닥 소음 없는 청소 (정숙)', required: true },
-        { id: '3', label: '휴게실 커피머신 주변 정리', required: true },
-        { id: '4', label: '사물함 먼지 제거', required: false },
-        { id: '5', label: '분리수거 및 분쇄기 비우기', required: true },
-    ],
-    practice_room: [
-        { id: '1', label: '거울 지문 및 습기 제거', required: true },
-        { id: '2', label: '바닥 송진/먼지 청소', required: true },
-        { id: '3', label: '앰프 및 전자기기 주변 정리', required: true },
-        { id: '4', label: '의자 및 악보대 정돈', required: true },
-        { id: '5', label: '쓰레기 수거', required: true },
-    ],
-    workspace: [
-        { id: '1', label: '개별 데스크 위 먼지 제거', required: true },
-        { id: '2', label: '바닥 청소기 + 물걸레', required: true },
-        { id: '3', label: '공용 탕비실 정리', required: true },
-        { id: '4', label: '화이트보드 지우기', required: false },
-        { id: '5', label: '쓰레기 비우기', required: true },
-    ],
-    other: [
-        { id: '1', label: '바닥 청소', required: true },
-        { id: '2', label: '창틀 및 선반 먼지 제거', required: true },
-        { id: '3', label: '화장실 청소', required: true },
-        { id: '4', label: '쓰레기 배출', required: true },
-    ]
-};
+const TYPE_OPTIONS: { value: SpaceType; icon: string }[] = [
+  { value: 'airbnb', icon: '🏠' },
+  { value: 'partyroom', icon: '🎉' },
+  { value: 'studio', icon: '📸' },
+  { value: 'unmanned_store', icon: '🏪' },
+  { value: 'study_cafe', icon: '📚' },
+  { value: 'practice_room', icon: '🎤' },
+  { value: 'gym', icon: '🏋️' },
+  { value: 'workspace', icon: '💼' },
+  { value: 'other', icon: '📦' },
+]
+
+type StepId = 1 | 2 | 3 | 4 | 5
+const STEPS: { id: StepId; title: string }[] = [
+  { id: 1, title: '공간 유형' },
+  { id: 2, title: '위치' },
+  { id: 3, title: '기본 정보' },
+  { id: 4, title: '청소 안내' },
+  { id: 5, title: '체크리스트' },
+]
 
 export default function CreateSpacePage() {
-    const router = useRouter();
-    const [form, setForm] = useState({
-        name: '', type: 'airbnb' as SpaceType, address: '', address_detail: '',
-        entry_code: '', cleaning_tool_location: '', parking_guide: '', trash_guide: '',
-        caution_notes: '', size_sqm: '', size_pyeong: '', base_price: '30000', estimated_duration: '60',
-        description: '', is_parking_available: false, cleaning_difficulty: '보통',
-        biz_type: 'INDIVIDUAL' as 'BUSINESS' | 'INDIVIDUAL', biz_reg_number: '', biz_email: '', cash_receipt_number: '',
-        has_toilet: false, has_kitchen: false, has_bed: false, has_balcony: false,
-    });
-    const [checklist, setChecklist] = useState(DEFAULT_CHECKLISTS['airbnb']);
+  const router = useRouter()
+  const supabase = createClient()
 
-    // 공간 유형 변경 시 체크리스트 자동 업데이트
-    React.useEffect(() => {
-        if (DEFAULT_CHECKLISTS[form.type]) {
-            setChecklist(DEFAULT_CHECKLISTS[form.type]);
-        }
-    }, [form.type]);
-    const [referencePhotos, setReferencePhotos] = useState<File[]>([]);
-    const [photoPreviewUrls, setPhotoPreviewUrls] = useState<string[]>([]);
-    const [bizRegPhoto, setBizRegPhoto] = useState<File | null>(null);
-    const [bizRegPhotoUrl, setBizRegPhotoUrl] = useState<string>('');
-    const [loading, setLoading] = useState(false);
-    const [step, setStep] = useState(1);
+  const [step, setStep] = useState<StepId>(1)
+  const [loading, setLoading] = useState(false)
+  const [err, setErr] = useState<string | null>(null)
 
-    const [mapLocation, setMapLocation] = useState<{ lat: number, lng: number } | null>(null);
-    const mapRef = useRef<HTMLDivElement>(null);
+  const [type, setType] = useState<SpaceType | null>(null)
+  const [name, setName] = useState('')
+  const [address, setAddress] = useState('')
+  const [addressDetail, setAddressDetail] = useState('')
+  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null)
+  const [geoLoading, setGeoLoading] = useState(false)
+  const [sizePyeong, setSizePyeong] = useState<string>('')
+  const [basePrice, setBasePrice] = useState<number>(30000)
 
-    const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (!e.target.files) return;
-        const files = Array.from(e.target.files);
-        setReferencePhotos(prev => [...prev, ...files]);
-        files.forEach(file => {
-            const reader = new FileReader();
-            reader.onload = (ev) => setPhotoPreviewUrls(prev => [...prev, ev.target?.result as string]);
-            reader.readAsDataURL(file);
-        });
-    };
+  const [photos, setPhotos] = useState<string[]>([])
+  const [referencePhotos, setReferencePhotos] = useState<string[]>([])
 
-    const removePhoto = (index: number) => {
-        setReferencePhotos(prev => prev.filter((_, i) => i !== index));
-        setPhotoPreviewUrls(prev => prev.filter((_, i) => i !== index));
-    };
+  const [toolLocation, setToolLocation] = useState('')
+  const [parkingGuide, setParkingGuide] = useState('')
+  const [trashGuide, setTrashGuide] = useState('')
+  const [hasToilet, setHasToilet] = useState(true)
+  const [hasKitchen, setHasKitchen] = useState(false)
+  const [hasBed, setHasBed] = useState(false)
+  const [hasBalcony, setHasBalcony] = useState(false)
 
-    const handleAddressCheck = async (searchAddress?: string) => {
-        const targetAddress = searchAddress || form.address;
-        if (!targetAddress) return alert('주소를 먼저 입력해주세요.');
-        try {
-            const res = await fetch(`/api/geocode?query=${encodeURIComponent(targetAddress)}`);
-            const data = await res.json();
+  const [checklist, setChecklist] = useState<{ id: string; label: string; required: boolean }[]>([])
+  const [newItem, setNewItem] = useState('')
 
-            if (data && data.addresses && data.addresses.length > 0) {
-                const addr = data.addresses[0];
-                const lat = parseFloat(addr.y);
-                const lng = parseFloat(addr.x);
-                setMapLocation({ lat, lng });
-                if (!searchAddress) {
-                    setForm(f => ({ ...f, address: addr.roadAddress || addr.jibunAddress }));
-                }
+  useEffect(() => {
+    if (type) {
+      setBasePrice(BASE_PRICE_BY_TYPE[type] ?? 30000)
+      if (checklist.length === 0) {
+        setChecklist(DEFAULT_CHECKLISTS[type].map((it) => ({ id: rid('ck'), ...it })))
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [type])
 
-                const naver = (window as any).naver;
-                if (naver && naver.maps && mapRef.current) {
-                    const map = new naver.maps.Map(mapRef.current, {
-                        center: new naver.maps.LatLng(lat, lng),
-                        zoom: 16
-                    });
-                    new naver.maps.Marker({
-                        position: new naver.maps.LatLng(lat, lng),
-                        map: map
-                    });
-                }
-            } else {
-                const naver = (window as any).naver;
-                if (naver && naver.maps && naver.maps.Service) {
-                    naver.maps.Service.geocode({ query: targetAddress }, (status: any, response: any) => {
-                        if (status === naver.maps.Service.Status.OK && response.v2.addresses.length > 0) {
-                            const addr = response.v2.addresses[0];
-                            const lat = parseFloat(addr.y);
-                            const lng = parseFloat(addr.x);
-                            setMapLocation({ lat, lng });
-                            if (!searchAddress) {
-                                setForm(f => ({ ...f, address: addr.roadAddress || addr.jibunAddress }));
-                            }
-                        }
-                    });
-                } else if (!searchAddress) {
-                    alert('주소 검색에 실패했습니다. 도로명 주소를 정확히 입력해주세요.');
-                }
-            }
-        } catch (e) {
-            console.error('Geocode fallback error:', e);
-        }
-    };
+  const handleGeocode = async () => {
+    if (!address.trim()) return
+    setGeoLoading(true)
+    const result = await geocode(address.trim())
+    if (result) setCoords({ lat: result.lat, lng: result.lng })
+    setGeoLoading(false)
+  }
 
-    const handleAddressSearch = () => {
-        const daum = (window as any).daum;
-        if (!daum || !daum.Postcode) {
-            alert('주소 서비스 로딩 중입니다. 잠시 후 다시 시도해주세요.');
-            return;
-        }
+  const sizeSqm = sizePyeong ? Math.round(parseFloat(sizePyeong) * 3.3 * 10) / 10 : undefined
 
-        new daum.Postcode({
-            oncomplete: (data: any) => {
-                const fullAddress = data.roadAddress || data.address;
-                setForm(f => ({ ...f, address: fullAddress }));
-                // 주소 선택 후 자동으로 좌표 추출 및 지도 갱신
-                handleAddressCheck(fullAddress);
-            }
-        }).open();
-    };
+  const canProceed = (() => {
+    if (step === 1) return !!type
+    if (step === 2) return !!address.trim()
+    if (step === 3) return !!name.trim()
+    if (step === 4) return true
+    if (step === 5) return checklist.length > 0
+    return false
+  })()
 
-    const handleBizRegPhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (!e.target.files?.[0]) return;
-        const file = e.target.files[0];
-        setBizRegPhoto(file);
-        const reader = new FileReader();
-        reader.onload = (ev) => setBizRegPhotoUrl(ev.target?.result as string);
-        reader.readAsDataURL(file);
-    };
+  const handleNext = () => {
+    if (!canProceed) return
+    if (step === 5) return handleSubmit()
+    setStep((s) => (s + 1) as StepId)
+  }
 
-    const handleSubmit = async () => {
-        if (!form.name || !form.address) { alert('이름과 주소를 확인해주세요.'); return; }
-        setLoading(true);
-        const supabase = createClient();
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) { router.push('/login'); return; }
+  const handleSubmit = async () => {
+    setLoading(true)
+    setErr(null)
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('로그인이 필요합니다.')
 
-        const uploadedPhotoUrls: string[] = [];
-        for (const file of referencePhotos) {
-            const fileExt = file.name.split('.').pop();
-            const fileName = `${Date.now()}_${Math.random()}.${fileExt}`;
-            const filePath = `${user.id}/${fileName}`;
-            const { error: uploadError } = await supabase.storage.from('photos').upload(filePath, file);
-            if (!uploadError) {
-                const { data } = supabase.storage.from('photos').getPublicUrl(filePath);
-                uploadedPhotoUrls.push(data.publicUrl);
-            }
-        }
+      const payload = {
+        operator_id: user.id,
+        name: name.trim(),
+        type,
+        address: address.trim(),
+        address_detail: addressDetail.trim() || null,
+        location: coords
+          ? { type: 'Point', coordinates: [coords.lng, coords.lat] }
+          : null,
+        size_pyeong: sizePyeong ? parseFloat(sizePyeong) : null,
+        size_sqm: sizeSqm ?? null,
+        base_price: basePrice,
+        estimated_duration: 90,
+        cleaning_difficulty: 'NORMAL',
+        cleaning_tool_location: toolLocation || null,
+        parking_guide: parkingGuide || null,
+        trash_guide: trashGuide || null,
+        has_toilet: hasToilet,
+        has_kitchen: hasKitchen,
+        has_bed: hasBed,
+        has_balcony: hasBalcony,
+        checklist_template: checklist.map((c) => ({ ...c, completed: false })),
+        photos,
+        reference_photos: referencePhotos,
+        is_active: true,
+      }
 
-        let uploadedBizRegUrl = null;
-        if (bizRegPhoto) {
-            const fileExt = bizRegPhoto.name.split('.').pop();
-            const fileName = `biz_${Date.now()}.${fileExt}`;
-            const filePath = `${user.id}/${fileName}`;
-            const { error: uploadError } = await supabase.storage.from('photos').upload(filePath, bizRegPhoto);
-            if (!uploadError) {
-                const { data } = supabase.storage.from('photos').getPublicUrl(filePath);
-                uploadedBizRegUrl = data.publicUrl;
-            }
-        }
+      const { data, error } = await supabase.from('spaces').insert(payload).select('id').single()
+      if (error) throw error
 
-        const { data, error } = await supabase.from('spaces').insert({
-            operator_id: user.id,
-            name: form.name,
-            type: form.type,
-            address: form.address,
-            address_detail: form.address_detail,
-            entry_code: form.entry_code,
-            cleaning_tool_location: form.cleaning_tool_location,
-            parking_guide: form.parking_guide,
-            trash_guide: form.trash_guide,
-            caution_notes: form.caution_notes,
-            size_sqm: form.size_sqm ? parseInt(form.size_sqm) : null,
-            size_pyeong: form.size_pyeong ? parseFloat(form.size_pyeong) : null,
-            base_price: parseInt(form.base_price),
-            estimated_duration: parseInt(form.estimated_duration),
-            description: form.description,
-            is_parking_available: form.is_parking_available,
-            cleaning_difficulty: form.cleaning_difficulty,
-            checklist_template: checklist,
-            reference_photos: uploadedPhotoUrls,
-            photos: uploadedPhotoUrls, // Ensure both are populated for safety
-            is_active: true,
-            biz_type: form.biz_type,
-            biz_reg_number: form.biz_type === 'BUSINESS' ? form.biz_reg_number : null,
-            biz_email: form.biz_type === 'BUSINESS' ? form.biz_email : null,
-            biz_reg_image: form.biz_type === 'BUSINESS' ? uploadedBizRegUrl : null,
-            cash_receipt_number: form.biz_type === 'INDIVIDUAL' ? form.cash_receipt_number : null,
-            lat: mapLocation?.lat || null,
-            lng: mapLocation?.lng || null,
-            has_toilet: form.has_toilet,
-            has_kitchen: form.has_kitchen,
-            has_bed: form.has_bed,
-            has_balcony: form.has_balcony
-        }).select().single();
+      router.replace(data?.id ? `/spaces/${data.id}` : '/spaces')
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : '공간 등록에 실패했습니다.')
+      setLoading(false)
+    }
+  }
 
-        if (!error && data) {
-            router.push(`/spaces/${data.id}?created=1`);
-        } else {
-            console.error('Space creation error:', error);
-            alert(`공간 등록에 실패했어요: ${error?.message || '알 수 없는 오류'}`);
-            setLoading(false);
-        }
-    };
-
-    return (
-        <div className="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 min-h-screen">
-            <div className="relative flex h-auto min-h-screen w-full flex-col max-w-md mx-auto bg-white dark:bg-gray-900 shadow-md">
-
-                {/* Top App Bar */}
-                <div className="flex items-center p-4 pb-2 justify-between border-b border-gray-100 dark:border-gray-800 sticky top-0 bg-white/90 dark:bg-gray-900/90 backdrop-blur z-20">
-                    <button className="flex size-12 shrink-0 items-center justify-center text-slate-900 dark:text-slate-100 cursor-pointer" onClick={() => step === 1 ? router.back() : setStep(step - 1)}>
-                        <span className="material-symbols-outlined text-2xl">arrow_back</span>
-                    </button>
-                    <h2 className="text-lg font-bold leading-tight tracking-[-0.015em] flex-1 text-center pr-12">새 공간 등록</h2>
-                </div>
-
-                {/* Progress Indicator */}
-                <div className="flex w-full flex-row items-center justify-center gap-3 py-6 relative z-10 px-5 bg-white dark:bg-gray-900">
-                    {[1, 2, 3, 4].map((i) => (
-                        <div key={i} className={`h-2 transition-all duration-300 rounded-full ${step === i ? 'w-8 bg-primary-light dark:bg-primary' : step > i ? 'w-2 bg-primary' : 'w-2 bg-gray-200 dark:bg-gray-700'}`}></div>
-                    ))}
-                </div>
-
-                {/* Content */}
-                <div className="flex-1 overflow-x-hidden pb-32">
-                    <Script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js" strategy="afterInteractive" />
-                    <div className="transition-all duration-300 transform" key={step}>
-                        {step === 1 && <Step1BasicInfo form={form} setForm={setForm} handleAddressCheck={handleAddressCheck} handleAddressSearch={handleAddressSearch} mapLocation={mapLocation} mapRef={mapRef} />}
-                        {step === 2 && <Step2Guide form={form} setForm={setForm} />}
-                        {step === 3 && <Step3Checklist checklist={checklist} setChecklist={setChecklist} photoPreviewUrls={photoPreviewUrls} removePhoto={removePhoto} handlePhotoChange={handlePhotoChange} />}
-                        {step === 4 && <Step4BizInfo form={form} setForm={setForm} bizRegPhotoUrl={bizRegPhotoUrl} bizRegPhoto={bizRegPhoto} setBizRegPhoto={setBizRegPhoto} setBizRegPhotoUrl={setBizRegPhotoUrl} handleBizRegPhotoChange={handleBizRegPhotoChange} />}
-                    </div>
-                </div>
-
-                {/* Bottom Button */}
-                <div className="fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-md p-5 bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800 pb-[env(safe-area-inset-bottom,20px)] z-20 shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
-                    {step < 4 ? (
-                        <button className="w-full flex h-14 items-center justify-center rounded-xl bg-primary text-white text-[17px] font-bold leading-normal tracking-wide active:scale-[0.98] transition-transform shadow-md" onClick={() => setStep(step + 1)}>
-                            다음 단계
-                        </button>
-                    ) : (
-                        <button className="w-full flex h-14 items-center justify-center rounded-xl bg-primary text-white text-[17px] font-bold leading-normal tracking-wide active:scale-[0.98] transition-transform shadow-md" onClick={handleSubmit} disabled={loading}>
-                            {loading ? '등록 처리 중...' : '공간 저장 완료하기'}
-                        </button>
-                    )}
-                </div>
-            </div>
+  return (
+    <div className="sseuksak-shell">
+      <header className="flex items-center h-14 px-3 safe-top border-b border-line-soft bg-surface">
+        <button
+          onClick={() => (step === 1 ? router.back() : setStep((s) => (s - 1) as StepId))}
+          className="flex items-center justify-center w-10 h-10 rounded-full hover:bg-surface-muted active:scale-95 transition"
+          aria-label="뒤로"
+        >
+          <ChevronLeft size={22} />
+        </button>
+        <div className="flex-1 text-center">
+          <h1 className="text-[15px] font-extrabold text-ink">공간 등록</h1>
+          <p className="text-[11px] text-text-soft font-bold">
+            {step}/{STEPS.length} · {STEPS[step - 1].title}
+          </p>
         </div>
-    );
+        <div className="w-10" />
+      </header>
+
+      <div className="px-5 pt-4 pb-1 bg-surface">
+        <div className="flex gap-1.5">
+          {STEPS.map((s) => (
+            <div key={s.id} className={`flex-1 h-1.5 rounded-full ${s.id <= step ? 'bg-brand' : 'bg-line'}`} />
+          ))}
+        </div>
+      </div>
+
+      <div className="flex-1 flex flex-col px-5 pt-5 pb-32">
+        <AnimatePresence mode="wait">
+          {step === 1 && (
+            <motion.div key="s1" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }}>
+              <h2 className="h-title text-ink">어떤 공간을 운영하세요?</h2>
+              <p className="t-caption mt-1.5">공간 유형에 맞게 체크리스트 · 기본 가격이 자동 설정됩니다.</p>
+              <div className="grid grid-cols-3 gap-2.5 mt-6">
+                {TYPE_OPTIONS.map((opt) => (
+                  <button
+                    key={opt.value}
+                    onClick={() => setType(opt.value)}
+                    className={`aspect-square rounded-2xl border-2 flex flex-col items-center justify-center text-center p-2 transition ${
+                      type === opt.value ? 'border-brand bg-brand-softer' : 'border-line-soft bg-surface hover:border-line-strong'
+                    }`}
+                  >
+                    <span className="text-[28px] mb-1" style={{ lineHeight: 1 }}>{opt.icon}</span>
+                    <span className={`text-[11.5px] font-extrabold leading-tight ${type === opt.value ? 'text-brand-dark' : 'text-ink'}`}>
+                      {spaceTypeLabel(opt.value)}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </motion.div>
+          )}
+
+          {step === 2 && (
+            <motion.div key="s2" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} className="flex flex-col gap-5">
+              <div>
+                <h2 className="h-title text-ink">공간이 어디 있나요?</h2>
+                <p className="t-caption mt-1.5">지도에 표시될 위치입니다.</p>
+              </div>
+              <div>
+                <label className="t-meta block mb-2 ml-1">도로명 주소 *</label>
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <MapPin size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-text-faint pointer-events-none" />
+                    <input
+                      value={address}
+                      onChange={(e) => setAddress(e.target.value)}
+                      placeholder="서울 마포구 홍익로 XX"
+                      className="input pl-11"
+                      onBlur={handleGeocode}
+                    />
+                  </div>
+                  <button
+                    onClick={handleGeocode}
+                    disabled={!address.trim() || geoLoading}
+                    className="btn btn-secondary !min-h-[56px] !px-4"
+                    aria-label="주소 확인"
+                  >
+                    {geoLoading ? <Loader2 size={18} className="animate-spin" /> : <Search size={18} />}
+                  </button>
+                </div>
+              </div>
+              <div>
+                <label className="t-meta block mb-2 ml-1">상세 주소</label>
+                <input
+                  value={addressDetail}
+                  onChange={(e) => setAddressDetail(e.target.value)}
+                  placeholder="2층 201호"
+                  className="input"
+                />
+              </div>
+
+              {coords ? (
+                <NaverMap
+                  height={200}
+                  center={coords}
+                  markers={[{ lat: coords.lat, lng: coords.lng, title: name || '공간 위치', tone: 'brand' }]}
+                  interactive={false}
+                />
+              ) : (
+                <div className="rounded-2xl border-2 border-dashed border-line p-6 text-center">
+                  <MapPin size={22} className="mx-auto text-text-faint mb-2" />
+                  <p className="text-[12.5px] font-bold text-text-soft">
+                    주소를 입력하면 지도에 위치가 표시됩니다.
+                  </p>
+                </div>
+              )}
+            </motion.div>
+          )}
+
+          {step === 3 && (
+            <motion.div key="s3" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} className="flex flex-col gap-5">
+              <div>
+                <h2 className="h-title text-ink">공간 기본 정보</h2>
+                <p className="t-caption mt-1.5">작업자에게 보여질 정보입니다.</p>
+              </div>
+
+              <div>
+                <label className="t-meta block mb-2 ml-1">공간 이름 *</label>
+                <input
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="예) 홍대 파티룸 A호"
+                  className="input"
+                  maxLength={40}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="t-meta block mb-2 ml-1">평수</label>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      value={sizePyeong}
+                      onChange={(e) => setSizePyeong(e.target.value)}
+                      placeholder="15"
+                      className="input pr-10"
+                      min={1}
+                    />
+                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-text-faint text-sm font-bold">평</span>
+                  </div>
+                  {sizeSqm && <p className="text-[11px] text-text-soft font-bold mt-1 ml-1">≈ {sizeSqm}㎡</p>}
+                </div>
+                <div>
+                  <label className="t-meta block mb-2 ml-1">기본 가격</label>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      value={basePrice}
+                      onChange={(e) => setBasePrice(parseInt(e.target.value) || 0)}
+                      className="input pr-10"
+                      step={1000}
+                    />
+                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-text-faint text-sm font-bold">원</span>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label className="t-meta block mb-2 ml-1">공간 시설</label>
+                <div className="flex flex-wrap gap-2">
+                  <FacilityChip selected={hasToilet} onClick={() => setHasToilet((v) => !v)} label="화장실" />
+                  <FacilityChip selected={hasKitchen} onClick={() => setHasKitchen((v) => !v)} label="주방" />
+                  <FacilityChip selected={hasBed} onClick={() => setHasBed((v) => !v)} label="침구" />
+                  <FacilityChip selected={hasBalcony} onClick={() => setHasBalcony((v) => !v)} label="발코니" />
+                </div>
+              </div>
+
+              <ImageUploader
+                bucket="spaces"
+                folder="photos"
+                value={photos}
+                onChange={setPhotos}
+                max={6}
+                label="공간 사진 (최대 6장)"
+                hint="밝고 깨끗한 사진이 매칭 확률을 높여요."
+              />
+            </motion.div>
+          )}
+
+          {step === 4 && (
+            <motion.div key="s4" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} className="flex flex-col gap-5">
+              <div>
+                <h2 className="h-title text-ink">작업자에게 안내할 내용</h2>
+                <p className="t-caption mt-1.5">상세한 안내는 작업 품질을 높여줍니다.</p>
+              </div>
+
+              <div>
+                <label className="t-meta block mb-2 ml-1">청소도구 위치</label>
+                <textarea
+                  value={toolLocation}
+                  onChange={(e) => setToolLocation(e.target.value)}
+                  placeholder="현관 신발장 아래 청소함"
+                  className="input min-h-[80px]"
+                  rows={2}
+                />
+              </div>
+              <div>
+                <label className="t-meta block mb-2 ml-1">주차 안내</label>
+                <textarea
+                  value={parkingGuide}
+                  onChange={(e) => setParkingGuide(e.target.value)}
+                  placeholder="건물 지하 1층 주차장 (10분 무료)"
+                  className="input min-h-[80px]"
+                  rows={2}
+                />
+              </div>
+              <div>
+                <label className="t-meta block mb-2 ml-1">쓰레기 분리 안내</label>
+                <textarea
+                  value={trashGuide}
+                  onChange={(e) => setTrashGuide(e.target.value)}
+                  placeholder="일반쓰레기는 공용 쓰레기장, 음식물은 별도 수거함"
+                  className="input min-h-[80px]"
+                  rows={2}
+                />
+              </div>
+
+              <ImageUploader
+                bucket="spaces"
+                folder="reference"
+                value={referencePhotos}
+                onChange={setReferencePhotos}
+                max={4}
+                label="참고 사진 - 완료 예시 (선택)"
+                hint="청소 후 상태 기준 사진입니다. 작업자가 참고해요."
+              />
+            </motion.div>
+          )}
+
+          {step === 5 && (
+            <motion.div key="s5" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} className="flex flex-col gap-5">
+              <div>
+                <h2 className="h-title text-ink">청소 체크리스트</h2>
+                <p className="t-caption mt-1.5">
+                  작업자가 사진과 함께 체크할 항목입니다.{' '}
+                  {type && <span className="font-bold text-brand-dark">· {spaceTypeLabel(type)} 템플릿 적용됨</span>}
+                </p>
+              </div>
+
+              <div className="flex flex-col gap-2.5">
+                {checklist.map((item, idx) => (
+                  <div key={item.id} className="card p-3.5 flex items-center gap-3">
+                    <span className="w-7 h-7 rounded-full bg-brand-softer text-brand-dark font-black text-xs flex items-center justify-center shrink-0">
+                      {idx + 1}
+                    </span>
+                    <input
+                      value={item.label}
+                      onChange={(e) =>
+                        setChecklist((list) =>
+                          list.map((c) => (c.id === item.id ? { ...c, label: e.target.value } : c)),
+                        )
+                      }
+                      className="flex-1 bg-transparent outline-none text-[14px] font-semibold text-ink"
+                    />
+                    <button
+                      onClick={() =>
+                        setChecklist((list) =>
+                          list.map((c) => (c.id === item.id ? { ...c, required: !c.required } : c)),
+                        )
+                      }
+                      className={`chip ${item.required ? 'chip-brand' : 'chip-muted'} !text-[10px] px-2 py-0.5`}
+                    >
+                      {item.required ? '필수' : '선택'}
+                    </button>
+                    <button
+                      onClick={() => setChecklist((list) => list.filter((c) => c.id !== item.id))}
+                      className="text-text-faint hover:text-danger transition p-1"
+                    >
+                      <X size={16} />
+                    </button>
+                  </div>
+                ))}
+
+                <div className="flex gap-2 mt-1">
+                  <input
+                    value={newItem}
+                    onChange={(e) => setNewItem(e.target.value)}
+                    placeholder="항목 추가"
+                    className="input flex-1"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && newItem.trim()) {
+                        setChecklist((list) => [
+                          ...list,
+                          { id: rid('ck'), label: newItem.trim(), required: false },
+                        ])
+                        setNewItem('')
+                      }
+                    }}
+                  />
+                  <button
+                    disabled={!newItem.trim()}
+                    onClick={() => {
+                      setChecklist((list) => [
+                        ...list,
+                        { id: rid('ck'), label: newItem.trim(), required: false },
+                      ])
+                      setNewItem('')
+                    }}
+                    className="btn btn-secondary min-h-[56px] px-5"
+                  >
+                    <Plus size={18} />
+                  </button>
+                </div>
+              </div>
+
+              <div className="mt-2 p-4 rounded-2xl bg-info-soft border border-info/15">
+                <div className="flex items-start gap-2.5">
+                  <Info size={16} className="text-info shrink-0 mt-0.5" />
+                  <div className="text-[12.5px] text-ink-soft font-semibold leading-snug">
+                    필수 항목은 사진 인증이 필요합니다. AI가 체크리스트 이행 여부를 자동 검증해요.
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {err && <div className="mt-4 p-3 bg-danger-soft rounded-xl text-[13px] font-bold text-danger">{err}</div>}
+      </div>
+
+      <div className="fixed bottom-0 inset-x-0 border-t border-line-soft bg-surface/95 backdrop-blur safe-bottom">
+        <div className="max-w-[480px] mx-auto px-5 py-3.5">
+          <button onClick={handleNext} disabled={!canProceed || loading} className="btn btn-primary w-full">
+            {loading ? (
+              <Loader2 size={20} className="animate-spin" />
+            ) : step === 5 ? (
+              <>공간 등록 완료 <Check size={20} /></>
+            ) : (
+              <>다음 <ChevronRight size={20} /></>
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function FacilityChip({ selected, onClick, label }: { selected: boolean; onClick: () => void; label: string }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`chip ${selected ? 'chip-brand' : 'chip-muted'} !px-4 !py-2 !text-[13px] border-2 ${
+        selected ? 'border-brand/30' : 'border-transparent'
+      }`}
+    >
+      {label}
+    </button>
+  )
 }

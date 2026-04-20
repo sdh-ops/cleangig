@@ -1,189 +1,186 @@
-'use client';
+'use client'
 
-import React, { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
-import { motion, AnimatePresence } from 'framer-motion';
-import { createClient } from '@/lib/supabase/client';
-import { Message } from '@/lib/types';
+import { useState, useEffect, useRef } from 'react'
+import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
+import { ChevronLeft, Send, Loader2, CheckCheck } from 'lucide-react'
 
-interface Props {
-    jobId: string;
-    userId: string;
-    receiverId: string;
-    spaceName: string;
+type Message = {
+  id: string
+  job_id: string
+  sender_id: string
+  receiver_id: string
+  content: string
+  is_read: boolean
+  created_at: string
 }
 
-export default function ChatClient({ jobId, userId, receiverId, spaceName }: Props) {
-    const router = useRouter();
-    const [messages, setMessages] = useState<Message[]>([]);
-    const [input, setInput] = useState('');
-    const [sending, setSending] = useState(false);
-    const scrollRef = useRef<HTMLDivElement>(null);
+type Props = {
+  jobId: string
+  userId: string
+  partnerId: string
+  partnerName: string
+  partnerImage?: string | null
+  spaceName: string
+}
 
-    useEffect(() => {
-        fetchMessages();
-        const supabase = createClient();
-        const channel = supabase.channel(`chat-${jobId}`)
-            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `job_id=eq.${jobId}` },
-                (payload) => setMessages(prev => [...prev, payload.new as Message]))
-            .subscribe();
-        return () => { supabase.removeChannel(channel); };
-    }, [jobId]);
+export default function ChatClient({ jobId, userId, partnerId, partnerName, partnerImage, spaceName }: Props) {
+  const router = useRouter()
+  const supabase = createClient()
+  const [messages, setMessages] = useState<Message[]>([])
+  const [text, setText] = useState('')
+  const [sending, setSending] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const scrollRef = useRef<HTMLDivElement>(null)
 
-    useEffect(() => {
-        scrollRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, [messages]);
+  // initial load
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase
+        .from('messages')
+        .select('*')
+        .eq('job_id', jobId)
+        .order('created_at', { ascending: true })
+        .limit(200)
+      setMessages((data || []) as Message[])
+      setLoading(false)
+      // mark received as read
+      await supabase
+        .from('messages')
+        .update({ is_read: true })
+        .eq('job_id', jobId)
+        .eq('receiver_id', userId)
+        .eq('is_read', false)
+    })()
+  }, [jobId, userId, supabase])
 
-    const fetchMessages = async () => {
-        const supabase = createClient();
-        const { data } = await supabase.from('messages').select('*').eq('job_id', jobId).order('created_at', { ascending: true });
-        if (data) setMessages(data as Message[]);
-    };
+  // realtime subscription
+  useEffect(() => {
+    const channel = supabase
+      .channel(`chat:${jobId}`)
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', table: 'messages', schema: 'public', filter: `job_id=eq.${jobId}` },
+        async (payload) => {
+          const m = payload.new as Message
+          setMessages((prev) => [...prev, m])
+          if (m.receiver_id === userId) {
+            await supabase.from('messages').update({ is_read: true }).eq('id', m.id)
+          }
+        },
+      )
+      .subscribe()
+    return () => { supabase.removeChannel(channel) }
+  }, [jobId, userId, supabase])
 
-    const handleSend = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!input.trim() || sending || !receiverId) return;
-        setSending(true);
-        const supabase = createClient();
-        const { error } = await supabase.from('messages').insert({
-            job_id: jobId,
-            sender_id: userId,
-            receiver_id: receiverId,
-            content: input.trim(),
-        });
-        if (!error) setInput('');
-        else alert('메시지 전송 실패');
-        setSending(false);
-    };
+  // scroll bottom
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
+  }, [messages])
 
-    return (
-        <div className="bg-[#F7F8F0] dark:bg-slate-900 font-display flex flex-col min-h-[100dvh] text-slate-900 dark:text-slate-100 max-w-md mx-auto shadow-xl relative border-x border-slate-200 dark:border-slate-800">
-            {/* Header */}
-            <div className="sticky top-0 z-20 flex items-center bg-[#F7F8F0]/90 dark:bg-slate-900/90 backdrop-blur-md p-4 pb-3 border-b border-slate-200 dark:border-slate-800 justify-between">
-                <button onClick={() => router.back()} className="flex items-center justify-center p-2 text-slate-900 dark:text-slate-100 mr-2 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors">
-                    <span className="material-symbols-outlined">arrow_back_ios_new</span>
-                </button>
-                <div className="flex items-center gap-3 flex-1">
-                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-lg shadow-sm border border-primary/20 shrink-0">
-                        {spaceName ? spaceName.charAt(0) : '방'}
-                    </div>
-                    <div>
-                        <h2 className="text-slate-900 dark:text-slate-100 text-lg font-bold leading-tight truncate max-w-[200px]">{spaceName || '채팅방'}</h2>
-                        <p className={`text-xs ${receiverId ? 'text-green-600 dark:text-green-400 font-bold' : 'text-slate-500 dark:text-slate-400 font-medium'}`}>
-                            {receiverId ? '파트너와 연결됨' : '대기 중'}
-                        </p>
-                    </div>
-                </div>
-                <button className="flex items-center justify-center p-2 text-slate-900 dark:text-slate-100 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors">
-                    <span className="material-symbols-outlined">more_vert</span>
-                </button>
+  const handleSend = async () => {
+    const content = text.trim()
+    if (!content || !partnerId) return
+    setSending(true)
+    const { error } = await supabase.from('messages').insert({
+      job_id: jobId,
+      sender_id: userId,
+      receiver_id: partnerId,
+      content,
+      is_read: false,
+    })
+    if (!error) setText('')
+    setSending(false)
+  }
+
+  return (
+    <div className="sseuksak-shell bg-canvas">
+      <header className="sticky top-0 z-20 glass border-b border-line-soft safe-top">
+        <div className="flex items-center h-14 px-3">
+          <button onClick={() => router.back()} className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-muted">
+            <ChevronLeft size={22} />
+          </button>
+          <div className="flex-1 flex items-center gap-2 min-w-0">
+            <div className="w-8 h-8 rounded-full bg-brand-softer text-brand-dark flex items-center justify-center font-black text-sm overflow-hidden shrink-0">
+              {partnerImage ? <img src={partnerImage} alt="" className="w-full h-full object-cover" /> : partnerName.charAt(0)}
             </div>
-
-            {/* Chat Area */}
-            <main className="flex-1 overflow-y-auto p-4 flex flex-col gap-6" style={{ scrollBehavior: 'smooth' }}>
-                {messages.length === 0 && (
-                    <div className="flex flex-col items-center justify-center h-full text-slate-400 space-y-4">
-                        <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center border border-slate-200 dark:border-slate-700">
-                            <span className="material-symbols-outlined text-[32px] text-slate-300 dark:text-slate-600">chat_bubble</span>
-                        </div>
-                        <p className="text-sm font-bold text-center">
-                            대화를 시작해 보세요.<br />청소 관련 문의나 특이사항을 주고받을 수 있습니다.
-                        </p>
-                    </div>
-                )}
-
-                <AnimatePresence initial={false}>
-                    {messages.map((msg, idx) => {
-                        const isMine = msg.sender_id === userId;
-                        const showsTime = idx === messages.length - 1 ||
-                            new Date(messages[idx + 1].created_at).getTime() - new Date(msg.created_at).getTime() > 60000;
-                        const showsDate = idx === 0 || new Date(messages[idx - 1].created_at).getDate() !== new Date(msg.created_at).getDate();
-
-                        return (
-                            <React.Fragment key={msg.id}>
-                                {showsDate && (
-                                    <div className="flex justify-center my-2">
-                                        <span className="text-xs font-medium bg-slate-200/50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 px-3 py-1 rounded-full">
-                                            {new Date(msg.created_at).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' })}
-                                        </span>
-                                    </div>
-                                )}
-                                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-                                    className={`flex items-end gap-3 ${isMine ? 'justify-end mt-2' : ''}`}
-                                >
-                                    {!isMine && (
-                                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm shadow-sm border border-primary/20 shrink-0">
-                                            P
-                                        </div>
-                                    )}
-                                    <div className={`flex flex-1 flex-col gap-1 ${isMine ? 'items-end' : 'items-start'}`}>
-                                        {!isMine && (
-                                            <p className="text-slate-500 dark:text-slate-400 text-[11px] font-bold ml-1">상대방</p>
-                                        )}
-                                        <div className={`flex flex-col ${isMine ? 'items-end' : 'items-start'} gap-1`}>
-                                            <div className="flex items-end gap-2">
-                                                {isMine && showsTime && (
-                                                    <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 mb-1">
-                                                        {new Date(msg.created_at).toLocaleTimeString('ko-KR', { hour: 'numeric', minute: '2-digit', hour12: true })}
-                                                    </span>
-                                                )}
-                                                <div className={`
-                                                    text-[15px] font-medium leading-relaxed max-w-[280px] px-4 py-3 shadow-sm
-                                                    ${isMine
-                                                        ? 'bg-primary text-white rounded-[20px] rounded-br-[4px] shadow-primary/20'
-                                                        : 'bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-[20px] rounded-bl-[4px] border border-slate-100 dark:border-slate-700'
-                                                    }
-                                                `}>
-                                                    {msg.content}
-                                                </div>
-                                                {!isMine && showsTime && (
-                                                    <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 mb-1">
-                                                        {new Date(msg.created_at).toLocaleTimeString('ko-KR', { hour: 'numeric', minute: '2-digit', hour12: true })}
-                                                    </span>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </motion.div>
-                            </React.Fragment>
-                        );
-                    })}
-                </AnimatePresence>
-                <div ref={scrollRef} style={{ height: 1 }} />
-            </main>
-
-            {/* Input Area */}
-            <form className="sticky bottom-0 bg-[#F7F8F0] dark:bg-slate-900 p-3 pb-safe border-t border-slate-200 dark:border-slate-800 z-10" onSubmit={handleSend}>
-                <div className="flex items-end gap-2">
-                    <button type="button" className="flex items-center justify-center p-2 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-sm shrink-0 h-[42px] w-[42px]">
-                        <span className="material-symbols-outlined">add</span>
-                    </button>
-                    <div className="flex-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl flex items-end shadow-sm overflow-hidden min-h-[42px]">
-                        <input
-                            className="w-full bg-transparent border-none focus:ring-0 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 py-2.5 px-4 text-[15px] outline-none"
-                            placeholder={receiverId ? "메시지를 입력하세요..." : "매칭된 대상이 없습니다."}
-                            value={input}
-                            onChange={e => setInput(e.target.value)}
-                            disabled={!receiverId}
-                        />
-                        <button
-                            type="submit"
-                            disabled={!input.trim() || sending}
-                            className={`flex items-center justify-center p-2 m-1 rounded-xl shrink-0 transition-colors
-                                ${(!input.trim() || sending)
-                                    ? 'bg-slate-100 dark:bg-slate-800 text-slate-400'
-                                    : 'bg-primary/10 text-primary hover:bg-primary hover:text-white'
-                                }
-                            `}
-                        >
-                            <span className="material-symbols-outlined text-[20px]">send</span>
-                        </button>
-                    </div>
-                </div>
-            </form>
-            <style jsx>{`
-                .pb-safe { padding-bottom: calc(0.75rem + env(safe-area-inset-bottom)); }
-            `}</style>
+            <div className="min-w-0">
+              <h1 className="text-[14px] font-extrabold text-ink truncate">{partnerName}</h1>
+              <p className="text-[10.5px] text-text-soft font-bold truncate">{spaceName}</p>
+            </div>
+          </div>
+          <div className="w-10" />
         </div>
-    );
+      </header>
+
+      <div ref={scrollRef} className="flex-1 px-4 py-3 overflow-y-auto">
+        {loading ? (
+          <div className="flex items-center justify-center py-10">
+            <Loader2 size={22} className="animate-spin text-brand" />
+          </div>
+        ) : messages.length === 0 ? (
+          <div className="text-center py-20">
+            <p className="text-[13px] font-bold text-text-soft">대화를 시작해보세요 👋</p>
+            <p className="text-[11.5px] text-text-faint font-medium mt-1">예의 바른 메시지로 매너 온도를 높여보세요.</p>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-2">
+            {messages.map((m, i) => {
+              const mine = m.sender_id === userId
+              const showTime =
+                i === messages.length - 1 ||
+                messages[i + 1]?.sender_id !== m.sender_id ||
+                new Date(messages[i + 1]?.created_at).getTime() - new Date(m.created_at).getTime() > 60000
+              const time = new Date(m.created_at).toLocaleTimeString('ko-KR', { hour: 'numeric', minute: '2-digit', hour12: true })
+              return (
+                <div key={m.id} className={`flex items-end gap-1 ${mine ? 'justify-end' : ''}`}>
+                  {mine && showTime && (
+                    <div className="flex flex-col items-end text-[10px] font-bold text-text-faint leading-tight">
+                      {m.is_read && <CheckCheck size={12} className="text-brand-dark mb-0.5" />}
+                      <span>{time}</span>
+                    </div>
+                  )}
+                  <div
+                    className={`max-w-[78%] px-3.5 py-2.5 rounded-2xl text-[14px] font-medium leading-snug break-words ${
+                      mine ? 'bg-brand text-white rounded-br-md' : 'bg-surface border border-line-soft text-ink rounded-bl-md'
+                    }`}
+                  >
+                    {m.content}
+                  </div>
+                  {!mine && showTime && (
+                    <span className="text-[10px] font-bold text-text-faint">{time}</span>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </div>
+
+      <div className="safe-bottom border-t border-line-soft bg-surface">
+        <div className="flex items-center gap-2 px-4 py-3">
+          <input
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            placeholder="메시지 입력"
+            className="input flex-1 !min-h-[44px] !py-2.5 !rounded-full"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault()
+                handleSend()
+              }
+            }}
+          />
+          <button
+            onClick={handleSend}
+            disabled={!text.trim() || sending}
+            className="w-11 h-11 rounded-full bg-brand text-white flex items-center justify-center disabled:bg-line active:scale-95 transition"
+            aria-label="보내기"
+          >
+            {sending ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
 }

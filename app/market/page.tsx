@@ -1,125 +1,115 @@
 'use client'
 
-import React from 'react'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { useEffect, useState } from 'react'
+import { createClient } from '@/lib/supabase/client'
+import Header from '@/components/common/Header'
+import EmptyState from '@/components/common/EmptyState'
+import { Sparkles, Star, Heart, Search } from 'lucide-react'
+import { TIER_BENEFITS } from '@/lib/matching'
 
-const COUPANG_LINKS = [
-    { id: 1, title: '대용량 롤 휴지', q: '업소용 화장지', icon: '🧻', desc: '자주 쓰이는 대용량 3겹 롤휴지' },
-    { id: 2, title: '종량제 봉투', q: '종량제 봉투 75L', icon: '🗑️', desc: '공간 파트너 필수 대용량 봉투' },
-    { id: 3, title: '다목적 세정제', q: '다목적 세정제 대용량', icon: '🧴', desc: '바닥부터 화장실까지 하나로' },
-    { id: 4, title: '청소용 물티슈', q: '청소용 물티슈', icon: '🧽', desc: '찌든 때와 먼지를 쉽게 닦는 물티슈' },
-    { id: 5, title: '무선 청소기', q: '가성비 무선 청소기', icon: '🧹', desc: '잔고장 없고 흡입력 좋은 청소기' },
-    { id: 6, title: '섬유 탈취제', q: '실내 섬유 탈취제 대용량', icon: '🌿', desc: '공간의 첫인상을 결정하는 향기' },
-]
+type Worker = {
+  id: string
+  name: string
+  profile_image?: string
+  tier?: 'STARTER' | 'SILVER' | 'GOLD' | 'MASTER'
+  avg_rating?: number
+  total_jobs?: number
+  bio?: string
+}
 
 export default function MarketPage() {
-    const router = useRouter()
+  const supabase = createClient()
+  const [workers, setWorkers] = useState<Worker[]>([])
+  const [q, setQ] = useState('')
+  const [loading, setLoading] = useState(true)
 
-    const handleSearchCoupang = (query: string) => {
-        const encoded = encodeURIComponent(query)
-        window.open(`https://www.coupang.com/np/search?component=&q=${encoded}&channel=user`, '_blank')
-    }
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase
+        .from('users')
+        .select('id, name, profile_image, tier, avg_rating, total_jobs, bio, is_active')
+        .eq('role', 'worker')
+        .eq('is_active', true)
+        .order('avg_rating', { ascending: false })
+        .limit(60)
+      setWorkers((data || []) as Worker[])
+      setLoading(false)
+    })()
+  }, [])
 
-    return (
-        <div className="page-container">
-            {/* 헤더 */}
-            <header className="header">
-                <button className="btn btn-icon" onClick={() => router.back()}>
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M15 18l-6-6 6-6" />
-                    </svg>
-                </button>
-                <div className="header-title">비품 마켓</div>
-                <div style={{ width: 40 }} />
-            </header>
+  const filtered = workers.filter(
+    (w) => !q || w.name.toLowerCase().includes(q.toLowerCase()) || (w.bio && w.bio.toLowerCase().includes(q.toLowerCase())),
+  )
 
-            <div className="page-content">
-                <div className="card mb-md" style={{ background: 'linear-gradient(135deg, #FFF0F0 0%, #FFE4E4 100%)', border: 'none' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <div>
-                            <span className="badge-approved mb-sm inline-block" style={{ background: '#E11D48', color: '#fff' }}>로켓배송 파트너십</span>
-                            <h2 style={{ fontSize: '18px', fontWeight: 800, color: '#9F1239', marginBottom: '8px' }}>
-                                사업자용 필수 비품<br />
-                                로켓배송으로 내일 바로 받으세요
-                            </h2>
-                            <p style={{ fontSize: '13px', color: '#BE123C', opacity: 0.9 }}>
-                                쿠팡 연동으로 가장 저렴하고 빠른 상품들을 모았습니다.
-                            </p>
-                        </div>
-                        <div style={{ fontSize: '48px', opacity: 0.8 }}>📦</div>
-                    </div>
-                </div>
+  return (
+    <div className="sseuksak-shell">
+      <Header title="클린 파트너 찾기" showBack />
 
-                <div className="market-grid">
-                    {COUPANG_LINKS.map(item => (
-                        <div key={item.id} className="market-item card" onClick={() => handleSearchCoupang(item.q)}>
-                            <div className="market-icon">{item.icon}</div>
-                            <h3 className="market-title">{item.title}</h3>
-                            <p className="market-desc">{item.desc}</p>
-                            <div className="coupang-link-btn">쿠팡 최저가 보기 →</div>
-                        </div>
-                    ))}
-                </div>
-
-                <div className="mt-xl text-center" style={{ padding: '24px 0', borderTop: '1px solid #E2E8F0' }}>
-                    <p style={{ fontSize: '14px', color: '#64748B', marginBottom: '12px' }}>
-                        원하는 상품이 없으신가요?
-                    </p>
-                    <button
-                        className="btn btn-secondary"
-                        onClick={() => window.open('https://www.coupang.com', '_blank')}
-                    >
-                        쿠팡 기본 홈으로 이동
-                    </button>
-                </div>
-            </div>
-
-            <style jsx>{`
-                .market-grid {
-                    display: grid;
-                    grid-template-columns: repeat(2, 1fr);
-                    gap: 16px;
-                }
-                .market-item {
-                    display: flex;
-                    flex-direction: column;
-                    align-items: center;
-                    text-align: center;
-                    padding: 24px 16px;
-                    cursor: pointer;
-                    transition: all 0.2s;
-                }
-                .market-item:active {
-                    transform: scale(0.98);
-                }
-                .market-icon {
-                    font-size: 32px;
-                    margin-bottom: 12px;
-                }
-                .market-title {
-                    font-weight: 700;
-                    font-size: 15px;
-                    margin-bottom: 8px;
-                    color: #1E293B;
-                }
-                .market-desc {
-                    font-size: 12px;
-                    color: #64748B;
-                    margin-bottom: 16px;
-                    line-height: 1.4;
-                }
-                .coupang-link-btn {
-                    margin-top: auto;
-                    font-size: 12px;
-                    font-weight: 700;
-                    color: #E11D48;
-                    background: #FEF2F2;
-                    padding: 6px 12px;
-                    border-radius: 4px;
-                    width: 100%;
-                }
-            `}</style>
+      <div className="sticky top-14 z-10 px-5 py-3 bg-canvas/95 backdrop-blur border-b border-line-soft">
+        <div className="relative">
+          <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-text-faint" />
+          <input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="이름 / 특징 검색"
+            className="input pl-11"
+          />
         </div>
-    )
+      </div>
+
+      <div className="flex-1 px-5 pt-4 pb-12">
+        {loading ? (
+          <div className="flex flex-col gap-3">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="skeleton h-[84px]" />
+            ))}
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="card p-2 mt-4">
+            <EmptyState icon={<Sparkles size={22} />} title="검색 결과가 없어요" description="다른 키워드로 검색해보세요." />
+          </div>
+        ) : (
+          <ul className="flex flex-col gap-3">
+            {filtered.map((w) => {
+              const tier = TIER_BENEFITS[w.tier || 'STARTER']
+              return (
+                <li key={w.id}>
+                  <div className="card-interactive p-4 flex items-center gap-3">
+                    <div className="w-14 h-14 rounded-2xl bg-brand-softer text-brand-dark flex items-center justify-center font-black text-xl overflow-hidden shrink-0">
+                      {w.profile_image ? (
+                        <img src={w.profile_image} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        w.name.charAt(0)
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <h4 className="text-[14.5px] font-extrabold text-ink truncate">{w.name}</h4>
+                        <span
+                          className="text-[10px] font-black px-2 py-0.5 rounded-full"
+                          style={{ backgroundColor: `${tier.color}22`, color: tier.color }}
+                        >
+                          {tier.label}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 mt-0.5 text-[11.5px] font-bold text-text-soft">
+                        <span className="flex items-center gap-0.5">
+                          <Star size={11} className="text-sun" fill="currentColor" />
+                          {(w.avg_rating ?? 0).toFixed(1)}
+                        </span>
+                        <span>·</span>
+                        <span>{w.total_jobs ?? 0}건</span>
+                      </div>
+                      {w.bio && <p className="text-[11.5px] font-medium text-text-muted truncate mt-1">{w.bio}</p>}
+                    </div>
+                  </div>
+                </li>
+              )
+            })}
+          </ul>
+        )}
+      </div>
+    </div>
+  )
 }

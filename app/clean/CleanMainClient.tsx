@@ -1,222 +1,268 @@
-'use client';
+'use client'
 
-import React, { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { createClient } from '@/lib/supabase/client';
-import BottomNav from '@/components/layout/BottomNav';
+import Link from 'next/link'
+import { motion } from 'framer-motion'
+import {
+  Sparkles,
+  Clock,
+  MapPin,
+  Zap,
+  Wallet,
+  Star,
+  ChevronRight,
+  TrendingUp,
+  Navigation,
+  CheckCircle2,
+} from 'lucide-react'
+import Header from '@/components/common/Header'
+import BottomNav from '@/components/common/BottomNav'
+import StatusChip from '@/components/common/StatusChip'
+import EmptyState from '@/components/common/EmptyState'
+import { formatKRW, formatScheduled, spaceTypeLabel, maskAddress } from '@/lib/utils'
+import { TIER_BENEFITS } from '@/lib/matching'
+import type { JobStatus, SpaceType } from '@/lib/types'
 
-interface Job {
-  id: string;
-  status: string;
-  price: number;
-  scheduled_at: string;
-  estimated_duration: number;
-  is_urgent: boolean;
-  spaces?: { name: string; address: string; type: string };
-  job_id?: string;
-  space_name?: string;
-  space_type?: string;
-  distance_meters?: number;
+type Profile = {
+  id: string
+  name: string
+  avg_rating?: number
+  tier?: 'STARTER' | 'SILVER' | 'GOLD' | 'MASTER'
+  total_jobs?: number
+  sparkle_score?: number
+  profile_image?: string | null
 }
 
-interface Props {
-  profile: { id: string; name: string; avg_rating: number; tier: string; total_jobs: number; sparkle_score?: number };
-  activeJob: Job | null;
-  weekEarnings: number;
-  pendingCount: number;
+type Job = {
+  id: string
+  status: JobStatus
+  price: number
+  scheduled_at: string
+  estimated_duration?: number
+  is_urgent?: boolean
+  special_instructions?: string
+  spaces?: { id: string; name: string; type: SpaceType; address: string; address_detail?: string }
 }
 
-const DEFAULT_IMAGES = [
-  "https://lh3.googleusercontent.com/aida-public/AB6AXuC1kqFcdTGwUsC5qFYjFZ00oxpeMQqVjQN18NGRKxhKKsa_JuactxoE6O9luREQtvK_DLFf-CvBoe8NbyCHcwkwzi6K9x9RZNItTadrbzcIy-JIhCG80sxRSzW03usJxdnxKmMHfNoDges4jHY4Yq4DUdCfoTTU8gsOyIQKmZ16lq8kzwejE-cEH_cYZhMf_RZHuRtCnfZpUYfw41e4aiogsY9Gw6Tu97hj3EuJDfMdCXGyiMxHsMeORuN6LIhq4QL2IkPvVhyX1V4",
-  "https://lh3.googleusercontent.com/aida-public/AB6AXuCnuS-MODUZhLlcwcTanEYWDttWa26-B0whjoand34z9IMpah_ymcmh-3tGjSTnsPNT7hFe_7bMifK4JmVM3ngVw_Df1wDud_4NHm5hMEk_dOKg46pwiAGYfeR1LM4MoCoRRogJt5YiyOQRrXrwbR8gey_dbolEBm-9brfyAbhxLq0Yp5leg7EYJ6OOpwHIUomyJu12LT6FUixW1ufAhODv-gPGFwlubwBF1amODscqcvYTkSXdbG_CNx3rsfLKICMiYCy-kXXSLUE",
-  "https://lh3.googleusercontent.com/aida-public/AB6AXuCwVTchqTlbyVjN1KOQKCGXmIt6I8o8bAzGJ8HEyiVDavk_umqwplPSJHc8WuIi-2VcWu8P5SumyILTkBswLF_sR6r-jUl1f4qqY1F-7lAtHGnMZTNXII1IM7OUxJ5PgQ3CBaRafmUee1WHK5zju11mxLVdaTUWobVt3JWbqwLXaBpRLO9p7AHQrUReQp8YifQAVXPBlxkIa0YvaaGL4e-VocYPLODdtZmRAvJltSDPPHZz1sy0zeKEOnW4NFzi6Xwr5170h1A5G0s"
-];
+type Props = {
+  profile: Profile
+  activeJob: Job | null
+  openJobs: Job[]
+  weekEarnings: number
+  pendingCount: number
+  unreadCount: number
+}
 
-export default function CleanMainClient({ profile, activeJob, weekEarnings, pendingCount }: Props) {
-  const [nearbyJobs, setNearbyJobs] = useState<Job[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (!navigator.geolocation) {
-      setLoading(false);
-      return;
-    }
-    navigator.geolocation.getCurrentPosition(
-      async (pos) => {
-        const supabase = createClient();
-        const { data, error } = await supabase.rpc('nearby_open_jobs', {
-          worker_lat: pos.coords.latitude,
-          worker_lng: pos.coords.longitude,
-          radius_km: 10,
-        });
-        if (!error && data) setNearbyJobs(data as Job[]);
-        setLoading(false);
-      },
-      () => {
-        createClient()
-          .from('jobs').select('*, spaces(name,address,type)')
-          .eq('status', 'OPEN').order('scheduled_at').limit(10)
-          .then(({ data }) => {
-            setNearbyJobs((data as Job[]) || []);
-            setLoading(false);
-          });
-      }
-    );
-  }, []);
-
-  const formatFutureTime = (iso: string) => {
-    const d = new Date(iso);
-    const today = new Date();
-    const isTomorrow = d.getDate() === today.getDate() + 1 && d.getMonth() === today.getMonth();
-    const prefix = isTomorrow ? '내일' : `${d.getMonth() + 1}/${d.getDate()}`;
-    const ampm = d.getHours() >= 12 ? '오후' : '오전';
-    const h = d.getHours() % 12 || 12;
-    const m = d.getMinutes().toString().padStart(2, '0');
-    return `${prefix}, ${ampm} ${h}:${m}`;
-  };
+export default function CleanMainClient({ profile, activeJob, openJobs, weekEarnings, pendingCount, unreadCount }: Props) {
+  const tier = profile.tier ?? 'STARTER'
+  const tierInfo = TIER_BENEFITS[tier]
+  const rating = profile.avg_rating ?? 0
+  const jobsCount = profile.total_jobs ?? 0
 
   return (
-    <div className="bg-background-light dark:bg-background-dark font-display text-text-primary-light dark:text-text-primary-dark min-h-screen flex flex-col antialiased">
-      <div className="relative flex min-h-screen w-full flex-col group/design-root overflow-x-hidden max-w-md mx-auto">
+    <div className="sseuksak-shell">
+      <Header showLogo showBell unreadCount={unreadCount} />
 
-        {/* Header */}
-        <header className="flex items-center bg-surface-light dark:bg-surface-dark p-4 pb-2 justify-between sticky top-0 z-10 border-b border-border-light dark:border-border-dark">
-          <h2 className="text-text-primary-light dark:text-text-primary-dark text-lg font-bold leading-tight tracking-[-0.015em] flex-1">
-            CleanGig 파트너
-          </h2>
-          <div className="flex w-12 items-center justify-end">
-            <button className="flex items-center justify-center rounded-lg h-12 w-12 bg-transparent text-text-primary-light dark:text-text-primary-dark hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
-              <span className="material-symbols-outlined text-2xl">notifications</span>
-            </button>
+      <div className="page-container flex-1">
+        {/* Profile mini */}
+        <motion.section initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="mb-5 pt-2">
+          <div className="flex items-center gap-3">
+            <div className="w-14 h-14 rounded-full bg-gradient-to-br from-brand to-brand-dark flex items-center justify-center text-white font-black text-lg shadow-brand-sm">
+              {profile.profile_image ? (
+                <img src={profile.profile_image} alt="" className="w-full h-full rounded-full object-cover" />
+              ) : (
+                profile.name.charAt(0)
+              )}
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center gap-1.5">
+                <h1 className="text-[18px] font-extrabold text-ink">{profile.name} 님</h1>
+                <span
+                  className="text-[10.5px] font-black px-2 py-0.5 rounded-full"
+                  style={{ backgroundColor: `${tierInfo.color}20`, color: tierInfo.color }}
+                >
+                  {tierInfo.label}
+                </span>
+              </div>
+              <div className="flex items-center gap-3 mt-1 text-[12px] font-bold text-text-soft">
+                <span className="flex items-center gap-0.5">
+                  <Star size={12} className="text-sun" fill="currentColor" />
+                  {rating.toFixed(1) || '—'}
+                </span>
+                <span>·</span>
+                <span>{jobsCount}건 완료</span>
+              </div>
+            </div>
+            <Link href="/profile" className="text-[12px] font-bold text-text-muted flex items-center gap-0.5">
+              프로필 <ChevronRight size={14} />
+            </Link>
           </div>
-        </header>
+        </motion.section>
 
-        {/* Main Content */}
-        <main className="flex-1 overflow-y-auto pb-[90px]">
+        {/* Active job OR weekly earnings hero */}
+        {activeJob ? (
+          <motion.section
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.05 }}
+            className="mb-6"
+          >
+            <Link href={`/clean/job/${activeJob.id}`} className="block">
+              <div className="rounded-3xl bg-ink text-white p-5 overflow-hidden relative">
+                <div className="absolute -top-8 -right-8 w-40 h-40 bg-brand/25 rounded-full blur-3xl" />
+                <div className="relative z-10">
+                  <div className="flex items-center gap-2 mb-3">
+                    <StatusChip kind="job" status={activeJob.status} />
+                    {activeJob.is_urgent && (
+                      <span className="chip chip-danger text-[10px]">긴급</span>
+                    )}
+                  </div>
+                  <h3 className="text-[18px] font-extrabold mb-1">{activeJob.spaces?.name}</h3>
+                  <div className="flex items-center gap-2 text-[12.5px] text-white/75 font-semibold">
+                    <Clock size={12} />
+                    {formatScheduled(activeJob.scheduled_at)}
+                  </div>
+                  <div className="flex items-center gap-1.5 mt-1 text-[12.5px] text-white/75 font-semibold">
+                    <MapPin size={12} />
+                    {maskAddress(activeJob.spaces?.address || '')}
+                  </div>
 
-          {/* Today's Earnings */}
-          <section className="p-4">
-            <div className="bg-surface-light dark:bg-surface-dark rounded-xl p-6 shadow-sm border border-border-light dark:border-border-dark flex flex-col gap-2">
-              <div className="flex items-center justify-between">
-                <p className="text-text-secondary-light dark:text-text-secondary-dark text-sm font-medium leading-normal">이번 주 수익</p>
-                <span className="material-symbols-outlined text-primary text-xl">account_balance_wallet</span>
+                  <div className="mt-4 p-3.5 rounded-2xl bg-white/10 flex items-center justify-between">
+                    <div>
+                      <p className="text-[11px] text-white/70 font-bold">지금 해야 할 일</p>
+                      <p className="text-[14px] font-extrabold text-brand-light">
+                        {activeJob.status === 'ASSIGNED' && '현장으로 출발하세요'}
+                        {activeJob.status === 'EN_ROUTE' && '도착 후 ARRIVED 버튼을 눌러주세요'}
+                        {activeJob.status === 'ARRIVED' && '체크리스트를 시작하세요'}
+                        {activeJob.status === 'IN_PROGRESS' && '청소를 완료하고 사진 제출'}
+                      </p>
+                    </div>
+                    <div className="w-10 h-10 rounded-full bg-brand flex items-center justify-center shrink-0 animate-pulse-ring">
+                      <Navigation size={18} className="text-ink" strokeWidth={2.5} />
+                    </div>
+                  </div>
+                </div>
               </div>
-              <p className="text-primary tracking-tight text-3xl font-bold leading-tight mt-1">
-                ₩{weekEarnings.toLocaleString()}
-              </p>
-              <div className="flex items-center gap-1 mt-2 text-sm">
-                <span className="material-symbols-outlined text-green-500 text-sm">trending_up</span>
-                <span className="text-green-500 font-medium">+12%</span>
-                <span className="text-text-secondary-light dark:text-text-secondary-dark">지난주 대비</span>
-              </div>
-            </div>
-          </section>
-
-          {/* Sparkle Benefit Banner */}
-          <section className="px-4 pb-4">
-            <div className="bg-gradient-to-r from-primary to-emerald-500 rounded-2xl p-4 text-white shadow-lg overflow-hidden relative">
-              <div className="absolute right-[-20px] top-[-20px] opacity-10">
-                <span className="material-symbols-outlined text-[100px]">verified</span>
-              </div>
-              <p className="font-bold text-sm mb-1 italic">PRO TIP</p>
-              <h4 className="font-bold text-[15px] mb-1">스파클 점수가 높을수록 우선 배정!</h4>
-              <p className="text-[11px] opacity-90 leading-relaxed">
-                매칭 대기 시 상단에 노출되어 일감을 더 빨리 받을 수 있고,<br />
-                골드 등급 이상 시 수수료 추가 감면 혜택이 적용됩니다.
-              </p>
-            </div>
-          </section>
-
-          {/* Active Jobs Summary */}
-          <section className="px-4 py-2">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-text-primary-light dark:text-text-primary-dark text-lg font-bold leading-tight tracking-[-0.015em]">진행 중인 청소요청</h3>
-              <Link href="/clean/jobs/active" className="text-primary text-sm font-medium hover:underline">모두 보기</Link>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="bg-green-500/10 dark:bg-green-500/20 rounded-xl p-4 shadow-sm border border-green-500/20 flex flex-col items-center justify-center text-center gap-2">
-                <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center">
-                  <span className="material-symbols-outlined text-green-600 dark:text-green-400">auto_awesome</span>
+            </Link>
+          </motion.section>
+        ) : (
+          <motion.section
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.05 }}
+            className="mb-6"
+          >
+            <div className="rounded-3xl bg-brand-softer p-5 border border-brand/15">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-full bg-brand/15 flex items-center justify-center">
+                  <Wallet size={18} className="text-brand-dark" />
                 </div>
                 <div>
-                  <p className="text-xl font-bold text-text-primary-light dark:text-text-primary-dark">{profile.sparkle_score || 50.0}점</p>
-                  <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark font-bold text-green-600 dark:text-green-400">스파클 점수</p>
+                  <p className="text-[11px] text-brand-dark font-extrabold">이번 주 수익</p>
+                  <p className="t-money text-[28px] text-ink leading-tight mt-0.5">
+                    {formatKRW(weekEarnings)}
+                  </p>
                 </div>
               </div>
-              <div className="bg-primary/10 dark:bg-primary/20 rounded-xl p-4 shadow-sm border border-primary/20 flex flex-col items-center justify-center text-center gap-2">
-                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                  <span className="material-symbols-outlined text-primary">priority_high</span>
-                </div>
-                <div>
-                  <p className="text-xl font-bold text-text-primary-light dark:text-text-primary-dark">우선순위</p>
-                  <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark">높음</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Next Job Card */}
-            {activeJob && (
-              <div className="mt-3 bg-surface-light dark:bg-surface-dark rounded-xl p-4 shadow-sm border border-border-light dark:border-border-dark">
-                <div className="flex justify-between items-start mb-3">
-                  <div className="bg-primary/10 text-primary text-xs font-bold px-2 py-1 rounded">다음 일정</div>
-                  <span className="text-text-secondary-light dark:text-text-secondary-dark text-sm">
-                    {new Date(activeJob.scheduled_at).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}
-                  </span>
-                </div>
-                <h4 className="font-bold text-base mb-1">{(activeJob.spaces as any)?.name} 클리닝</h4>
-                <div className="flex items-center gap-1 text-text-secondary-light dark:text-text-secondary-dark text-sm mb-4">
-                  <span className="material-symbols-outlined text-sm">location_on</span>
-                  <span>{(activeJob.spaces as any)?.address}</span>
-                </div>
-                <Link href={`/clean/job/${activeJob.id}`} className="flex justify-center w-full bg-primary hover:bg-primary/90 text-white rounded-lg py-3 font-semibold transition-colors">
-                  일정 조회하기
+              <div className="flex items-center gap-3 text-[12px] font-bold text-text-muted">
+                <span className="flex items-center gap-1">
+                  <Clock size={12} /> 정산 대기 {pendingCount}건
+                </span>
+                <Link href="/earnings" className="ml-auto flex items-center gap-0.5 text-brand-dark">
+                  자세히 <ChevronRight size={14} />
                 </Link>
               </div>
-            )}
-          </section>
+            </div>
+          </motion.section>
+        )}
 
-          {/* Recommended Jobs */}
-          <section className="px-4 py-6">
-            <h3 className="text-text-primary-light dark:text-text-primary-dark text-lg font-bold leading-tight tracking-[-0.015em] mb-3">추천 청소요청</h3>
-            {loading ? (
-              <div className="flex justify-center p-4">
-                <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
-              </div>
-            ) : nearbyJobs.length === 0 ? (
-              <div className="text-center py-8 text-slate-500 text-sm border-t border-slate-100 dark:border-slate-800">
-                주변에 추천할 만한 청소요청이 없습니다.
-              </div>
-            ) : (
-              <div className="flex flex-col gap-3">
-                {nearbyJobs.map((job, idx) => {
-                  const bgImage = DEFAULT_IMAGES[idx % DEFAULT_IMAGES.length];
-                  return (
-                    <Link href={`/clean/job/${job.job_id || job.id}`} key={job.job_id || job.id} className="bg-surface-light dark:bg-surface-dark rounded-xl p-4 shadow-sm border border-border-light dark:border-border-dark flex gap-4 items-center group hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                      <div className="w-16 h-16 rounded-lg bg-gray-200 dark:bg-gray-700 flex-shrink-0 bg-cover bg-center" style={{ backgroundImage: `url('${bgImage}')` }}></div>
+        {/* Nearby open jobs */}
+        <section className="mb-6">
+          <div className="flex items-center justify-between mb-3 px-1">
+            <div>
+              <h2 className="h-section text-ink">내 주변 작업</h2>
+              <p className="text-[11px] text-text-soft font-bold mt-0.5">지금 신청하면 우선 매칭돼요</p>
+            </div>
+            <Link href="/clean/jobs" className="text-xs font-bold text-text-muted flex items-center gap-0.5">
+              전체 <ChevronRight size={14} />
+            </Link>
+          </div>
+
+          {openJobs.length === 0 ? (
+            <div className="card p-2">
+              <EmptyState
+                icon={<Sparkles size={24} />}
+                title="주변에 열린 작업이 없어요"
+                description="알림을 켜두면 근처 작업이 생길 때 바로 알려드려요."
+              />
+            </div>
+          ) : (
+            <ul className="flex flex-col gap-3">
+              {openJobs.slice(0, 5).map((job) => (
+                <li key={job.id}>
+                  <Link href={`/clean/job/${job.id}`} className="card-interactive p-4">
+                    <div className="flex items-start gap-3">
+                      <div className="w-11 h-11 rounded-xl bg-brand-softer flex items-center justify-center shrink-0">
+                        <Sparkles size={18} className="text-brand-dark" />
+                      </div>
                       <div className="flex-1 min-w-0">
-                        <div className="flex justify-between items-start">
-                          <h4 className="font-bold text-sm truncate">{job.space_name || (job.spaces as any)?.name || '청소요청'}</h4>
-                          <span className="font-bold text-primary text-sm whitespace-nowrap group-hover:underline">₩{(job.price || 0).toLocaleString()}</span>
+                        <div className="flex items-center gap-1.5 mb-1">
+                          <span className="chip chip-brand text-[10px] px-2 py-0.5">
+                            {spaceTypeLabel(job.spaces?.type || 'other')}
+                          </span>
+                          {job.is_urgent && <span className="chip chip-danger text-[10px]">긴급</span>}
                         </div>
-                        <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark mt-1 flex items-center gap-1">
-                          <span className="material-symbols-outlined text-[14px]">calendar_today</span>
-                          {formatFutureTime(job.scheduled_at)}
+                        <h4 className="text-[14.5px] font-extrabold text-ink truncate">
+                          {job.spaces?.name}
+                        </h4>
+                        <p className="text-[11.5px] text-text-soft font-bold truncate flex items-center gap-1 mt-0.5">
+                          <Clock size={11} /> {formatScheduled(job.scheduled_at)}
                         </p>
-                        <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark mt-0.5 flex items-center gap-1">
-                          <span className="material-symbols-outlined text-[14px]">map</span>
-                          거리 {(job.distance_meters ? job.distance_meters / 1000 : 0.5).toFixed(1)}km
+                        <p className="text-[11.5px] text-text-soft font-bold truncate flex items-center gap-1 mt-0.5">
+                          <MapPin size={11} /> {maskAddress(job.spaces?.address || '')}
                         </p>
                       </div>
-                    </Link>
-                  );
-                })}
-              </div>
-            )}
-          </section>
-        </main>
+                      <div className="text-right shrink-0">
+                        <div className="t-money text-[16px] text-brand-dark">
+                          {formatKRW(Math.round(job.price * 0.88), { short: true })}
+                        </div>
+                        <p className="text-[10px] font-bold text-text-faint mt-0.5">예상 정산</p>
+                      </div>
+                    </div>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
 
-        <BottomNav />
+        {/* Tips */}
+        <section>
+          <h2 className="h-section text-ink px-1 mb-3">쓱싹 꿀팁</h2>
+          <div className="flex gap-3 overflow-x-auto no-scrollbar -mx-1 px-1">
+            {[
+              { icon: TrendingUp, label: '티어 올리는 법', desc: '평점 4.8 이상 유지 · 100건 달성', tone: '#00C896' },
+              { icon: Zap, label: '긴급 작업 잡기', desc: '알림 켜두고 가장 먼저 신청하기', tone: '#FFB800' },
+              { icon: CheckCircle2, label: '체크리스트 100%', desc: '사진 모두 제출해 분쟁 방지', tone: '#3B82F6' },
+            ].map((t, i) => {
+              const Icon = t.icon
+              return (
+                <div key={i} className="shrink-0 w-[200px] card p-4">
+                  <div
+                    className="w-8 h-8 rounded-full flex items-center justify-center mb-2"
+                    style={{ backgroundColor: `${t.tone}22`, color: t.tone }}
+                  >
+                    <Icon size={16} strokeWidth={2.5} />
+                  </div>
+                  <h4 className="text-[13px] font-extrabold text-ink">{t.label}</h4>
+                  <p className="text-[11.5px] text-text-soft font-bold mt-1 leading-snug">{t.desc}</p>
+                </div>
+              )
+            })}
+          </div>
+        </section>
       </div>
+
+      <BottomNav role="worker" />
     </div>
-  );
+  )
 }

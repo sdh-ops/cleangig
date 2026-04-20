@@ -1,25 +1,36 @@
 import Link from 'next/link'
+import { XCircle } from 'lucide-react'
 
-export default function PaymentFailPage({ searchParams }: { searchParams: any }) {
-    const code = searchParams.code as string
-    const message = searchParams.message as string
-    const jobId = searchParams.jobId as string
-
-    return (
-        <div style={{ padding: '60px 20px', textAlign: 'center', maxWidth: 400, margin: '0 auto', fontFamily: 'Pretendard, sans-serif' }}>
-            <div style={{ fontSize: 60, marginBottom: 20 }}>⚠️</div>
-            <h1 style={{ fontSize: 24, fontWeight: 800, marginBottom: 16, color: '#EF4444' }}>결제가 취소되었거나 실패했습니다</h1>
-
-            <div style={{ background: '#FEF2F2', padding: 20, borderRadius: 12, border: '1px solid #FECDD3', marginBottom: 32, textAlign: 'left' }}>
-                <div style={{ fontSize: 13, color: '#E11D48', fontWeight: 600, marginBottom: 8 }}>에러 메시지</div>
-                <div style={{ fontSize: 15, color: '#9F1239' }}>{message || '원인을 알 수 없는 오류'}</div>
-                {code && <div style={{ marginTop: 8, fontSize: 12, color: '#BE123C' }}>코드: {code}</div>}
-            </div>
-
-            <Link href={jobId ? `/requests/${jobId}` : '/dashboard'}
-                style={{ display: 'block', padding: '16px', background: '#F1F5F9', color: '#475569', textDecoration: 'none', borderRadius: 8, fontWeight: 700, border: '1px solid #CBD5E1' }}>
-                돌아가기
-            </Link>
+export default async function PaymentFailPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ message?: string; code?: string }>
+}) {
+  const sp = (await searchParams) || {}
+  return (
+    <div className="sseuksak-shell">
+      <div className="flex-1 flex flex-col items-center justify-center px-8 text-center">
+        <div className="w-24 h-24 rounded-full bg-danger-soft flex items-center justify-center mb-6">
+          <XCircle size={52} className="text-danger" strokeWidth={2.5} />
         </div>
-    )
+        <h1 className="h-hero text-ink">결제 실패</h1>
+        <p className="t-body text-text-muted mt-3 leading-relaxed">
+          결제가 정상적으로 이뤄지지 않았어요.
+          <br />
+          다시 시도해주세요.
+        </p>
+        {sp.message && (
+          <p className="mt-5 text-[13px] font-bold text-danger max-w-[280px]">{decodeURIComponent(sp.message)}</p>
+        )}
+        <div className="mt-8 w-full max-w-[280px] flex flex-col gap-2">
+          <Link href="/requests/create" className="btn btn-primary w-full">
+            다시 시도
+          </Link>
+          <Link href="/dashboard" className="btn btn-ghost w-full">
+            홈으로
+          </Link>
+        </div>
+      </div>
+    </div>
+  )
 }

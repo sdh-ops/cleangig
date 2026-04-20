@@ -1,157 +1,144 @@
-'use client';
+'use client'
 
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
+import { uploadImage } from '@/lib/storage'
+import { ChevronLeft, ShieldCheck, Check, Loader2, Upload, AlertCircle, BadgeCheck } from 'lucide-react'
 
 export default function VerificationPage() {
-    const router = useRouter();
-    const [loading, setLoading] = useState(true);
-    const [verifying, setVerifying] = useState(false);
-    const [user, setUser] = useState<any>(null);
-    const [step, setStep] = useState(1); // 1: Intro, 2: Upload, 3: Success
+  const router = useRouter()
+  const supabase = createClient()
+  const [loading, setLoading] = useState(true)
+  const [userId, setUserId] = useState('')
+  const [isVerified, setIsVerified] = useState(false)
+  const [role, setRole] = useState<string>('operator')
+  const [uploading, setUploading] = useState(false)
+  const [submitted, setSubmitted] = useState(false)
+  const [err, setErr] = useState<string | null>(null)
 
-    useEffect(() => {
-        const fetchUser = async () => {
-            const supabase = createClient();
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) {
-                router.push('/login');
-                return;
-            }
-            const { data: profile } = await supabase.from('users').select('*').eq('id', user.id).single();
-            setUser(profile);
-            if (profile?.is_verified) setStep(3);
-            setLoading(false);
-        };
-        fetchUser();
-    }, []);
+  useEffect(() => {
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) { router.replace('/login'); return }
+      setUserId(user.id)
+      const { data } = await supabase.from('users').select('is_verified, role').eq('id', user.id).single()
+      if (data) {
+        setIsVerified(data.is_verified)
+        setRole(data.role || 'operator')
+      }
+      setLoading(false)
+    })()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
-    const handleVerify = async () => {
-        setVerifying(true);
-        // Simulate network delay for real KYC feel
-        await new Promise(resolve => setTimeout(resolve, 2000));
+  const handleUpload = async (file: File) => {
+    setUploading(true)
+    setErr(null)
+    try {
+      const { url } = await uploadImage('docs', userId, file, { folder: 'id' })
+      // store path in users preferences for admin review (in real app - separate table + queue)
+      await supabase.from('users').update({
+        preferences: { verification_doc_url: url, submitted_at: new Date().toISOString() },
+      }).eq('id', userId)
+      setSubmitted(true)
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : '업로드 실패')
+    } finally {
+      setUploading(false)
+    }
+  }
 
-        const supabase = createClient();
-        const { error } = await supabase.from('users').update({ is_verified: true }).eq('id', user.id);
+  if (loading) {
+    return <div className="sseuksak-shell flex items-center justify-center"><Loader2 size={24} className="animate-spin text-brand" /></div>
+  }
 
-        if (!error) {
-            setStep(3);
-        } else {
-            alert('인증에 실패했습니다. 다시 시도해 주세요.');
-        }
-        setVerifying(false);
-    };
+  return (
+    <div className="sseuksak-shell">
+      <header className="flex items-center h-14 px-3 safe-top border-b border-line-soft bg-surface">
+        <button onClick={() => router.back()} className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-muted">
+          <ChevronLeft size={22} />
+        </button>
+        <h1 className="flex-1 text-center text-[15px] font-extrabold">본인 인증</h1>
+        <div className="w-10" />
+      </header>
 
-    if (loading) return (
-        <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900">
-            <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-        </div>
-    );
-
-    return (
-        <div className="min-h-screen bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-sans max-w-md mx-auto flex flex-col relative overflow-hidden">
-
-            {/* Header */}
-            <div className="p-6 flex items-center gap-4">
-                <button onClick={() => router.back()} className="material-symbols-outlined text-slate-500 hover:text-slate-900">arrow_back</button>
-                <h1 className="text-xl font-bold">임팩트 신원 인증 (KYC)</h1>
+      <div className="flex-1 px-5 pt-6 pb-28 flex flex-col gap-5">
+        {isVerified ? (
+          <div className="card p-6 bg-brand-softer border border-brand/15 flex items-center gap-4">
+            <div className="w-12 h-12 rounded-full bg-brand flex items-center justify-center">
+              <BadgeCheck size={22} className="text-white" />
+            </div>
+            <div>
+              <h3 className="text-[15px] font-black text-ink">인증 완료</h3>
+              <p className="text-[12px] text-text-muted font-semibold mt-0.5">인증된 파트너로 활동 중입니다.</p>
+            </div>
+          </div>
+        ) : submitted ? (
+          <div className="card p-6 bg-info-soft border border-info/15 flex items-center gap-4">
+            <div className="w-12 h-12 rounded-full bg-info flex items-center justify-center">
+              <Check size={22} className="text-white" />
+            </div>
+            <div>
+              <h3 className="text-[15px] font-black text-ink">제출 완료</h3>
+              <p className="text-[12px] text-text-muted font-semibold mt-0.5">관리자 검토 후 1영업일 이내 인증됩니다.</p>
+            </div>
+          </div>
+        ) : (
+          <>
+            <div className="card p-5">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-2xl bg-brand-softer flex items-center justify-center">
+                  <ShieldCheck size={20} className="text-brand-dark" />
+                </div>
+                <div>
+                  <h3 className="text-[15px] font-extrabold text-ink">신원 인증하고 쓱싹 배지 받기</h3>
+                  <p className="text-[11.5px] text-text-muted font-semibold mt-0.5">인증 파트너는 매칭률이 2배 높아져요.</p>
+                </div>
+              </div>
+              <ul className="mt-4 flex flex-col gap-2 text-[13px] font-semibold text-ink-soft">
+                <li className="flex items-start gap-2">
+                  <Check size={15} className="text-brand shrink-0 mt-0.5" />
+                  {role === 'operator' ? '사업자등록증 또는 신분증 사진' : '신분증 사진 (주민번호 뒷자리 가려주세요)'}
+                </li>
+                <li className="flex items-start gap-2">
+                  <Check size={15} className="text-brand shrink-0 mt-0.5" />
+                  밝고 선명하게, 글자가 잘 보이게
+                </li>
+                <li className="flex items-start gap-2">
+                  <Check size={15} className="text-brand shrink-0 mt-0.5" />
+                  이름과 생년월일이 보여야 합니다
+                </li>
+              </ul>
             </div>
 
-            <div className="flex-1 p-6 flex flex-col">
-                <AnimatePresence mode="wait">
-                    {step === 1 && (
-                        <motion.div
-                            key="step1"
-                            initial={{ opacity: 0, x: 20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: -20 }}
-                            className="flex flex-col h-full"
-                        >
-                            <div className="bg-primary/10 w-16 h-16 rounded-2xl flex items-center justify-center mb-6 text-primary">
-                                <span className="material-symbols-outlined text-[32px]">verified_user</span>
-                            </div>
-                            <h2 className="text-[24px] font-black leading-tight mb-4">신뢰받는 파트너가<br />되는 첫 걸음</h2>
-                            <p className="text-slate-500 leading-relaxed mb-auto">
-                                클린긱은 안전한 청소 문화를 위해 모든 파트너의 신원을 검증합니다. 본인 확인이 완료된 파트너에게만 일감 지원 권한이 부여됩니다.
-                            </p>
-                            <button
-                                onClick={() => setStep(2)}
-                                className="w-full bg-primary text-white font-bold py-4 rounded-2xl shadow-lg shadow-primary/20 transition-all active:scale-95"
-                            >
-                                본인 인증 시작하기
-                            </button>
-                        </motion.div>
-                    )}
+            <label className="card-interactive p-8 flex flex-col items-center justify-center border-2 border-dashed border-line-strong cursor-pointer">
+              <div className="w-12 h-12 rounded-full bg-brand-softer text-brand-dark flex items-center justify-center mb-3">
+                {uploading ? <Loader2 size={20} className="animate-spin" /> : <Upload size={20} />}
+              </div>
+              <p className="text-[14px] font-extrabold text-ink">
+                {uploading ? '업로드 중...' : '사진 업로드'}
+              </p>
+              <p className="text-[11.5px] text-text-soft font-bold mt-1">JPG/PNG · 최대 10MB</p>
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => e.target.files?.[0] && handleUpload(e.target.files[0])}
+              />
+            </label>
 
-                    {step === 2 && (
-                        <motion.div
-                            key="step2"
-                            initial={{ opacity: 0, x: 20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: -20 }}
-                            className="flex flex-col h-full"
-                        >
-                            <div className="mb-8">
-                                <h2 className="text-[22px] font-black leading-tight mb-2">본인 확인 중</h2>
-                                <p className="text-slate-500 text-sm">휴대폰 본인인증(NICE)을 통해 실명을 확인합니다.</p>
-                            </div>
-
-                            <div className="flex-1 flex flex-col items-center justify-center gap-6 p-8 bg-white dark:bg-slate-800 rounded-[32px] border border-slate-200 dark:border-slate-700 shadow-sm mb-8">
-                                <div className="relative">
-                                    <div className={`w-24 h-24 rounded-full border-4 ${verifying ? 'border-primary border-t-transparent animate-spin' : 'border-slate-100 flex items-center justify-center'}`}>
-                                        {!verifying && <span className="material-symbols-outlined text-[40px] text-slate-300">person_search</span>}
-                                    </div>
-                                    {verifying && (
-                                        <div className="absolute inset-0 flex items-center justify-center text-primary font-bold transition-opacity">
-                                            <span className="material-symbols-outlined animate-pulse">lock</span>
-                                        </div>
-                                    )}
-                                </div>
-                                <div className="text-center">
-                                    <p className="font-bold text-lg mb-1">{verifying ? '보안 연결 중...' : '인증 준비 완료'}</p>
-                                    <p className="text-slate-400 text-xs">안전하게 암호화되어 전송됩니다.</p>
-                                </div>
-                            </div>
-
-                            <button
-                                onClick={handleVerify}
-                                disabled={verifying}
-                                className="w-full bg-primary text-white font-bold py-4 rounded-2xl shadow-lg shadow-primary/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
-                            >
-                                {verifying ? '통신 중...' : '인증 실행 (PASS/NICE)'}
-                            </button>
-                        </motion.div>
-                    )}
-
-                    {step === 3 && (
-                        <motion.div
-                            key="step3"
-                            initial={{ opacity: 0, scale: 0.9 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            className="flex flex-col items-center justify-center h-full text-center"
-                        >
-                            <div className="w-20 h-20 bg-green-500 text-white rounded-full flex items-center justify-center mb-6 shadow-xl shadow-green-500/30">
-                                <span className="material-symbols-outlined text-[40px] font-bold">check</span>
-                            </div>
-                            <h2 className="text-[26px] font-black leading-tight mb-2">신원 인증 완료!</h2>
-                            <p className="text-slate-500 mb-12">이제 클린긱의 모든 일감에<br />자유롭게 지원하실 수 있습니다.</p>
-
-                            <button
-                                onClick={() => router.push('/clean/jobs')}
-                                className="w-full bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 font-bold py-4 rounded-2xl transition-all active:scale-95"
-                            >
-                                일감 보러 가기
-                            </button>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
+            <div className="p-4 rounded-2xl bg-info-soft border border-info/15 flex items-start gap-2">
+              <AlertCircle size={16} className="text-info shrink-0 mt-0.5" />
+              <div className="text-[12px] text-ink-soft font-semibold leading-snug">
+                업로드된 인증 서류는 암호화되어 저장되며, 검토 후 즉시 폐기됩니다.
+              </div>
             </div>
 
-            {/* Decoration */}
-            <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -z-10"></div>
-            <div className="absolute bottom-0 left-0 w-48 h-48 bg-primary/10 rounded-full blur-3xl -z-10"></div>
-        </div>
-    );
+            {err && <div className="p-3 bg-danger-soft rounded-xl text-[13px] font-bold text-danger">{err}</div>}
+          </>
+        )}
+      </div>
+    </div>
+  )
 }

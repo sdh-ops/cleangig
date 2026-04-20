@@ -1,791 +1,361 @@
 'use client'
 
 import Link from 'next/link'
-import { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { useState } from 'react'
+import { motion } from 'framer-motion'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
-import PaymentModal from '@/components/common/PaymentModal'
-import SecureImage from '@/components/common/SecureImage'
+import {
+  ChevronLeft,
+  Clock,
+  MapPin,
+  Star,
+  MessageSquare,
+  Phone,
+  CheckCircle2,
+  Loader2,
+  X,
+  AlertTriangle,
+  Trash2,
+  Heart,
+} from 'lucide-react'
+import StatusChip from '@/components/common/StatusChip'
+import ReviewModal from '@/components/common/ReviewModal'
+import { formatKRW, formatScheduled, spaceTypeLabel } from '@/lib/utils'
+import type { JobStatus, SpaceType } from '@/lib/types'
 
-const STATUS_MAP: Record<string, { label: string; bgCls: string; textCls: string; desc: string }> = {
-    OPEN: { label: '매칭 중', bgCls: 'bg-primary-light/20', textCls: 'text-primary', desc: 'AI가 클린파트너를 찾고 있어요' },
-    ASSIGNED: { label: '배정 완료', bgCls: 'bg-emerald-100 dark:bg-emerald-900/30', textCls: 'text-emerald-700 dark:text-emerald-400', desc: '클린파트너가 배정됐어요' },
-    EN_ROUTE: { label: '이동 중', bgCls: 'bg-emerald-100 dark:bg-emerald-900/30', textCls: 'text-emerald-700 dark:text-emerald-400', desc: '클린파트너가 이동 중이에요' },
-    ARRIVED: { label: '도착', bgCls: 'bg-emerald-100 dark:bg-emerald-900/30', textCls: 'text-emerald-700 dark:text-emerald-400', desc: '클린파트너가 도착했어요' },
-    IN_PROGRESS: { label: '청소 중', bgCls: 'bg-blue-100 dark:bg-blue-900/30', textCls: 'text-blue-700 dark:text-blue-400', desc: '청소가 진행 중이에요' },
-    SUBMITTED: { label: '검수 대기', bgCls: 'bg-purple-100 dark:bg-purple-900/30', textCls: 'text-purple-700 dark:text-purple-400', desc: 'AI가 사진을 검수 중이에요' },
-    APPROVED: { label: '승인 완료', bgCls: 'bg-green-100 dark:bg-green-900/30', textCls: 'text-green-700 dark:text-green-400', desc: '청소가 완료됐어요! 정산 처리 중' },
-    DISPUTED: { label: '분쟁 중', bgCls: 'bg-red-100 dark:bg-red-900/30', textCls: 'text-red-700 dark:text-red-400', desc: '' },
-    PAID_OUT: { label: '정산 완료', bgCls: 'bg-gray-100 dark:bg-gray-800', textCls: 'text-gray-700 dark:text-gray-300', desc: '정산이 완료됐어요' },
-    CANCELED: { label: '취소', bgCls: 'bg-gray-100 dark:bg-gray-800', textCls: 'text-gray-500 dark:text-gray-400', desc: '' },
+type JobFull = {
+  id: string
+  status: JobStatus
+  price: number
+  scheduled_at: string
+  estimated_duration?: number
+  is_urgent?: boolean
+  special_instructions?: string
+  price_breakdown?: {
+    total: number
+    platform_fee: number
+    worker_payout: number
+    items?: { label: string; amount: number; kind: string }[]
+  }
+  checklist?: { id: string; label: string; required?: boolean; completed?: boolean; photo_url?: string }[]
+  checklist_completed?: { id: string; label: string; required?: boolean; completed?: boolean; photo_url?: string }[]
+  spaces?: {
+    id: string
+    name: string
+    type: SpaceType
+    address: string
+    address_detail?: string
+    photos?: string[]
+  }
+  users?: {
+    id: string
+    name: string
+    avg_rating?: number
+    tier?: string
+    profile_image?: string
+    phone?: string
+  } | null
 }
 
-interface Props {
-    job: any; photos: any[]; payment: any; applications: any[]; userId: string; initialIsFavorite?: boolean
+type Props = {
+  job: JobFull
+  photos: any[]
+  payment: any
+  applications: any[]
+  userId: string
+  initialIsFavorite?: boolean
 }
 
-export default function RequestDetailClient({ job, photos, payment, applications, userId, initialIsFavorite = false }: Props) {
-    const router = useRouter()
-    const [approving, setApproving] = useState(false)
-    const [disputing, setDisputing] = useState(false)
-    const [disputeReason, setDisputeReason] = useState('')
-    const [showDispute, setShowDispute] = useState(false)
-    const [recleanInstructions, setRecleanInstructions] = useState('')
-    const [showRecleanModal, setShowRecleanModal] = useState(false)
-    const [isFavorite, setIsFavorite] = useState(initialIsFavorite)
-    const [togglingFav, setTogglingFav] = useState(false)
-    const [currentJob, setCurrentJob] = useState(job)
-    const [reportingNoShow, setReportingNoShow] = useState(false)
+export default function RequestDetailClient({ job, userId, initialIsFavorite = false }: Props) {
+  const router = useRouter()
+  const supabase = createClient()
+  const [isFavorite, setIsFavorite] = useState(initialIsFavorite)
+  const [approving, setApproving] = useState(false)
+  const [canceling, setCanceling] = useState(false)
+  const [showCancel, setShowCancel] = useState(false)
+  const [showReview, setShowReview] = useState(false)
+  const [err, setErr] = useState<string | null>(null)
 
-    // 리얼타임 상태 동기화
-    useEffect(() => {
-        setCurrentJob(job)
-    }, [job])
+  const checklist = job.checklist_completed?.length ? job.checklist_completed : (job.checklist || [])
 
-    useEffect(() => {
-        const supabase = createClient()
-        const channel = supabase.channel(`job-detail-${job.id}`)
-            .on(
-                'postgres_changes',
-                {
-                    event: 'UPDATE',
-                    schema: 'public',
-                    table: 'jobs',
-                    filter: `id=eq.${job.id}`
-                },
-                (payload) => {
-                    console.log('Job updated in Realtime:', payload.new)
-                    setCurrentJob(payload.new)
-                }
-            )
-            .subscribe()
-
-        return () => {
-            supabase.removeChannel(channel)
-        }
-    }, [job.id])
-
-    // 리뷰 상태
-    const [reviewModalOpen, setReviewModalOpen] = useState(false)
-    const [reviewRating, setReviewRating] = useState(5)
-    const [selectedTags, setSelectedTags] = useState<string[]>([])
-    const [reviewComment, setReviewComment] = useState('')
-    const [reviewSubmitted, setReviewSubmitted] = useState(false)
-    const [submittingReview, setSubmittingReview] = useState(false)
-
-    const REVIEW_TAGS = [
-        "✨ 청결해요", "🤝 친절해요", "⚡ 빨라요", "⏱️ 시간을 잘 지켜요", "📋 요청사항을 잘 지켜요"
-    ]
-
-    // 결제 모달 상태
-    const [paymentModalOpen, setPaymentModalOpen] = useState(false)
-    const [paymentContext, setPaymentContext] = useState<'accept' | 'extra'>('accept')
-    const [selectedApp, setSelectedApp] = useState<{ appId: string, workerId: string } | null>(null)
-
-    // 비교 모달 상태
-    const [showComparison, setShowComparison] = useState(false)
-
-    const st = STATUS_MAP[currentJob.status] || { label: currentJob.status, bgCls: 'bg-gray-100', textCls: 'text-gray-700', desc: '' }
-    const space = currentJob.spaces
-    const worker = currentJob.users
-    const isOperator = currentJob.operator_id === userId
-    const afterPhotos = photos.filter((p: any) => p.type === 'after')
-
-    const handleApproveBtnClick = () => {
-        if (currentJob.extra_charge_amount > 0) {
-            setPaymentContext('extra')
-            setPaymentModalOpen(true)
-        } else {
-            if (!window.confirm('청소 결과를 승인하시겠습니까? 승인 시 정산이 진행됩니다.')) return
-            executeApprove()
-        }
+  const toggleFavorite = async () => {
+    if (!job.users?.id) return
+    setIsFavorite((v) => !v)
+    if (!isFavorite) {
+      await supabase.from('favorite_partners').insert({ operator_id: userId, worker_id: job.users.id })
+    } else {
+      await supabase.from('favorite_partners').delete().eq('operator_id', userId).eq('worker_id', job.users.id)
     }
+  }
 
-    const executeApprove = async () => {
-        setApproving(true)
-        const supabase = createClient()
-        await supabase.from('jobs').update({ status: 'APPROVED', auto_approved: false }).eq('id', currentJob.id)
-
-        const { error: notifyError } = await supabase.rpc('notify_user', {
-            p_user_id: currentJob.worker_id,
-            p_title: '💰 정산 완료 안내',
-            p_message: '공간 파트너님이 청소를 승인했습니다. 정산이 곧 완료됩니다.',
-            p_url: '/earnings'
-        })
-        if (notifyError) console.error(notifyError)
-
-        fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/finance-agent`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}` },
-            body: JSON.stringify({ job_id: currentJob.id })
-        }).catch(console.error)
-        router.refresh()
-        setApproving(false)
+  const handleApprove = async () => {
+    setApproving(true)
+    setErr(null)
+    try {
+      const { error } = await supabase
+        .from('jobs')
+        .update({ status: 'APPROVED', updated_at: new Date().toISOString() })
+        .eq('id', job.id)
+      if (error) throw error
+      setApproving(false)
+      // 승인 후 곧바로 리뷰 작성 유도
+      if (job.users?.id) setShowReview(true)
+      else router.refresh()
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : '승인 실패')
+      setApproving(false)
     }
+  }
 
-    const handleAcceptBtnClick = (appId: string, workerId: string) => {
-        setSelectedApp({ appId, workerId })
-        setPaymentContext('accept')
-        setPaymentModalOpen(true)
+  const handleCancel = async () => {
+    setCanceling(true)
+    setErr(null)
+    try {
+      const { error } = await supabase
+        .from('jobs')
+        .update({ status: 'CANCELED', updated_at: new Date().toISOString() })
+        .eq('id', job.id)
+      if (error) throw error
+      setShowCancel(false)
+      router.refresh()
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : '취소 실패')
     }
+    setCanceling(false)
+  }
 
-    const handleDispute = async () => {
-        if (!disputeReason.trim()) return
-        const supabase = createClient()
-        await supabase.from('disputes').insert({
-            job_id: currentJob.id, reporter_id: userId,
-            category: 'photo_quality', description: disputeReason,
-        })
-        await supabase.from('jobs').update({ status: 'DISPUTED' }).eq('id', currentJob.id)
-        setShowDispute(false)
-        router.refresh()
-    }
+  const canCancel = ['OPEN', 'ASSIGNED'].includes(job.status)
+  const canApprove = job.status === 'SUBMITTED'
+  const canReview = ['APPROVED', 'PAID_OUT'].includes(job.status) && !!job.users?.id
 
-    const handleReCleaningRequest = async () => {
-        const supabase = createClient()
-        const { error } = await supabase.from('jobs').update({
-            status: 'IN_PROGRESS',
-            dispute_resolved: false,
-            extra_charge_amount: 0,
-            reclean_instructions: recleanInstructions
-        }).eq('id', currentJob.id)
-
-        if (!error) {
-            await supabase.rpc('notify_user', {
-                p_user_id: currentJob.worker_id,
-                p_title: '🧹 재청소 요청 안내',
-                p_message: '호스트가 일부 미흡한 구간에 대해 재청소를 요청했습니다. 상세 내용을 확인해주세요.',
-                p_url: `/clean/job/${currentJob.id}`
-            })
-            alert('재청소가 요청되었습니다.')
-            setShowRecleanModal(false)
-            router.refresh()
-        }
-    }
-
-    const handleToggleFavorite = async () => {
-        if (!worker) return
-        setTogglingFav(true)
-        const supabase = createClient()
-        if (isFavorite) {
-            await supabase.from('favorite_partners')
-                .delete()
-                .eq('operator_id', userId)
-                .eq('worker_id', worker.id)
-            setIsFavorite(false)
-        } else {
-            await supabase.from('favorite_partners')
-                .insert({ operator_id: userId, worker_id: worker.id })
-            setIsFavorite(true)
-        }
-        setTogglingFav(false)
-    }
-
-    const handleSubmitReview = async () => {
-        if (!worker) return
-        setSubmittingReview(true)
-        const supabase = createClient()
-        await supabase.from('reviews').insert({
-            job_id: currentJob.id, reviewer_id: userId, reviewee_id: worker.id,
-            rating: reviewRating, comment: reviewComment,
-            tags: selectedTags
-        })
-
-        const { error: notifyError } = await supabase.rpc('notify_user', {
-            p_user_id: worker.id, p_title: '⭐ 새로운 리뷰 도착',
-            p_message: `공간 파트너님이 ${reviewRating}점 리뷰를 남겼어요!`, p_url: `/profile`
-        })
-        if (notifyError) console.error(notifyError)
-
-        alert('소중한 리뷰가 등록되었습니다. 스파클 점수가 반영됩니다!')
-        setReviewSubmitted(true)
-        setReviewModalOpen(false)
-        setSubmittingReview(false)
-        router.refresh()
-    }
-
-    const handleNoShowReport = async () => {
-        if (!worker) return
-        if (!window.confirm('파트너가 현장에 도착하지 않았나요? 노쇼 신고 시 해당 작업은 즉시 취소되며 파트너의 스파클 점수가 크게 하락합니다.')) return
-
-        setReportingNoShow(true)
-        const supabase = createClient()
-
-        try {
-            // 1. 작업 취소 처리
-            const { error: jobError } = await supabase.from('jobs').update({
-                status: 'CANCELED',
-                cancellation_reason: 'HOST_REPORTED_NOSHOW'
-            }).eq('id', currentJob.id)
-
-            if (jobError) throw jobError
-
-            // 2. 파트너 점수 삭감 (노쇼 페널티 -15점)
-            const newScore = Math.max(0, (worker.sparkle_score || 50) - 15)
-            const { error: scoreError } = await supabase.from('users').update({
-                sparkle_score: newScore
-            }).eq('id', worker.id)
-
-            if (scoreError) throw scoreError
-
-            // 3. 알림 발송
-            await supabase.rpc('notify_user', {
-                p_user_id: worker.id,
-                p_title: '🚫 노쇼 신고 및 페널티 안내',
-                p_message: '호스트가 노쇼를 보고했습니다. 작업이 취소되었으며 스파클 점수 -15점 페널티가 부여되었습니다.',
-                p_url: '/profile'
-            })
-
-            alert('노쇼 신고가 접수되었습니다. 해당 청소 요청은 취소 처리되었습니다.')
-            router.refresh()
-        } catch (err) {
-            console.error('No-show report error:', err)
-            alert('신고 처리 중 오류가 발생했습니다.')
-        } finally {
-            setReportingNoShow(false)
-        }
-    }
-
-    return (
-        <div className="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display min-h-screen antialiased flex flex-col mx-auto max-w-md w-full relative">
-            <div className="sticky top-0 z-20 flex items-center bg-background-light dark:bg-background-dark p-4 justify-between border-b border-primary/10">
-                <button onClick={() => router.back()} className="flex size-12 shrink-0 items-center justify-center text-slate-900 dark:text-slate-100 focus:outline-none">
-                    <span className="material-symbols-outlined text-2xl">arrow_back</span>
-                </button>
-                <h2 className="text-lg font-bold leading-tight tracking-tight flex-1 text-center pr-12">청소 요청 상세</h2>
-            </div>
-
-            <main className="flex-1 overflow-y-auto pb-32">
-                <div className="p-4 flex flex-col gap-4">
-                    {/* 상태 카드 */}
-                    <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
-                        <div className="p-4 flex justify-between items-start">
-                            <div>
-                                <h2 className="text-[20px] font-bold tracking-tight">{space?.name}</h2>
-                                <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">{space?.address}</p>
-                            </div>
-                            <span className={`px-2.5 py-1 rounded-md text-xs font-bold leading-tight ${st.bgCls} ${st.textCls}`}>
-                                {st.label}
-                            </span>
-                        </div>
-                        {st.desc && (
-                            <div className="bg-slate-50 dark:bg-slate-800/50 px-4 py-3 text-sm text-slate-600 dark:text-slate-400 border-t border-b border-slate-100 dark:border-slate-700">
-                                {st.desc}
-                            </div>
-                        )}
-                        <div className="p-4 flex justify-between items-center text-sm font-medium border-t border-slate-100 dark:border-slate-700">
-                            <span className="flex items-center gap-1 text-slate-600 dark:text-slate-300">
-                                <span className="material-symbols-outlined text-base">calendar_today</span>
-                                {new Date(currentJob.scheduled_at).toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                            </span>
-                            <span className="text-primary font-bold text-base">₩{currentJob.price.toLocaleString()}</span>
-                        </div>
-                    </div>
-
-                    {/* 이동 중 패널 */}
-                    {currentJob.status === 'EN_ROUTE' && isOperator && (
-                        <div className="bg-sky-50 dark:bg-sky-900/20 border border-sky-200 dark:border-sky-800 p-4 rounded-xl flex items-start gap-4">
-                            <span className="text-3xl">🚗</span>
-                            <div>
-                                <h3 className="font-bold text-sky-700 dark:text-sky-400 mb-1">클린파트너가 이동 중입니다</h3>
-                                <p className="text-xs text-sky-600 dark:text-sky-300 mb-3 leading-relaxed">
-                                    클린파트너가 현장으로 출발했습니다. 지도 상의 이동 동선(ETA) 기능은 추후 연동됩니다.
-                                </p>
-                                <div className="inline-flex items-center gap-2 text-[11px] font-bold text-sky-700 dark:text-sky-300 bg-sky-100 dark:bg-sky-800/50 px-3 py-1.5 rounded-full">
-                                    <div className="w-3 h-3 border-2 border-sky-500 border-t-transparent rounded-full animate-spin" />
-                                    도착 예정 시간: 약 15~20분
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* 호스트 왓치독: 작업 지연 알림 */}
-                    {currentJob.status === 'ASSIGNED' && isOperator && new Date(currentJob.scheduled_at) < new Date() && (
-                        <div className="bg-rose-50 dark:bg-rose-900/20 border-2 border-rose-500 p-5 rounded-2xl shadow-lg animate-pulse">
-                            <div className="flex items-center gap-3 mb-2">
-                                <span className="material-symbols-outlined text-rose-600 font-black">warning</span>
-                                <h3 className="font-black text-rose-600 text-[16px]">작업 시작 지연 알림</h3>
-                            </div>
-                            <p className="text-[13px] text-rose-700 dark:text-rose-300 font-bold mb-4 leading-snug">
-                                예약된 시간이 경과했지만 작업이 시작되지 않았습니다.<br />파트너님께 연락하여 상황을 확인해보세요.
-                            </p>
-                            <button
-                                onClick={() => router.push(`/chat/${currentJob.id}`)}
-                                className="w-full bg-rose-600 text-white font-black py-3 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-rose-200 dark:shadow-none"
-                            >
-                                <span className="material-symbols-outlined">chat</span>
-                                파트너에게 즉시 채팅하기
-                            </button>
-                            <button
-                                onClick={handleNoShowReport}
-                                disabled={reportingNoShow}
-                                className="w-full mt-3 py-2.5 text-xs font-bold text-rose-400 hover:text-rose-600 transition-colors flex items-center justify-center gap-1.5"
-                            >
-                                <span className="material-symbols-outlined text-[14px]">block</span>
-                                {reportingNoShow ? '신고 처리 중...' : '파트너 노쇼(No-show) 신고하기'}
-                            </button>
-                        </div>
-                    )}
-
-                    {/* 클린파트너 정보 */}
-                    {worker ? (
-                        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4 flex justify-between items-center">
-                            <div className="flex gap-3 items-center">
-                                <div className="w-12 h-12 rounded-full bg-primary text-white flex items-center justify-center font-bold text-lg">
-                                    {worker.name?.[0]}
-                                </div>
-                                <div className="flex flex-col">
-                                    <div className="font-bold text-base">{worker.name}</div>
-                                    <div className="flex items-center text-xs font-medium mt-1">
-                                        <span className="text-rose-500 font-bold mr-2 flex items-center gap-0.5"><span className="material-symbols-outlined text-[14px]">auto_awesome</span>{worker.sparkle_score || 50.0}점</span>
-                                        <span className="text-amber-500 flex items-center gap-0.5 mr-2"><span className="material-symbols-outlined text-[14px]">star</span>{worker.avg_rating?.toFixed(1) || '-'}</span>
-                                        <span className="text-slate-500">{worker.tier}</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <button
-                                onClick={handleToggleFavorite}
-                                disabled={togglingFav}
-                                className={`text-[11px] font-bold px-3 py-1.5 rounded-full border transition-colors flex items-center gap-1 ${isFavorite ? 'bg-rose-50 text-rose-600 border-rose-200 dark:bg-rose-900/30 dark:border-rose-800' : 'bg-white text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700'}`}
-                            >
-                                {isFavorite ? '💖 단골 파트너' : '🤍 단골로 등록'}
-                            </button>
-                        </div>
-                    ) : currentJob.status === 'OPEN' && (
-                        /* 지원자 리뷰 UI - Stitch App 적용 */
-                        <div className="mt-2">
-                            <h3 className="text-[17px] font-bold leading-tight tracking-[-0.015em] mb-4 text-slate-900 dark:text-slate-100 flex items-center justify-between">
-                                지원한 파트너 <span className="text-primary text-sm bg-primary-light/20 px-2.5 py-0.5 rounded-full">{applications.length}</span>
-                            </h3>
-
-                            {applications.length === 0 ? (
-                                <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-8 text-center text-slate-500 dark:text-slate-400 text-sm">
-                                    <span className="material-symbols-outlined text-4xl mb-2 opacity-50">hourglass_empty</span>
-                                    <br />아직 지원한 클린파트너가 없습니다.<br />잠시만 기다려주세요!
-                                </div>
-                            ) : (
-                                <div className="flex flex-col gap-3">
-                                    {applications.map((app: any) => (
-                                        <div key={app.id} className="flex gap-4 bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
-                                            <div className="bg-primary/10 text-primary aspect-square rounded-full h-[56px] w-[56px] shrink-0 flex items-center justify-center font-bold text-xl">
-                                                {app.users?.name?.[0] || 'C'}
-                                            </div>
-                                            <div className="flex flex-1 flex-col justify-center">
-                                                <div className="flex justify-between items-start mb-1">
-                                                    <div>
-                                                        <p className="text-[15px] font-bold leading-normal flex items-center gap-1">
-                                                            {app.users?.name || '익명 파트너'}
-                                                            <span className="text-[10px] bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 px-1.5 py-0.5 rounded">{app.users?.tier || 'NEW'}</span>
-                                                            {(app.users?.sparkle_score >= 80 || app.users?.avg_rating >= 4.8) && (
-                                                                <span className="text-[9px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded font-black border border-amber-200 ml-1 flex items-center gap-0.5">
-                                                                    <span className="material-symbols-outlined text-[10px]">workspace_premium</span> 강력추천
-                                                                </span>
-                                                            )}
-                                                        </p>
-                                                        <div className="flex items-center text-xs font-medium mt-1">
-                                                            <span className="text-amber-500 flex items-center gap-0.5"><span className="material-symbols-outlined text-[14px]">star</span> {app.users?.avg_rating?.toFixed(1) || '신규'}</span>
-                                                            <span className="text-slate-500 dark:text-slate-400 ml-2 font-normal">성공 {app.users?.jobs_completed || 0}회</span>
-                                                            {/* 단골 배지 (데이터가 있다면 조건부 표시) */}
-                                                            {app.users?.is_favorite && (
-                                                                <span className="ml-2 text-[10px] font-bold text-rose-500 flex items-center gap-0.5">
-                                                                    <span className="material-symbols-outlined text-[12px]">favorite</span> 단골
-                                                                </span>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                    <button
-                                                        onClick={() => handleAcceptBtnClick(app.id, app.worker_id)}
-                                                        disabled={approving}
-                                                        className="flex h-8 items-center justify-center rounded-lg px-4 bg-primary text-white text-[13px] font-bold transition-colors hover:bg-primary/90 shadow-sm active:scale-95"
-                                                    >
-                                                        선택하기
-                                                    </button>
-                                                </div>
-                                                {app.message ? (
-                                                    <p className="text-slate-600 dark:text-slate-300 text-xs font-normal leading-snug line-clamp-2 mt-2 bg-slate-50 dark:bg-slate-800/50 p-2 rounded-lg italic">
-                                                        "{app.message}"
-                                                    </p>
-                                                ) : (
-                                                    <p className="text-slate-400 dark:text-slate-500 text-xs mt-2 italic">인사말이 없습니다.</p>
-                                                )}
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    )}
-
-                    {/* 부족한 비품 */}
-                    {(currentJob.supply_shortages as string[])?.length > 0 && (
-                        <div className="bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-800 p-4 rounded-xl mt-2">
-                            <h3 className="font-bold text-rose-600 dark:text-rose-400 text-sm mb-1 flex items-center gap-1"><span className="material-symbols-outlined text-base">warning</span> 보충이 필요한 비품</h3>
-                            <p className="text-xs text-rose-600/80 mb-3">클린파트너가 다음 비품이 현장에 부족하다고 보고했습니다.</p>
-                            <div className="flex gap-2 flex-wrap mb-3">
-                                {(currentJob.supply_shortages as string[]).map((item, idx) => (
-                                    <span key={idx} className="bg-rose-100 dark:bg-rose-800 text-rose-700 dark:text-rose-200 px-3 py-1 rounded-full text-xs font-bold border border-rose-200 dark:border-rose-700">
-                                        {item}
-                                    </span>
-                                ))}
-                            </div>
-                            <button
-                                onClick={() => alert('장바구니 연동 준비 중입니다.')}
-                                className="w-full h-10 bg-white dark:bg-slate-800 border border-rose-300 dark:border-rose-700 text-rose-600 dark:text-rose-400 rounded-lg text-xs font-bold flex items-center justify-center gap-1 shadow-sm transition-colors hover:bg-rose-50 dark:hover:bg-slate-700"
-                            >
-                                <span className="material-symbols-outlined text-[16px]">shopping_cart</span> 바로 구매하기 (준비 중)
-                            </button>
-                        </div>
-                    )}
-
-                    {/* 추가 요금 청구 */}
-                    {currentJob.extra_charge_amount > 0 && (
-                        <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 p-4 rounded-xl mt-2">
-                            <h3 className="font-bold text-amber-700 dark:text-amber-500 text-sm mb-2 flex items-center gap-1"><span className="material-symbols-outlined text-base">payments</span> 현장 오염도 추가 청구</h3>
-                            <div className="flex justify-between items-center mb-2">
-                                <span className="text-xs font-bold text-amber-800 dark:text-amber-400">추가 청구 금액</span>
-                                <span className="font-bold text-base text-amber-600 dark:text-amber-500">+{currentJob.extra_charge_amount.toLocaleString()}원</span>
-                            </div>
-                            <div className="bg-white dark:bg-slate-800 p-3 rounded-lg border border-amber-100 dark:border-amber-900/50 text-xs text-slate-600 dark:text-slate-300">
-                                <span className="font-bold text-slate-800 dark:text-slate-200">청구 사유:</span> {currentJob.extra_charge_reason}
-                            </div>
-                        </div>
-                    )}
-
-                    {/* 청소 완료 사진 */}
-                    {afterPhotos.length > 0 && (
-                        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4 mt-2">
-                            <div className="flex justify-between items-center mb-3">
-                                <h3 className="text-[15px] font-bold flex items-center gap-1"><span className="material-symbols-outlined text-[18px]">photo_camera</span>청소 완료 사진 ({afterPhotos.length}장)</h3>
-                                <button
-                                    onClick={() => setShowComparison(true)}
-                                    className="text-[11px] font-black text-primary bg-primary/10 px-2.5 py-1.5 rounded-lg border border-primary/20 flex items-center gap-1 hover:bg-primary/20 transition-colors"
-                                >
-                                    <span className="material-symbols-outlined text-[14px]">compare</span> 비포/애프터 비교
-                                </button>
-                            </div>
-                            <div className="grid grid-cols-3 gap-2">
-                                {afterPhotos.map((p: any) => (
-                                    <div key={p.id} className="relative aspect-square rounded-lg overflow-hidden bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
-                                        <SecureImage srcOrPath={p.photo_url} className="w-full h-full object-cover" />
-                                        {p.ai_quality_score && (
-                                            <div className={`absolute bottom-1 right-1 px-1.5 py-0.5 rounded-md text-[9px] font-bold text-white shadow-sm flex items-center gap-0.5 ${p.ai_quality_score >= 80 ? 'bg-primary' : 'bg-orange-500'}`}>
-                                                <span className="material-symbols-outlined text-[10px]">smart_toy</span> {p.ai_quality_score}점
-                                            </div>
-                                        )}
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-
-                    {/* 정산 정보 */}
-                    {payment && (
-                        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4 mt-2">
-                            <h3 className="text-[15px] font-bold mb-4 flex items-center gap-1"><span className="material-symbols-outlined text-[18px]">receipt_long</span>정산 내역</h3>
-                            <div className="flex flex-col gap-2.5 text-sm">
-                                <div className="flex justify-between items-center text-slate-600 dark:text-slate-300">
-                                    <span>기본 청소 금액</span>
-                                    <span className="font-medium text-slate-900 dark:text-slate-100">₩{currentJob.price.toLocaleString()}</span>
-                                </div>
-                                {currentJob.extra_charge_amount > 0 && (
-                                    <div className="flex justify-between items-center text-amber-600 dark:text-amber-500 font-medium">
-                                        <span>추가 청구 금액</span>
-                                        <span>+₩{currentJob.extra_charge_amount.toLocaleString()}</span>
-                                    </div>
-                                )}
-                                <div className="w-full h-px bg-slate-100 dark:bg-slate-700 my-1"></div>
-                                <div className="flex justify-between items-center font-bold text-slate-900 dark:text-slate-100">
-                                    <span>총 청구 금액</span>
-                                    <span>₩{(currentJob.price + (currentJob.extra_charge_amount || 0)).toLocaleString()}</span>
-                                </div>
-                                <div className="flex justify-between items-center text-xs text-slate-500 mt-1">
-                                    <span>플랫폼 수수료 (10%)</span>
-                                    <span>-₩{payment.platform_fee.toLocaleString()}</span>
-                                </div>
-                                <div className="flex justify-between items-center text-xs text-slate-500">
-                                    <span>원천징수 (3.3%)</span>
-                                    <span>-₩{payment.withholding_tax.toLocaleString()}</span>
-                                </div>
-                                <div className="w-full border-t border-dashed border-slate-200 dark:border-slate-700 my-1"></div>
-                                <div className="flex justify-between items-center font-bold text-primary mt-1">
-                                    <span>클린파트너 최종 수령액</span>
-                                    <span className="text-[17px]">₩{payment.worker_payout.toLocaleString()}</span>
-                                </div>
-                                <div className="flex justify-between items-center text-xs text-slate-500 mt-2 bg-slate-50 dark:bg-slate-800/50 p-2 rounded-lg border border-slate-100 dark:border-slate-700">
-                                    <span>정산 상태</span>
-                                    <span className={`px-2 py-0.5 border rounded-full font-bold ${payment.status === 'RELEASED' ? 'border-primary/30 text-primary bg-primary-light/10' : 'border-slate-300 dark:border-slate-600'}`}>{payment.status === 'HELD' ? '입금 대기 중' : payment.status === 'RELEASED' ? '정산 완료 (입금 확인)' : payment.status}</span>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-                </div>
-
-                {/* 공간파트너 액션: 검수 대기 */}
-                {isOperator && currentJob.status === 'SUBMITTED' && (
-                    <div className="px-4 pb-6 mt-4">
-                        <div className="bg-primary-light/10 border border-primary/20 p-4 rounded-xl text-center mb-4">
-                            <span className="material-symbols-outlined text-primary text-3xl mb-1">flaky</span>
-                            <p className="text-sm text-primary font-medium">
-                                {currentJob.auto_approved ? 'AI가 1차 검수를 완료했어요.' : '청소 사진을 확인하고 승인해주세요.'}
-                            </p>
-                        </div>
-                        <div className="flex flex-col gap-3">
-                            <button
-                                onClick={handleApproveBtnClick}
-                                disabled={approving}
-                                className="w-full bg-primary text-white font-bold py-4 rounded-xl shadow-lg shadow-primary/30 flex items-center justify-center gap-2"
-                            >
-                                <span className="material-symbols-outlined">verified</span>
-                                {approving ? '처리 중...' : '최종 승인 및 정산하기'}
-                            </button>
-                            <button
-                                onClick={() => setShowDispute(true)}
-                                className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-bold py-4 rounded-xl shadow-sm flex items-center justify-center gap-2"
-                            >
-                                <span className="material-symbols-outlined">report</span>
-                                문제 신고 (분쟁 제기)
-                            </button>
-                        </div>
-                    </div>
-                )}
-
-                {/* 분쟁 중 액션 패널 */}
-                {isOperator && currentJob.status === 'DISPUTED' && (
-                    <div className="px-4 pb-6 mt-4">
-                        <div className="bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-800 p-4 rounded-xl text-center mb-4">
-                            <span className="material-symbols-outlined text-rose-500 text-3xl mb-1">warning</span>
-                            <p className="text-sm text-rose-700 dark:text-rose-300 font-medium">
-                                현재 해당 청소건에 대해 문제가 제기되었습니다.
-                            </p>
-                        </div>
-                        <div className="flex flex-col gap-3">
-                            <button
-                                onClick={() => setShowRecleanModal(true)}
-                                className="w-full bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 font-bold py-4 rounded-xl shadow-sm flex items-center justify-center gap-2"
-                            >
-                                <span className="material-symbols-outlined">restart_alt</span>
-                                부분 재청소 요청하기
-                            </button>
-                            <button
-                                onClick={() => alert('플랫폼 관리자에게 중재가 요청되었습니다.')}
-                                className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-bold py-4 rounded-xl shadow-sm flex items-center justify-center gap-2"
-                            >
-                                <span className="material-symbols-outlined">support_agent</span>
-                                관리자 중재 요청 (고객센터)
-                            </button>
-                        </div>
-                    </div>
-                )}
-
-                {/* 공간파트너 액션: 청소 완료 후 리뷰 작성 */}
-                {isOperator && ['APPROVED', 'PAID_OUT'].includes(currentJob.status) && !reviewSubmitted && (
-                    <div className="px-4 mt-6 pb-6">
-                        <div className="bg-gradient-to-br from-rose-50 to-rose-100 dark:from-rose-900/30 dark:to-rose-800/30 border border-rose-200 dark:border-rose-700/50 p-5 rounded-2xl shadow-sm">
-                            <div className="flex justify-between items-center mb-2">
-                                <h3 className="font-bold text-[16px] text-rose-700 dark:text-rose-400">⭐ 파트너님은 어떠셨나요?</h3>
-                                <span className="text-3xl">✨</span>
-                            </div>
-                            <p className="text-xs text-rose-600/80 dark:text-rose-300/80 mb-4 leading-relaxed">작업에 대한 솔직한 리뷰를 남겨주시면<br />해당 클린파트너의 스파클 점수가 쑥쑥 올라갑니다!</p>
-                            <button
-                                className="w-full h-12 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl text-sm transition-colors shadow-sm"
-                                onClick={() => setReviewModalOpen(true)}
-                            >
-                                리뷰 남기고 스파클 점수 올리기
-                            </button>
-                        </div>
-                    </div>
-                )}
-            </main>
-
-            {/* Modals using Tailwind */}
-            {showDispute && (
-                <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 backdrop-blur-sm p-4 sm:items-center" onClick={() => setShowDispute(false)}>
-                    <div className="bg-white dark:bg-slate-900 w-full max-w-md rounded-2xl p-6 shadow-xl transform transition-all" onClick={e => e.stopPropagation()}>
-                        <div className="w-12 h-1.5 bg-slate-200 mx-auto rounded-full mb-6"></div>
-                        <h3 className="font-bold text-xl mb-4">문제 신고</h3>
-                        <p className="text-sm text-slate-500 mb-4">구체적으로 어떤 문제가 있었는지 작성해주세요.</p>
-                        <textarea
-                            className="w-full h-32 p-4 border border-slate-300 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800 text-sm focus:ring-2 focus:ring-primary outline-none resize-none mb-6"
-                            placeholder="예: 거실 바닥에 먼지가 그대로 남아있어요, 쓰레기통이 안 비워져 있어요."
-                            value={disputeReason}
-                            onChange={e => setDisputeReason(e.target.value)}
-                        />
-                        <button
-                            className="w-full h-14 bg-rose-600 text-white rounded-xl font-bold text-base disabled:opacity-50"
-                            onClick={handleDispute}
-                            disabled={!disputeReason.trim()}
-                        >
-                            신고 접수하기
-                        </button>
-                    </div>
-                </div>
-            )}
-
-            {showRecleanModal && (
-                <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 backdrop-blur-sm p-4 sm:items-center" onClick={() => setShowRecleanModal(false)}>
-                    <div className="bg-white dark:bg-slate-900 w-full max-w-md rounded-2xl p-6 shadow-xl transform transition-all" onClick={e => e.stopPropagation()}>
-                        <div className="w-12 h-1.5 bg-slate-200 mx-auto rounded-full mb-6"></div>
-                        <h3 className="font-bold text-xl mb-4">재청소 지시사항</h3>
-                        <p className="text-sm text-slate-500 mb-4">클린파트너가 보완해야 할 구체적인 내용을 작성해주세요.</p>
-                        <textarea
-                            className="w-full h-32 p-4 border border-slate-300 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800 text-sm focus:ring-2 focus:ring-primary outline-none resize-none mb-6"
-                            placeholder="예: 안방 창틀에 먼지가 남았습니다. 주방 배수구 거름망을 다시 확인해주세요."
-                            value={recleanInstructions}
-                            onChange={e => setRecleanInstructions(e.target.value)}
-                        />
-                        <button
-                            className="w-full h-14 bg-primary text-white rounded-xl font-bold text-base disabled:opacity-50"
-                            onClick={handleReCleaningRequest}
-                            disabled={!recleanInstructions.trim()}
-                        >
-                            재청소 요청 발송
-                        </button>
-                    </div>
-                </div>
-            )}
-
-            {reviewModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={() => setReviewModalOpen(false)}>
-                    <div className="bg-white dark:bg-slate-900 w-full max-w-sm rounded-[24px] p-6 shadow-2xl relative" onClick={e => e.stopPropagation()}>
-                        <button className="absolute top-4 right-4 text-slate-400 hover:text-slate-600" onClick={() => setReviewModalOpen(false)}>
-                            <span className="material-symbols-outlined">close</span>
-                        </button>
-                        <div className="text-center mb-6 mt-4">
-                            <div className="w-16 h-16 bg-rose-100 rounded-full flex items-center justify-center mx-auto mb-3 text-3xl">📝</div>
-                            <h3 className="font-bold text-[18px]">클린파트너 평가하기</h3>
-                            <p className="text-xs text-slate-500 mt-1">별점을 터치하여 평가해주세요.</p>
-                        </div>
-                        <div className="flex justify-center gap-2 mb-4">
-                            {[1, 2, 3, 4, 5].map(star => (
-                                <button
-                                    key={star}
-                                    onClick={() => setReviewRating(star)}
-                                    className="text-[40px] focus:outline-none transition-transform hover:scale-110 active:scale-95"
-                                    style={{ filter: star <= reviewRating ? 'drop-shadow(0 2px 4px rgba(251,191,36,0.3))' : 'grayscale(100%) opacity(20%)' }}
-                                >
-                                    ⭐
-                                </button>
-                            ))}
-                        </div>
-
-                        <div className="flex flex-wrap justify-center gap-2 mb-6">
-                            {REVIEW_TAGS.map(tag => (
-                                <button
-                                    key={tag}
-                                    onClick={() => setSelectedTags(prev =>
-                                        prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
-                                    )}
-                                    className={`px-3 py-1.5 rounded-full text-[11px] font-bold transition-all border ${selectedTags.includes(tag)
-                                        ? 'bg-rose-500 text-white border-rose-500 shadow-sm scale-105'
-                                        : 'bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:border-rose-300'
-                                        }`}
-                                >
-                                    {tag}
-                                </button>
-                            ))}
-                        </div>
-                        <textarea
-                            className="w-full h-24 p-4 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800 text-sm focus:ring-2 focus:ring-rose-500 outline-none resize-none mb-6 text-slate-700 dark:text-slate-200"
-                            placeholder="요청사항을 잘 지켜주셨나요? 자유롭게 후기를 남겨주세요. (선택)"
-                            value={reviewComment}
-                            onChange={e => setReviewComment(e.target.value)}
-                        />
-                        <button
-                            className="w-full h-14 bg-rose-600 hover:bg-rose-700 text-white rounded-xl font-bold text-[15px] shadow-md transition-colors"
-                            onClick={handleSubmitReview}
-                            disabled={submittingReview}
-                        >
-                            {submittingReview ? <div className="w-5 h-5 mx-auto border-2 border-white/30 border-t-white rounded-full animate-spin"></div> : '평가 완료하기'}
-                        </button>
-                    </div>
-                </div>
-            )}
-
-            <PaymentModal
-                isOpen={paymentModalOpen}
-                onClose={() => setPaymentModalOpen(false)}
-                amount={paymentContext === 'accept' ? currentJob.price : currentJob.extra_charge_amount}
-                jobName={space?.name ? `[${space.name}] 청소 결제` : '청소 결제'}
-                jobId={currentJob.id}
-                paymentContext={paymentContext}
-                workerId={selectedApp?.workerId}
-            />
-
-            {/* Before & After Comparison Modal */}
-            <AnimatePresence>
-                {showComparison && (
-                    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md p-4" onClick={() => setShowComparison(false)}>
-                        <motion.div
-                            initial={{ scale: 0.9, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            exit={{ scale: 0.9, opacity: 0 }}
-                            className="bg-white dark:bg-slate-900 w-full max-w-lg rounded-[32px] overflow-hidden shadow-2xl flex flex-col max-h-[90vh]"
-                            onClick={e => e.stopPropagation()}
-                        >
-                            <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-white dark:bg-slate-900 sticky top-0 z-10">
-                                <div>
-                                    <h3 className="text-xl font-bold tracking-tight">Before & After 비교</h3>
-                                    <p className="text-xs text-slate-500 mt-0.5">표준 사진과 완료 사진을 대조해보세요.</p>
-                                </div>
-                                <button onClick={() => setShowComparison(false)} className="size-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-                                    <span className="material-symbols-outlined text-slate-600 dark:text-slate-400">close</span>
-                                </button>
-                            </div>
-
-                            <div className="flex-1 overflow-y-auto p-6 space-y-8">
-                                <section>
-                                    <h4 className="text-[13px] font-black text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
-                                        <span className="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
-                                        공간 표준 (Before)
-                                    </h4>
-                                    <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none">
-                                        {space?.reference_photos?.map((url: string, i: number) => (
-                                            <div key={i} className="w-[200px] h-[150px] shrink-0 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm">
-                                                <img src={url} className="w-full h-full object-cover" alt="Before" />
-                                            </div>
-                                        )) || <p className="text-xs text-slate-400 italic">등록된 표준 사진이 없습니다.</p>}
-                                    </div>
-                                </section>
-
-                                <span className="flex items-center gap-3">
-                                    <div className="flex-1 h-px bg-slate-100 dark:bg-slate-800"></div>
-                                    <span className="material-symbols-outlined text-primary text-2xl">compare_arrows</span>
-                                    <div className="flex-1 h-px bg-slate-100 dark:bg-slate-800"></div>
-                                </span>
-
-                                <section>
-                                    <h4 className="text-[13px] font-black text-primary uppercase tracking-widest mb-3 flex items-center gap-2">
-                                        <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
-                                        청소 결과 (After)
-                                    </h4>
-                                    <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none">
-                                        {afterPhotos.map((p: any) => (
-                                            <div key={p.id} className="w-[200px] h-[150px] shrink-0 rounded-2xl border border-primary/20 dark:border-slate-700 overflow-hidden shadow-md relative">
-                                                <SecureImage srcOrPath={p.photo_url} className="w-full h-full object-cover" />
-                                                {p.ai_quality_score && (
-                                                    <div className="absolute top-2 right-2 px-2 py-1 bg-primary text-white text-[9px] font-bold rounded-lg shadow-lg">
-                                                        AI {p.ai_quality_score}점
-                                                    </div>
-                                                )}
-                                            </div>
-                                        ))}
-                                    </div>
-                                </section>
-                            </div>
-
-                            <div className="p-6 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-800">
-                                <button
-                                    onClick={() => setShowComparison(false)}
-                                    className="w-full py-4 bg-slate-900 dark:bg-white dark:text-slate-900 text-white font-black rounded-2xl shadow-xl hover:scale-[1.02] transition-transform"
-                                >
-                                    검수 완료
-                                </button>
-                            </div>
-                        </motion.div>
-                    </div>
-                )}
-            </AnimatePresence>
+  return (
+    <div className="sseuksak-shell">
+      <header className="sticky top-0 z-20 glass border-b border-line-soft safe-top">
+        <div className="flex items-center h-14 px-3">
+          <button onClick={() => router.back()} className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-muted">
+            <ChevronLeft size={22} />
+          </button>
+          <div className="flex-1 text-center">
+            <h1 className="text-[14.5px] font-extrabold text-ink">요청 상세</h1>
+          </div>
+          <div className="w-10" />
         </div>
-    )
+      </header>
+
+      <div className="flex-1 pb-28">
+        {/* Hero */}
+        <div className="relative bg-ink text-white px-5 pt-5 pb-8">
+          <div className="absolute -top-10 -right-8 w-48 h-48 bg-brand/25 rounded-full blur-3xl" />
+          <div className="relative z-10">
+            <div className="flex items-center gap-2 mb-3">
+              <StatusChip kind="job" status={job.status} />
+              {job.is_urgent && <span className="chip chip-danger !text-[10px]">긴급</span>}
+            </div>
+            <div className="chip chip-brand !text-[10.5px] mb-2">
+              {spaceTypeLabel(job.spaces?.type || 'other')}
+            </div>
+            <h2 className="text-[22px] font-black leading-tight">{job.spaces?.name}</h2>
+            <p className="text-[13px] text-white/80 font-semibold mt-2 flex items-center gap-1.5">
+              <Clock size={13} /> {formatScheduled(job.scheduled_at)} · {job.estimated_duration ?? 90}분
+            </p>
+            <p className="text-[13px] text-white/80 font-semibold mt-1 flex items-center gap-1.5">
+              <MapPin size={13} /> {job.spaces?.address}
+            </p>
+            <div className="mt-5">
+              <p className="text-[11px] text-white/60 font-bold">총 결제 금액</p>
+              <p className="t-money text-[26px] text-white">{formatKRW(job.price)}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="px-5 -mt-4 relative z-10">
+          {/* Worker card */}
+          {job.users ? (
+            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="card p-4 mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-brand to-brand-dark flex items-center justify-center text-white font-black shrink-0">
+                  {job.users.profile_image ? (
+                    <img src={job.users.profile_image} alt="" className="w-full h-full rounded-full object-cover" />
+                  ) : (
+                    job.users.name.charAt(0)
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h4 className="text-[14.5px] font-extrabold text-ink truncate">{job.users.name}</h4>
+                  <div className="flex items-center gap-2 text-[11.5px] font-bold text-text-soft mt-0.5">
+                    <span className="flex items-center gap-0.5">
+                      <Star size={11} className="text-sun" fill="currentColor" />
+                      {(job.users.avg_rating ?? 0).toFixed(1)}
+                    </span>
+                    {job.users.tier && (
+                      <>
+                        <span>·</span>
+                        <span>{job.users.tier}</span>
+                      </>
+                    )}
+                  </div>
+                </div>
+                <button
+                  onClick={toggleFavorite}
+                  className={`w-10 h-10 rounded-full flex items-center justify-center ${isFavorite ? 'bg-danger-soft text-danger' : 'bg-surface-muted text-text-faint'}`}
+                  aria-label="단골 등록"
+                >
+                  <Heart size={17} fill={isFavorite ? 'currentColor' : 'none'} />
+                </button>
+              </div>
+              {['ASSIGNED', 'EN_ROUTE', 'ARRIVED', 'IN_PROGRESS'].includes(job.status) && (
+                <div className="mt-3 flex gap-2">
+                  <Link href={`/chat/${job.id}`} className="flex-1 btn btn-ghost !min-h-[42px] !text-sm">
+                    <MessageSquare size={16} /> 채팅
+                  </Link>
+                  {job.users.phone && (
+                    <a href={`tel:${job.users.phone}`} className="flex-1 btn btn-secondary !min-h-[42px] !text-sm">
+                      <Phone size={16} /> 통화
+                    </a>
+                  )}
+                </div>
+              )}
+            </motion.div>
+          ) : job.status === 'OPEN' ? (
+            <div className="card p-4 mb-4 bg-brand-softer border border-brand/15">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-brand/15 flex items-center justify-center">
+                  <Loader2 size={18} className="text-brand-dark animate-spin" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-[13.5px] font-extrabold text-ink">매칭 중입니다</p>
+                  <p className="text-[11.5px] font-bold text-text-muted mt-0.5">
+                    근처 마스터 작업자에게 알림을 보냈어요. 평균 4분
+                  </p>
+                </div>
+              </div>
+            </div>
+          ) : null}
+
+          {/* Instructions */}
+          {job.special_instructions && (
+            <div className="card p-4 mb-4 bg-sun-soft border border-sun/20">
+              <div className="flex items-center gap-2 mb-1.5">
+                <AlertTriangle size={14} className="text-[#92580C]" />
+                <span className="text-[12px] font-black text-[#92580C] uppercase tracking-wide">특별 요청사항</span>
+              </div>
+              <p className="text-[13.5px] font-semibold text-ink leading-snug">{job.special_instructions}</p>
+            </div>
+          )}
+
+          {/* Checklist + photos */}
+          {checklist.length > 0 && (
+            <div className="card p-4 mb-4">
+              <h3 className="text-[13.5px] font-extrabold text-ink mb-3">체크리스트</h3>
+              <ul className="flex flex-col gap-2.5">
+                {checklist.map((c) => (
+                  <li key={c.id} className="flex items-start gap-3">
+                    <div className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 mt-0.5 ${c.completed ? 'bg-brand text-white' : 'bg-surface-muted'}`}>
+                      {c.completed && <CheckCircle2 size={14} />}
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-[13.5px] font-semibold text-ink">
+                        {c.label}
+                        {c.required && <span className="ml-1.5 text-[10.5px] font-black text-danger">필수</span>}
+                      </p>
+                      {c.photo_url && (
+                        <img src={c.photo_url} alt="" className="mt-2 w-24 h-24 rounded-lg object-cover border border-line-soft" />
+                      )}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Price breakdown */}
+          {job.price_breakdown && (
+            <div className="card p-4 mb-4">
+              <h3 className="text-[13.5px] font-extrabold text-ink mb-3">가격 상세</h3>
+              <div className="flex flex-col gap-2">
+                {job.price_breakdown.items?.map((it, i) => (
+                  <div key={i} className="flex justify-between text-[13px]">
+                    <span className="font-semibold text-text-muted">{it.label}</span>
+                    <span className="t-money text-ink">
+                      {it.kind === 'sub' ? '-' : ''}
+                      {formatKRW(Math.abs(it.amount))}
+                    </span>
+                  </div>
+                ))}
+                <div className="divider" />
+                <div className="flex justify-between items-baseline">
+                  <span className="text-[13px] font-bold text-text-soft">총 결제</span>
+                  <span className="t-money text-[18px] text-ink">{formatKRW(job.price_breakdown.total)}</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {err && (
+            <div className="p-3.5 rounded-xl bg-danger-soft border border-danger/15 mb-4 flex items-start gap-2">
+              <AlertTriangle size={16} className="text-danger shrink-0 mt-0.5" />
+              <p className="text-[13px] font-bold text-danger leading-snug">{err}</p>
+            </div>
+          )}
+
+          {/* Action buttons */}
+          <div className="flex flex-col gap-2">
+            {canApprove && (
+              <button onClick={handleApprove} disabled={approving} className="btn btn-primary w-full">
+                {approving ? <Loader2 size={18} className="animate-spin" /> : <>승인하고 정산 진행 <CheckCircle2 size={18} /></>}
+              </button>
+            )}
+            {canReview && (
+              <button onClick={() => setShowReview(true)} className="btn btn-secondary w-full">
+                <Star size={16} /> {job.users?.name} 님께 리뷰 남기기
+              </button>
+            )}
+            {canCancel && (
+              <button onClick={() => setShowCancel(true)} className="btn btn-ghost w-full !text-danger">
+                <Trash2 size={16} /> 요청 취소
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {job.users?.id && (
+        <ReviewModal
+          open={showReview}
+          onClose={() => { setShowReview(false); router.refresh() }}
+          onSubmitted={() => router.refresh()}
+          jobId={job.id}
+          revieweeId={job.users.id}
+          revieweeName={job.users.name}
+        />
+      )}
+
+      {/* Cancel modal */}
+      {showCancel && (
+        <div className="fixed inset-0 z-50 bg-ink/40 backdrop-blur-sm flex items-end sm:items-center justify-center" onClick={() => setShowCancel(false)}>
+          <motion.div
+            initial={{ y: 60 }}
+            animate={{ y: 0 }}
+            className="w-full max-w-[480px] rounded-t-3xl sm:rounded-3xl bg-surface p-6 pb-8 safe-bottom"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="h-section">요청 취소</h3>
+              <button onClick={() => setShowCancel(false)} className="w-8 h-8 rounded-full hover:bg-surface-muted flex items-center justify-center">
+                <X size={18} />
+              </button>
+            </div>
+            <p className="t-caption mb-5">취소 수수료가 발생할 수 있습니다.</p>
+            <div className="flex gap-2">
+              <button onClick={() => setShowCancel(false)} className="flex-1 btn btn-ghost">유지하기</button>
+              <button onClick={handleCancel} disabled={canceling} className="flex-1 btn btn-primary !bg-danger">
+                {canceling ? <Loader2 size={18} className="animate-spin" /> : '취소하기'}
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+    </div>
+  )
 }

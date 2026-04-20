@@ -1,114 +1,66 @@
-'use client';
+import Header from '@/components/common/Header'
+import { FileText, Sparkles, Zap, ShieldCheck } from 'lucide-react'
 
-import React, { useState, useEffect } from 'react';
-import { createClient } from '@/lib/supabase/client';
-import { motion } from 'framer-motion';
-import { ChevronRight, Megaphone, Clock, ChevronDown } from 'lucide-react';
-import BottomNav from '@/components/layout/BottomNav';
-
-interface Notice {
-    id: string;
-    title: string;
-    content: string;
-    is_important: boolean;
-    created_at: string;
-}
+const NOTICES = [
+  {
+    date: '2026-04-20',
+    badge: '신규',
+    title: '쓱싹 v1.0 정식 출시',
+    body: '공간 운영의 새로운 기준, 쓱싹이 정식 출시되었습니다. 원클릭 청소 요청, AI 품질 검수, 에스크로 결제로 안심하고 사용하세요.',
+    icon: Sparkles,
+    tone: 'brand',
+  },
+  {
+    date: '2026-04-18',
+    badge: '이벤트',
+    title: '홍대 파티룸 100곳 등록 프로모션',
+    body: '홍대/합정/망원 지역 파티룸·에어비앤비 운영자는 첫 3회 요청 수수료 무료!',
+    icon: Zap,
+    tone: 'sun',
+  },
+  {
+    date: '2026-04-15',
+    badge: '안전',
+    title: '에스크로 결제 시스템 안내',
+    body: '모든 청소 대금은 작업 승인 후 정산되어, 공간 파트너와 작업자 모두를 보호합니다.',
+    icon: ShieldCheck,
+    tone: 'info',
+  },
+]
 
 export default function NoticesPage() {
-    const [notices, setNotices] = useState<Notice[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [expandedId, setExpandedId] = useState<string | null>(null);
-
-    useEffect(() => {
-        fetchNotices();
-    }, []);
-
-    const fetchNotices = async () => {
-        const supabase = createClient();
-        const { data } = await supabase
-            .from('notices')
-            .select('*')
-            .order('is_important', { ascending: false })
-            .order('created_at', { ascending: false });
-
-        setNotices(data || []);
-        setLoading(false);
-    };
-
-    const formatDate = (dateStr: string) => {
-        return new Date(dateStr).toLocaleDateString('ko-KR', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        });
-    };
-
-    return (
-        <div className="bg-background-light dark:bg-background-dark min-h-screen text-slate-900 dark:text-slate-100 font-display flex flex-col mx-auto max-w-md w-full relative">
-            <header className="sticky top-0 z-20 bg-background-light/90 dark:bg-background-dark/90 backdrop-blur-md border-b border-slate-100 dark:border-slate-800 p-4 flex items-center gap-4">
-                <button onClick={() => window.history.back()} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors">
-                    <span className="material-symbols-outlined">arrow_back</span>
-                </button>
-                <h1 className="text-xl font-black tracking-tight">공지사항</h1>
-            </header>
-
-            <main className="flex-1 p-4 pb-24 space-y-4">
-                {loading ? (
-                    <div className="space-y-4">
-                        {[1, 2, 3].map(i => (
-                            <div key={i} className="h-24 bg-white dark:bg-slate-900 rounded-3xl animate-pulse border border-slate-100 dark:border-slate-800" />
-                        ))}
+  return (
+    <div className="sseuksak-shell">
+      <Header title="공지사항" showBack />
+      <div className="flex-1 pb-8">
+        <ul className="divide-y divide-line-soft">
+          {NOTICES.map((n, i) => {
+            const Icon = n.icon
+            return (
+              <li key={i} className="px-5 py-4">
+                <div className="flex items-start gap-3">
+                  <div className={`w-10 h-10 rounded-xl bg-${n.tone}-soft flex items-center justify-center shrink-0`}>
+                    <Icon size={18} className={`text-${n.tone === 'brand' ? 'brand-dark' : n.tone === 'sun' ? '[#92580C]' : 'info'}`} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <span className={`chip chip-${n.tone === 'sun' ? 'sun' : n.tone} !text-[10px]`}>{n.badge}</span>
+                      <span className="text-[11px] font-bold text-text-faint">{n.date}</span>
                     </div>
-                ) : notices.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-20 text-slate-400">
-                        <Megaphone size={48} className="mb-4 opacity-20" />
-                        <p className="font-bold">등록된 공지사항이 없습니다.</p>
-                    </div>
-                ) : (
-                    notices.map((notice, index) => (
-                        <motion.div
-                            key={notice.id}
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: index * 0.05 }}
-                            className={`bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 overflow-hidden transition-all ${expandedId === notice.id ? 'ring-2 ring-primary/20 shadow-xl' : 'hover:shadow-md'}`}
-                        >
-                            <button
-                                onClick={() => setExpandedId(expandedId === notice.id ? null : notice.id)}
-                                className="w-full text-left p-6 flex flex-col gap-2"
-                            >
-                                <div className="flex items-center gap-2">
-                                    {notice.is_important && (
-                                        <span className="bg-primary/10 text-primary text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-tighter">IMPORTANT</span>
-                                    )}
-                                    <div className="flex items-center gap-1 text-[11px] font-bold text-slate-400">
-                                        <Clock size={12} />
-                                        <span>{formatDate(notice.created_at)}</span>
-                                    </div>
-                                </div>
-                                <div className="flex items-center justify-between">
-                                    <h3 className={`text-base font-black leading-tight ${expandedId === notice.id ? 'text-primary' : 'text-slate-800 dark:text-slate-100'}`}>
-                                        {notice.title}
-                                    </h3>
-                                    <ChevronDown size={20} className={`text-slate-300 transition-transform duration-300 ${expandedId === notice.id ? 'rotate-180 text-primary' : ''}`} />
-                                </div>
-                            </button>
+                    <h3 className="text-[14.5px] font-extrabold text-ink">{n.title}</h3>
+                    <p className="text-[12.5px] font-medium text-text-muted mt-1 leading-relaxed">{n.body}</p>
+                  </div>
+                </div>
+              </li>
+            )
+          })}
+        </ul>
 
-                            <motion.div
-                                initial={false}
-                                animate={{ height: expandedId === notice.id ? 'auto' : 0, opacity: expandedId === notice.id ? 1 : 0 }}
-                                className="overflow-hidden bg-slate-50 dark:bg-slate-800/50"
-                            >
-                                <div className="p-6 pt-0 text-sm font-medium leading-relaxed text-slate-600 dark:text-slate-400 whitespace-pre-wrap border-t border-slate-50 dark:border-slate-800 mt-2 pt-6">
-                                    {notice.content}
-                                </div>
-                            </motion.div>
-                        </motion.div>
-                    ))
-                )}
-            </main>
-
-            <BottomNav />
+        <div className="text-center mt-8 px-5">
+          <FileText size={18} className="mx-auto text-text-faint mb-2" />
+          <p className="text-[11.5px] font-bold text-text-faint">쓱싹은 지속적으로 업데이트되고 있습니다.</p>
         </div>
-    );
+      </div>
+    </div>
+  )
 }

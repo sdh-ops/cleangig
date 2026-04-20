@@ -1,185 +1,286 @@
-'use client';
+'use client'
 
-import React, { Suspense, useState } from 'react';
-import { createClient } from '@/lib/supabase/client';
-import { useSearchParams, useRouter } from 'next/navigation';
-import { motion, AnimatePresence } from 'framer-motion';
-import Link from 'next/link';
+import { Suspense, useState } from 'react'
+import { createClient } from '@/lib/supabase/client'
+import { useSearchParams, useRouter } from 'next/navigation'
+import { motion, AnimatePresence } from 'framer-motion'
+import Link from 'next/link'
+import { ChevronLeft, Mail, Lock, AlertCircle, Loader2 } from 'lucide-react'
+import Logo from '@/components/common/Logo'
 
 function LoginContent() {
-  const searchParams = useSearchParams();
-  const router = useRouter();
-  const errorMsg = searchParams.get('error');
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const errorMsg = searchParams.get('error')
+  const supabase = createClient()
 
-  const supabase = createClient();
+  const [mode, setMode] = useState<'choose' | 'email' | 'signup'>('choose')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [message, setMessage] = useState<string | null>(null)
 
-  const [isEmailView, setIsEmailView] = useState(false);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
-
-  const handleKakaoLogin = async () => {
-    await supabase.auth.signInWithOAuth({
-      provider: 'kakao',
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-      },
-    });
-  };
-
-  const handleEmailLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setMessage(null);
-
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (error) {
-      setMessage(error.message === 'Invalid login credentials' ? '이메일 또는 비밀번호가 일치하지 않습니다.' : error.message);
-      setLoading(false);
-    } else {
-      router.push('/dashboard');
+  const handleKakao = async () => {
+    setLoading(true)
+    try {
+      await supabase.auth.signInWithOAuth({
+        provider: 'kakao',
+        options: { redirectTo: `${window.location.origin}/auth/callback` },
+      })
+    } catch {
+      setLoading(false)
+      setMessage('카카오 로그인에 실패했습니다. 잠시 후 다시 시도해주세요.')
     }
-  };
+  }
+
+  const handleEmailAuth = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+    setMessage(null)
+
+    try {
+      if (mode === 'email') {
+        const { error } = await supabase.auth.signInWithPassword({ email, password })
+        if (error) {
+          setMessage(
+            error.message === 'Invalid login credentials'
+              ? '이메일 또는 비밀번호가 일치하지 않습니다.'
+              : error.message,
+          )
+          setLoading(false)
+          return
+        }
+        router.push('/onboarding')
+      } else {
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+        })
+        if (error) {
+          setMessage(error.message)
+          setLoading(false)
+          return
+        }
+        setMessage('이메일로 인증 링크를 보냈어요. 확인 후 다시 로그인해주세요.')
+        setLoading(false)
+      }
+    } catch {
+      setMessage('예상치 못한 오류가 발생했습니다.')
+      setLoading(false)
+    }
+  }
+
+  const showError = errorMsg || message
 
   return (
-    <div className="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 relative flex min-h-screen w-full flex-col group/design-root overflow-x-hidden max-w-md mx-auto shadow-2xl">
-      <div className="flex items-center p-4 pb-2 justify-between">
+    <div className="sseuksak-shell">
+      <div className="flex items-center h-14 px-3 safe-top">
         <button
-          onClick={() => isEmailView ? setIsEmailView(false) : window.history.back()}
-          className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors"
+          onClick={() => (mode === 'choose' ? router.back() : setMode('choose'))}
+          aria-label="뒤로가기"
+          className="flex items-center justify-center w-10 h-10 rounded-full hover:bg-surface-muted active:scale-95 transition"
         >
-          <span className="material-symbols-outlined">arrow_back</span>
+          <ChevronLeft size={22} />
         </button>
-        <h2 className="text-slate-900 dark:text-slate-100 text-lg font-bold leading-tight tracking-[-0.015em] flex-1 text-center pr-10">
-          로그인
-        </h2>
       </div>
 
-      <div className="flex-1 flex flex-col justify-center pb-24">
+      <div className="flex-1 flex flex-col px-6 pt-4 pb-24">
         <AnimatePresence mode="wait">
-          {!isEmailView ? (
+          {mode === 'choose' && (
             <motion.div
-              key="social-login"
+              key="choose"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className="flex flex-col"
+              transition={{ duration: 0.3 }}
+              className="flex flex-col flex-1"
             >
-              {(errorMsg || message) && (
-                <div className="mx-4 mb-4 p-4 bg-red-50 text-red-600 rounded-2xl text-sm font-bold border border-red-100 animate-in fade-in zoom-in duration-300">
-                  {errorMsg ? decodeURIComponent(errorMsg) : message}
-                </div>
-              )}
-
-              <div className="flex justify-center pt-8">
-                <img src="/logo_kr.png" alt="CleanGig" className="w-32 h-auto object-contain" />
+              <div className="pt-4 pb-8">
+                <Logo size="lg" />
               </div>
-              <h1 className="text-slate-900 dark:text-slate-100 tracking-tight text-[32px] font-black leading-tight px-4 text-center pb-3 pt-8">
-                간편하게 시작하세요
+
+              <h1 className="h-hero text-ink mb-2">
+                환영합니다.
+                <br />
+                한 번에 <span className="text-gradient-brand">쓱싹</span>.
               </h1>
-              <p className="text-slate-500 dark:text-slate-400 text-base font-bold leading-normal pb-10 px-4 text-center">
-                CleanGig에 오신 것을 환영합니다.
+              <p className="t-body text-text-muted mb-10 leading-relaxed">
+                소셜 계정이나 이메일로 시작해보세요.
               </p>
 
-              <div className="flex flex-col gap-4 px-6 w-full mx-auto">
-                <button
-                  type="button"
-                  onClick={handleKakaoLogin}
-                  className="flex w-full cursor-pointer items-center justify-center overflow-hidden rounded-[20px] min-h-[64px] px-5 bg-[#FEE500] text-[#000000] gap-3 text-[17px] font-black shadow-lg shadow-yellow-500/10 transition-all hover:opacity-90 active:scale-95"
+              {showError && (
+                <motion.div
+                  initial={{ opacity: 0, y: -4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="flex items-start gap-2 mb-5 p-3.5 bg-danger-soft rounded-xl border border-danger/10"
                 >
-                  <img src="https://developers.kakao.com/tool/resource/static/img/button/kakaotalksharing/kakaotalk_sharing_btn_small.png" alt="Kakao" className="w-6 h-6" />
-                  <span className="truncate">카카오로 시작하기</span>
+                  <AlertCircle size={18} className="text-danger shrink-0 mt-0.5" />
+                  <p className="text-[13px] font-bold text-danger leading-snug">
+                    {errorMsg ? decodeURIComponent(errorMsg) : message}
+                  </p>
+                </motion.div>
+              )}
+
+              <div className="flex flex-col gap-3">
+                <button
+                  onClick={handleKakao}
+                  disabled={loading}
+                  className="btn btn-kakao w-full"
+                >
+                  {loading ? (
+                    <Loader2 size={20} className="animate-spin" />
+                  ) : (
+                    <>
+                      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                        <path
+                          d="M9 1C4.58 1 1 3.83 1 7.32c0 2.26 1.52 4.24 3.8 5.36L3.8 16.5c-.06.22.17.4.37.28l4.25-2.8c.19.02.38.04.58.04 4.42 0 8-2.83 8-6.7C17 3.83 13.42 1 9 1z"
+                          fill="#191919"
+                        />
+                      </svg>
+                      카카오로 3초 만에 시작하기
+                    </>
+                  )}
                 </button>
 
                 <button
-                  type="button"
-                  onClick={() => setIsEmailView(true)}
-                  className="mt-4 text-sm font-bold text-slate-400 hover:text-primary transition-colors underline underline-offset-4"
+                  onClick={() => setMode('email')}
+                  disabled={loading}
+                  className="btn btn-ghost w-full"
                 >
-                  이메일로 로그인하기
+                  <Mail size={18} />
+                  이메일로 로그인
+                </button>
+
+                <button
+                  onClick={() => setMode('signup')}
+                  disabled={loading}
+                  className="mt-2 text-sm font-bold text-text-muted hover:text-ink transition underline underline-offset-4"
+                >
+                  아직 계정이 없으신가요? 회원가입
                 </button>
               </div>
             </motion.div>
-          ) : (
+          )}
+
+          {(mode === 'email' || mode === 'signup') && (
             <motion.div
-              key="email-login"
+              key={mode}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className="px-6"
+              transition={{ duration: 0.3 }}
+              className="flex flex-col flex-1"
             >
-              <h1 className="text-2xl font-black mb-2 text-slate-900 dark:text-white">이메일 로그인</h1>
-              <p className="text-slate-500 dark:text-slate-400 text-sm font-bold mb-8">가입하신 이메일과 비밀번호를 입력해주세요.</p>
+              <div className="pt-4 pb-6">
+                <h1 className="h-hero text-ink">
+                  {mode === 'email' ? '이메일 로그인' : '이메일 회원가입'}
+                </h1>
+                <p className="t-body text-text-muted mt-2">
+                  {mode === 'email'
+                    ? '가입하신 이메일과 비밀번호를 입력하세요.'
+                    : '쓱싹 계정을 무료로 만드세요.'}
+                </p>
+              </div>
 
-              <form onSubmit={handleEmailLogin} className="space-y-4">
-                <div className="space-y-2">
-                  <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">이메일</label>
-                  <input
-                    type="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="example@email.com"
-                    className="w-full bg-slate-100 dark:bg-slate-800 border-none rounded-2xl p-4 text-base font-bold outline-none focus:ring-4 focus:ring-primary/10 transition-all"
-                  />
+              <form onSubmit={handleEmailAuth} className="flex flex-col gap-4">
+                <div>
+                  <label className="t-meta block mb-2 ml-1">이메일</label>
+                  <div className="relative">
+                    <Mail
+                      size={18}
+                      className="absolute left-4 top-1/2 -translate-y-1/2 text-text-faint pointer-events-none"
+                    />
+                    <input
+                      type="email"
+                      required
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="you@example.com"
+                      className="input pl-11"
+                      autoComplete="email"
+                    />
+                  </div>
                 </div>
 
-                <div className="space-y-2">
-                  <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">비밀번호</label>
-                  <input
-                    type="password"
-                    required
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••"
-                    className="w-full bg-slate-100 dark:bg-slate-800 border-none rounded-2xl p-4 text-base font-bold outline-none focus:ring-4 focus:ring-primary/10 transition-all"
-                  />
+                <div>
+                  <label className="t-meta block mb-2 ml-1">비밀번호</label>
+                  <div className="relative">
+                    <Lock
+                      size={18}
+                      className="absolute left-4 top-1/2 -translate-y-1/2 text-text-faint pointer-events-none"
+                    />
+                    <input
+                      type="password"
+                      required
+                      minLength={6}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="6자 이상"
+                      className="input pl-11"
+                      autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
+                    />
+                  </div>
                 </div>
 
                 {message && (
-                  <div className="p-4 bg-red-50 text-red-600 rounded-2xl text-sm font-bold border border-red-100 animate-in fade-in zoom-in duration-300">
-                    {message}
+                  <div className="flex items-start gap-2 p-3.5 bg-danger-soft rounded-xl border border-danger/10">
+                    <AlertCircle size={18} className="text-danger shrink-0 mt-0.5" />
+                    <p className="text-[13px] font-bold text-danger leading-snug">{message}</p>
                   </div>
                 )}
 
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full bg-primary text-white h-16 rounded-2xl text-[17px] font-black shadow-xl shadow-primary/20 transition-all hover:bg-primary/90 active:scale-95 disabled:opacity-50 mt-4"
-                >
-                  {loading ? '로그인 중...' : '로그인'}
+                <button type="submit" disabled={loading} className="btn btn-primary w-full mt-2">
+                  {loading ? (
+                    <Loader2 size={20} className="animate-spin" />
+                  ) : mode === 'email' ? (
+                    '로그인'
+                  ) : (
+                    '회원가입'
+                  )}
                 </button>
               </form>
 
-              <div className="mt-8 text-center space-y-4">
-                <p className="text-sm text-slate-400 font-bold">
-                  아직 회원이 아니신가요?
-                  <Link href="/onboarding" className="text-primary ml-2 hover:underline underline-offset-4">회원가입</Link>
-                </p>
+              <div className="mt-8 text-center">
                 <button
-                  onClick={() => setIsEmailView(false)}
-                  className="text-xs font-bold text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+                  onClick={() => setMode(mode === 'email' ? 'signup' : 'email')}
+                  className="text-sm font-bold text-text-muted hover:text-ink transition"
                 >
-                  다른 방법으로 로그인하기
+                  {mode === 'email' ? '아직 계정이 없으신가요? 회원가입' : '이미 계정이 있으신가요? 로그인'}
                 </button>
               </div>
             </motion.div>
           )}
         </AnimatePresence>
       </div>
+
+      <div className="px-6 pb-6 safe-bottom">
+        <p className="text-center text-[11px] text-text-faint font-medium leading-relaxed">
+          계속하면{' '}
+          <Link href="/terms" className="underline font-bold">
+            이용약관
+          </Link>
+          ,{' '}
+          <Link href="/privacy" className="underline font-bold">
+            개인정보 처리방침
+          </Link>
+          에 동의하게 됩니다.
+        </p>
+      </div>
     </div>
-  );
+  )
 }
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div className="flex h-screen w-full items-center justify-center">로딩 중...</div>}>
+    <Suspense
+      fallback={
+        <div className="flex h-screen w-full items-center justify-center">
+          <Loader2 size={24} className="animate-spin text-brand" />
+        </div>
+      }
+    >
       <LoginContent />
     </Suspense>
-  );
+  )
 }

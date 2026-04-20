@@ -1,176 +1,269 @@
-'use client';
+'use client'
 
-import React from 'react';
-import Link from 'next/link';
-import BottomNav from '@/components/layout/BottomNav';
+import Link from 'next/link'
+import { motion } from 'framer-motion'
+import {
+  Plus,
+  Sparkles,
+  Building2,
+  Clock,
+  ChevronRight,
+  TrendingUp,
+  Zap,
+  Wallet,
+} from 'lucide-react'
+import Header from '@/components/common/Header'
+import BottomNav from '@/components/common/BottomNav'
+import StatusChip from '@/components/common/StatusChip'
+import EmptyState from '@/components/common/EmptyState'
+import MetricCard from '@/components/common/MetricCard'
+import { formatKRW, formatScheduled, spaceTypeLabel } from '@/lib/utils'
+import type { JobStatus, SpaceType } from '@/lib/types'
 
-interface Props {
-  profile: { name: string; email?: string; profile_image?: string };
-  todayJobs: Array<{ id: string; status: string; price: number; scheduled_at: string; spaces?: { name: string; type: string } }>;
-  spaces: Array<{ id: string; name: string; type: string; base_price: number; is_active: boolean }>;
-  recentJobs: Array<{ id: string; status: string; price: number; scheduled_at: string; spaces?: { name: string } }>;
-  monthJobs: Array<{ status: string; price: number; scheduled_at: string; spaces?: { name: string } }>;
-  monthTotal: number;
-  monthCount: number;
+type Profile = {
+  id: string
+  name: string
+  business_name?: string | null
+  profile_image?: string | null
+  avg_rating?: number | null
 }
 
-const STATUS_MAP: Record<string, { label: string; textCls: string; bgCls: string }> = {
-  OPEN: { label: '매칭 중', bgCls: 'bg-orange-100 dark:bg-orange-900/30 border-orange-200 dark:border-orange-800', textCls: 'text-orange-700 dark:text-orange-400' },
-  ASSIGNED: { label: '배정 완료', bgCls: 'bg-blue-100 dark:bg-blue-900/30 border-blue-200 dark:border-blue-800', textCls: 'text-blue-700 dark:text-blue-400' },
-  EN_ROUTE: { label: '이동 중', bgCls: 'bg-blue-100 dark:bg-blue-900/30 border-blue-200 dark:border-blue-800', textCls: 'text-blue-700 dark:text-blue-400' },
-  ARRIVED: { label: '도착', bgCls: 'bg-blue-100 dark:bg-blue-900/30 border-blue-200 dark:border-blue-800', textCls: 'text-blue-700 dark:text-blue-400' },
-  IN_PROGRESS: { label: '청소 중', bgCls: 'bg-green-100 dark:bg-green-900/30 border-green-200 dark:border-green-800', textCls: 'text-green-700 dark:text-green-400' },
-  SUBMITTED: { label: '검수 대기', bgCls: 'bg-purple-100 dark:bg-purple-900/30 border-purple-200 dark:border-purple-800', textCls: 'text-purple-700 dark:text-purple-400' },
-  APPROVED: { label: '승인 완료', bgCls: 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700', textCls: 'text-slate-700 dark:text-slate-300' },
-  DISPUTED: { label: '분쟁 중', bgCls: 'bg-red-100 dark:bg-red-900/30 border-red-200 dark:border-red-800', textCls: 'text-red-700 dark:text-red-400' },
-  PAID_OUT: { label: '정산 완료', bgCls: 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700', textCls: 'text-slate-700 dark:text-slate-300' },
-  CANCELED: { label: '취소', bgCls: 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700', textCls: 'text-slate-700 dark:text-slate-300' },
-};
+type Job = {
+  id: string
+  status: JobStatus
+  price: number
+  scheduled_at: string
+  estimated_duration?: number
+  is_urgent?: boolean
+  spaces?: { name: string; type: SpaceType; address?: string }
+  users?: { name: string; avg_rating?: number } | null
+}
 
-const DEFAULT_IMAGES = [
-  "https://lh3.googleusercontent.com/aida-public/AB6AXuCwVTchqTlbyVjN1KOQKCGXmIt6I8o8bAzGJ8HEyiVDavk_umqwplPSJHc8WuIi-2VcWu8P5SumyILTkBswLF_sR6r-jUl1f4qqY1F-7lAtHGnMZTNXII1IM7OUxJ5PgQ3CBaRafmUee1WHK5zju11mxLVdaTUWobVt3JWbqwLXaBpRLO9p7AHQrUReQp8YifQAVXPBlxkIa0YvaaGL4e-VocYPLODdtZmRAvJltSDPPHZz1sy0zeKEOnW4NFzi6Xwr5170h1A5G0s",
-  "https://lh3.googleusercontent.com/aida-public/AB6AXuAFPQ6x8nwKugVztldkohNoud_zTQayzcUfEJbVUxboTn25En5q-jbN6B8KJmzKgJTQJANHbJgxxJY5D2wJraGuYo6hwunRunEhztpl6HB3j_gbPNqYfafWJEAZGqQoS_R9tJl5JpRApjARi8n_kNTYT30XrM_wanF60LnVu2qw1Tc2FtcALD4VX6gYMUzWWsi-1Mt2z3GViiXNTsw4aOexHu7_CKWzsuHgRDwrBm0vubV8QhPLQJK2SO3DkrwaStieszhsHrzFFiE",
-  "https://lh3.googleusercontent.com/aida-public/AB6AXuDvUPL9hfGgn9F6g1TM4vcZwZg51COuHFtsdkcVhtPK9CYXq5I_1G1qm66L4AQUaKHPzg2IyXcjZNNLLTNbPUK_6hKvEPOQR1wptBSAgqZWz-k51AUkpuPc3Wob3_WSTuRM6RIdDlomzI4JYHrAqjc2BrSG28nthE1dF4rplWLN13tvXaoL2VUsm9ObPPqv9E7N5alMzdGxuOcSZWFiWe7K_4yOcd_ML-ayl2_Dv9KaQdgx7JB-zoD-N8pogT7_MxmQNz6fXdqID5Y",
-  "https://lh3.googleusercontent.com/aida-public/AB6AXuAJ2WuwR50Xo-L5mCYA2-guF51NEO21vmU5ahgWJydR4W8SlTdkHfKWvFWIeX8A-DzOwrkBu4cvvjVbXPeZMWLFWPpTkhQTnrXB49QF88rMjzaksUxUpmsXIG_eGlIycCLosA0sc_OxVpA6DXDgjBDvdPnf3Z6nScxDRjt9lfwNSohwLwO1h-jCj6s5XdDahP1VXv8z4iK9Y8TdbseC7A1e3DRnSupn5NSuUNE8684D08KNLd7-eB_HyNjk-17wl9zkWSxiqzKrXuM"
-];
+type Space = {
+  id: string
+  name: string
+  type: SpaceType
+  base_price: number
+  is_active: boolean
+  photos?: string[]
+}
 
-export default function DashboardClient({ profile, todayJobs, spaces, monthTotal, monthCount }: Props) {
-  const formatTime = (iso: string) => {
-    const d = new Date(iso);
-    const ampm = d.getHours() >= 12 ? '오후' : '오전';
-    const h = d.getHours() % 12 || 12;
-    const m = d.getMinutes().toString().padStart(2, '0');
-    return `오늘 ${ampm} ${h}:${m}`;
-  };
+type Props = {
+  profile: Profile
+  todayJobs: Job[]
+  spaces: Space[]
+  recentJobs: Job[]
+  monthTotal: number
+  monthCount: number
+  monthApproved: number
+  unreadCount: number
+}
 
-  const formatFutureTime = (iso: string) => {
-    const d = new Date(iso);
-    const today = new Date();
-    const isTomorrow = d.getDate() === today.getDate() + 1 && d.getMonth() === today.getMonth();
-    const prefix = isTomorrow ? '내일' : `${d.getMonth() + 1}/${d.getDate()}`;
-    const ampm = d.getHours() >= 12 ? '오후' : '오전';
-    const h = d.getHours() % 12 || 12;
-    const m = d.getMinutes().toString().padStart(2, '0');
-    return `${prefix} ${ampm} ${h}:${m}`;
-  };
+export default function DashboardClient({
+  profile,
+  todayJobs,
+  spaces,
+  recentJobs,
+  monthTotal,
+  monthCount,
+  monthApproved,
+  unreadCount,
+}: Props) {
+  const greeting = (() => {
+    const h = new Date().getHours()
+    if (h < 5) return '늦은 밤입니다'
+    if (h < 12) return '좋은 아침이에요'
+    if (h < 18) return '안녕하세요'
+    return '좋은 저녁이에요'
+  })()
 
   return (
-    <div className="font-display bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 flex justify-center w-full antialiased min-h-screen">
-      <div className="relative flex h-full min-h-screen w-full max-w-md flex-col overflow-hidden pb-[72px]">
+    <div className="sseuksak-shell">
+      <Header showLogo showBell unreadCount={unreadCount} />
 
-        {/* Header */}
-        <header className="flex items-center justify-between p-4 bg-background-light dark:bg-background-dark sticky top-0 z-10 border-b border-slate-200 dark:border-slate-800">
-          <h2 className="text-xl font-bold tracking-tight">CleanGig</h2>
-          <button className="flex items-center justify-center p-2 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors">
-            <span className="material-symbols-outlined">notifications</span>
-          </button>
-        </header>
+      <div className="page-container flex-1">
+        <motion.section
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-5 pt-2"
+        >
+          <p className="t-caption">{greeting}, 공간 파트너님</p>
+          <h1 className="h-hero text-ink mt-1">
+            {profile.business_name || profile.name}
+            <span className="text-text-faint text-xl font-extrabold">님</span>
+          </h1>
+        </motion.section>
 
-        {/* Main Content */}
-        <main className="flex-1 overflow-y-auto px-4 py-6 space-y-6">
-          {/* Welcome Banner */}
-          <div className="bg-primary text-white rounded-xl p-6 relative overflow-hidden shadow-sm">
+        <motion.section
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.05 }}
+          className="mb-5"
+        >
+          <div className="rounded-3xl bg-ink text-white p-5 overflow-hidden relative">
+            <div className="absolute -top-8 -right-8 w-40 h-40 bg-brand/30 rounded-full blur-3xl" />
             <div className="relative z-10">
-              <h3 className="text-2xl font-bold mb-1">안녕하세요, {profile.name || '호스트'}님!</h3>
-              <p className="text-primary-100 opacity-90 text-sm">오늘 {todayJobs.length}건의 청소가 진행 중입니다.</p>
-            </div>
-            <div className="absolute right-0 bottom-0 opacity-20 pointer-events-none transform translate-x-1/4 translate-y-1/4">
-              <span className="material-symbols-outlined text-[120px]">cleaning_services</span>
-            </div>
-          </div>
-
-          {/* Stats */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="flex flex-col gap-1 rounded-xl bg-white dark:bg-slate-900 shadow-sm p-4 border border-slate-100 dark:border-slate-800 text-center">
-              <p className="text-3xl font-bold text-primary dark:text-primary-light">{spaces.length}</p>
-              <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">등록된 공간</p>
-            </div>
-            <div className="flex flex-col gap-1 rounded-xl bg-white dark:bg-slate-900 shadow-sm p-4 border border-slate-100 dark:border-slate-800 text-center">
-              <p className="text-3xl font-bold text-primary dark:text-primary-light">{todayJobs.length}</p>
-              <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">진행중인 요청</p>
-            </div>
-          </div>
-
-          {/* Active Requests */}
-          <section>
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-bold">진행중인 청소</h3>
-              <Link href="/requests" className="text-primary text-sm font-medium">전체보기</Link>
-            </div>
-            <div className="space-y-3">
-              {todayJobs.length === 0 ? (
-                <div className="text-center py-8 text-slate-500 bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm">
-                  <p className="text-sm">오늘 진행중인 청소가 없습니다.</p>
+              <p className="text-white/70 text-xs font-bold">오늘의 작업</p>
+              <div className="mt-1 flex items-baseline gap-2">
+                <span className="t-money text-4xl">{todayJobs.length}</span>
+                <span className="text-white/70 text-sm font-bold">건 예정</span>
+              </div>
+              {todayJobs.length > 0 ? (
+                <div className="mt-4 text-[13px] font-semibold text-white/85 leading-snug">
+                  가장 빠른 작업:{' '}
+                  <span className="text-brand-light font-extrabold">
+                    {formatScheduled(todayJobs[0].scheduled_at)}
+                  </span>{' '}
+                  · {todayJobs[0].spaces?.name}
                 </div>
               ) : (
-                todayJobs.map((job, idx) => {
-                  const statusObj = STATUS_MAP[job.status] || STATUS_MAP.OPEN;
-                  const bgImage = DEFAULT_IMAGES[idx % DEFAULT_IMAGES.length];
-                  return (
-                    <Link href={`/requests/${job.id}`} key={job.id} className="flex gap-4 bg-white dark:bg-slate-900 p-4 rounded-xl shadow-sm border border-slate-100 dark:border-slate-800 items-center hover:bg-slate-50 transition-colors">
-                      <div className="w-16 h-16 rounded-lg bg-cover bg-center shrink-0 shadow-inner" style={{ backgroundImage: `url('${bgImage}')` }}></div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${statusObj.bgCls} ${statusObj.textCls}`}>
-                            {statusObj.label}
-                          </span>
-                        </div>
-                        <h4 className="font-bold text-base truncate">{job.spaces?.name || '공간 이름 확인불가'}</h4>
-                        <p className="text-slate-500 dark:text-slate-400 text-xs mt-0.5">{formatFutureTime(job.scheduled_at)} 예약</p>
-                      </div>
-                    </Link>
-                  );
-                })
+                <p className="mt-4 text-[13px] font-semibold text-white/75">
+                  오늘 예정된 작업이 없어요. 새로운 요청을 만들어보세요.
+                </p>
               )}
-            </div>
-          </section>
 
-          {/* Quick Actions / Spaces */}
-          <section className="pb-10">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-bold">내 공간</h3>
+              <div className="mt-5 flex gap-2">
+                <Link
+                  href="/requests/create"
+                  className="flex-1 flex items-center justify-center gap-1.5 h-11 rounded-xl bg-brand text-ink font-black text-sm shadow-sm active:scale-[0.98] transition"
+                >
+                  <Zap size={16} strokeWidth={2.6} /> 즉시 요청
+                </Link>
+                <Link
+                  href="/requests"
+                  className="flex items-center justify-center h-11 px-4 rounded-xl bg-white/10 text-white font-bold text-sm active:scale-[0.98] transition"
+                >
+                  요청 전체보기
+                </Link>
+              </div>
             </div>
-            <div className="flex gap-3 overflow-x-auto pb-2 snap-x hide-scrollbar">
-              <Link href="/spaces/create" className="min-w-[140px] h-[100px] bg-white dark:bg-slate-900 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 flex flex-col items-center justify-center gap-2 text-slate-500 dark:text-slate-400 snap-start cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shrink-0">
-                <span className="material-symbols-outlined text-2xl">add_business</span>
-                <span className="text-sm font-medium">공간 추가</span>
+          </div>
+        </motion.section>
+
+        <section className="grid grid-cols-2 gap-3 mb-6">
+          <MetricCard
+            label="이번 달 지출"
+            value={formatKRW(monthTotal, { short: true, withUnit: false })}
+            unit="원"
+            icon={<Wallet size={16} />}
+          />
+          <MetricCard
+            label="완료율"
+            value={monthCount > 0 ? Math.round((monthApproved / monthCount) * 100) : 0}
+            unit="%"
+            icon={<TrendingUp size={16} />}
+          />
+        </section>
+
+        <section className="mb-7">
+          <div className="flex items-center justify-between mb-3 px-1">
+            <h2 className="h-section text-ink">내 공간</h2>
+            <Link href="/spaces" className="text-xs font-bold text-text-muted flex items-center gap-0.5">
+              전체 <ChevronRight size={14} />
+            </Link>
+          </div>
+
+          {spaces.length === 0 ? (
+            <div className="card p-2">
+              <EmptyState
+                icon={<Building2 size={24} />}
+                title="첫 공간을 등록해보세요"
+                description="공간을 등록하면 청소 요청을 자동으로 만들 수 있어요."
+                actionLabel="공간 등록하기"
+                actionHref="/spaces/create"
+              />
+            </div>
+          ) : (
+            <div className="flex gap-3 overflow-x-auto no-scrollbar -mx-1 px-1 pb-1">
+              {spaces.map((s) => (
+                <Link key={s.id} href={`/spaces/${s.id}`} className="shrink-0 w-[200px] card-interactive p-4">
+                  <div className="w-full aspect-[16/10] rounded-xl bg-surface-muted overflow-hidden mb-3 relative">
+                    {s.photos?.[0] ? (
+                      <img src={s.photos[0]} alt={s.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-text-faint">
+                        <Building2 size={28} />
+                      </div>
+                    )}
+                    {s.is_active && (
+                      <span className="absolute top-2 right-2 chip chip-brand text-[10px] px-2 py-0.5">운영중</span>
+                    )}
+                  </div>
+                  <h3 className="text-[14px] font-extrabold text-ink truncate">{s.name}</h3>
+                  <p className="text-[11.5px] text-text-soft font-bold mt-0.5">
+                    {spaceTypeLabel(s.type)} · 기본 {formatKRW(s.base_price, { short: true })}
+                  </p>
+                </Link>
+              ))}
+              <Link
+                href="/spaces/create"
+                className="shrink-0 w-[140px] card-interactive flex flex-col items-center justify-center text-center p-4"
+                style={{ borderStyle: 'dashed' }}
+              >
+                <div className="w-10 h-10 rounded-full bg-brand-softer text-brand-dark flex items-center justify-center mb-2">
+                  <Plus size={20} />
+                </div>
+                <span className="text-[13px] font-extrabold text-ink">공간 추가</span>
               </Link>
-              {spaces.map((space, index) => {
-                const bgImage = DEFAULT_IMAGES[(index + 2) % DEFAULT_IMAGES.length];
-                return (
-                  <Link href={`/spaces/${space.id}`} key={space.id} className="min-w-[140px] h-[100px] bg-cover bg-center rounded-xl relative overflow-hidden snap-start group cursor-pointer shrink-0" style={{ backgroundImage: `url('${bgImage}')` }}>
-                    <div className="absolute inset-0 bg-black/40 group-hover:bg-black/50 transition-colors"></div>
-                    <div className="absolute inset-0 p-3 flex flex-col justify-end text-white">
-                      <p className="font-bold text-sm truncate">{space.name}</p>
-                      <p className="text-xs opacity-80">{space.type === 'airbnb' ? '에어비앤비' : '오피스/기타'} · {space.base_price.toLocaleString()}원</p>
+            </div>
+          )}
+        </section>
+
+        <section>
+          <div className="flex items-center justify-between mb-3 px-1">
+            <h2 className="h-section text-ink">최근 요청</h2>
+            <Link href="/requests" className="text-xs font-bold text-text-muted flex items-center gap-0.5">
+              전체 <ChevronRight size={14} />
+            </Link>
+          </div>
+
+          {recentJobs.length === 0 ? (
+            <div className="card p-2">
+              <EmptyState
+                icon={<Sparkles size={24} />}
+                title="아직 요청 내역이 없어요"
+                description="지금 바로 청소 요청을 만들고 매칭을 받아보세요."
+                actionLabel="청소 요청하기"
+                actionHref="/requests/create"
+              />
+            </div>
+          ) : (
+            <ul className="flex flex-col gap-3">
+              {recentJobs.map((job) => (
+                <li key={job.id}>
+                  <Link href={`/requests/${job.id}`} className="card-interactive p-4 flex items-center gap-3">
+                    <div className="w-11 h-11 rounded-xl bg-brand-softer flex items-center justify-center shrink-0">
+                      <Sparkles size={18} className="text-brand-dark" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <StatusChip kind="job" status={job.status} size="sm" />
+                        {job.is_urgent && <span className="chip chip-danger text-[10px] px-1.5 py-0">긴급</span>}
+                      </div>
+                      <h4 className="text-[14.5px] font-extrabold text-ink truncate mt-1">
+                        {job.spaces?.name || '공간'}
+                      </h4>
+                      <p className="text-[11.5px] text-text-soft font-bold truncate flex items-center gap-1 mt-0.5">
+                        <Clock size={11} />
+                        {formatScheduled(job.scheduled_at)}
+                        {job.users?.name && <span className="ml-1">· {job.users.name}</span>}
+                      </p>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <div className="t-money text-[15px] text-ink">
+                        {formatKRW(job.price, { short: true })}
+                      </div>
+                      <ChevronRight size={16} className="text-text-faint ml-auto mt-0.5" />
                     </div>
                   </Link>
-                );
-              })}
-            </div>
-          </section>
-        </main>
-
-        {/* Floating Action Button */}
-        <Link href="/requests/create" className="absolute bottom-24 right-4 bg-primary text-white w-14 h-14 rounded-full shadow-lg flex items-center justify-center hover:bg-primary/90 transition-transform active:scale-95 z-20">
-          <span className="material-symbols-outlined text-3xl">add</span>
-        </Link>
-
-        <BottomNav />
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
       </div>
 
-      <style jsx global>{`
-        .hide-scrollbar::-webkit-scrollbar {
-            display: none;
-        }
-        .hide-scrollbar {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-        }
-        .pb-safe {
-            padding-bottom: env(safe-area-inset-bottom, 20px);
-        }
-      `}</style>
+      <BottomNav role="operator" />
     </div>
-  );
+  )
 }

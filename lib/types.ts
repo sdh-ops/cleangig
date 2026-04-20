@@ -93,6 +93,7 @@ export interface Job {
     pre_damage_report?: { desc: string; photo_url?: string }[]
     recurring_config?: Record<string, unknown>
     matching_score?: number
+    preferred_worker_id?: string
     auto_approved: boolean
     supplies_to_check?: string[]
     supply_shortages?: string[]

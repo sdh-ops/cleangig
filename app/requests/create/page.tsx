@@ -1,500 +1,416 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { Space } from '@/lib/types'
+import { motion, AnimatePresence } from 'framer-motion'
+import {
+  ChevronLeft,
+  ChevronRight,
+  Loader2,
+  Zap,
+  Clock,
+  Building2,
+  Sparkles,
+  Check,
+  AlertCircle,
+  Calendar,
+  MessageSquare,
+} from 'lucide-react'
+import { calculatePrice } from '@/lib/pricing'
+import { formatKRW, formatScheduled, spaceTypeLabel } from '@/lib/utils'
+import type { SpaceType, ChecklistItem } from '@/lib/types'
+
+type Space = {
+  id: string
+  name: string
+  type: SpaceType
+  address: string
+  base_price: number
+  size_sqm?: number
+  checklist_template?: ChecklistItem[]
+}
+
+type StepId = 1 | 2 | 3
 
 export default function CreateRequestPage() {
-    const router = useRouter()
-    const [spaces, setSpaces] = useState<Space[]>([])
-    const [favoritePartners, setFavoritePartners] = useState<any[]>([])
-    const [form, setForm] = useState({
-        space_id: '',
-        scheduled_date: '',
-        time_window_start: '11:00',
-        time_window_end: '15:00',
-        is_urgent: false,
-        is_recurring: false,
-        recurring_days: [] as string[],
-        special_instructions: '',
-        supplies_to_check: [] as string[],
-        targeted_worker_id: '',
-        custom_price: '',
-        custom_duration: '60',
-        custom_difficulty: '보통'
+  const router = useRouter()
+  const supabase = createClient()
+
+  const [step, setStep] = useState<StepId>(1)
+  const [spaces, setSpaces] = useState<Space[]>([])
+  const [spaceId, setSpaceId] = useState<string>('')
+  const [loading, setLoading] = useState(false)
+  const [loadingSpaces, setLoadingSpaces] = useState(true)
+  const [err, setErr] = useState<string | null>(null)
+
+  const [when, setWhen] = useState<'now' | 'schedule'>('now')
+  const [scheduledDate, setScheduledDate] = useState<string>('')
+  const [scheduledTime, setScheduledTime] = useState<string>('')
+  const [isUrgent, setIsUrgent] = useState(false)
+
+  const [extraTrash, setExtraTrash] = useState(false)
+  const [heavySoil, setHeavySoil] = useState(false)
+  const [instructions, setInstructions] = useState('')
+
+  useEffect(() => {
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) { router.replace('/login'); return }
+      const { data } = await supabase
+        .from('spaces')
+        .select('id, name, type, address, base_price, size_sqm, checklist_template')
+        .eq('operator_id', user.id)
+        .eq('is_active', true)
+        .order('created_at', { ascending: false })
+      setSpaces((data || []) as Space[])
+      if (data && data.length > 0) setSpaceId(data[0].id)
+      setLoadingSpaces(false)
+
+      const d = new Date()
+      d.setHours(d.getHours() + 2)
+      setScheduledDate(d.toISOString().slice(0, 10))
+      setScheduledTime(`${String(d.getHours()).padStart(2, '0')}:00`)
+    })()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  const selectedSpace = useMemo(() => spaces.find((s) => s.id === spaceId), [spaces, spaceId])
+
+  const scheduledAt = useMemo(() => {
+    if (when === 'now') {
+      const d = new Date()
+      d.setMinutes(d.getMinutes() + 30)
+      return d.toISOString()
+    }
+    if (scheduledDate && scheduledTime) {
+      return new Date(`${scheduledDate}T${scheduledTime}:00`).toISOString()
+    }
+    return new Date().toISOString()
+  }, [when, scheduledDate, scheduledTime])
+
+  const priceBreakdown = useMemo(() => {
+    if (!selectedSpace) return null
+    return calculatePrice({
+      base_price: selectedSpace.base_price,
+      space_type: selectedSpace.type,
+      size_sqm: selectedSpace.size_sqm,
+      scheduled_at: scheduledAt,
+      is_urgent: isUrgent || when === 'now',
+      extra_trash: extraTrash,
+      has_heavy_soil: heavySoil,
     })
-    const [selectedSpace, setSelectedSpace] = useState<Space | null>(null)
-    const [loading, setLoading] = useState(false)
-    const [price, setPrice] = useState(0)
+  }, [selectedSpace, scheduledAt, isUrgent, when, extraTrash, heavySoil])
 
-    useEffect(() => {
-        const fetchSpaces = async () => {
-            const supabase = createClient()
-            const { data: { user } } = await supabase.auth.getUser()
-            if (!user) return
-            const { data } = await supabase
-                .from('spaces').select('*')
-                .eq('operator_id', user.id).eq('is_active', true)
-            setSpaces(data as Space[] || [])
+  const canProceed = (() => {
+    if (step === 1) return !!spaceId
+    if (step === 2) return !!scheduledAt
+    if (step === 3) return !!priceBreakdown
+    return false
+  })()
 
-            const { data: favs } = await supabase
-                .from('favorite_partners')
-                .select('worker_id, users!favorite_partners_worker_id_fkey(id, name, tier, avg_rating)')
-                .eq('operator_id', user.id)
-            if (favs) setFavoritePartners(favs)
-        }
-        fetchSpaces()
+  const handleSubmit = async () => {
+    if (!selectedSpace || !priceBreakdown) return
+    setLoading(true)
+    setErr(null)
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('로그인이 필요합니다.')
 
-        // 오늘 날짜 기본값
-        const today = new Date()
-        const yyyy = today.getFullYear()
-        const mm = String(today.getMonth() + 1).padStart(2, '0')
-        const dd = String(today.getDate()).padStart(2, '0')
-        setForm(f => ({ ...f, scheduled_date: `${yyyy}-${mm}-${dd}` }))
-    }, [])
-
-    useEffect(() => {
-        if (!selectedSpace) return
-
-        // Multi-factor Smart Estimation Logic
-        const calculateSmartEstimation = () => {
-            const size = selectedSpace.size_sqm || 0;
-
-            // 1. Base Price & Time Calculation
-            let estimatedPrice = size * 1500; // 1,500 KRW per m2
-            let estimatedTime = size * 2;     // 2 mins per m2
-
-            // 2. Space Type Multipliers
-            const typeMultipliers: Record<string, number> = {
-                airbnb: 1.2,
-                partyroom: 1.1,
-                gym: 1.1,
-                studio: 1.05,
-            };
-            const typeMult = typeMultipliers[selectedSpace.type] || 1.0;
-            estimatedPrice *= typeMult;
-            estimatedTime *= typeMult;
-
-            // 3. Facility Add-ons
-            if (selectedSpace.has_toilet) { estimatedPrice += 5000; estimatedTime += 15; }
-            if (selectedSpace.has_kitchen) { estimatedPrice += 5000; estimatedTime += 15; }
-            if (selectedSpace.has_bed) { estimatedPrice += 3000; estimatedTime += 10; }
-            if (selectedSpace.has_balcony) { estimatedPrice += 2000; estimatedTime += 10; }
-
-            // 4. Difficulty Multiplier (Calculated based on custom_difficulty)
-            const difficultyMultipliers: Record<string, number> = {
-                '쉬움': 0.8,
-                '보통': 1.0,
-                '어려움': 1.3,
-                '특수': 1.6,
-            };
-            const diffMult = difficultyMultipliers[form.custom_difficulty] || 1.0;
-
-            const finalPrice = Math.round(estimatedPrice * diffMult);
-            const finalDuration = Math.round(estimatedTime * diffMult);
-
-            return { finalPrice, finalDuration };
-        };
-
-        const { finalPrice, finalDuration } = calculateSmartEstimation();
-
-        // Update price calculation with urgency
-        let p = form.custom_price ? parseInt(form.custom_price) : finalPrice;
-        if (form.is_urgent) p = Math.round(p * 1.3);
-        setPrice(p);
-
-        // Auto-update custom duration if it hasn't been manually tweaked (simplified)
-        // If the user hasn't touched it, we keep it in sync with our smart suggestion
-        setForm(f => ({ ...f, custom_duration: f.custom_duration ? f.custom_duration : finalDuration.toString() }));
-    }, [selectedSpace, form.is_urgent, form.custom_price, form.custom_difficulty])
-
-    const handleSpaceSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        const spaceId = e.target.value;
-        const space = spaces.find(s => s.id === spaceId)
-        setSelectedSpace(space || null)
-        setForm(f => ({
-            ...f,
-            space_id: spaceId,
-            custom_difficulty: space?.cleaning_difficulty || '보통'
-        }))
+      const payload = {
+        space_id: selectedSpace.id,
+        operator_id: user.id,
+        status: 'OPEN',
+        scheduled_at: scheduledAt,
+        estimated_duration: 90,
+        price: priceBreakdown.total,
+        price_breakdown: priceBreakdown as unknown as Record<string, number>,
+        checklist: selectedSpace.checklist_template ?? [],
+        special_instructions: instructions || null,
+        is_urgent: isUrgent || when === 'now',
+        is_recurring: false,
+        auto_approved: false,
+      }
+      const { data, error } = await supabase.from('jobs').insert(payload).select('id').single()
+      if (error) throw error
+      router.replace(data?.id ? `/requests/${data.id}` : '/dashboard')
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : '요청 생성에 실패했습니다.')
+      setLoading(false)
     }
+  }
 
-    const handleSubmit = async () => {
-        if (!form.space_id || !form.scheduled_date) return
-        setLoading(true)
-        const supabase = createClient()
-        const { data: { user } } = await supabase.auth.getUser()
-        if (!user) return
-
-        const scheduledAt = new Date(`${form.scheduled_date}T${form.time_window_start}:00+09:00`).toISOString()
-
-        const { data: job, error } = await supabase.from('jobs').insert({
-            space_id: form.space_id,
-            operator_id: user.id,
-            status: 'OPEN',
-            scheduled_at: scheduledAt,
-            time_window_start: form.time_window_start,
-            time_window_end: form.time_window_end,
-            estimated_duration: parseInt(form.custom_duration) || selectedSpace?.estimated_duration || 60,
-            price,
-            price_breakdown: {
-                base: form.custom_price ? parseInt(form.custom_price) : selectedSpace?.base_price || 0,
-                urgency_multiplier: form.is_urgent ? 1.3 : 1.0,
-            },
-            checklist: selectedSpace?.checklist_template || [],
-            special_instructions: form.special_instructions || null,
-            is_urgent: form.is_urgent,
-            is_recurring: form.is_recurring,
-            recurring_config: form.is_recurring ? { days: form.recurring_days } : null,
-            supplies_to_check: form.supplies_to_check,
-            targeted_worker_id: form.targeted_worker_id || null,
-            cleaning_difficulty: form.custom_difficulty
-        }).select().single()
-
-        if (!error && job) {
-            // Matching Agent 즉시 실행 (비동기)
-            fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/matching-agent`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`
-                },
-                body: JSON.stringify({ job_id: job.id })
-            }).catch(console.error)
-
-            router.push(`/requests/${job.id}?created=1`)
-        } else {
-            alert('요청 생성에 실패했어요.')
-            setLoading(false)
-        }
-    }
-
-    const minDate = new Date().toISOString().split('T')[0]
-
+  if (loadingSpaces) {
     return (
-        <div className="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display min-h-screen antialiased flex flex-col mx-auto max-w-md w-full relative">
-            {/* TopAppBar */}
-            <div className="sticky top-0 z-20 flex items-center bg-background-light dark:bg-background-dark p-4 justify-between border-b border-slate-200 dark:border-slate-800">
-                <button onClick={() => router.back()} className="flex size-12 shrink-0 items-center justify-center text-slate-900 dark:text-slate-100 focus:outline-none">
-                    <span className="material-symbols-outlined text-2xl">arrow_back</span>
-                </button>
-                <h2 className="text-lg font-bold leading-tight tracking-tight flex-1 text-center pr-12">새로운 청소 요청</h2>
-            </div>
-
-            {/* Main Content */}
-            <main className="flex-1 overflow-y-auto pb-40">
-                {/* Space Selection */}
-                <div className="px-4 pt-6 pb-2">
-                    <h1 className="text-[22px] font-bold leading-tight tracking-tight mb-4">어떤 공간을 청소할까요?</h1>
-                    <label className="flex flex-col w-full">
-                        <span className="text-sm font-medium leading-normal mb-2 text-slate-700 dark:text-slate-300">청소할 공간 *</span>
-                        {spaces.length === 0 ? (
-                            <div className="text-center p-6 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
-                                <p className="mb-4 text-slate-600 dark:text-slate-400">등록된 공간이 없어요</p>
-                                <button onClick={() => router.push('/spaces/create')} className="w-full h-12 bg-primary text-white rounded-lg font-bold flex items-center justify-center">
-                                    공간 먼저 등록하기
-                                </button>
-                            </div>
-                        ) : (
-                            <div className="relative">
-                                <select
-                                    className="appearance-none form-input flex w-full flex-1 rounded-xl text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 h-14 px-4 pr-10 text-base font-medium"
-                                    value={form.space_id}
-                                    onChange={handleSpaceSelect}
-                                >
-                                    <option disabled value="">공간을 선택해주세요</option>
-                                    {spaces.map(space => (
-                                        <option key={space.id} value={space.id}>
-                                            {space.type === 'airbnb' ? '🏠 ' : space.type === 'partyroom' ? '🎉 ' : space.type === 'studio' ? '📸 ' : '🏢 '}
-                                            {space.name} ({space.address})
-                                        </option>
-                                    ))}
-                                </select>
-                                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-500">
-                                    <span className="material-symbols-outlined">expand_more</span>
-                                </div>
-                            </div>
-                        )}
-                    </label>
-                </div>
-
-                <div className="h-4"></div>
-
-                {/* Date & Time Selection */}
-                <div className="px-4 py-2">
-                    <h1 className="text-[22px] font-bold leading-tight tracking-tight mb-4">언제 청소가 필요하신가요?</h1>
-
-                    <div className="flex flex-col mb-4">
-                        <label className="flex flex-col flex-1">
-                            <span className="text-sm font-medium leading-normal mb-2 text-slate-700 dark:text-slate-300">청소 날짜 *</span>
-                            <div className="relative flex items-center">
-                                <input
-                                    className="appearance-none form-input flex w-full rounded-xl text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 h-14 px-4 pr-10 text-base font-medium"
-                                    type="date"
-                                    min={minDate}
-                                    value={form.scheduled_date}
-                                    onChange={e => setForm(f => ({ ...f, scheduled_date: e.target.value }))}
-                                />
-                            </div>
-                        </label>
-                    </div>
-
-                    <div className="flex gap-4 items-end mb-2">
-                        <label className="flex flex-col flex-1">
-                            <span className="text-sm font-medium leading-normal mb-2 text-slate-700 dark:text-slate-300">시작 가능 시간 *</span>
-                            <div className="relative flex items-center">
-                                <input
-                                    className="appearance-none form-input flex w-full rounded-xl text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 h-14 px-4 pr-10 text-base font-medium"
-                                    type="time"
-                                    value={form.time_window_start}
-                                    onChange={e => setForm(f => ({ ...f, time_window_start: e.target.value }))}
-                                />
-                                <span className="material-symbols-outlined absolute right-3 text-slate-400 pointer-events-none">schedule</span>
-                            </div>
-                        </label>
-                        <div className="text-lg font-bold text-slate-400 pb-3">~</div>
-                        <label className="flex flex-col flex-1">
-                            <span className="text-sm font-medium leading-normal mb-2 text-slate-700 dark:text-slate-300">완료 한계 시간 *</span>
-                            <div className="relative flex items-center">
-                                <input
-                                    className="appearance-none form-input flex w-full rounded-xl text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 h-14 px-4 pr-10 text-base font-medium"
-                                    type="time"
-                                    value={form.time_window_end}
-                                    onChange={e => setForm(f => ({ ...f, time_window_end: e.target.value }))}
-                                />
-                                <span className="material-symbols-outlined absolute right-3 text-slate-400 pointer-events-none">schedule_send</span>
-                            </div>
-                        </label>
-                    </div>
-
-                    {/* Job Details Overrides */}
-                    {selectedSpace && (
-                        <div className="mt-6 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700">
-                            <h3 className="text-sm font-bold mb-4 flex items-center gap-1">⚙️ 상세 조건 수정 (공간 기본값 기반)</h3>
-
-                            <div className="grid grid-cols-2 gap-3 mb-4">
-                                <label className="flex flex-col">
-                                    <span className="text-[11px] font-bold text-slate-500 mb-1.5 ml-1">청소 비용 (원)</span>
-                                    <input
-                                        type="number"
-                                        className="h-11 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 text-sm font-medium focus:ring-2 focus:ring-primary focus:outline-none"
-                                        value={form.custom_price}
-                                        onChange={e => setForm(f => ({ ...f, custom_price: e.target.value }))}
-                                    />
-                                </label>
-                                <label className="flex flex-col">
-                                    <span className="text-[11px] font-bold text-slate-500 mb-1.5 ml-1">소요 시간 (분)</span>
-                                    <input
-                                        type="number"
-                                        className="h-11 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 text-sm font-medium focus:ring-2 focus:ring-primary focus:outline-none"
-                                        value={form.custom_duration}
-                                        onChange={e => setForm(f => ({ ...f, custom_duration: e.target.value }))}
-                                    />
-                                </label>
-                            </div>
-
-                            <label className="flex flex-col">
-                                <span className="text-[11px] font-bold text-slate-500 mb-1.5 ml-1">청소 난이도</span>
-                                <div className="flex gap-2">
-                                    {['쉬움', '보통', '어려움', '특수'].map(level => {
-                                        const isSelected = form.custom_difficulty === level;
-                                        return (
-                                            <button
-                                                key={level}
-                                                className={`flex-1 h-10 rounded-lg text-xs font-bold transition-all ${isSelected ? 'bg-primary text-white' : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500'}`}
-                                                onClick={() => setForm(f => ({ ...f, custom_difficulty: level }))}
-                                            >
-                                                {level}
-                                            </button>
-                                        )
-                                    })}
-                                </div>
-                            </label>
-                        </div>
-                    )}
-
-                    <p className="text-xs text-slate-500 my-4 px-1 leading-relaxed">클린파트너가 위 시간 범위 내에 도착하여 청소를 모두 마칩니다.</p>
-
-                    {/* Recurring Config */}
-                    <div className="flex flex-col w-full bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden mt-4">
-                        <div
-                            className="flex justify-between items-center p-4 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/80 transition-colors"
-                            onClick={() => setForm(f => ({ ...f, is_recurring: !f.is_recurring }))}
-                        >
-                            <div>
-                                <div className="font-bold text-base flex items-center gap-1">🔁 정기 청소 (반복)</div>
-                                <div className="text-xs text-slate-500 mt-1">매주 정해진 요일에 자동으로 청소 요청</div>
-                            </div>
-                            <div className={`w-12 h-7 rounded-full relative transition-colors ${form.is_recurring ? 'bg-primary' : 'bg-slate-200 dark:bg-slate-600'}`}>
-                                <div className={`absolute top-1 left-1 bg-white w-5 h-5 rounded-full shadow transition-transform ${form.is_recurring ? 'translate-x-5' : 'translate-x-0'}`}></div>
-                            </div>
-                        </div>
-
-                        {form.is_recurring && (
-                            <div className="p-4 pt-0 border-t border-slate-100 dark:border-slate-700">
-                                <p className="text-sm font-medium mb-3 mt-3">반복 요일 선택</p>
-                                <div className="flex gap-2 justify-between">
-                                    {['월', '화', '수', '목', '금', '토', '일'].map(day => {
-                                        const selected = form.recurring_days.includes(day)
-                                        return (
-                                            <button
-                                                key={day}
-                                                className={`w-10 h-10 rounded-full font-bold text-sm transition-all ${selected ? 'bg-primary text-white border-primary border-2 shadow-sm' : 'bg-transparent text-slate-600 dark:text-slate-300 border-2 border-slate-200 dark:border-slate-600'}`}
-                                                onClick={() => {
-                                                    setForm(f => ({
-                                                        ...f,
-                                                        recurring_days: selected
-                                                            ? f.recurring_days.filter(d => d !== day)
-                                                            : [...f.recurring_days, day]
-                                                    }))
-                                                }}
-                                            >
-                                                {day}
-                                            </button>
-                                        )
-                                    })}
-                                </div>
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Urgent Config */}
-                    <div className="flex flex-col w-full bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden mt-3">
-                        <div
-                            className="flex justify-between items-center p-4 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/80 transition-colors"
-                            onClick={() => setForm(f => ({ ...f, is_urgent: !f.is_urgent }))}
-                        >
-                            <div>
-                                <div className="font-bold text-base flex items-center gap-1 text-red-500">🔥 긴급 요청</div>
-                                <div className="text-xs text-slate-500 mt-1">+30% 요금으로 더 빠른 매칭</div>
-                            </div>
-                            <div className={`w-12 h-7 rounded-full relative transition-colors ${form.is_urgent ? 'bg-red-500' : 'bg-slate-200 dark:bg-slate-600'}`}>
-                                <div className={`absolute top-1 left-1 bg-white w-5 h-5 rounded-full shadow transition-transform ${form.is_urgent ? 'translate-x-5' : 'translate-x-0'}`}></div>
-                            </div>
-                        </div>
-                    </div>
-
-                </div>
-
-                <div className="h-4"></div>
-
-                {/* Special Instructions */}
-                <div className="px-4 py-2">
-                    <h1 className="text-[22px] font-bold leading-tight tracking-tight mb-4">요청사항이 있으신가요?</h1>
-
-                    <label className="flex flex-col w-full mb-6">
-                        <span className="text-sm font-medium leading-normal mb-2 text-slate-700 dark:text-slate-300">특이사항 또는 주의사항 (선택)</span>
-                        <textarea
-                            className="form-textarea flex w-full rounded-xl text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 text-base font-normal resize-none min-h-[120px]"
-                            placeholder="예: 고양이가 있어요. 베란다 창틀 청소도 부탁드려요."
-                            value={form.special_instructions}
-                            onChange={e => setForm(f => ({ ...f, special_instructions: e.target.value }))}
-                        ></textarea>
-                    </label>
-
-                    <label className="flex flex-col w-full mb-6 relative">
-                        <span className="text-sm font-medium leading-normal mb-1 text-slate-700 dark:text-slate-300">클린파트너가 꼭 확인해야 할 비품 (선택)</span>
-                        <span className="text-xs text-slate-500 mb-3">체크해두시면 클린파트너가 수량 부족 시 알려줍니다.</span>
-                        <div className="flex flex-wrap gap-2">
-                            {['휴지', '수건', '종량제봉투', '핸드워시', '주방세제', '음료수'].map(item => {
-                                const isSelected = form.supplies_to_check.includes(item)
-                                return (
-                                    <button
-                                        key={item}
-                                        className={`px-4 py-2 rounded-full text-sm transition-all ${isSelected ? 'bg-primary-light text-primary border border-primary font-bold shadow-sm' : 'bg-slate-100 dark:bg-slate-800 border-transparent border text-slate-600 dark:text-slate-300 font-medium'}`}
-                                        onClick={() => setForm(f => ({
-                                            ...f,
-                                            supplies_to_check: isSelected
-                                                ? f.supplies_to_check.filter(x => x !== item)
-                                                : [...f.supplies_to_check, item]
-                                        }))}
-                                    >
-                                        {item}
-                                    </button>
-                                )
-                            })}
-                        </div>
-                    </label>
-
-                    {/* Favorite Partner Direct Message */}
-                    {favoritePartners.length > 0 && (
-                        <div className="flex flex-col w-full bg-orange-50 dark:bg-orange-900/20 rounded-xl border border-orange-200 dark:border-orange-800/50 p-4 mb-4">
-                            <span className="text-sm font-bold leading-normal mb-1 text-orange-700 dark:text-orange-500">💖 단골 파트너 지정 전송 (선택)</span>
-                            <span className="text-xs text-orange-600/80 dark:text-orange-400/80 mb-3">지정한 파트너에게만 알림이 가며 수락 대기 상태가 됩니다.</span>
-
-                            <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none snap-x">
-                                <button
-                                    className={`snap-center flex flex-col items-center justify-center p-3 min-w-[80px] rounded-xl border-2 transition-all flex-shrink-0 ${form.targeted_worker_id === '' ? 'border-orange-500 bg-orange-100 dark:bg-orange-800/50' : 'border-transparent bg-white dark:bg-slate-800 opacity-80'}`}
-                                    onClick={() => setForm(f => ({ ...f, targeted_worker_id: '' }))}
-                                >
-                                    <span className="text-2xl mb-1">📢</span>
-                                    <span className={`text-[11px] ${form.targeted_worker_id === '' ? 'font-bold text-orange-700 dark:text-orange-300' : 'font-medium text-slate-600 dark:text-slate-400'}`}>전체 공개</span>
-                                </button>
-
-                                {favoritePartners.map(fav => {
-                                    const worker = fav.users
-                                    if (!worker) return null
-                                    const isSelected = form.targeted_worker_id === worker.id
-                                    return (
-                                        <button
-                                            key={worker.id}
-                                            className={`snap-center flex flex-col items-center justify-center p-3 min-w-[90px] rounded-xl border-2 transition-all flex-shrink-0 ${isSelected ? 'border-orange-500 bg-orange-100 dark:bg-orange-800/50' : 'border-transparent bg-white dark:bg-slate-800 opacity-80'}`}
-                                            onClick={() => setForm(f => ({ ...f, targeted_worker_id: worker.id }))}
-                                        >
-                                            <div className="w-10 h-10 rounded-full bg-orange-500 text-white flex items-center justify-center font-bold text-lg mb-1">{worker.name[0]}</div>
-                                            <span className={`text-[12px] truncate max-w-full ${isSelected ? 'font-bold text-orange-800 dark:text-orange-300' : 'font-medium text-slate-700 dark:text-slate-300'}`}>{worker.name}</span>
-                                            <span className="text-[10px] font-bold text-orange-600 dark:text-orange-400">{worker.tier}</span>
-                                        </button>
-                                    )
-                                })}
-                            </div>
-                        </div>
-                    )}
-                </div>
-
-            </main>
-
-            {/* Bottom Action Area */}
-            <div className="fixed bottom-0 z-30 w-full max-w-md mx-auto bg-white/95 dark:bg-slate-900/95 backdrop-blur border-t border-slate-200 dark:border-slate-800 p-4 pb-8 safe-area-bottom shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
-                {selectedSpace && (
-                    <div className="flex flex-col mb-3 px-1 gap-1">
-                        <div className="flex justify-between items-center text-[13px] text-slate-500">
-                            <span>기본 청소비 ({selectedSpace.estimated_duration}분 소요)</span>
-                            <span>{selectedSpace.base_price.toLocaleString()}원</span>
-                        </div>
-                        {form.is_urgent && (
-                            <div className="flex justify-between items-center text-[13px] text-red-500 font-medium">
-                                <span>긴급 할증 (+30%)</span>
-                                <span>+{Math.round(selectedSpace.base_price * 0.3).toLocaleString()}원</span>
-                            </div>
-                        )}
-                        <div className="flex justify-between items-center text-sm text-slate-600 dark:text-slate-400 pt-1 border-t border-slate-100 dark:border-slate-800 mt-1">
-                            <span>파트너 수령액</span>
-                            <span className="font-bold">{price.toLocaleString()}원</span>
-                        </div>
-                        <div className="flex justify-between items-center mt-1">
-                            <span className="text-base font-bold text-slate-900 dark:text-slate-100">최종 결제 금액 (수수료 포함)</span>
-                            <span className="text-2xl font-bold text-primary">₩{Math.round(price * 1.1).toLocaleString()}</span>
-                        </div>
-                    </div>
-                )}
-                {!selectedSpace && (
-                    <div className="flex justify-between items-center mb-4 px-2">
-                        <span className="text-base font-medium text-slate-600 dark:text-slate-400">예상 결제 금액</span>
-                        <span className="text-2xl font-bold text-slate-300 dark:text-slate-700">-</span>
-                    </div>
-                )}
-                <button
-                    className="w-full h-14 bg-primary text-white rounded-xl font-bold text-lg flex items-center justify-center hover:bg-primary/95 transition-all shadow-md active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100"
-                    onClick={handleSubmit}
-                    disabled={loading || !form.space_id || !form.scheduled_date || spaces.length === 0}
-                >
-                    {loading ? (
-                        <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                    ) : '요청 올리기'}
-                </button>
-            </div>
-        </div>
+      <div className="sseuksak-shell flex items-center justify-center">
+        <Loader2 size={28} className="animate-spin text-brand" />
+      </div>
     )
+  }
+
+  if (spaces.length === 0) {
+    return (
+      <div className="sseuksak-shell">
+        <header className="flex items-center h-14 px-3 safe-top border-b border-line-soft bg-surface">
+          <button onClick={() => router.back()} className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-muted">
+            <ChevronLeft size={22} />
+          </button>
+          <h1 className="flex-1 text-center text-[15px] font-extrabold">청소 요청</h1>
+          <div className="w-10" />
+        </header>
+        <div className="flex-1 flex flex-col items-center justify-center px-8 text-center">
+          <div className="w-16 h-16 rounded-full bg-brand-softer text-brand-dark flex items-center justify-center mb-5">
+            <Building2 size={28} />
+          </div>
+          <h2 className="h-section">등록된 공간이 없어요</h2>
+          <p className="t-caption mt-2">먼저 청소를 요청할 공간을 등록해주세요.</p>
+          <button onClick={() => router.push('/spaces/create')} className="btn btn-primary mt-6">
+            공간 등록하기
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="sseuksak-shell">
+      <header className="flex items-center h-14 px-3 safe-top border-b border-line-soft bg-surface">
+        <button
+          onClick={() => (step === 1 ? router.back() : setStep((s) => (s - 1) as StepId))}
+          className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-muted active:scale-95 transition"
+          aria-label="뒤로"
+        >
+          <ChevronLeft size={22} />
+        </button>
+        <div className="flex-1 text-center">
+          <h1 className="text-[15px] font-extrabold text-ink">청소 요청</h1>
+          <p className="text-[11px] text-text-soft font-bold">{step}/3</p>
+        </div>
+        <div className="w-10" />
+      </header>
+
+      <div className="px-5 pt-4 pb-1 bg-surface">
+        <div className="flex gap-1.5">
+          {[1, 2, 3].map((n) => (
+            <div key={n} className={`flex-1 h-1.5 rounded-full ${n <= step ? 'bg-brand' : 'bg-line'}`} />
+          ))}
+        </div>
+      </div>
+
+      <div className="flex-1 flex flex-col px-5 pt-6 pb-32">
+        <AnimatePresence mode="wait">
+          {step === 1 && (
+            <motion.div key="s1" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} className="flex flex-col gap-4">
+              <div>
+                <h2 className="h-title text-ink">어느 공간을 청소할까요?</h2>
+                <p className="t-caption mt-1.5">공간을 선택하면 자동으로 체크리스트가 적용돼요.</p>
+              </div>
+              <div className="flex flex-col gap-2.5">
+                {spaces.map((s) => (
+                  <button
+                    key={s.id}
+                    onClick={() => setSpaceId(s.id)}
+                    className={`card-interactive p-4 flex items-center gap-3 text-left !border-2 ${spaceId === s.id ? '!border-brand bg-brand-softer' : ''}`}
+                  >
+                    <div className="w-11 h-11 rounded-xl bg-brand/10 flex items-center justify-center shrink-0">
+                      <Building2 size={18} className="text-brand-dark" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="text-[14.5px] font-extrabold text-ink truncate">{s.name}</h4>
+                      <p className="text-[11.5px] text-text-soft font-bold truncate mt-0.5">
+                        {spaceTypeLabel(s.type)} · {s.address.split(' ').slice(0, 3).join(' ')}
+                      </p>
+                    </div>
+                    {spaceId === s.id && <Check size={20} className="text-brand shrink-0" strokeWidth={3} />}
+                  </button>
+                ))}
+              </div>
+            </motion.div>
+          )}
+
+          {step === 2 && (
+            <motion.div key="s2" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} className="flex flex-col gap-5">
+              <div>
+                <h2 className="h-title text-ink">언제 청소할까요?</h2>
+                <p className="t-caption mt-1.5">지금 요청 또는 예약을 선택하세요.</p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  onClick={() => setWhen('now')}
+                  className={`rounded-2xl border-2 p-4 text-left transition ${when === 'now' ? 'border-brand bg-brand-softer' : 'border-line-soft bg-surface'}`}
+                >
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 ${when === 'now' ? 'bg-brand text-white' : 'bg-surface-muted text-text-muted'}`}>
+                    <Zap size={18} strokeWidth={2.6} />
+                  </div>
+                  <h4 className="text-[14px] font-extrabold text-ink">지금 요청</h4>
+                  <p className="text-[11.5px] text-text-soft font-bold mt-0.5">긴급 수수료 +10,000원</p>
+                </button>
+                <button
+                  onClick={() => setWhen('schedule')}
+                  className={`rounded-2xl border-2 p-4 text-left transition ${when === 'schedule' ? 'border-brand bg-brand-softer' : 'border-line-soft bg-surface'}`}
+                >
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 ${when === 'schedule' ? 'bg-brand text-white' : 'bg-surface-muted text-text-muted'}`}>
+                    <Calendar size={18} strokeWidth={2.6} />
+                  </div>
+                  <h4 className="text-[14px] font-extrabold text-ink">날짜/시간 예약</h4>
+                  <p className="text-[11.5px] text-text-soft font-bold mt-0.5">원하는 시간 지정</p>
+                </button>
+              </div>
+
+              {when === 'schedule' && (
+                <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="t-meta block mb-2 ml-1">날짜</label>
+                    <input type="date" value={scheduledDate} onChange={(e) => setScheduledDate(e.target.value)} className="input" />
+                  </div>
+                  <div>
+                    <label className="t-meta block mb-2 ml-1">시간</label>
+                    <input type="time" value={scheduledTime} onChange={(e) => setScheduledTime(e.target.value)} className="input" step={1800} />
+                  </div>
+                </motion.div>
+              )}
+
+              {when === 'schedule' && !isUrgent && (
+                <button onClick={() => setIsUrgent(true)} className="card-interactive p-3.5 flex items-center gap-3 border-line-soft">
+                  <div className="w-8 h-8 rounded-full bg-sun-soft text-[#92580C] flex items-center justify-center">
+                    <Zap size={15} strokeWidth={2.6} />
+                  </div>
+                  <div className="flex-1 text-left">
+                    <p className="text-[13px] font-extrabold text-ink">긴급 요청으로 변경</p>
+                    <p className="text-[11px] text-text-soft font-bold">+10,000원 · 마스터 작업자 우선 배정</p>
+                  </div>
+                  <ChevronRight size={16} className="text-text-faint" />
+                </button>
+              )}
+
+              {when === 'schedule' && isUrgent && (
+                <div className="card p-3.5 bg-sun-soft border border-sun/30 flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-sun text-ink flex items-center justify-center">
+                    <Zap size={15} strokeWidth={2.6} />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-[13px] font-extrabold text-ink">긴급 요청 활성화</p>
+                    <p className="text-[11px] text-ink-soft font-bold">+10,000원 · 우선 매칭</p>
+                  </div>
+                  <button onClick={() => setIsUrgent(false)} className="text-[12px] font-bold text-text-muted">해제</button>
+                </div>
+              )}
+            </motion.div>
+          )}
+
+          {step === 3 && selectedSpace && priceBreakdown && (
+            <motion.div key="s3" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} className="flex flex-col gap-5">
+              <div>
+                <h2 className="h-title text-ink">추가 옵션 · 확인</h2>
+                <p className="t-caption mt-1.5">필요한 옵션을 추가하고 가격을 확인하세요.</p>
+              </div>
+
+              <div className="card p-4 flex items-center gap-3">
+                <div className="w-11 h-11 rounded-xl bg-brand-softer flex items-center justify-center">
+                  <Sparkles size={18} className="text-brand-dark" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h4 className="text-[14.5px] font-extrabold text-ink truncate">{selectedSpace.name}</h4>
+                  <p className="text-[11.5px] text-text-soft font-bold truncate mt-0.5 flex items-center gap-1">
+                    <Clock size={11} /> {formatScheduled(scheduledAt)}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-2.5">
+                <OptionToggle label="쓰레기 다량" sublabel="+10,000원" checked={extraTrash} onChange={setExtraTrash} />
+                <OptionToggle label="심한 오염" sublabel="+15,000원" checked={heavySoil} onChange={setHeavySoil} />
+              </div>
+
+              <div>
+                <label className="t-meta mb-2 ml-1 flex items-center gap-1.5">
+                  <MessageSquare size={12} /> 특별 요청사항
+                </label>
+                <textarea
+                  value={instructions}
+                  onChange={(e) => setInstructions(e.target.value)}
+                  placeholder="예) 침대 시트 교체 부탁드려요"
+                  className="input min-h-[90px]"
+                  rows={3}
+                />
+              </div>
+
+              <div className="card p-4">
+                <h4 className="text-[13px] font-extrabold text-ink mb-3">가격 상세</h4>
+                <div className="flex flex-col gap-2">
+                  {priceBreakdown.items.map((it, i) => (
+                    <div key={i} className="flex justify-between text-[13px]">
+                      <span className={`font-semibold ${it.kind === 'sub' ? 'text-brand-dark' : 'text-text-muted'}`}>{it.label}</span>
+                      <span className={`t-money ${it.kind === 'sub' ? 'text-brand-dark' : 'text-ink'}`}>
+                        {it.kind === 'sub' ? '-' : ''}{formatKRW(Math.abs(it.amount))}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                <div className="divider" />
+                <div className="flex justify-between items-baseline">
+                  <span className="text-[13px] font-bold text-text-soft">결제 금액</span>
+                  <span className="t-money text-[22px] text-ink">{formatKRW(priceBreakdown.total)}</span>
+                </div>
+                <p className="mt-2 text-[11px] text-text-soft font-bold">
+                  작업자 정산: {formatKRW(priceBreakdown.worker_payout)} · 플랫폼 수수료: {formatKRW(priceBreakdown.platform_fee)}
+                </p>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-info-soft border border-info/15 flex items-start gap-2.5">
+                <AlertCircle size={16} className="text-info shrink-0 mt-0.5" />
+                <div className="text-[12.5px] text-ink-soft font-semibold leading-snug">
+                  요청 생성 시 결제는 에스크로로 보관됩니다. 작업 승인 후 작업자에게 정산됩니다.
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {err && <div className="mt-4 p-3 bg-danger-soft rounded-xl text-[13px] font-bold text-danger">{err}</div>}
+      </div>
+
+      <div className="fixed bottom-0 inset-x-0 border-t border-line-soft bg-surface/95 backdrop-blur safe-bottom">
+        <div className="max-w-[480px] mx-auto px-5 py-3.5">
+          {step === 3 && priceBreakdown && (
+            <div className="flex items-baseline justify-between mb-2.5 px-1">
+              <span className="text-[12px] font-bold text-text-soft">결제 예정</span>
+              <span className="t-money text-[18px] text-ink">{formatKRW(priceBreakdown.total)}</span>
+            </div>
+          )}
+          <button
+            onClick={step === 3 ? handleSubmit : () => setStep((s) => (s + 1) as StepId)}
+            disabled={!canProceed || loading}
+            className="btn btn-primary w-full"
+          >
+            {loading ? (
+              <Loader2 size={20} className="animate-spin" />
+            ) : step === 3 ? (
+              <>결제 및 요청 보내기 <ChevronRight size={20} /></>
+            ) : (
+              <>다음 <ChevronRight size={20} /></>
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function OptionToggle({ label, sublabel, checked, onChange }: { label: string; sublabel: string; checked: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <button
+      onClick={() => onChange(!checked)}
+      className={`rounded-2xl border-2 p-4 flex items-center gap-3 text-left transition ${checked ? 'border-brand bg-brand-softer' : 'border-line-soft bg-surface'}`}
+    >
+      <div className={`w-6 h-6 rounded-md flex items-center justify-center shrink-0 ${checked ? 'bg-brand text-white' : 'bg-surface-muted'}`}>
+        {checked && <Check size={15} strokeWidth={3} />}
+      </div>
+      <div className="flex-1">
+        <p className="text-[14px] font-extrabold text-ink">{label}</p>
+      </div>
+      <span className="text-[13px] font-bold text-brand-dark">{sublabel}</span>
+    </button>
+  )
 }

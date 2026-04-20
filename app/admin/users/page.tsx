@@ -1,65 +1,80 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import { isPlatformAdmin } from '@/lib/admin'
+import { Star, BadgeCheck } from 'lucide-react'
+import { maskName, timeAgo } from '@/lib/utils'
 
 export default async function AdminUsersPage() {
-    const supabase = await createClient()
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/')
+  const { data: me } = await supabase.from('users').select('email, role').eq('id', user.id).single()
+  if (!isPlatformAdmin(me?.email, me?.role)) redirect('/')
 
-    // 최신 가입자 순으로 전체 유저 조회
-    const { data: users } = await supabase
-        .from('users')
-        .select('*')
-        .order('created_at', { ascending: false })
+  const { data: users } = await supabase
+    .from('users')
+    .select('id, name, email, phone, role, tier, total_jobs, avg_rating, is_verified, is_active, created_at')
+    .order('created_at', { ascending: false })
+    .limit(200)
 
-    return (
-        <div>
-            <h1 style={{ fontSize: 28, fontWeight: 800, marginBottom: 32 }}>가입자 관리</h1>
-            <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #E2E8F0', overflow: 'hidden' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: 14 }}>
-                    <thead style={{ background: '#F8FAFC', borderBottom: '1px solid #E2E8F0' }}>
-                        <tr>
-                            <th style={{ padding: '16px 20px', fontWeight: 600, color: '#475569' }}>이름</th>
-                            <th style={{ padding: '16px 20px', fontWeight: 600, color: '#475569' }}>이메일</th>
-                            <th style={{ padding: '16px 20px', fontWeight: 600, color: '#475569' }}>역할</th>
-                            <th style={{ padding: '16px 20px', fontWeight: 600, color: '#475569' }}>연락처</th>
-                            <th style={{ padding: '16px 20px', fontWeight: 600, color: '#475569' }}>스파클 온도</th>
-                            <th style={{ padding: '16px 20px', fontWeight: 600, color: '#475569' }}>가입일</th>
-                            <th style={{ padding: '16px 20px', fontWeight: 600, color: '#475569', textAlign: 'center' }}>상태/관리</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {users?.map(user => (
-                            <tr key={user.id} style={{ borderBottom: '1px solid #F1F5F9' }}>
-                                <td style={{ padding: '16px 20px', fontWeight: 500 }}>
-                                    {user.name}
-                                    {user.is_admin && <span style={{ marginLeft: 8, background: '#DC2626', color: '#fff', padding: '2px 6px', borderRadius: 4, fontSize: 11, fontWeight: 600 }}>ADMIN</span>}
-                                </td>
-                                <td style={{ padding: '16px 20px', color: '#64748B' }}>{user.email}</td>
-                                <td style={{ padding: '16px 20px' }}>
-                                    <span style={{
-                                        background: user.role === 'operator' ? '#E0F2FE' : '#D1FAE5',
-                                        color: user.role === 'operator' ? '#0369A1' : '#059669',
-                                        padding: '4px 8px', borderRadius: 12, fontSize: 12, fontWeight: 600, display: 'inline-block'
-                                    }}>
-                                        {user.role === 'operator' ? '공간 파트너' : '클린 파트너'}
-                                    </span>
-                                </td>
-                                <td style={{ padding: '16px 20px', color: '#64748B' }}>{user.phone || '-'}</td>
-                                <td style={{ padding: '16px 20px', color: '#E11D48', fontWeight: 800 }}>{user.sparkle_score ? `${user.sparkle_score.toFixed(1)}점` : '-'}</td>
-                                <td style={{ padding: '16px 20px', color: '#64748B' }}>{new Date(user.created_at).toLocaleDateString('ko-KR')}</td>
-                                <td style={{ padding: '16px 20px', textAlign: 'center' }}>
-                                    {/* TODO: 계정 정지 기능은 API 확장 시 추가 */}
-                                    <button style={{ background: '#F1F5F9', border: '1px solid #CBD5E1', padding: '6px 12px', borderRadius: 6, fontSize: 12, fontWeight: 600, color: '#475569', cursor: 'pointer' }}>
-                                        상세
-                                    </button>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-                {(!users || users.length === 0) && (
-                    <div style={{ textAlign: 'center', padding: 40, color: '#94A3B8' }}>가입자가 없습니다.</div>
-                )}
-            </div>
+  return (
+    <div>
+      <div className="mb-6">
+        <h1 className="h-hero text-ink">가입자 관리</h1>
+        <p className="t-caption mt-1">최근 가입 순 200명. 티어 · 검증 · 평점 기준으로 관리하세요.</p>
+      </div>
+
+      <div className="card overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left">
+            <thead className="bg-surface-muted text-[11px] font-black text-text-soft uppercase tracking-wider">
+              <tr>
+                <th className="px-4 py-3">이름</th>
+                <th className="px-4 py-3">역할</th>
+                <th className="px-4 py-3">티어</th>
+                <th className="px-4 py-3">작업수</th>
+                <th className="px-4 py-3">평점</th>
+                <th className="px-4 py-3">가입일</th>
+                <th className="px-4 py-3">상태</th>
+              </tr>
+            </thead>
+            <tbody className="text-[13px]">
+              {(users || []).map((u: any) => (
+                <tr key={u.id} className="border-t border-line-soft hover:bg-surface-muted">
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-2">
+                      <span className="font-extrabold text-ink">{maskName(u.name || '무명')}</span>
+                      {u.is_verified && <BadgeCheck size={14} className="text-brand-dark" />}
+                    </div>
+                    <div className="text-[11px] text-text-faint">{u.email || u.phone}</div>
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className={`chip ${u.role === 'worker' ? 'chip-info' : u.role === 'admin' ? 'chip-danger' : 'chip-brand'} !text-[10px]`}>
+                      {u.role === 'operator' ? '파트너' : u.role === 'worker' ? '작업자' : u.role === 'admin' ? 'Admin' : '미정'}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3"><span className="chip chip-muted !text-[10px]">{u.tier || 'STARTER'}</span></td>
+                  <td className="px-4 py-3 font-bold text-ink">{u.total_jobs ?? 0}</td>
+                  <td className="px-4 py-3">
+                    <span className="inline-flex items-center gap-0.5 font-bold text-ink">
+                      <Star size={12} className="text-sun" fill="currentColor" />
+                      {(u.avg_rating ?? 0).toFixed(1)}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-text-soft">{timeAgo(u.created_at)}</td>
+                  <td className="px-4 py-3">
+                    {u.is_active ? (
+                      <span className="chip chip-success !text-[10px]">활성</span>
+                    ) : (
+                      <span className="chip chip-muted !text-[10px]">비활성</span>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
-    )
+      </div>
+    </div>
+  )
 }

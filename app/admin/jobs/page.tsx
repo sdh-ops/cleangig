@@ -1,85 +1,95 @@
 import { createClient } from '@/lib/supabase/server'
+import { redirect } from 'next/navigation'
+import { isPlatformAdmin } from '@/lib/admin'
 import Link from 'next/link'
+import StatusChip from '@/components/common/StatusChip'
+import { formatKRW, formatScheduled } from '@/lib/utils'
+import type { JobStatus } from '@/lib/types'
 
-export default async function AdminJobsPage() {
-    const supabase = await createClient()
+export default async function AdminJobsPage({ searchParams }: { searchParams?: Promise<{ status?: string }> }) {
+  const sp = (await searchParams) || {}
+  const statusFilter = sp.status || 'all'
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/')
+  const { data: me } = await supabase.from('users').select('email, role').eq('id', user.id).single()
+  if (!isPlatformAdmin(me?.email, me?.role)) redirect('/')
 
-    // 청소요청 목록 (요청일 기준 내림차순 정렬)
-    const { data: jobs } = await supabase
-        .from('jobs')
-        .select(`
-            id, status, price, scheduled_at, created_at,
-            spaces (name, address),
-            operator:users!jobs_operator_id_fkey (id, name),
-            worker:users!jobs_worker_id_fkey (id, name)
-        `)
-        .order('created_at', { ascending: false })
+  let query = supabase
+    .from('jobs')
+    .select('id, status, price, scheduled_at, is_urgent, spaces(name), operator:operator_id(name), worker:worker_id(name)')
+    .order('created_at', { ascending: false })
+    .limit(200)
 
-    const STATUS_MAP: Record<string, { label: string; color: string; bg: string }> = {
-        OPEN: { label: '모집중', color: '#0369A1', bg: '#E0F2FE' },
-        ASSIGNED: { label: '배정됨', color: '#5B21B6', bg: '#EDE9FE' },
-        EN_ROUTE: { label: '이동중', color: '#5B21B6', bg: '#EDE9FE' },
-        ARRIVED: { label: '도착', color: '#5B21B6', bg: '#EDE9FE' },
-        IN_PROGRESS: { label: '진행중', color: '#B45309', bg: '#FEF3C7' },
-        SUBMITTED: { label: '검수대기', color: '#0F766E', bg: '#CCFBF1' },
-        APPROVED: { label: '승인됨', color: '#15803D', bg: '#DCFCE7' },
-        DISPUTED: { label: '분쟁중', color: '#BE123C', bg: '#FFE4E6' },
-        PAID_OUT: { label: '정산완료', color: '#15803D', bg: '#DCFCE7' },
-        CANCELED: { label: '취소', color: '#334155', bg: '#F1F5F9' },
-    }
+  if (statusFilter !== 'all') query = query.eq('status', statusFilter as JobStatus)
 
-    return (
-        <div>
-            <h1 style={{ fontSize: 28, fontWeight: 800, marginBottom: 32 }}>전체 청소 의뢰 현황</h1>
-            <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #E2E8F0', overflow: 'hidden' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: 14 }}>
-                    <thead style={{ background: '#F8FAFC', borderBottom: '1px solid #E2E8F0' }}>
-                        <tr>
-                            <th style={{ padding: '16px 20px', fontWeight: 600, color: '#475569' }}>의뢰 공간</th>
-                            <th style={{ padding: '16px 20px', fontWeight: 600, color: '#475569' }}>공간 파트너</th>
-                            <th style={{ padding: '16px 20px', fontWeight: 600, color: '#475569' }}>클린 파트너</th>
-                            <th style={{ padding: '16px 20px', fontWeight: 600, color: '#475569' }}>상태</th>
-                            <th style={{ padding: '16px 20px', fontWeight: 600, color: '#475569' }}>청소 예정일시</th>
-                            <th style={{ padding: '16px 20px', fontWeight: 600, color: '#475569' }}>금액</th>
-                            <th style={{ padding: '16px 20px', fontWeight: 600, color: '#475569', textAlign: 'center' }}>상세 보기</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {jobs?.map((job: any) => {
-                            const st = STATUS_MAP[job.status] || { label: job.status, color: '#000', bg: '#eee' }
-                            return (
-                                <tr key={job.id} style={{ borderBottom: '1px solid #F1F5F9' }}>
-                                    <td style={{ padding: '16px 20px' }}>
-                                        <div style={{ fontWeight: 600, color: '#0F172A', marginBottom: 2 }}>{job.spaces?.name}</div>
-                                        <div style={{ fontSize: 12, color: '#64748B' }}>{job.spaces?.address}</div>
-                                    </td>
-                                    <td style={{ padding: '16px 20px', color: '#475569' }}>{job.operator?.name || '-'}</td>
-                                    <td style={{ padding: '16px 20px', color: '#475569' }}>{job.worker?.name || '-'}</td>
-                                    <td style={{ padding: '16px 20px' }}>
-                                        <span style={{ background: st.bg, color: st.color, padding: '4px 8px', borderRadius: 12, fontSize: 12, fontWeight: 700 }}>
-                                            {st.label}
-                                        </span>
-                                    </td>
-                                    <td style={{ padding: '16px 20px', color: '#64748B' }}>
-                                        {new Date(job.scheduled_at).toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                                    </td>
-                                    <td style={{ padding: '16px 20px', fontWeight: 700, color: '#0F172A' }}>
-                                        ₩{job.price.toLocaleString()}
-                                    </td>
-                                    <td style={{ padding: '16px 20px', textAlign: 'center' }}>
-                                        <Link href={`/requests/${job.id}`} style={{ textDecoration: 'none', background: '#F8FAFC', border: '1px solid #E2E8F0', padding: '6px 12px', borderRadius: 6, fontSize: 12, fontWeight: 600, color: '#3B82F6', display: 'inline-block' }}>
-                                            조회
-                                        </Link>
-                                    </td>
-                                </tr>
-                            )
-                        })}
-                    </tbody>
-                </table>
-                {(!jobs || jobs.length === 0) && (
-                    <div style={{ textAlign: 'center', padding: 40, color: '#94A3B8' }}>생성된 청소 의뢰가 없습니다.</div>
-                )}
-            </div>
+  const { data: jobs } = await query
+
+  const filters: { key: string; label: string }[] = [
+    { key: 'all', label: '전체' },
+    { key: 'OPEN', label: '매칭 대기' },
+    { key: 'ASSIGNED', label: '배정' },
+    { key: 'IN_PROGRESS', label: '진행' },
+    { key: 'SUBMITTED', label: '검수 대기' },
+    { key: 'APPROVED', label: '승인' },
+    { key: 'DISPUTED', label: '분쟁' },
+    { key: 'CANCELED', label: '취소' },
+  ]
+
+  return (
+    <div>
+      <div className="mb-6">
+        <h1 className="h-hero text-ink">청소 요청 관리</h1>
+        <p className="t-caption mt-1">모든 작업을 모니터링하고 조치하세요.</p>
+      </div>
+
+      <div className="flex items-center gap-2 mb-4 overflow-x-auto no-scrollbar -mx-1 px-1">
+        {filters.map((f) => (
+          <Link
+            key={f.key}
+            href={`/admin/jobs?status=${f.key}`}
+            className={`shrink-0 chip ${statusFilter === f.key ? 'chip-brand' : 'chip-muted'} !px-3.5 !py-1.5`}
+          >
+            {f.label}
+          </Link>
+        ))}
+      </div>
+
+      <div className="card overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left">
+            <thead className="bg-surface-muted text-[11px] font-black text-text-soft uppercase tracking-wider">
+              <tr>
+                <th className="px-4 py-3">공간</th>
+                <th className="px-4 py-3">파트너</th>
+                <th className="px-4 py-3">작업자</th>
+                <th className="px-4 py-3">예정</th>
+                <th className="px-4 py-3">가격</th>
+                <th className="px-4 py-3">상태</th>
+              </tr>
+            </thead>
+            <tbody className="text-[13px]">
+              {(jobs || []).map((j: any) => (
+                <tr key={j.id} className="border-t border-line-soft hover:bg-surface-muted">
+                  <td className="px-4 py-3">
+                    <Link href={`/requests/${j.id}`} className="font-extrabold text-ink hover:text-brand-dark">
+                      {j.spaces?.name || '(공간 없음)'}
+                    </Link>
+                    {j.is_urgent && <span className="ml-2 chip chip-danger !text-[10px]">긴급</span>}
+                  </td>
+                  <td className="px-4 py-3 text-text-soft font-bold">{j.operator?.name || '-'}</td>
+                  <td className="px-4 py-3 text-text-soft font-bold">{j.worker?.name || '미배정'}</td>
+                  <td className="px-4 py-3 text-text-soft font-bold">{formatScheduled(j.scheduled_at)}</td>
+                  <td className="px-4 py-3 font-extrabold text-ink t-money">{formatKRW(j.price, { short: true })}</td>
+                  <td className="px-4 py-3">
+                    <StatusChip kind="job" status={j.status as JobStatus} size="sm" />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
-    )
+      </div>
+    </div>
+  )
 }
