@@ -14,6 +14,8 @@ export interface User {
     phone?: string
     name: string
     role: UserRole
+    can_operate?: boolean
+    can_work?: boolean
     profile_image?: string
     tier?: WorkerTier
     total_jobs?: number

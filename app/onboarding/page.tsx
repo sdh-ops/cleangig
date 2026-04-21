@@ -70,6 +70,8 @@ export default function OnboardingPage() {
         name: name.trim(),
         phone: phone.trim(),
         role: selectedRole,
+        can_operate: selectedRole === 'operator',
+        can_work: selectedRole === 'worker',
         business_name: selectedRole === 'operator' ? businessName.trim() || null : null,
         is_active: true,
         is_verified: false,

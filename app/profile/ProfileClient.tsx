@@ -18,6 +18,7 @@ import {
 } from 'lucide-react'
 import Header from '@/components/common/Header'
 import BottomNav from '@/components/common/BottomNav'
+import RoleSwitcher from '@/components/common/RoleSwitcher'
 import { TIER_BENEFITS } from '@/lib/matching'
 import { maskName } from '@/lib/utils'
 
@@ -27,6 +28,8 @@ type Profile = {
   name: string
   phone?: string
   role: 'operator' | 'worker' | 'admin'
+  can_operate?: boolean
+  can_work?: boolean
   profile_image?: string | null
   tier?: 'STARTER' | 'SILVER' | 'GOLD' | 'MASTER'
   total_jobs?: number
@@ -104,6 +107,13 @@ export default function ProfileClient({ profile, totalCompletedJobs }: Props) {
         </div>
 
         <div className="px-5 pt-5 flex flex-col gap-4">
+          <RoleSwitcher
+            userId={profile.id}
+            currentRole={profile.role}
+            canOperate={profile.can_operate}
+            canWork={profile.can_work}
+          />
+
           <section className="card overflow-hidden">
             <h3 className="px-4 pt-4 pb-2 text-[12px] font-black text-text-faint uppercase tracking-wide">기본 정보</h3>
             <RowLink
