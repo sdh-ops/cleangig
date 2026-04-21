@@ -1,7 +1,8 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { Wallet, Clock, TrendingUp, Banknote, CheckCircle2 } from 'lucide-react'
+import Link from 'next/link'
+import { Wallet, Clock, TrendingUp, Banknote, CheckCircle2, Receipt, Info } from 'lucide-react'
 import Header from '@/components/common/Header'
 import BottomNav from '@/components/common/BottomNav'
 import EmptyState from '@/components/common/EmptyState'
@@ -12,7 +13,11 @@ type Payment = {
   id: string
   status: PaymentStatus
   worker_payout: number
-  platform_fee: number
+  platform_fee?: number
+  host_fee?: number
+  worker_fee?: number
+  withholding_tax?: number
+  worker_tax_type?: string
   created_at: string
   escrow_released_at?: string
   jobs?: { id: string; scheduled_at: string; spaces?: { name: string } }
@@ -24,9 +29,10 @@ type Props = {
   totalEarned: number
   pendingAmount: number
   monthEarned: number
+  ytdWht?: number
 }
 
-export default function EarningsClient({ profile, payments, totalEarned, pendingAmount, monthEarned }: Props) {
+export default function EarningsClient({ profile, payments, totalEarned, pendingAmount, monthEarned, ytdWht = 0 }: Props) {
   return (
     <div className="sseuksak-shell">
       <Header title="수익 관리" />
@@ -44,6 +50,20 @@ export default function EarningsClient({ profile, payments, totalEarned, pending
               </div>
             </div>
           </motion.div>
+
+          {/* YTD withholding tax + tax setting entry */}
+          <div className="mt-3 card p-4 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-info-soft text-info flex items-center justify-center shrink-0">
+              <Receipt size={16} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[12px] font-bold text-text-soft">올해 원천징수 누계</p>
+              <p className="t-money text-[16px] text-ink mt-0.5">{formatKRW(ytdWht)}</p>
+            </div>
+            <Link href="/profile/tax" className="text-[12px] font-black text-brand-dark flex items-center gap-0.5">
+              세금 유형 <Info size={12} />
+            </Link>
+          </div>
         </div>
 
         <div className="px-5 pt-5">
@@ -88,7 +108,15 @@ export default function EarningsClient({ profile, payments, totalEarned, pending
                     </div>
                     <div className="text-right shrink-0">
                       <div className="t-money text-[15px] text-ink">+{formatKRW(p.worker_payout)}</div>
-                      <p className="text-[10.5px] font-bold text-text-faint mt-0.5">수수료 −{formatKRW(p.platform_fee)}</p>
+                      {(p.withholding_tax ?? 0) > 0 ? (
+                        <p className="text-[10.5px] font-bold text-text-faint mt-0.5">
+                          수수료 −{formatKRW((p.worker_fee || 0) + (p.host_fee || 0) || (p.platform_fee || 0))} · 원천징수 −{formatKRW(p.withholding_tax || 0)}
+                        </p>
+                      ) : (
+                        <p className="text-[10.5px] font-bold text-text-faint mt-0.5">
+                          수수료 −{formatKRW((p.worker_fee || 0) + (p.host_fee || 0) || (p.platform_fee || 0))}
+                        </p>
+                      )}
                     </div>
                   </div>
                 </li>

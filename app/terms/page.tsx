@@ -1,4 +1,5 @@
 import Header from '@/components/common/Header'
+import LegalFooter from '@/components/common/LegalFooter'
 
 export const metadata = { title: '이용약관' }
 
@@ -81,6 +82,7 @@ export default function TermsPage() {
           </p>
         </article>
       </div>
+      <LegalFooter />
     </div>
   )
 }

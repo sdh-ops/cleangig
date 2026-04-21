@@ -12,7 +12,7 @@ export default async function EarningsPage() {
 
   const { data: payments } = await supabase
     .from('payments')
-    .select('id, status, worker_payout, platform_fee, created_at, escrow_released_at, jobs(id, scheduled_at, spaces(name))')
+    .select('id, status, worker_payout, platform_fee, worker_fee, host_fee, withholding_tax, worker_tax_type, created_at, escrow_released_at, jobs(id, scheduled_at, spaces(name))')
     .eq('worker_id', user.id)
     .order('created_at', { ascending: false })
     .limit(50)
@@ -24,6 +24,10 @@ export default async function EarningsPage() {
   const monthEarned = list
     .filter((p) => p.status === 'RELEASED' && new Date(p.created_at) >= monthStart)
     .reduce((s, p) => s + (p.worker_payout || 0), 0)
+  const yearStart = new Date(new Date().getFullYear(), 0, 1)
+  const ytdWht = list
+    .filter((p) => p.status === 'RELEASED' && new Date(p.created_at) >= yearStart)
+    .reduce((s, p) => s + (p.withholding_tax || 0), 0)
 
   return (
     <EarningsClient
@@ -32,6 +36,7 @@ export default async function EarningsPage() {
       totalEarned={totalEarned}
       pendingAmount={pendingAmount}
       monthEarned={monthEarned}
+      ytdWht={ytdWht}
     />
   )
 }

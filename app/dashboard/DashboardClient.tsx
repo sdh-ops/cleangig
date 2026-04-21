@@ -19,6 +19,7 @@ import StatusChip from '@/components/common/StatusChip'
 import EmptyState from '@/components/common/EmptyState'
 import MetricCard from '@/components/common/MetricCard'
 import PullToRefresh from '@/components/common/PullToRefresh'
+import SetupChecklist from '@/components/common/SetupChecklist'
 import { formatKRW, formatScheduled, spaceTypeLabel } from '@/lib/utils'
 import type { JobStatus, SpaceType } from '@/lib/types'
 
@@ -28,6 +29,9 @@ type Profile = {
   business_name?: string | null
   profile_image?: string | null
   avg_rating?: number | null
+  is_verified?: boolean
+  tax_type?: string | null
+  phone?: string | null
 }
 
 type Job = {
@@ -97,6 +101,20 @@ export default function DashboardClient({
             <span className="text-text-faint text-xl font-extrabold">님</span>
           </h1>
         </motion.section>
+
+        {/* Setup checklist */}
+        <div className="mb-5">
+          <SetupChecklist
+            storageKey="sseuksak:host_setup_dismissed"
+            title="공간 파트너 설정을 완료해보세요"
+            items={[
+              { key: 'profile', label: '이름 · 연락처 등록', href: '/profile/edit', done: !!profile.name && !!profile.phone },
+              { key: 'verify', label: '본인 인증', href: '/profile/verification', done: !!profile.is_verified, badge: '중요' },
+              { key: 'space', label: '첫 공간 등록', href: '/spaces/create', done: spaces.length > 0 },
+              { key: 'tax', label: '사업자 정보 등록 (선택)', href: '/profile/tax', done: !!profile.tax_type },
+            ]}
+          />
+        </div>
 
         <motion.section
           initial={{ opacity: 0, y: 8 }}

@@ -35,13 +35,14 @@ const TYPE_OPTIONS: { value: SpaceType; icon: string }[] = [
   { value: 'other', icon: '📦' },
 ]
 
-type StepId = 1 | 2 | 3 | 4 | 5
+type StepId = 1 | 2 | 3 | 4 | 5 | 6
 const STEPS: { id: StepId; title: string }[] = [
   { id: 1, title: '공간 유형' },
   { id: 2, title: '위치' },
   { id: 3, title: '기본 정보' },
   { id: 4, title: '청소 안내' },
   { id: 5, title: '체크리스트' },
+  { id: 6, title: '사업자 정보' },
 ]
 
 export default function CreateSpacePage() {
@@ -75,6 +76,14 @@ export default function CreateSpacePage() {
   const [checklist, setChecklist] = useState<{ id: string; label: string; required: boolean }[]>([])
   const [newItem, setNewItem] = useState('')
 
+  // Biz info (per-space)
+  const [bizTypeSel, setBizTypeSel] = useState<'INDIVIDUAL' | 'BUSINESS'>('INDIVIDUAL')
+  const [bizRegNumber, setBizRegNumber] = useState('')
+  const [bizEmail, setBizEmail] = useState('')
+  const [bizRegImage, setBizRegImage] = useState<string[]>([])
+  const [vatType, setVatType] = useState<'GENERAL' | 'SIMPLE' | 'EXEMPT'>('SIMPLE')
+  const [taxInvoiceRequired, setTaxInvoiceRequired] = useState(false)
+
   useEffect(() => {
     if (type) {
       setBasePrice(BASE_PRICE_BY_TYPE[type] ?? 30000)
@@ -101,12 +110,18 @@ export default function CreateSpacePage() {
     if (step === 3) return !!name.trim()
     if (step === 4) return true
     if (step === 5) return checklist.length > 0
+    if (step === 6) {
+      if (bizTypeSel === 'BUSINESS') {
+        return /^\d{10}$/.test(bizRegNumber.replace(/-/g, ''))
+      }
+      return true
+    }
     return false
   })()
 
   const handleNext = () => {
     if (!canProceed) return
-    if (step === 5) return handleSubmit()
+    if (step === 6) return handleSubmit()
     setStep((s) => (s + 1) as StepId)
   }
 
@@ -141,6 +156,12 @@ export default function CreateSpacePage() {
         checklist_template: checklist.map((c) => ({ ...c, completed: false })),
         photos,
         reference_photos: referencePhotos,
+        biz_type: bizTypeSel,
+        biz_reg_number: bizTypeSel === 'BUSINESS' ? bizRegNumber.replace(/-/g, '') : null,
+        biz_email: bizEmail.trim() || null,
+        biz_reg_image: bizRegImage[0] || null,
+        vat_type: bizTypeSel === 'BUSINESS' ? vatType : 'EXEMPT',
+        tax_invoice_required: bizTypeSel === 'BUSINESS' ? taxInvoiceRequired : false,
         is_active: true,
       }
 
@@ -470,6 +491,102 @@ export default function CreateSpacePage() {
               </div>
             </motion.div>
           )}
+
+          {step === 6 && (
+            <motion.div key="s6" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} className="flex flex-col gap-5">
+              <div>
+                <h2 className="h-title text-ink">사업자 정보</h2>
+                <p className="t-caption mt-1.5">세금계산서·현금영수증 발행 시 필요합니다. 사업자가 아니어도 OK.</p>
+              </div>
+
+              <div>
+                <label className="t-meta block mb-2 ml-1">이 공간의 운영 형태 *</label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => setBizTypeSel('INDIVIDUAL')}
+                    className={`rounded-2xl border-2 p-4 text-left transition ${bizTypeSel === 'INDIVIDUAL' ? 'border-brand bg-brand-softer' : 'border-line-soft'}`}
+                  >
+                    <p className="text-[14px] font-extrabold text-ink">개인 운영</p>
+                    <p className="text-[11px] text-text-soft font-bold mt-0.5">비사업자 · 현금영수증만</p>
+                  </button>
+                  <button
+                    onClick={() => setBizTypeSel('BUSINESS')}
+                    className={`rounded-2xl border-2 p-4 text-left transition ${bizTypeSel === 'BUSINESS' ? 'border-brand bg-brand-softer' : 'border-line-soft'}`}
+                  >
+                    <p className="text-[14px] font-extrabold text-ink">사업자 운영</p>
+                    <p className="text-[11px] text-text-soft font-bold mt-0.5">세금계산서 발행 가능</p>
+                  </button>
+                </div>
+              </div>
+
+              {bizTypeSel === 'BUSINESS' && (
+                <>
+                  <div>
+                    <label className="t-meta block mb-2 ml-1">사업자등록번호 *</label>
+                    <input
+                      value={bizRegNumber}
+                      onChange={(e) => setBizRegNumber(e.target.value.replace(/[^0-9-]/g, ''))}
+                      placeholder="000-00-00000"
+                      className="input"
+                      inputMode="numeric"
+                      maxLength={12}
+                    />
+                  </div>
+                  <div>
+                    <label className="t-meta block mb-2 ml-1">과세 구분</label>
+                    <div className="grid grid-cols-3 gap-2">
+                      {(['GENERAL', 'SIMPLE', 'EXEMPT'] as const).map((t) => (
+                        <button
+                          key={t}
+                          onClick={() => setVatType(t)}
+                          className={`chip !text-[11.5px] !px-2 !py-2 ${vatType === t ? 'chip-brand' : 'chip-muted'}`}
+                        >
+                          {t === 'GENERAL' ? '일반과세' : t === 'SIMPLE' ? '간이과세' : '면세'}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="t-meta block mb-2 ml-1">세금계산서 수신 이메일</label>
+                    <input
+                      type="email"
+                      value={bizEmail}
+                      onChange={(e) => setBizEmail(e.target.value)}
+                      placeholder="tax@example.com"
+                      className="input"
+                    />
+                  </div>
+                  <label className="flex items-start gap-2.5 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={taxInvoiceRequired}
+                      onChange={(e) => setTaxInvoiceRequired(e.target.checked)}
+                      className="mt-1 w-4 h-4 accent-[#00C896]"
+                    />
+                    <span className="text-[12.5px] font-semibold text-ink-soft leading-snug">
+                      거래 시 <b>세금계산서 자동 발행</b> 요청
+                    </span>
+                  </label>
+                  <ImageUploader
+                    bucket="docs"
+                    folder="biz"
+                    value={bizRegImage}
+                    onChange={setBizRegImage}
+                    max={1}
+                    label="사업자등록증 사본 (권장)"
+                    hint="과세/면세 구분 및 세무 처리 시 활용됩니다."
+                  />
+                </>
+              )}
+
+              <div className="p-4 rounded-2xl bg-info-soft border border-info/15 flex items-start gap-2.5">
+                <Info size={16} className="text-info shrink-0 mt-0.5" />
+                <div className="text-[12.5px] text-ink-soft font-semibold leading-snug">
+                  입력한 정보는 결제·정산 시 자동 적용되며, 세무 처리 외에는 사용되지 않습니다.
+                </div>
+              </div>
+            </motion.div>
+          )}
         </AnimatePresence>
 
         {err && <div className="mt-4 p-3 bg-danger-soft rounded-xl text-[13px] font-bold text-danger">{err}</div>}
@@ -480,7 +597,7 @@ export default function CreateSpacePage() {
           <button onClick={handleNext} disabled={!canProceed || loading} className="btn btn-primary w-full">
             {loading ? (
               <Loader2 size={20} className="animate-spin" />
-            ) : step === 5 ? (
+            ) : step === 6 ? (
               <>공간 등록 완료 <Check size={20} /></>
             ) : (
               <>다음 <ChevronRight size={20} /></>

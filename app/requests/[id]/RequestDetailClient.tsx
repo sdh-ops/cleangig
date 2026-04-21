@@ -34,8 +34,14 @@ type JobFull = {
   special_instructions?: string
   price_breakdown?: {
     total: number
-    platform_fee: number
-    worker_payout: number
+    host_fee?: number
+    worker_fee?: number
+    platform_revenue?: number
+    estimated_withholding?: number
+    estimated_worker_payout?: number
+    worker_payout_if_business?: number
+    platform_fee?: number
+    worker_payout?: number
     items?: { label: string; amount: number; kind: string }[]
   }
   checklist?: { id: string; label: string; required?: boolean; completed?: boolean; photo_url?: string }[]
@@ -285,9 +291,27 @@ export default function RequestDetailClient({ job, userId, initialIsFavorite = f
                 ))}
                 <div className="divider" />
                 <div className="flex justify-between items-baseline">
-                  <span className="text-[13px] font-bold text-text-soft">총 결제</span>
+                  <span className="text-[13px] font-bold text-text-soft">총 결제 (VAT 포함)</span>
                   <span className="t-money text-[18px] text-ink">{formatKRW(job.price_breakdown.total)}</span>
                 </div>
+                {(job.price_breakdown.host_fee !== undefined || job.price_breakdown.worker_fee !== undefined) && (
+                  <div className="mt-3 pt-3 border-t border-line-soft text-[11.5px] text-text-soft font-bold space-y-1">
+                    <div className="flex justify-between">
+                      <span>플랫폼 호스트 수수료</span>
+                      <span>{formatKRW(job.price_breakdown.host_fee || 0)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>플랫폼 워커 수수료</span>
+                      <span>{formatKRW(job.price_breakdown.worker_fee || 0)}</span>
+                    </div>
+                    {job.price_breakdown.estimated_worker_payout !== undefined && (
+                      <div className="flex justify-between text-brand-dark">
+                        <span>워커 정산액 (세금 전)</span>
+                        <span>{formatKRW(job.price_breakdown.worker_payout_if_business || 0)}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           )}

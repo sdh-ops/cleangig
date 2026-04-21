@@ -7,6 +7,8 @@ export type JobStatus =
 export type WorkerTier = 'STARTER' | 'SILVER' | 'GOLD' | 'MASTER'
 export type PaymentStatus = 'PENDING' | 'HELD' | 'RELEASED' | 'REFUNDED' | 'FAILED'
 export type DisputeStatus = 'OPEN' | 'AUTO_RESOLVED' | 'ESCALATED' | 'RESOLVED' | 'CLOSED'
+export type TaxType = 'FREELANCER' | 'INDIVIDUAL_BUSINESS' | 'BUSINESS'
+export type VatType = 'GENERAL' | 'SIMPLE' | 'EXEMPT'
 
 export interface User {
     id: string
@@ -24,6 +26,21 @@ export interface User {
     bio?: string
     bank_account?: { bank_name: string; account_number: string; account_holder: string }
     business_name?: string
+    tax_type?: TaxType
+    biz_reg_number?: string
+    biz_reg_image?: string
+    biz_email?: string
+    biz_name?: string
+    biz_holder?: string
+    biz_type?: string
+    biz_category?: string
+    biz_vat_type?: VatType
+    resident_id_last?: string
+    age_verified?: boolean
+    terms_agreed_at?: string
+    privacy_agreed_at?: string
+    location_agreed_at?: string
+    marketing_agreed_at?: string
     is_active: boolean
     is_verified: boolean
     preferences?: Record<string, unknown>

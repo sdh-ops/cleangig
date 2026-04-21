@@ -20,6 +20,7 @@ import BottomNav from '@/components/common/BottomNav'
 import StatusChip from '@/components/common/StatusChip'
 import EmptyState from '@/components/common/EmptyState'
 import PullToRefresh from '@/components/common/PullToRefresh'
+import SetupChecklist from '@/components/common/SetupChecklist'
 import { formatKRW, formatScheduled, spaceTypeLabel, maskAddress } from '@/lib/utils'
 import { TIER_BENEFITS } from '@/lib/matching'
 import type { JobStatus, SpaceType } from '@/lib/types'
@@ -27,11 +28,15 @@ import type { JobStatus, SpaceType } from '@/lib/types'
 type Profile = {
   id: string
   name: string
+  phone?: string | null
   avg_rating?: number
   tier?: 'STARTER' | 'SILVER' | 'GOLD' | 'MASTER'
   total_jobs?: number
   sparkle_score?: number
   profile_image?: string | null
+  is_verified?: boolean
+  bank_account?: { bank_name?: string; account_number?: string; account_holder?: string } | null
+  tax_type?: string | null
 }
 
 type Job = {
@@ -101,6 +106,20 @@ export default function CleanMainClient({ profile, activeJob, openJobs, weekEarn
             </Link>
           </div>
         </motion.section>
+
+        {/* Setup checklist */}
+        <div className="mb-5">
+          <SetupChecklist
+            storageKey="sseuksak:worker_setup_dismissed"
+            title="클린 파트너 시작 준비"
+            items={[
+              { key: 'profile', label: '이름 · 연락처 등록', href: '/profile/edit', done: !!profile.name && !!profile.phone },
+              { key: 'verify', label: '본인 인증', href: '/profile/verification', done: !!profile.is_verified, badge: '중요' },
+              { key: 'bank', label: '정산 계좌 등록', href: '/profile/bank', done: !!profile.bank_account?.account_number, badge: '필수' },
+              { key: 'tax', label: '세금 유형 선택 (프리랜서/사업자)', href: '/profile/tax', done: !!profile.tax_type, badge: '필수' },
+            ]}
+          />
+        </div>
 
         {/* Active job OR weekly earnings hero */}
         {activeJob ? (

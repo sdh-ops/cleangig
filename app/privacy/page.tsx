@@ -1,4 +1,5 @@
 import Header from '@/components/common/Header'
+import LegalFooter from '@/components/common/LegalFooter'
 
 export const metadata = { title: '개인정보 처리방침' }
 
@@ -79,6 +80,7 @@ export default function PrivacyPage() {
           </p>
         </article>
       </div>
+      <LegalFooter />
     </div>
   )
 }

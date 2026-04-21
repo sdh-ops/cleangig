@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { isPlatformAdmin } from '@/lib/admin'
-import { LayoutDashboard, Users, Briefcase, AlertTriangle, Home, Shield } from 'lucide-react'
+import { LayoutDashboard, Users, Briefcase, AlertTriangle, Home, Shield, Settings } from 'lucide-react'
 import Logo from '@/components/common/Logo'
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -30,6 +30,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           <AdminLink href="/admin/users" icon={<Users size={16} />} label="가입자 관리" />
           <AdminLink href="/admin/jobs" icon={<Briefcase size={16} />} label="청소 요청" />
           <AdminLink href="/admin/disputes" icon={<AlertTriangle size={16} />} label="분쟁 관리" tone="danger" />
+          <AdminLink href="/admin/settings" icon={<Settings size={16} />} label="수수료 · 세율" />
         </nav>
         <div className="p-3 border-t border-white/10">
           <Link href="/" className="flex items-center gap-2 px-3 py-2 text-[12px] font-bold text-white/70 hover:text-white rounded-lg hover:bg-white/5">

@@ -17,7 +17,8 @@ import {
   Calendar,
   MessageSquare,
 } from 'lucide-react'
-import { calculatePrice } from '@/lib/pricing'
+import { calculatePrice, DEFAULT_FEES, type FeeSettings } from '@/lib/pricing'
+import { getFeeSettings } from '@/lib/settings'
 import { formatKRW, formatScheduled, spaceTypeLabel } from '@/lib/utils'
 import type { SpaceType, ChecklistItem } from '@/lib/types'
 
@@ -52,19 +53,24 @@ export default function CreateRequestPage() {
   const [extraTrash, setExtraTrash] = useState(false)
   const [heavySoil, setHeavySoil] = useState(false)
   const [instructions, setInstructions] = useState('')
+  const [fees, setFees] = useState<FeeSettings>(DEFAULT_FEES)
 
   useEffect(() => {
     (async () => {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { router.replace('/login'); return }
-      const { data } = await supabase
-        .from('spaces')
-        .select('id, name, type, address, base_price, size_sqm, checklist_template')
-        .eq('operator_id', user.id)
-        .eq('is_active', true)
-        .order('created_at', { ascending: false })
-      setSpaces((data || []) as Space[])
-      if (data && data.length > 0) setSpaceId(data[0].id)
+      const [{ data: spaces }, feeSettings] = await Promise.all([
+        supabase
+          .from('spaces')
+          .select('id, name, type, address, base_price, size_sqm, checklist_template')
+          .eq('operator_id', user.id)
+          .eq('is_active', true)
+          .order('created_at', { ascending: false }),
+        getFeeSettings(),
+      ])
+      setSpaces((spaces || []) as Space[])
+      if (spaces && spaces.length > 0) setSpaceId(spaces[0].id)
+      setFees(feeSettings)
       setLoadingSpaces(false)
 
       const d = new Date()
@@ -99,8 +105,9 @@ export default function CreateRequestPage() {
       is_urgent: isUrgent || when === 'now',
       extra_trash: extraTrash,
       has_heavy_soil: heavySoil,
+      fees,
     })
-  }, [selectedSpace, scheduledAt, isUrgent, when, extraTrash, heavySoil])
+  }, [selectedSpace, scheduledAt, isUrgent, when, extraTrash, heavySoil, fees])
 
   const canProceed = (() => {
     if (step === 1) return !!spaceId
@@ -350,12 +357,23 @@ export default function CreateRequestPage() {
                 </div>
                 <div className="divider" />
                 <div className="flex justify-between items-baseline">
-                  <span className="text-[13px] font-bold text-text-soft">결제 금액</span>
+                  <span className="text-[13px] font-bold text-text-soft">결제 금액 (VAT 포함)</span>
                   <span className="t-money text-[22px] text-ink">{formatKRW(priceBreakdown.total)}</span>
                 </div>
-                <p className="mt-2 text-[11px] text-text-soft font-bold">
-                  작업자 정산: {formatKRW(priceBreakdown.worker_payout)} · 플랫폼 수수료: {formatKRW(priceBreakdown.platform_fee)}
-                </p>
+                <div className="mt-3 pt-3 border-t border-line-soft text-[11.5px] text-text-soft font-bold space-y-1">
+                  <div className="flex justify-between">
+                    <span>호스트 수수료 ({Math.round(fees.host_fee_rate * 100 * 10) / 10}%)</span>
+                    <span>{formatKRW(priceBreakdown.host_fee)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>워커 수수료 ({Math.round(fees.worker_fee_rate * 100 * 10) / 10}%)</span>
+                    <span>{formatKRW(priceBreakdown.worker_fee)}</span>
+                  </div>
+                  <div className="flex justify-between text-brand-dark">
+                    <span>워커 예상 수령 (프리랜서 기준)</span>
+                    <span>{formatKRW(priceBreakdown.estimated_worker_payout)}</span>
+                  </div>
+                </div>
               </div>
 
               <div className="p-4 rounded-2xl bg-info-soft border border-info/15 flex items-start gap-2.5">

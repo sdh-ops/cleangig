@@ -15,6 +15,7 @@ import {
   BadgeCheck,
   Heart,
   User as UserIcon,
+  Receipt,
 } from 'lucide-react'
 import Header from '@/components/common/Header'
 import BottomNav from '@/components/common/BottomNav'
@@ -138,6 +139,24 @@ export default function ProfileClient({ profile, totalCompletedJobs }: Props) {
                   icon={<Banknote size={17} />}
                   label="정산 계좌"
                   value="등록하기"
+                />
+                <div className="mx-4 border-t border-line-soft" />
+                <RowLink
+                  href="/profile/tax"
+                  icon={<Receipt size={17} />}
+                  label="세금 유형 · 사업자 정보"
+                  value="설정"
+                />
+              </>
+            )}
+            {!isWorker && (
+              <>
+                <div className="mx-4 border-t border-line-soft" />
+                <RowLink
+                  href="/profile/tax"
+                  icon={<Receipt size={17} />}
+                  label="사업자 정보 · 세금 유형"
+                  value="설정"
                 />
               </>
             )}

@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useState } from 'react'
 import Header from '@/components/common/Header'
+import LegalFooter from '@/components/common/LegalFooter'
 import { ChevronRight, MessageCircle, Phone, Mail, ChevronDown, HelpCircle } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
@@ -108,6 +109,7 @@ export default function SupportPage() {
           쓱싹 v1.0 · 운영시간 평일 10:00–18:00
         </p>
       </div>
+      <LegalFooter />
     </div>
   )
 }

@@ -73,12 +73,26 @@ export default function WorkerJobDetail() {
   const [uploadingIdx, setUploadingIdx] = useState<number | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
   const [currentChecklistIdx, setCurrentChecklistIdx] = useState<number | null>(null)
+  const [workerReady, setWorkerReady] = useState<{ bank: boolean; tax: boolean } | null>(null)
 
   useEffect(() => {
     (async () => {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { router.replace('/login'); return }
       setUserId(user.id)
+
+      const { data: profile } = await supabase
+        .from('users')
+        .select('bank_account, tax_type')
+        .eq('id', user.id)
+        .single()
+      if (profile) {
+        setWorkerReady({
+          bank: !!profile.bank_account?.account_number,
+          tax: !!profile.tax_type,
+        })
+      }
+
       const { data, error } = await supabase
         .from('jobs')
         .select(`
@@ -425,7 +439,27 @@ export default function WorkerJobDetail() {
             <div className="card p-4 mb-4">
               <h3 className="text-[13.5px] font-extrabold text-ink mb-2">이 작업에 지원하시겠어요?</h3>
               <p className="t-caption mb-4">지원하면 공간 파트너가 확인 후 배정합니다.</p>
-              <button onClick={() => setShowConsent(true)} className="btn btn-primary w-full">
+              {workerReady && (!workerReady.bank || !workerReady.tax) ? (
+                <div className="p-3.5 rounded-xl bg-warning-soft border border-warning/20 mb-3">
+                  <p className="text-[12.5px] font-extrabold text-[#B45309] mb-1.5">정산 설정이 완료되지 않았어요</p>
+                  <p className="text-[11.5px] font-semibold text-ink-soft mb-2 leading-snug">
+                    작업 수행 전에 아래 항목을 먼저 등록해주세요. 정산이 지연되지 않도록 도와드려요.
+                  </p>
+                  <div className="flex gap-2">
+                    {!workerReady.bank && (
+                      <Link href="/profile/bank" className="flex-1 btn btn-primary !min-h-[40px] !text-xs">정산 계좌 등록</Link>
+                    )}
+                    {!workerReady.tax && (
+                      <Link href="/profile/tax" className="flex-1 btn btn-secondary !min-h-[40px] !text-xs">세금 유형 선택</Link>
+                    )}
+                  </div>
+                </div>
+              ) : null}
+              <button
+                onClick={() => setShowConsent(true)}
+                disabled={workerReady ? (!workerReady.bank || !workerReady.tax) : false}
+                className="btn btn-primary w-full"
+              >
                 지원하기 <Zap size={18} strokeWidth={2.5} />
               </button>
             </div>
