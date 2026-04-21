@@ -118,32 +118,32 @@ export default function OnboardingPage() {
           className="flex-1 flex flex-col px-6 pt-4"
         >
           <h1 className="h-hero text-ink">
-            어떻게 쓱싹을
+            맡기러 오셨나요,
             <br />
-            사용하시나요?
+            벌러 오셨나요?
           </h1>
           <p className="t-body text-text-muted mt-3">
-            역할에 따라 맞춤 화면이 제공됩니다.
+            어떤 쪽이든 쓱싹은 항상 당신 편입니다.
           </p>
 
           <div className="flex flex-col gap-3 mt-8 flex-1">
-            <RoleCard
-              selected={selectedRole === 'operator'}
-              onClick={() => setSelectedRole('operator')}
-              icon={<Building2 size={28} strokeWidth={2.2} />}
-              title="공간 파트너"
-              subtitle="공간 운영자"
-              description="파티룸 / 에어비앤비 / 스튜디오 등을 운영하며 청소를 맡기고 싶어요."
-              tags={['원클릭 요청', '자동 정산', 'SaaS 분석']}
-            />
             <RoleCard
               selected={selectedRole === 'worker'}
               onClick={() => setSelectedRole('worker')}
               icon={<Sparkles size={28} strokeWidth={2.2} />}
               title="클린 파트너"
-              subtitle="청소 작업자"
-              description="청소 전문가로 등록하여 원할 때 자유롭게 일하고 수익을 만들고 싶어요."
+              subtitle="청소로 부업 수익"
+              description="원하는 시간·지역에서 청소 작업을 골라 수행하고 주 1회 정산받아요."
               tags={['자유 근무', '주 1회 정산', '티어 승급']}
+            />
+            <RoleCard
+              selected={selectedRole === 'operator'}
+              onClick={() => setSelectedRole('operator')}
+              icon={<Building2 size={28} strokeWidth={2.2} />}
+              title="공간 파트너"
+              subtitle="청소 맡기기"
+              description="파티룸·에어비앤비·무인매장을 운영하며 청소를 원클릭으로 맡기고 싶어요."
+              tags={['원클릭 요청', '에스크로 결제', 'AI 품질 검수']}
             />
           </div>
 

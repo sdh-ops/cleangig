@@ -1,16 +1,29 @@
 'use client'
 
 import Link from 'next/link'
-import { motion } from 'framer-motion'
-import { Sparkles, ShieldCheck, MapPin, Zap, ArrowRight, CheckCircle2 } from 'lucide-react'
+import { useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import {
+  Sparkles,
+  ShieldCheck,
+  Zap,
+  ArrowRight,
+  CheckCircle2,
+  Wallet,
+  Clock,
+  Star,
+  Building2,
+} from 'lucide-react'
 import Logo from '@/components/common/Logo'
 
+type Audience = 'host' | 'worker'
+
 export default function LandingClient() {
+  const [audience, setAudience] = useState<Audience>('host')
+
   return (
     <div className="sseuksak-shell">
-      {/* Hero mesh bg */}
       <div className="relative flex-1 overflow-hidden bg-brand-mesh">
-        {/* floating orbs */}
         <div className="absolute -top-10 -right-16 w-[320px] h-[320px] bg-brand/20 rounded-full blur-[80px] pointer-events-none" />
         <div className="absolute bottom-0 -left-20 w-[260px] h-[260px] bg-sun/25 rounded-full blur-[80px] pointer-events-none" />
 
@@ -26,121 +39,137 @@ export default function LandingClient() {
         </div>
 
         {/* Hero */}
-        <div className="relative z-10 px-6 pt-12 pb-8">
+        <div className="relative z-10 px-6 pt-10 pb-6">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7 }}
+            transition={{ duration: 0.6 }}
           >
-            <div className="inline-flex items-center gap-1.5 bg-white/70 backdrop-blur border border-line-soft rounded-full px-3 py-1.5 mb-6">
+            <div className="inline-flex items-center gap-1.5 bg-white/70 backdrop-blur border border-line-soft rounded-full px-3 py-1.5 mb-5">
               <Sparkles size={14} className="text-brand-dark" />
-              <span className="text-xs font-bold text-ink-soft">공간 운영의 새로운 기준</span>
+              <span className="text-xs font-bold text-ink-soft">청소 매칭 플랫폼</span>
             </div>
           </motion.div>
 
           <motion.h1
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1, duration: 0.7 }}
-            className="text-[38px] font-black leading-[1.12] tracking-[-0.03em] text-ink"
+            transition={{ delay: 0.1, duration: 0.6 }}
+            className="text-[34px] font-black leading-[1.15] tracking-[-0.03em] text-ink"
           >
-            한 번에 <span className="text-gradient-brand">쓱싹</span>,
+            청소 <span className="text-gradient-brand">맡기고</span>,
             <br />
-            공간이 살아나요
+            청소로 <span className="text-gradient-brand">돈 벌고</span>
           </motion.h1>
 
           <motion.p
-            initial={{ opacity: 0, y: 16 }}
+            initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2, duration: 0.7 }}
-            className="mt-5 text-[15px] text-text-muted font-medium leading-relaxed max-w-[340px]"
+            transition={{ delay: 0.2, duration: 0.6 }}
+            className="mt-4 text-[14.5px] text-text-muted font-semibold leading-relaxed max-w-[340px]"
           >
-            파티룸·에어비앤비·무인매장 청소를 <b className="text-ink">원클릭</b>으로.
-            <br />
-            에스크로 결제 · AI 품질 검수 · 자동 정산.
+            <b className="text-ink">공간 운영자</b>와 <b className="text-ink">클린 파트너</b>를<br />
+            가장 가깝게 연결합니다.
           </motion.p>
-
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3, duration: 0.7 }}
-            className="mt-8 flex items-center gap-4"
-          >
-            <div className="flex -space-x-2">
-              {['#00C896', '#FFB800', '#0A1F3D', '#3B82F6'].map((c, i) => (
-                <div
-                  key={i}
-                  className="w-8 h-8 rounded-full border-2 border-white"
-                  style={{ backgroundColor: c }}
-                />
-              ))}
-            </div>
-            <div className="text-xs">
-              <div className="font-black text-ink">전문 작업자 500+</div>
-              <div className="text-text-soft font-medium">홍대·합정·망원 지역 운영 중</div>
-            </div>
-          </motion.div>
         </div>
 
-        {/* Floating cards preview */}
+        {/* Audience toggle */}
+        <div className="relative z-10 px-6 mb-5">
+          <div className="bg-white/80 backdrop-blur border border-line-soft rounded-full p-1 flex">
+            <ToggleBtn active={audience === 'host'} onClick={() => setAudience('host')} label="공간 운영자" />
+            <ToggleBtn active={audience === 'worker'} onClick={() => setAudience('worker')} label="클린 파트너" />
+          </div>
+        </div>
+
+        {/* Audience-specific card */}
         <div className="relative z-10 px-6">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4, duration: 0.6 }}
-            className="bg-white rounded-3xl p-5 shadow-lg border border-line-soft"
-          >
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-2xl bg-brand flex items-center justify-center">
-                <Zap size={22} className="text-white" strokeWidth={2.5} />
-              </div>
-              <div className="flex-1">
-                <div className="text-[15px] font-extrabold text-ink">
-                  지금 요청 → 평균 4분 매칭
+          <AnimatePresence mode="wait">
+            {audience === 'host' ? (
+              <motion.div
+                key="host"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.25 }}
+                className="bg-white rounded-3xl p-5 shadow-lg border border-line-soft"
+              >
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-11 h-11 rounded-2xl bg-brand text-white flex items-center justify-center">
+                    <Building2 size={20} strokeWidth={2.5} />
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-black text-brand-dark uppercase tracking-wider">공간 운영자라면</p>
+                    <h3 className="text-[17px] font-black text-ink leading-tight">청소 걱정 없는 운영</h3>
+                  </div>
                 </div>
-                <div className="text-xs text-text-soft font-medium">근처 마스터 작업자 자동 배정</div>
-              </div>
-              <div className="text-[11px] font-black text-brand-dark chip chip-brand">실시간</div>
-            </div>
-          </motion.div>
+                <ul className="flex flex-col gap-2 mt-3">
+                  <LI icon={<Zap size={14} />}>요청 한 번으로 평균 4분 매칭</LI>
+                  <LI icon={<ShieldCheck size={14} />}>에스크로 결제 · AI 사진 검수</LI>
+                  <LI icon={<Sparkles size={14} />}>체크리스트 기반 품질 보증</LI>
+                </ul>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="worker"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.25 }}
+                className="bg-white rounded-3xl p-5 shadow-lg border border-line-soft"
+              >
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-11 h-11 rounded-2xl bg-sun text-ink flex items-center justify-center">
+                    <Wallet size={20} strokeWidth={2.5} />
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-black text-[#92580C] uppercase tracking-wider">클린 파트너라면</p>
+                    <h3 className="text-[17px] font-black text-ink leading-tight">원하는 시간, 내 부업</h3>
+                  </div>
+                </div>
+                <ul className="flex flex-col gap-2 mt-3">
+                  <LI icon={<Clock size={14} />}>근무 시간 · 지역 자유롭게 선택</LI>
+                  <LI icon={<Wallet size={14} />}>주 1회 정산 · 평균 건당 3~5만원</LI>
+                  <LI icon={<Star size={14} />}>실력만큼 올라가는 티어 + 단골</LI>
+                </ul>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
-        {/* Value props */}
-        <div className="relative z-10 px-6 mt-8 grid grid-cols-3 gap-3">
-          {[
-            { icon: ShieldCheck, label: '에스크로\n결제 보호' },
-            { icon: Sparkles, label: 'AI 사진\n품질 검수' },
-            { icon: MapPin, label: '실시간\n위치 추적' },
-          ].map((v, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 + i * 0.08, duration: 0.5 }}
-              className="bg-white/80 backdrop-blur rounded-2xl p-3 border border-line-soft"
-            >
-              <div className="w-8 h-8 rounded-full bg-brand-softer flex items-center justify-center text-brand-dark mb-2">
-                <v.icon size={16} strokeWidth={2.5} />
-              </div>
-              <div className="text-[11px] font-extrabold text-ink leading-tight whitespace-pre-line">
-                {v.label}
-              </div>
-            </motion.div>
-          ))}
+        {/* Community stats */}
+        <div className="relative z-10 px-6 mt-6 mb-4">
+          <div className="grid grid-cols-3 gap-2">
+            {[
+              { label: '등록 공간', value: '5,000+' },
+              { label: '클린 파트너', value: '850+' },
+              { label: '평균 매칭', value: '4분' },
+            ].map((s, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 + i * 0.08, duration: 0.5 }}
+                className="bg-white/80 backdrop-blur rounded-2xl p-3 border border-line-soft text-center"
+              >
+                <div className="t-money text-[18px] text-ink">{s.value}</div>
+                <div className="text-[10.5px] font-bold text-text-soft mt-0.5">{s.label}</div>
+              </motion.div>
+            ))}
+          </div>
         </div>
       </div>
 
-      {/* Bottom CTA */}
-      <div className="px-5 pt-6 pb-8 safe-bottom bg-gradient-to-t from-canvas via-canvas to-transparent">
-        <div className="flex flex-col gap-2.5 mb-5">
+      {/* Bottom CTA — DUAL */}
+      <div className="px-5 pt-5 pb-6 safe-bottom bg-gradient-to-t from-canvas via-canvas to-transparent">
+        <div className="flex flex-col gap-2 mb-4">
           {[
-            '공간 청소 · 점검 · 보충을 한 곳에서',
-            '결제 실패 없는 에스크로 시스템',
-            '자동 매칭 · 자동 정산',
+            '공간 파트너: 원클릭으로 청소 맡기기',
+            '클린 파트너: 원할 때 원하는 지역에서 부업',
+            '플랫폼: 결제 보호 · 품질 보증 · 자동 정산',
           ].map((t, i) => (
             <div key={i} className="flex items-center gap-2">
-              <CheckCircle2 size={16} className="text-brand shrink-0" strokeWidth={2.5} />
-              <span className="text-[13px] font-semibold text-ink-soft">{t}</span>
+              <CheckCircle2 size={15} className="text-brand shrink-0" strokeWidth={2.5} />
+              <span className="text-[12.5px] font-semibold text-ink-soft">{t}</span>
             </div>
           ))}
         </div>
@@ -155,12 +184,22 @@ export default function LandingClient() {
           </Link>
         </motion.div>
 
-        <p className="text-center text-xs text-text-faint font-medium mt-4">
+        <div className="flex items-center gap-3 mt-3 justify-center text-[11.5px] font-bold text-text-soft">
+          <Link href="/login" className="flex items-center gap-1 hover:text-ink">
+            <Building2 size={12} /> 청소 맡기기
+          </Link>
+          <span className="text-text-faint">·</span>
+          <Link href="/login" className="flex items-center gap-1 hover:text-ink">
+            <Wallet size={12} /> 청소로 돈벌기
+          </Link>
+        </div>
+
+        <p className="text-center text-[10.5px] text-text-faint font-medium mt-3">
           시작하면{' '}
           <Link href="/terms" className="underline font-bold">
             이용약관
           </Link>
-          과{' '}
+          ,{' '}
           <Link href="/privacy" className="underline font-bold">
             개인정보 처리방침
           </Link>
@@ -168,5 +207,29 @@ export default function LandingClient() {
         </p>
       </div>
     </div>
+  )
+}
+
+function ToggleBtn({ active, onClick, label }: { active: boolean; onClick: () => void; label: string }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`flex-1 h-9 rounded-full text-[12.5px] font-extrabold transition ${
+        active ? 'bg-ink text-white' : 'text-text-muted'
+      }`}
+    >
+      {label}
+    </button>
+  )
+}
+
+function LI({ icon, children }: { icon: React.ReactNode; children: React.ReactNode }) {
+  return (
+    <li className="flex items-center gap-2 text-[13.5px] font-semibold text-ink-soft">
+      <span className="w-6 h-6 rounded-full bg-brand-softer text-brand-dark flex items-center justify-center shrink-0">
+        {icon}
+      </span>
+      {children}
+    </li>
   )
 }

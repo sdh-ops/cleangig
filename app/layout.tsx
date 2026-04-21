@@ -9,13 +9,15 @@ import InstallPrompt from '@/components/common/InstallPrompt'
 
 export const metadata: Metadata = {
   title: {
-    default: '쓱싹 - 공간 운영의 새로운 기준',
+    default: '쓱싹 - 청소 맡기고, 청소로 돈 벌고',
     template: '%s | 쓱싹',
   },
-  description: '한 번에 쓱싹, 공간이 살아납니다. 파티룸·에어비앤비·무인매장의 청소/점검/보충을 원클릭으로. 에스크로 결제, AI 품질 검수, 자동 정산까지.',
+  description:
+    '청소 맡기고, 청소로 돈 벌고. 공간 운영자와 클린 파트너를 연결하는 청소 매칭 플랫폼. 원하는 시간·지역에서 부업 수익 만들고, 공간은 원클릭으로 청소 요청하세요.',
   keywords: [
-    '쓱싹', '청소 매칭', '파티룸 청소', '에어비앤비 청소', '무인매장 청소',
-    '공간 운영', '청소 부업', '청소 알바', '홈클리닝', 'Space Operations',
+    '쓱싹', '청소 매칭', '청소 부업', '청소 알바', '홈클리닝', '주말 부업',
+    '파티룸 청소', '에어비앤비 청소', '무인매장 청소', '스튜디오 청소',
+    '공간 운영', '청소 요청 앱', '청소 대행', 'Space Operations',
   ],
   authors: [{ name: '쓱싹' }],
   manifest: '/manifest.json',
@@ -24,14 +26,14 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'ko_KR',
-    title: '쓱싹 - 공간 운영의 새로운 기준',
-    description: '한 번에 쓱싹, 공간이 살아납니다.',
+    title: '쓱싹 - 청소 맡기고, 청소로 돈 벌고',
+    description: '공간 운영자와 클린 파트너를 연결하는 청소 매칭 플랫폼.',
     siteName: '쓱싹',
   },
   twitter: {
     card: 'summary_large_image',
-    title: '쓱싹 - 공간 운영의 새로운 기준',
-    description: '한 번에 쓱싹, 공간이 살아납니다.',
+    title: '쓱싹 - 청소 맡기고, 청소로 돈 벌고',
+    description: '공간 운영자와 클린 파트너를 연결합니다.',
   },
   icons: {
     icon: '/favicon.ico',

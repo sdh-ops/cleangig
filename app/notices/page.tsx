@@ -1,28 +1,36 @@
 import Header from '@/components/common/Header'
-import { FileText, Sparkles, Zap, ShieldCheck } from 'lucide-react'
+import { FileText, Sparkles, Zap, ShieldCheck, Wallet } from 'lucide-react'
 
 const NOTICES = [
   {
     date: '2026-04-20',
     badge: '신규',
     title: '쓱싹 v1.0 정식 출시',
-    body: '공간 운영의 새로운 기준, 쓱싹이 정식 출시되었습니다. 원클릭 청소 요청, AI 품질 검수, 에스크로 결제로 안심하고 사용하세요.',
+    body: '청소 맡기고, 청소로 돈 벌고. 공간 운영자와 클린 파트너를 잇는 플랫폼 쓱싹이 정식 출시되었습니다.',
     icon: Sparkles,
     tone: 'brand',
   },
   {
+    date: '2026-04-19',
+    badge: '클린 파트너',
+    title: '주말 부업 · 클린 파트너 모집 시작',
+    body: '청소 경험이 없어도 OK. 신원 인증 후 바로 작업을 골라 수행하세요. 가입 후 30일 내 첫 5건 완료 시 수수료 면제!',
+    icon: Wallet,
+    tone: 'sun',
+  },
+  {
     date: '2026-04-18',
-    badge: '이벤트',
-    title: '홍대 파티룸 100곳 등록 프로모션',
+    badge: '공간 파트너',
+    title: '홍대 파티룸 운영자 프로모션',
     body: '홍대/합정/망원 지역 파티룸·에어비앤비 운영자는 첫 3회 요청 수수료 무료!',
     icon: Zap,
-    tone: 'sun',
+    tone: 'brand',
   },
   {
     date: '2026-04-15',
     badge: '안전',
-    title: '에스크로 결제 시스템 안내',
-    body: '모든 청소 대금은 작업 승인 후 정산되어, 공간 파트너와 작업자 모두를 보호합니다.',
+    title: '에스크로 결제 + AI 품질 검수',
+    body: '모든 청소 대금은 작업 승인 후 정산되어, 양쪽 모두를 보호합니다. 체크리스트 사진은 AI가 자동 검수해 분쟁을 예방해요.',
     icon: ShieldCheck,
     tone: 'info',
   },

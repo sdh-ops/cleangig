@@ -1,7 +1,7 @@
 {
-  "name": "쓱싹 - 공간 운영의 새로운 기준",
+  "name": "쓱싹 - 청소 맡기고, 청소로 돈 벌고",
   "short_name": "쓱싹",
-  "description": "한 번에 쓱싹, 공간이 살아납니다. 공간 운영의 청소·점검·보충을 원클릭으로.",
+  "description": "청소 매칭 플랫폼. 원하는 시간·지역에서 부업 수익 만들고, 공간은 원클릭으로 청소 요청하세요.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#F7F9FC",
