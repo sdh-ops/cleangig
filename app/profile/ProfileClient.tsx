@@ -16,6 +16,7 @@ import {
   Heart,
   User as UserIcon,
   Receipt,
+  ShieldCheck,
 } from 'lucide-react'
 import Header from '@/components/common/Header'
 import BottomNav from '@/components/common/BottomNav'
@@ -42,9 +43,10 @@ type Profile = {
 type Props = {
   profile: Profile
   totalCompletedJobs: number
+  isAdmin?: boolean
 }
 
-export default function ProfileClient({ profile, totalCompletedJobs }: Props) {
+export default function ProfileClient({ profile, totalCompletedJobs, isAdmin = false }: Props) {
   const router = useRouter()
   const supabase = createClient()
   const isWorker = profile.role === 'worker'
@@ -108,6 +110,25 @@ export default function ProfileClient({ profile, totalCompletedJobs }: Props) {
         </div>
 
         <div className="px-5 pt-5 flex flex-col gap-4">
+          {isAdmin && (
+            <Link
+              href="/admin"
+              className="card-interactive p-4 flex items-center gap-3 bg-gradient-to-r from-ink to-[#1E3353] text-white border-0 active:scale-[0.99]"
+            >
+              <div className="w-11 h-11 rounded-2xl bg-sun text-ink flex items-center justify-center shrink-0">
+                <ShieldCheck size={20} strokeWidth={2.3} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <p className="text-[14px] font-black">관리자 콘솔</p>
+                  <span className="text-[9.5px] font-black px-1.5 py-0.5 rounded bg-sun text-ink uppercase tracking-wider">ADMIN</span>
+                </div>
+                <p className="text-[11.5px] font-bold text-white/70 mt-0.5">대시보드 · 가입자 · 분쟁 · 수수료 설정</p>
+              </div>
+              <ChevronRight size={16} className="text-white/60" />
+            </Link>
+          )}
+
           <RoleSwitcher
             userId={profile.id}
             currentRole={profile.role}

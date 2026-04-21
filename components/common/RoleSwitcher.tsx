@@ -31,21 +31,34 @@ export default function RoleSwitcher({ userId, currentRole, canOperate = false, 
     setSwitching(true)
     setErr(null)
     try {
-      const payload: Record<string, unknown> = {
+      // 1차 시도: can_operate/can_work 포함 (마이그레이션 적용 후)
+      const fullPayload: Record<string, unknown> = {
         role: targetRole,
         updated_at: new Date().toISOString(),
       }
-      if (targetRole === 'operator') payload.can_operate = true
-      else payload.can_work = true
+      if (targetRole === 'operator') fullPayload.can_operate = true
+      else fullPayload.can_work = true
 
-      const { error } = await supabase.from('users').update(payload).eq('id', userId)
+      let { error } = await supabase.from('users').update(fullPayload).eq('id', userId)
+
+      // 2차 fallback: can_operate/can_work 컬럼이 없는 경우 role만 업데이트
+      if (error) {
+        console.warn('role switch: full payload failed, retrying with role only', error)
+        const minimal = await supabase
+          .from('users')
+          .update({ role: targetRole, updated_at: new Date().toISOString() })
+          .eq('id', userId)
+        error = minimal.error
+      }
+
       if (error) throw error
 
       haptic.success()
       setConfirm(false)
       router.replace(targetRole === 'operator' ? '/dashboard' : '/clean')
     } catch (e) {
-      setErr(e instanceof Error ? e.message : '역할 전환에 실패했습니다')
+      const msg = e instanceof Error ? e.message : '역할 전환에 실패했습니다'
+      setErr(`${msg} — DB 마이그레이션(dual_role) 실행 여부를 확인해주세요.`)
       haptic.error()
       setSwitching(false)
     }
