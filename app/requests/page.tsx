@@ -5,6 +5,7 @@ import Header from '@/components/common/Header'
 import BottomNav from '@/components/common/BottomNav'
 import EmptyState from '@/components/common/EmptyState'
 import StatusChip from '@/components/common/StatusChip'
+import RequestsRefreshBridge from './RequestsRefreshBridge'
 import { Sparkles, Clock, ChevronRight, Zap } from 'lucide-react'
 import { formatKRW, formatScheduled } from '@/lib/utils'
 import type { JobStatus } from '@/lib/types'
@@ -34,6 +35,7 @@ export default async function RequestsPage(props: { searchParams?: Promise<{ tab
 
   return (
     <div className="sseuksak-shell">
+      <RequestsRefreshBridge />
       <Header title="내 요청 내역" showBell />
       {/* Tabs */}
       <div className="sticky top-14 z-10 bg-canvas/95 backdrop-blur border-b border-line-soft">

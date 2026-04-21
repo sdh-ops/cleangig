@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { motion } from 'framer-motion'
+import { useRouter } from 'next/navigation'
 import {
   Sparkles,
   Clock,
@@ -18,6 +19,7 @@ import Header from '@/components/common/Header'
 import BottomNav from '@/components/common/BottomNav'
 import StatusChip from '@/components/common/StatusChip'
 import EmptyState from '@/components/common/EmptyState'
+import PullToRefresh from '@/components/common/PullToRefresh'
 import { formatKRW, formatScheduled, spaceTypeLabel, maskAddress } from '@/lib/utils'
 import { TIER_BENEFITS } from '@/lib/matching'
 import type { JobStatus, SpaceType } from '@/lib/types'
@@ -53,6 +55,7 @@ type Props = {
 }
 
 export default function CleanMainClient({ profile, activeJob, openJobs, weekEarnings, pendingCount, unreadCount }: Props) {
+  const router = useRouter()
   const tier = profile.tier ?? 'STARTER'
   const tierInfo = TIER_BENEFITS[tier]
   const rating = profile.avg_rating ?? 0
@@ -60,6 +63,7 @@ export default function CleanMainClient({ profile, activeJob, openJobs, weekEarn
 
   return (
     <div className="sseuksak-shell">
+      <PullToRefresh onRefresh={() => router.refresh()} />
       <Header showLogo showBell unreadCount={unreadCount} />
 
       <div className="page-container flex-1">

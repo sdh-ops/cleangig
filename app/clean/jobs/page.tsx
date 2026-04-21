@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { motion } from 'framer-motion'
@@ -8,6 +8,7 @@ import { Clock, MapPin, Sparkles, Zap, Loader2, Search, Filter } from 'lucide-re
 import Header from '@/components/common/Header'
 import BottomNav from '@/components/common/BottomNav'
 import EmptyState from '@/components/common/EmptyState'
+import PullToRefresh from '@/components/common/PullToRefresh'
 import { formatKRW, formatScheduled, spaceTypeLabel, maskAddress } from '@/lib/utils'
 import type { JobStatus, SpaceType } from '@/lib/types'
 
@@ -33,32 +34,32 @@ export default function JobsListPage() {
   const [typeFilter, setTypeFilter] = useState<SpaceType | 'all'>('all')
   const [showTypeFilter, setShowTypeFilter] = useState(false)
 
-  useEffect(() => {
-    (async () => {
-      setLoading(true)
-      let query = supabase
-        .from('jobs')
-        .select('id, status, price, scheduled_at, estimated_duration, is_urgent, spaces(id, name, type, address, photos)')
-        .eq('status', 'OPEN')
+  const fetchJobs = useCallback(async () => {
+    setLoading(true)
+    let query = supabase
+      .from('jobs')
+      .select('id, status, price, scheduled_at, estimated_duration, is_urgent, spaces(id, name, type, address, photos)')
+      .eq('status', 'OPEN')
 
-      if (sort === 'urgent') query = query.eq('is_urgent', true)
-      query = query.order(sort === 'price' ? 'price' : 'created_at', { ascending: false })
+    if (sort === 'urgent') query = query.eq('is_urgent', true)
+    query = query.order(sort === 'price' ? 'price' : 'created_at', { ascending: false })
 
-      const { data } = await query.limit(50)
-      let list = (data || []) as any[]
-      if (typeFilter !== 'all') list = list.filter((j) => j.spaces?.type === typeFilter)
-      if (q.trim()) {
-        const kw = q.trim().toLowerCase()
-        list = list.filter(
-          (j) =>
-            (j.spaces?.name || '').toLowerCase().includes(kw) ||
-            (j.spaces?.address || '').toLowerCase().includes(kw),
-        )
-      }
-      setJobs(list as Job[])
-      setLoading(false)
-    })()
-  }, [sort, typeFilter, q])
+    const { data } = await query.limit(50)
+    let list = (data || []) as any[]
+    if (typeFilter !== 'all') list = list.filter((j) => j.spaces?.type === typeFilter)
+    if (q.trim()) {
+      const kw = q.trim().toLowerCase()
+      list = list.filter(
+        (j) =>
+          (j.spaces?.name || '').toLowerCase().includes(kw) ||
+          (j.spaces?.address || '').toLowerCase().includes(kw),
+      )
+    }
+    setJobs(list as Job[])
+    setLoading(false)
+  }, [sort, typeFilter, q, supabase])
+
+  useEffect(() => { fetchJobs() }, [fetchJobs])
 
   const typeOpts: { value: SpaceType | 'all'; label: string }[] = [
     { value: 'all', label: '전체' },
@@ -75,6 +76,7 @@ export default function JobsListPage() {
 
   return (
     <div className="sseuksak-shell">
+      <PullToRefresh onRefresh={fetchJobs} />
       <Header title="작업 찾기" showBack={false} showLogo={false} sticky />
       {/* Search & filters */}
       <div className="sticky top-14 z-10 bg-canvas/95 backdrop-blur px-5 pt-3 pb-3 border-b border-line-soft">

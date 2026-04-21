@@ -78,6 +78,24 @@ export default function ChatClient({ jobId, userId, partnerId, partnerName, part
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
   }, [messages])
 
+  // iOS: keyboard open/close handling via visualViewport
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.visualViewport) return
+    const vv = window.visualViewport
+    const handle = () => {
+      // when keyboard opens, scroll messages to bottom so user sees latest
+      requestAnimationFrame(() => {
+        scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight })
+      })
+    }
+    vv.addEventListener('resize', handle)
+    vv.addEventListener('scroll', handle)
+    return () => {
+      vv.removeEventListener('resize', handle)
+      vv.removeEventListener('scroll', handle)
+    }
+  }, [])
+
   const handleSend = async () => {
     const content = text.trim()
     if (!content || !partnerId) return

@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { motion } from 'framer-motion'
+import { useRouter } from 'next/navigation'
 import {
   Plus,
   Sparkles,
@@ -17,6 +18,7 @@ import BottomNav from '@/components/common/BottomNav'
 import StatusChip from '@/components/common/StatusChip'
 import EmptyState from '@/components/common/EmptyState'
 import MetricCard from '@/components/common/MetricCard'
+import PullToRefresh from '@/components/common/PullToRefresh'
 import { formatKRW, formatScheduled, spaceTypeLabel } from '@/lib/utils'
 import type { JobStatus, SpaceType } from '@/lib/types'
 
@@ -69,6 +71,7 @@ export default function DashboardClient({
   monthApproved,
   unreadCount,
 }: Props) {
+  const router = useRouter()
   const greeting = (() => {
     const h = new Date().getHours()
     if (h < 5) return '늦은 밤입니다'
@@ -79,6 +82,7 @@ export default function DashboardClient({
 
   return (
     <div className="sseuksak-shell">
+      <PullToRefresh onRefresh={() => router.refresh()} />
       <Header showLogo showBell unreadCount={unreadCount} />
 
       <div className="page-container flex-1">

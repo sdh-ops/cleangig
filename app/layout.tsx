@@ -4,6 +4,8 @@ import './globals.css'
 import NotificationOverlay from '@/components/common/NotificationOverlay'
 import PageTransition from '@/components/common/PageTransition'
 import ServiceWorkerRegister from '@/components/common/ServiceWorkerRegister'
+import HapticProvider from '@/components/common/HapticProvider'
+import InstallPrompt from '@/components/common/InstallPrompt'
 
 export const metadata: Metadata = {
   title: {
@@ -65,8 +67,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body>
         <ServiceWorkerRegister />
+        <HapticProvider />
         <NotificationOverlay />
         <PageTransition>{children}</PageTransition>
+        <InstallPrompt />
       </body>
     </html>
   )
