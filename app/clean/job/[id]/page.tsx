@@ -22,6 +22,7 @@ import {
   Zap,
 } from 'lucide-react'
 import StatusChip from '@/components/common/StatusChip'
+import DisputeModal from '@/components/common/DisputeModal'
 import { formatKRW, formatScheduled, spaceTypeLabel, maskAddress, haversineKm } from '@/lib/utils'
 import type { ChecklistItem, JobStatus, SpaceType } from '@/lib/types'
 
@@ -70,10 +71,37 @@ export default function WorkerJobDetail() {
   const [err, setErr] = useState<string | null>(null)
   const [checklist, setChecklist] = useState<ChecklistItem[]>([])
   const [showConsent, setShowConsent] = useState(false)
+  const [showDispute, setShowDispute] = useState(false)
   const [uploadingIdx, setUploadingIdx] = useState<number | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
   const [currentChecklistIdx, setCurrentChecklistIdx] = useState<number | null>(null)
   const [workerReady, setWorkerReady] = useState<{ bank: boolean; tax: boolean } | null>(null)
+
+  // Periodic GPS ping while worker is traveling/working (host can see live location)
+  useEffect(() => {
+    if (!job || !userId || job.worker_id !== userId) return
+    if (!['EN_ROUTE', 'ARRIVED', 'IN_PROGRESS'].includes(job.status)) return
+    if (typeof navigator === 'undefined' || !navigator.geolocation) return
+
+    const ping = () => {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          supabase.from('worker_locations').insert({
+            job_id: job.id,
+            worker_id: userId,
+            lat: pos.coords.latitude,
+            lng: pos.coords.longitude,
+          })
+        },
+        () => {},
+        { enableHighAccuracy: true, timeout: 15000, maximumAge: 30000 },
+      )
+    }
+    ping()
+    const t = setInterval(ping, 45_000) // 45s
+    return () => clearInterval(t)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [job?.status, userId, job?.id])
 
   useEffect(() => {
     (async () => {
@@ -464,6 +492,16 @@ export default function WorkerJobDetail() {
               </button>
             </div>
           )}
+
+          {/* Report button (for in-progress/completed jobs the worker is assigned to) */}
+          {isMine && ['ASSIGNED', 'EN_ROUTE', 'ARRIVED', 'IN_PROGRESS', 'SUBMITTED', 'APPROVED'].includes(job.status) && (
+            <button
+              onClick={() => setShowDispute(true)}
+              className="mt-2 w-full flex items-center justify-center gap-1.5 py-3 text-[12.5px] font-bold text-text-muted hover:text-danger"
+            >
+              <AlertTriangle size={14} /> 문제 신고하기
+            </button>
+          )}
         </div>
       </div>
 
@@ -532,6 +570,13 @@ export default function WorkerJobDetail() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <DisputeModal
+        open={showDispute}
+        onClose={() => setShowDispute(false)}
+        jobId={job.id}
+        onSubmitted={() => router.refresh()}
+      />
     </div>
   )
 }

@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, Briefcase, MapPinned, User, Wallet, MessageSquare, Building2 } from 'lucide-react'
+import { Home, Briefcase, MapPinned, User, Wallet, Building2, Calendar } from 'lucide-react'
 
 type Role = 'operator' | 'worker'
 
@@ -11,15 +11,15 @@ type Tab = { href: string; label: string; icon: React.ElementType; match: (p: st
 const OPERATOR_TABS: Tab[] = [
   { href: '/dashboard', label: '홈', icon: Home, match: (p) => p === '/dashboard' },
   { href: '/spaces', label: '공간', icon: Building2, match: (p) => p.startsWith('/spaces') },
-  { href: '/requests/create', label: '요청', icon: Briefcase, match: (p) => p.startsWith('/requests') },
-  { href: '/payments', label: '결제', icon: Wallet, match: (p) => p.startsWith('/payments') },
+  { href: '/calendar', label: '캘린더', icon: Calendar, match: (p) => p.startsWith('/calendar') },
+  { href: '/requests', label: '요청', icon: Briefcase, match: (p) => p.startsWith('/requests') },
   { href: '/profile', label: '내정보', icon: User, match: (p) => p.startsWith('/profile') },
 ]
 
 const WORKER_TABS: Tab[] = [
   { href: '/clean', label: '홈', icon: Home, match: (p) => p === '/clean' },
-  { href: '/clean/jobs', label: '작업찾기', icon: MapPinned, match: (p) => p.startsWith('/clean/jobs') },
-  { href: '/clean/jobs/active', label: '진행', icon: Briefcase, match: (p) => p.includes('/active') },
+  { href: '/clean/jobs', label: '작업찾기', icon: MapPinned, match: (p) => p.startsWith('/clean/jobs') && !p.includes('/active') },
+  { href: '/calendar', label: '캘린더', icon: Calendar, match: (p) => p.startsWith('/calendar') },
   { href: '/earnings', label: '수익', icon: Wallet, match: (p) => p.startsWith('/earnings') },
   { href: '/profile', label: '내정보', icon: User, match: (p) => p.startsWith('/profile') },
 ]

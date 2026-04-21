@@ -54,6 +54,9 @@ export default function CreateRequestPage() {
   const [heavySoil, setHeavySoil] = useState(false)
   const [instructions, setInstructions] = useState('')
   const [fees, setFees] = useState<FeeSettings>(DEFAULT_FEES)
+  const [isRecurring, setIsRecurring] = useState(false)
+  const [frequency, setFrequency] = useState<'WEEKLY' | 'BIWEEKLY' | 'MONTHLY'>('WEEKLY')
+  const [occurrences, setOccurrences] = useState(4)
 
   useEffect(() => {
     (async () => {
@@ -105,9 +108,10 @@ export default function CreateRequestPage() {
       is_urgent: isUrgent || when === 'now',
       extra_trash: extraTrash,
       has_heavy_soil: heavySoil,
+      recurring_discount: isRecurring,
       fees,
     })
-  }, [selectedSpace, scheduledAt, isUrgent, when, extraTrash, heavySoil, fees])
+  }, [selectedSpace, scheduledAt, isUrgent, when, extraTrash, heavySoil, isRecurring, fees])
 
   const canProceed = (() => {
     if (step === 1) return !!spaceId
@@ -123,6 +127,29 @@ export default function CreateRequestPage() {
     try {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error('로그인이 필요합니다.')
+
+      // 고정 청소 분기
+      if (isRecurring) {
+        const res = await fetch('/api/jobs/recurring', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            space_id: selectedSpace.id,
+            first_scheduled_at: scheduledAt,
+            estimated_duration: 90,
+            price: priceBreakdown.total,
+            price_breakdown: priceBreakdown,
+            checklist: selectedSpace.checklist_template ?? [],
+            special_instructions: instructions || null,
+            frequency,
+            occurrences,
+          }),
+        })
+        const data = await res.json()
+        if (!data?.ok) throw new Error(data?.error || '고정 청소 생성 실패')
+        router.replace(data.first_job_id ? `/requests/${data.first_job_id}` : '/requests?tab=active')
+        return
+      }
 
       const payload = {
         space_id: selectedSpace.id,
@@ -140,6 +167,13 @@ export default function CreateRequestPage() {
       }
       const { data, error } = await supabase.from('jobs').insert(payload).select('id').single()
       if (error) throw error
+      if (data?.id) {
+        fetch('/api/jobs/notify-workers', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ job_id: data.id }),
+        }).catch(() => {})
+      }
       router.replace(data?.id ? `/requests/${data.id}` : '/dashboard')
     } catch (e) {
       setErr(e instanceof Error ? e.message : '요청 생성에 실패했습니다.')
@@ -303,6 +337,59 @@ export default function CreateRequestPage() {
                   <button onClick={() => setIsUrgent(false)} className="text-[12px] font-bold text-text-muted">해제</button>
                 </div>
               )}
+
+              {/* Recurring cleaning toggle */}
+              {when === 'schedule' && (
+                <div className={`card p-3.5 border-2 ${isRecurring ? 'border-brand bg-brand-softer' : 'border-line-soft'}`}>
+                  <div className="flex items-center gap-3">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${isRecurring ? 'bg-brand text-white' : 'bg-surface-muted text-text-muted'}`}>
+                      <Calendar size={15} strokeWidth={2.6} />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-[13px] font-extrabold text-ink">고정 청소로 예약</p>
+                      <p className="text-[11px] text-text-soft font-bold">주기적으로 동일 시간에 자동 예약 · 최대 5% 할인</p>
+                    </div>
+                    <button
+                      onClick={() => setIsRecurring((v) => !v)}
+                      className={`w-11 h-6 rounded-full flex items-center px-0.5 transition ${isRecurring ? 'bg-brand justify-end' : 'bg-line-strong justify-start'}`}
+                    >
+                      <div className="w-5 h-5 rounded-full bg-white shadow-sm" />
+                    </button>
+                  </div>
+                  {isRecurring && (
+                    <div className="mt-3 pt-3 border-t border-brand/15 grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="t-meta block mb-1.5 ml-0.5">반복 주기</label>
+                        <div className="flex gap-1">
+                          {(['WEEKLY', 'BIWEEKLY', 'MONTHLY'] as const).map((f) => (
+                            <button
+                              key={f}
+                              onClick={() => setFrequency(f)}
+                              className={`flex-1 h-9 rounded-lg text-[11.5px] font-extrabold ${frequency === f ? 'bg-ink text-white' : 'bg-surface text-text-muted'}`}
+                            >
+                              {f === 'WEEKLY' ? '매주' : f === 'BIWEEKLY' ? '2주' : '매월'}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <label className="t-meta block mb-1.5 ml-0.5">반복 횟수</label>
+                        <div className="relative">
+                          <input
+                            type="number"
+                            min={1}
+                            max={12}
+                            value={occurrences}
+                            onChange={(e) => setOccurrences(Math.max(1, Math.min(12, parseInt(e.target.value) || 4)))}
+                            className="input !min-h-[40px] !py-2 pr-10"
+                          />
+                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-text-faint text-xs font-bold">회</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </motion.div>
           )}
 
@@ -379,7 +466,7 @@ export default function CreateRequestPage() {
               <div className="p-4 rounded-2xl bg-info-soft border border-info/15 flex items-start gap-2.5">
                 <AlertCircle size={16} className="text-info shrink-0 mt-0.5" />
                 <div className="text-[12.5px] text-ink-soft font-semibold leading-snug">
-                  요청 생성 시 결제는 에스크로로 보관됩니다. 작업 승인 후 작업자에게 정산됩니다.
+                  <b>베타 기간</b>: 실결제 없이 요청이 생성됩니다. 정식 오픈 시 Toss 에스크로 결제와 자동 정산이 적용됩니다.
                 </div>
               </div>
             </motion.div>
@@ -405,7 +492,7 @@ export default function CreateRequestPage() {
             {loading ? (
               <Loader2 size={20} className="animate-spin" />
             ) : step === 3 ? (
-              <>결제 및 요청 보내기 <ChevronRight size={20} /></>
+              <>요청 보내기 <ChevronRight size={20} /></>
             ) : (
               <>다음 <ChevronRight size={20} /></>
             )}

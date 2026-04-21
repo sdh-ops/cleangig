@@ -21,7 +21,10 @@ import {
 } from 'lucide-react'
 import StatusChip from '@/components/common/StatusChip'
 import ReviewModal from '@/components/common/ReviewModal'
+import DisputeModal from '@/components/common/DisputeModal'
+import WorkerLiveMap from '@/components/common/WorkerLiveMap'
 import { formatKRW, formatScheduled, spaceTypeLabel } from '@/lib/utils'
+import { cancelRefundRate } from '@/lib/pricing'
 import type { JobStatus, SpaceType } from '@/lib/types'
 
 type JobFull = {
@@ -53,6 +56,7 @@ type JobFull = {
     address: string
     address_detail?: string
     photos?: string[]
+    location?: { coordinates?: [number, number] } | null
   }
   users?: {
     id: string
@@ -81,6 +85,7 @@ export default function RequestDetailClient({ job, userId, initialIsFavorite = f
   const [canceling, setCanceling] = useState(false)
   const [showCancel, setShowCancel] = useState(false)
   const [showReview, setShowReview] = useState(false)
+  const [showDispute, setShowDispute] = useState(false)
   const [err, setErr] = useState<string | null>(null)
 
   const checklist = job.checklist_completed?.length ? job.checklist_completed : (job.checklist || [])
@@ -118,11 +123,13 @@ export default function RequestDetailClient({ job, userId, initialIsFavorite = f
     setCanceling(true)
     setErr(null)
     try {
-      const { error } = await supabase
-        .from('jobs')
-        .update({ status: 'CANCELED', updated_at: new Date().toISOString() })
-        .eq('id', job.id)
-      if (error) throw error
+      const res = await fetch('/api/jobs/cancel', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ job_id: job.id }),
+      })
+      const data = await res.json()
+      if (!data?.ok) throw new Error(data?.error || '취소 실패')
       setShowCancel(false)
       router.refresh()
     } catch (e) {
@@ -134,6 +141,7 @@ export default function RequestDetailClient({ job, userId, initialIsFavorite = f
   const canCancel = ['OPEN', 'ASSIGNED'].includes(job.status)
   const canApprove = job.status === 'SUBMITTED'
   const canReview = ['APPROVED', 'PAID_OUT'].includes(job.status) && !!job.users?.id
+  const canDispute = ['EN_ROUTE', 'ARRIVED', 'IN_PROGRESS', 'SUBMITTED', 'APPROVED'].includes(job.status)
 
   return (
     <div className="sseuksak-shell">
@@ -239,6 +247,20 @@ export default function RequestDetailClient({ job, userId, initialIsFavorite = f
             </div>
           ) : null}
 
+          {/* Live worker location (active states) */}
+          {['EN_ROUTE', 'ARRIVED', 'IN_PROGRESS'].includes(job.status) && job.spaces?.location?.coordinates && (
+            <div className="card p-4 mb-4">
+              <h3 className="text-[13.5px] font-extrabold text-ink mb-3">실시간 위치</h3>
+              <WorkerLiveMap
+                jobId={job.id}
+                spaceLat={job.spaces.location.coordinates[1]}
+                spaceLng={job.spaces.location.coordinates[0]}
+                spaceName={job.spaces.name}
+                height={220}
+              />
+            </div>
+          )}
+
           {/* Instructions */}
           {job.special_instructions && (
             <div className="card p-4 mb-4 bg-sun-soft border border-sun/20">
@@ -340,6 +362,11 @@ export default function RequestDetailClient({ job, userId, initialIsFavorite = f
                 <Trash2 size={16} /> 요청 취소
               </button>
             )}
+            {canDispute && (
+              <button onClick={() => setShowDispute(true)} className="btn btn-ghost w-full !text-danger">
+                <AlertTriangle size={16} /> 문제 신고
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -354,6 +381,13 @@ export default function RequestDetailClient({ job, userId, initialIsFavorite = f
           revieweeName={job.users.name}
         />
       )}
+
+      <DisputeModal
+        open={showDispute}
+        onClose={() => setShowDispute(false)}
+        jobId={job.id}
+        onSubmitted={() => router.refresh()}
+      />
 
       {/* Cancel modal */}
       {showCancel && (
@@ -370,7 +404,31 @@ export default function RequestDetailClient({ job, userId, initialIsFavorite = f
                 <X size={18} />
               </button>
             </div>
-            <p className="t-caption mb-5">취소 수수료가 발생할 수 있습니다.</p>
+            {(() => {
+              const policy = cancelRefundRate(job.scheduled_at)
+              const refund = Math.round((job.price || 0) * policy.rate)
+              const fee = (job.price || 0) - refund
+              return (
+                <>
+                  <p className="t-caption mb-4">{policy.label}</p>
+                  <div className="card p-4 bg-surface-soft mb-5">
+                    <div className="flex justify-between text-[13px] font-semibold text-text-muted py-1">
+                      <span>결제 금액</span>
+                      <span>{formatKRW(job.price || 0)}</span>
+                    </div>
+                    <div className="flex justify-between text-[13px] font-semibold text-danger py-1">
+                      <span>취소 수수료</span>
+                      <span>−{formatKRW(fee)}</span>
+                    </div>
+                    <div className="divider my-1" />
+                    <div className="flex justify-between text-[14px] font-black text-ink py-1">
+                      <span>환불 예정액</span>
+                      <span>{formatKRW(refund)}</span>
+                    </div>
+                  </div>
+                </>
+              )
+            })()}
             <div className="flex gap-2">
               <button onClick={() => setShowCancel(false)} className="flex-1 btn btn-ghost">유지하기</button>
               <button onClick={handleCancel} disabled={canceling} className="flex-1 btn btn-primary !bg-danger">

@@ -6,6 +6,7 @@ import PageTransition from '@/components/common/PageTransition'
 import ServiceWorkerRegister from '@/components/common/ServiceWorkerRegister'
 import HapticProvider from '@/components/common/HapticProvider'
 import InstallPrompt from '@/components/common/InstallPrompt'
+import BetaBadge from '@/components/common/BetaBadge'
 
 export const metadata: Metadata = {
   title: {
@@ -70,6 +71,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <ServiceWorkerRegister />
         <HapticProvider />
+        <BetaBadge />
         <NotificationOverlay />
         <PageTransition>{children}</PageTransition>
         <InstallPrompt />
