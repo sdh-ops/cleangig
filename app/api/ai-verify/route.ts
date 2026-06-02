@@ -36,6 +36,17 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: false, error: 'bad_request' }, { status: 400 })
     }
 
+    // 권한: 해당 작업에 배정된 워커만 검수 제출 가능 (타인 작업 auto_approved 조작 방지)
+    const { data: job } = await supabase
+      .from('jobs')
+      .select('id, worker_id')
+      .eq('id', jobId)
+      .single()
+    if (!job) return NextResponse.json({ ok: false, error: 'job_not_found' }, { status: 404 })
+    if (job.worker_id !== user.id) {
+      return NextResponse.json({ ok: false, error: 'forbidden' }, { status: 403 })
+    }
+
     const flags: { item_id: string; reason: string }[] = []
     let passed = 0
 
