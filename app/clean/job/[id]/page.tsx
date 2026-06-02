@@ -37,6 +37,7 @@ type JobFull = {
   is_urgent?: boolean
   special_instructions?: string
   checklist?: ChecklistItem[]
+  supply_shortages?: string[] | null
   price_breakdown?: { estimated_worker_payout?: number } | null
   spaces?: {
     id: string
@@ -60,6 +61,10 @@ const STATUS_FLOW: Partial<Record<JobStatus, { next: JobStatus; label: string; b
   IN_PROGRESS: { next: 'SUBMITTED', label: '청소 중', btnLabel: '작업 완료 보고', icon: CheckCircle2 },
 }
 
+// 현장에서 자주 떨어지는 소모품 — 워커가 부족분을 체크하면 공간 파트너에게 전달된다.
+// (지금은 기록·표시만. 추후 앱내 주문/제휴 구매를 이 데이터 위에 얹는다.)
+const SUPPLY_OPTIONS = ['휴지', '물티슈', '종량제봉투', '주방세제', '핸드워시', '섬유유연제', '청소세제', '수세미', '키친타월', '일회용장갑']
+
 export default function WorkerJobDetail() {
   const { id } = useParams<{ id: string }>()
   const router = useRouter()
@@ -71,6 +76,7 @@ export default function WorkerJobDetail() {
   const [transitioning, setTransitioning] = useState(false)
   const [err, setErr] = useState<string | null>(null)
   const [checklist, setChecklist] = useState<ChecklistItem[]>([])
+  const [supplies, setSupplies] = useState<string[]>([])
   const [showConsent, setShowConsent] = useState(false)
   const [showDispute, setShowDispute] = useState(false)
   const [uploadingIdx, setUploadingIdx] = useState<number | null>(null)
@@ -126,7 +132,7 @@ export default function WorkerJobDetail() {
         .from('jobs')
         .select(`
           id, status, worker_id, operator_id, price, scheduled_at,
-          estimated_duration, is_urgent, special_instructions, checklist, price_breakdown,
+          estimated_duration, is_urgent, special_instructions, checklist, supply_shortages, price_breakdown,
           spaces(id, name, type, address, address_detail, cleaning_tool_location, parking_guide, trash_guide, photos, location),
           users:worker_id(id, name, phone, profile_image, avg_rating)
         `)
@@ -139,6 +145,7 @@ export default function WorkerJobDetail() {
       }
       setJob(data as any)
       setChecklist(((data as any).checklist as ChecklistItem[]) ?? [])
+      setSupplies(((data as any).supply_shortages as string[]) ?? [])
       setLoading(false)
     })()
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -257,6 +264,13 @@ export default function WorkerJobDetail() {
       const updated = checklist.map((c, i) => (i === idx ? { ...c, completed: !c.completed } : c))
       supabase.from('jobs').update({ checklist: updated }).eq('id', job.id)
     }
+  }
+
+  const toggleSupply = (name: string) => {
+    if (!job) return
+    const next = supplies.includes(name) ? supplies.filter((s) => s !== name) : [...supplies, name]
+    setSupplies(next)
+    supabase.from('jobs').update({ supply_shortages: next }).eq('id', job.id)
   }
 
   const openCamera = (idx: number) => {
@@ -461,6 +475,31 @@ export default function WorkerJobDetail() {
                 ))}
               </ul>
               <input ref={fileRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handlePhotoUpload} />
+            </div>
+          )}
+
+          {/* 부족 비품 체크 (도착 후) — 공간 파트너에게 전달 */}
+          {isMine && ['ARRIVED', 'IN_PROGRESS'].includes(job.status) && (
+            <div className="card p-4 mb-4">
+              <h3 className="text-[13.5px] font-extrabold text-ink mb-1">부족한 비품 체크</h3>
+              <p className="text-[11.5px] text-text-soft font-medium mb-3 leading-snug">
+                떨어진 소모품을 선택하면 공간 파트너에게 전달돼 다음 청소 전 채워둘 수 있어요.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {SUPPLY_OPTIONS.map((name) => {
+                  const on = supplies.includes(name)
+                  return (
+                    <button
+                      key={name}
+                      onClick={() => toggleSupply(name)}
+                      className={`px-3 py-1.5 rounded-full text-[12.5px] font-bold border transition ${on ? 'bg-brand text-white border-brand' : 'bg-surface text-text-muted border-line-soft hover:border-line-strong'}`}
+                    >
+                      {on && <Check size={12} strokeWidth={3} className="inline mr-1 -mt-0.5" />}
+                      {name}
+                    </button>
+                  )
+                })}
+              </div>
             </div>
           )}
 

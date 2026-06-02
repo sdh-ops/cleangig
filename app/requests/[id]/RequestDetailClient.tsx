@@ -49,6 +49,7 @@ type JobFull = {
   }
   checklist?: { id: string; label: string; required?: boolean; completed?: boolean; photo_url?: string }[]
   checklist_completed?: { id: string; label: string; required?: boolean; completed?: boolean; photo_url?: string }[]
+  supply_shortages?: string[] | null
   spaces?: {
     id: string
     name: string
@@ -70,9 +71,6 @@ type JobFull = {
 
 type Props = {
   job: JobFull
-  photos: any[]
-  payment: any
-  applications: any[]
   userId: string
   initialIsFavorite?: boolean
 }
@@ -294,6 +292,23 @@ export default function RequestDetailClient({ job, userId, initialIsFavorite = f
                   </li>
                 ))}
               </ul>
+            </div>
+          )}
+
+          {/* 부족 비품 (워커가 현장에서 체크) */}
+          {job.supply_shortages && job.supply_shortages.length > 0 && (
+            <div className="card p-4 mb-4">
+              <h3 className="text-[13.5px] font-extrabold text-ink mb-1">채워야 할 비품</h3>
+              <p className="text-[11.5px] text-text-soft font-medium mb-3 leading-snug">
+                작업자가 이번 청소 중 부족을 확인한 소모품이에요. 다음 청소 전 채워주세요.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {job.supply_shortages.map((s) => (
+                  <span key={s} className="px-3 py-1.5 rounded-full text-[12.5px] font-bold bg-sun-soft text-[#92580C] border border-sun/30">
+                    {s}
+                  </span>
+                ))}
+              </div>
             </div>
           )}
 

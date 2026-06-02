@@ -16,18 +16,6 @@ export default async function RequestDetailPage({ params }: { params: Promise<{ 
 
     if (!job) redirect('/dashboard')
 
-    const { data: photos } = await supabase
-        .from('photos').select('*').eq('job_id', id).order('created_at')
-
-    const { data: payment } = await supabase
-        .from('payments').select('*').eq('job_id', id).maybeSingle()
-
-    const { data: applications } = await supabase
-        .from('job_applications')
-        .select('*, users!job_applications_worker_id_fkey(name, avg_rating, tier, profile_image)')
-        .eq('job_id', id)
-        .order('created_at')
-
     let isFavorite = false
     if (job.worker_id) {
         const { data: fav } = await supabase.from('favorite_partners')
@@ -35,5 +23,5 @@ export default async function RequestDetailPage({ params }: { params: Promise<{ 
         if (fav) isFavorite = true
     }
 
-    return <RequestDetailClient job={job as any} photos={photos || []} payment={payment} applications={applications || []} userId={user.id} initialIsFavorite={isFavorite} />
+    return <RequestDetailClient job={job as any} userId={user.id} initialIsFavorite={isFavorite} />
 }
