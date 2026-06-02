@@ -15,16 +15,50 @@
  */
 import type { SpaceType } from './types'
 
+// 공간 유형별 기본 단가 (20평 기준, 워커 최저 수령 35k+ 보장 위해 시장현실 반영)
 export const BASE_PRICE_BY_TYPE: Record<SpaceType, number> = {
-  airbnb: 35000,
-  partyroom: 35000,
-  studio: 30000,
-  gym: 45000,
-  unmanned_store: 25000,
-  study_cafe: 30000,
-  practice_room: 25000,
-  workspace: 35000,
-  other: 30000,
+  airbnb:         45000, // 에어비앤비: 린넨·침구 포함, 체크리스트 많음
+  partyroom:      40000, // 파티룸: 음식·주류 오염 잦음
+  studio:         40000, // 촬영스튜디오: 바닥·배경지 주의
+  gym:            55000, // 헬스장: 운동기구·샤워실 포함
+  unmanned_store: 30000, // 무인매장: 규모 작고 체크리스트 단순
+  study_cafe:     35000, // 스터디카페: 책상·개인공간 많음
+  practice_room:  30000, // 연습실: 비교적 단순
+  workspace:      35000, // 공유오피스: 사무기기 주의
+  other:          35000,
+}
+
+// 면적 구간별 추가 금액 (20평 기준 0원, 10평마다 구간 상승)
+export function getAreaBonus(pyeong: number): number {
+  if (pyeong <= 10) return -5000
+  if (pyeong <= 20) return 0
+  if (pyeong <= 30) return 10000
+  if (pyeong <= 40) return 20000
+  if (pyeong <= 50) return 32000
+  return 32000 + Math.round((pyeong - 50) * 800 / 1000) * 1000
+}
+
+// 난이도 배율
+export const DIFFICULTY_MULTIPLIER: Record<string, number> = {
+  '쉬움':  0.85,
+  '보통':  1.0,
+  '어려움': 1.2,
+}
+
+/**
+ * 공간 등록 시 추천 가격 자동 계산.
+ * 운영자는 이 값을 기준으로 ±조정 가능.
+ */
+export function suggestBasePrice(
+  spaceType: SpaceType,
+  pyeong: number | null | undefined,
+  difficulty: string = '보통',
+): number {
+  const base = BASE_PRICE_BY_TYPE[spaceType] ?? 35000
+  const areaBonus = pyeong ? getAreaBonus(pyeong) : 0
+  const multiplier = DIFFICULTY_MULTIPLIER[difficulty] ?? 1.0
+  const raw = (base + areaBonus) * multiplier
+  return Math.max(30000, Math.round(raw / 1000) * 1000)
 }
 
 export type TaxType = 'FREELANCER' | 'INDIVIDUAL_BUSINESS' | 'BUSINESS'

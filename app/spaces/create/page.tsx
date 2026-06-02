@@ -19,7 +19,7 @@ import {
 import ImageUploader from '@/components/common/ImageUploader'
 import NaverMap from '@/components/common/NaverMap'
 import { makeChecklist, DEFAULT_CHECKLISTS } from '@/lib/checklists'
-import { BASE_PRICE_BY_TYPE } from '@/lib/pricing'
+import { suggestBasePrice } from '@/lib/pricing'
 import { spaceTypeLabel, rid } from '@/lib/utils'
 import { geocode } from '@/lib/naver'
 
@@ -60,7 +60,9 @@ export default function CreateSpacePage() {
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null)
   const [geoLoading, setGeoLoading] = useState(false)
   const [sizePyeong, setSizePyeong] = useState<string>('')
-  const [basePrice, setBasePrice] = useState<number>(30000)
+  const [difficulty, setDifficulty] = useState<'쉬움' | '보통' | '어려움'>('보통')
+  const [basePrice, setBasePrice] = useState<number>(40000)
+  const [priceManuallySet, setPriceManuallySet] = useState(false)
 
   const [photos, setPhotos] = useState<string[]>([])
   const [referencePhotos, setReferencePhotos] = useState<string[]>([])
@@ -84,15 +86,20 @@ export default function CreateSpacePage() {
   const [vatType, setVatType] = useState<'GENERAL' | 'SIMPLE' | 'EXEMPT'>('SIMPLE')
   const [taxInvoiceRequired, setTaxInvoiceRequired] = useState(false)
 
+  // 타입 변경 시 체크리스트 초기화
   useEffect(() => {
-    if (type) {
-      setBasePrice(BASE_PRICE_BY_TYPE[type] ?? 30000)
-      if (checklist.length === 0) {
-        setChecklist(DEFAULT_CHECKLISTS[type].map((it) => ({ id: rid('ck'), ...it })))
-      }
+    if (type && checklist.length === 0) {
+      setChecklist(DEFAULT_CHECKLISTS[type].map((it) => ({ id: rid('ck'), ...it })))
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [type])
+
+  // 타입·면적·난이도 변경 시 추천가 자동 계산 (operator가 수동 수정하지 않은 경우에만)
+  useEffect(() => {
+    if (!type || priceManuallySet) return
+    const pyeong = sizePyeong ? parseFloat(sizePyeong) : null
+    setBasePrice(suggestBasePrice(type, pyeong, difficulty))
+  }, [type, sizePyeong, difficulty, priceManuallySet])
 
   const handleGeocode = async () => {
     if (!address.trim()) return
@@ -145,7 +152,7 @@ export default function CreateSpacePage() {
         size_sqm: sizeSqm ?? null,
         base_price: basePrice,
         estimated_duration: 90,
-        cleaning_difficulty: '보통',
+        cleaning_difficulty: difficulty,
         cleaning_tool_location: toolLocation || null,
         parking_guide: parkingGuide || null,
         trash_guide: trashGuide || null,
@@ -302,35 +309,92 @@ export default function CreateSpacePage() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="t-meta block mb-2 ml-1">평수</label>
-                  <div className="relative">
-                    <input
-                      type="number"
-                      value={sizePyeong}
-                      onChange={(e) => setSizePyeong(e.target.value)}
-                      placeholder="15"
-                      className="input pr-10"
-                      min={1}
-                    />
-                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-text-faint text-sm font-bold">평</span>
-                  </div>
-                  {sizeSqm && <p className="text-[11px] text-text-soft font-bold mt-1 ml-1">≈ {sizeSqm}㎡</p>}
+              {/* 면적 */}
+              <div>
+                <label className="t-meta block mb-2 ml-1">평수</label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    value={sizePyeong}
+                    onChange={(e) => { setSizePyeong(e.target.value); setPriceManuallySet(false) }}
+                    placeholder="20"
+                    className="input pr-10"
+                    min={1}
+                    inputMode="numeric"
+                  />
+                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-text-faint text-sm font-bold">평</span>
                 </div>
-                <div>
-                  <label className="t-meta block mb-2 ml-1">기본 가격</label>
-                  <div className="relative">
-                    <input
-                      type="number"
-                      value={basePrice}
-                      onChange={(e) => setBasePrice(parseInt(e.target.value) || 0)}
-                      className="input pr-10"
-                      step={1000}
-                    />
-                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-text-faint text-sm font-bold">원</span>
+                {sizeSqm && <p className="text-[11px] text-text-soft font-bold mt-1 ml-1">≈ {sizeSqm}㎡</p>}
+              </div>
+
+              {/* 청소 난이도 */}
+              <div>
+                <label className="t-meta block mb-2 ml-1">청소 난이도</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {(['쉬움', '보통', '어려움'] as const).map((d) => (
+                    <button
+                      key={d}
+                      type="button"
+                      onClick={() => { setDifficulty(d); setPriceManuallySet(false) }}
+                      className={`rounded-xl border-2 p-3 text-[13px] font-extrabold transition ${difficulty === d ? 'border-brand bg-brand-softer text-brand-dark' : 'border-line-soft bg-surface text-text-muted'}`}
+                    >
+                      {d === '쉬움' ? '🟢 쉬움' : d === '보통' ? '🟡 보통' : '🔴 어려움'}
+                    </button>
+                  ))}
+                </div>
+                <p className="text-[11px] text-text-soft font-medium mt-1.5 ml-1 leading-snug">
+                  {difficulty === '쉬움' && '음식·음료 오염 거의 없음 · 규모 작음'}
+                  {difficulty === '보통' && '일반적인 파티룸·숙박 수준'}
+                  {difficulty === '어려움' && '대규모 파티·음식 오염 심함 · 시설 복잡'}
+                </p>
+              </div>
+
+              {/* 스마트 가격 */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="t-meta ml-1">청소 1회 가격</label>
+                  {!priceManuallySet && (
+                    <span className="text-[10.5px] font-bold text-brand-dark bg-brand-softer px-2 py-0.5 rounded-full">
+                      자동 계산됨
+                    </span>
+                  )}
+                </div>
+                <div className="card p-4 bg-surface-soft">
+                  <div className="flex items-center justify-between mb-4">
+                    <button
+                      type="button"
+                      onClick={() => { setBasePrice((p) => Math.max(30000, p - 5000)); setPriceManuallySet(true) }}
+                      className="w-10 h-10 rounded-full border-2 border-line-strong flex items-center justify-center text-xl font-black text-ink hover:bg-surface-muted active:scale-95"
+                    >−</button>
+                    <div className="text-center">
+                      <p className="t-money text-[28px] text-ink">{basePrice.toLocaleString()}원</p>
+                      <p className="text-[11px] text-text-soft font-bold mt-0.5">
+                        워커 예상 수령 ≈ {(Math.round(basePrice * 0.88 / 1000) * 1000).toLocaleString()}원
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => { setBasePrice((p) => p + 5000); setPriceManuallySet(true) }}
+                      className="w-10 h-10 rounded-full border-2 border-line-strong flex items-center justify-center text-xl font-black text-ink hover:bg-surface-muted active:scale-95"
+                    >+</button>
+                  </div>
+                  <input
+                    type="range"
+                    min={30000}
+                    max={150000}
+                    step={5000}
+                    value={basePrice}
+                    onChange={(e) => { setBasePrice(parseInt(e.target.value)); setPriceManuallySet(true) }}
+                    className="w-full accent-brand"
+                  />
+                  <div className="flex justify-between text-[10px] text-text-faint font-bold mt-1">
+                    <span>최소 3만</span>
+                    <span>최대 15만</span>
                   </div>
                 </div>
+                <p className="text-[11px] text-text-soft font-medium mt-1.5 ml-1 leading-snug">
+                  면적·난이도 기반 자동 계산. ±버튼이나 슬라이더로 조정하세요.
+                </p>
               </div>
 
               <div>
