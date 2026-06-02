@@ -14,7 +14,7 @@ export const metadata: Metadata = {
     template: '%s | 쓱싹',
   },
   description:
-    '청소 맡기고, 청소로 돈 벌고. 공간 운영자와 클린 파트너를 연결하는 청소 매칭 플랫폼. 원하는 시간·지역에서 부업 수익 만들고, 공간은 원클릭으로 청소 요청하세요.',
+    '청소 맡기고, 청소로 돈 벌고. 공간파트너와 클린파트너를 연결하는 청소 매칭 플랫폼. 원하는 시간·지역에서 부업 수익 만들고, 공간은 원클릭으로 청소 요청하세요.',
   keywords: [
     '쓱싹', '청소 매칭', '청소 부업', '청소 알바', '홈클리닝', '주말 부업',
     '파티룸 청소', '에어비앤비 청소', '무인매장 청소', '스튜디오 청소',
@@ -28,13 +28,13 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'ko_KR',
     title: '쓱싹 - 청소 맡기고, 청소로 돈 벌고',
-    description: '공간 운영자와 클린 파트너를 연결하는 청소 매칭 플랫폼.',
+    description: '공간파트너와 클린파트너를 연결하는 청소 매칭 플랫폼.',
     siteName: '쓱싹',
   },
   twitter: {
     card: 'summary_large_image',
     title: '쓱싹 - 청소 맡기고, 청소로 돈 벌고',
-    description: '공간 운영자와 클린 파트너를 연결합니다.',
+    description: '공간파트너와 클린파트너를 연결합니다.',
   },
   icons: {
     icon: '/favicon.ico',

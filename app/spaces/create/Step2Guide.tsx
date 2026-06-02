@@ -7,7 +7,7 @@ export default function Step2Guide({ form, setForm }: any) {
         <div className="flex flex-col gap-6 px-5 mt-4">
             <div className="mb-2">
                 <h2 className="text-[22px] font-bold leading-tight tracking-[-0.015em] mb-1">현장 가이드 작성</h2>
-                <p className="text-secondary text-sm">클린 파트너가 헤매지 않도록 작성해 주세요.</p>
+                <p className="text-secondary text-sm">클린파트너가 헤매지 않도록 작성해 주세요.</p>
             </div>
 
             <label className="flex flex-col flex-1">
@@ -45,7 +45,7 @@ export default function Step2Guide({ form, setForm }: any) {
                 <p className="text-base font-medium leading-normal pb-2 text-slate-900 dark:text-slate-100">주의사항 및 세부 가이드 (선택)</p>
                 <textarea
                     className={`${commonInputClass} min-h-[120px] resize-y`}
-                    placeholder="클린 파트너에게 전달할 주의사항이나 상세 가이드를 입력해 주세요."
+                    placeholder="클린파트너에게 전달할 주의사항이나 상세 가이드를 입력해 주세요."
                     value={form.caution_notes}
                     onChange={e => setForm((f: any) => ({ ...f, caution_notes: e.target.value }))}
                 />

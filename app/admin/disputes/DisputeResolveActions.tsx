@@ -73,7 +73,7 @@ export default function DisputeResolveActions({ disputeId, jobPrice }: { dispute
         <div className="flex flex-col gap-2.5">
           <div className="flex items-center justify-between">
             <p className="text-[12.5px] font-extrabold text-ink">
-              {open === 'APPROVE_WORK' ? '워커 작업을 인정하고 승인 처리할까요?'
+              {open === 'APPROVE_WORK' ? '클린파트너 작업을 인정하고 승인 처리할까요?'
                 : open === 'REFUND' ? '요청자에게 환불 처리할까요?'
                   : '신고를 기각할까요?'}
             </p>

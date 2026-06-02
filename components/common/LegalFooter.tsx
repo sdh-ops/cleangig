@@ -15,7 +15,7 @@ export default function LegalFooter() {
         <p className="pt-1 font-bold text-text-muted">
           쓱싹은 통신판매중개자로서 개별 거래의 당사자가 아니며,
           <br />
-          공간 파트너와 클린 파트너 간 거래에 대한 책임은 해당 당사자에게 있습니다.
+          공간파트너와 클린파트너 간 거래에 대한 책임은 해당 당사자에게 있습니다.
         </p>
       </div>
       <div className="mt-4 flex items-center flex-wrap gap-x-3 gap-y-1.5 text-text-muted">

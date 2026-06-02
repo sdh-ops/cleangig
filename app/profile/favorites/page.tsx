@@ -21,14 +21,14 @@ export default async function FavoritesPage() {
 
   return (
     <div className="sseuksak-shell">
-      <Header title="단골 작업자" showBack />
+      <Header title="단골 클린파트너" showBack />
       <div className="flex-1 px-5 pt-4 pb-20">
         {list.length === 0 ? (
           <div className="card p-2 mt-4">
             <EmptyState
               icon={<Heart size={22} />}
-              title="아직 단골 작업자가 없어요"
-              description="만족했던 작업자를 하트로 저장해보세요. 다음 요청 시 우선 매칭됩니다."
+              title="아직 단골 클린파트너가 없어요"
+              description="만족했던 클린파트너를 하트로 저장해보세요. 다음 요청 시 우선 매칭됩니다."
             />
           </div>
         ) : (

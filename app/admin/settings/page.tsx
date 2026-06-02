@@ -49,7 +49,7 @@ export default function AdminFeeSettingsPage() {
   const save = async () => {
     setErr(null); setOk(false)
     if (host < 0 || worker < 0 || wht < 0 || vat < 0) { setErr('음수는 허용되지 않습니다.'); return }
-    if (host + worker > 50) { setErr('호스트+워커 수수료 합은 50%를 넘을 수 없습니다.'); return }
+    if (host + worker > 50) { setErr('공간파트너+클린파트너 수수료 합은 50%를 넘을 수 없습니다.'); return }
     setSaving(true)
     const res = await saveFeeSettings(asSettings())
     setSaving(false)
@@ -68,14 +68,14 @@ export default function AdminFeeSettingsPage() {
     <div>
       <div className="mb-6">
         <h1 className="h-hero text-ink">수수료 · 세율 설정</h1>
-        <p className="t-caption mt-1">트랜잭션별로 적용되는 수수료율을 조정하세요. 기본값: 호스트 5% · 워커 5% · 원천징수 3.3% · 부가세 10%.</p>
+        <p className="t-caption mt-1">트랜잭션별로 적용되는 수수료율을 조정하세요. 기본값: 공간파트너 5% · 클린파트너 5% · 원천징수 3.3% · 부가세 10%.</p>
       </div>
 
       <div className="grid md:grid-cols-2 gap-4">
         <div className="card p-5">
           <h3 className="h-section text-ink mb-4">요율</h3>
-          <RateInput label="호스트 수수료" value={host} onChange={setHost} suffix="%" hint="공간 파트너 거래액에서 차감" />
-          <RateInput label="워커 수수료" value={worker} onChange={setWorker} suffix="%" hint="작업자 정산액에서 차감" />
+          <RateInput label="공간파트너 수수료" value={host} onChange={setHost} suffix="%" hint="공간파트너 거래액에서 차감" />
+          <RateInput label="클린파트너 수수료" value={worker} onChange={setWorker} suffix="%" hint="클린파트너 정산액에서 차감" />
           <RateInput label="원천징수율 (프리랜서)" value={wht} onChange={setWht} suffix="%" hint="소득세 3% + 지방세 0.3% = 3.3%" />
           <RateInput label="부가세율" value={vat} onChange={setVat} suffix="%" hint="참조용 (과세사업자 대상)" />
 
@@ -101,7 +101,7 @@ export default function AdminFeeSettingsPage() {
             <Calculator size={18} className="text-brand-dark" />
             <h3 className="h-section text-ink">미리보기</h3>
           </div>
-          <label className="t-meta block mb-2 ml-1">거래액 (호스트 결제)</label>
+          <label className="t-meta block mb-2 ml-1">거래액 (공간파트너 결제)</label>
           <input
             type="number"
             value={preview}
@@ -111,24 +111,24 @@ export default function AdminFeeSettingsPage() {
           />
 
           <div className="card p-4 bg-surface-soft mb-3">
-            <p className="text-[11.5px] font-black text-text-faint uppercase tracking-wide mb-2">프리랜서 워커</p>
+            <p className="text-[11.5px] font-black text-text-faint uppercase tracking-wide mb-2">프리랜서 클린파트너</p>
             <Row label="거래액" value={formatKRW(settlementFreelancer.gross_amount)} />
-            <Row label={`호스트 수수료 (${host}%)`} value={`−${formatKRW(settlementFreelancer.host_fee)}`} dim />
-            <Row label={`워커 수수료 (${worker}%)`} value={`−${formatKRW(settlementFreelancer.worker_fee)}`} dim />
+            <Row label={`공간파트너 수수료 (${host}%)`} value={`−${formatKRW(settlementFreelancer.host_fee)}`} dim />
+            <Row label={`클린파트너 수수료 (${worker}%)`} value={`−${formatKRW(settlementFreelancer.worker_fee)}`} dim />
             <Row label={`원천징수 (${wht}%)`} value={`−${formatKRW(settlementFreelancer.withholding_tax)}`} dim />
             <div className="divider my-2" />
-            <Row label="워커 실수령" value={formatKRW(settlementFreelancer.worker_payout)} bold />
+            <Row label="클린파트너 실수령" value={formatKRW(settlementFreelancer.worker_payout)} bold />
             <Row label="플랫폼 매출" value={formatKRW(settlementFreelancer.platform_revenue)} bold tone="brand" />
           </div>
 
           <div className="card p-4 bg-surface-soft">
             <p className="text-[11.5px] font-black text-text-faint uppercase tracking-wide mb-2">개인/법인 사업자</p>
             <Row label="거래액" value={formatKRW(settlementBusiness.gross_amount)} />
-            <Row label={`호스트 수수료 (${host}%)`} value={`−${formatKRW(settlementBusiness.host_fee)}`} dim />
-            <Row label={`워커 수수료 (${worker}%)`} value={`−${formatKRW(settlementBusiness.worker_fee)}`} dim />
+            <Row label={`공간파트너 수수료 (${host}%)`} value={`−${formatKRW(settlementBusiness.host_fee)}`} dim />
+            <Row label={`클린파트너 수수료 (${worker}%)`} value={`−${formatKRW(settlementBusiness.worker_fee)}`} dim />
             <Row label="원천징수" value="없음" dim />
             <div className="divider my-2" />
-            <Row label="워커 실수령" value={formatKRW(settlementBusiness.worker_payout)} bold />
+            <Row label="클린파트너 실수령" value={formatKRW(settlementBusiness.worker_payout)} bold />
             <Row label="플랫폼 매출" value={formatKRW(settlementBusiness.platform_revenue)} bold tone="brand" />
           </div>
         </div>

@@ -44,7 +44,7 @@ export default function MarketPage() {
 
   return (
     <div className="sseuksak-shell">
-      <Header title="클린 파트너 찾기" showBack />
+      <Header title="클린파트너 찾기" showBack />
 
       <div className="sticky top-14 z-10 px-5 py-3 bg-canvas/95 backdrop-blur border-b border-line-soft">
         <div className="relative">

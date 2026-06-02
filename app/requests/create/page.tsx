@@ -17,7 +17,7 @@ import {
   Calendar,
   MessageSquare,
 } from 'lucide-react'
-import { calculatePrice, DEFAULT_FEES, type FeeSettings } from '@/lib/pricing'
+import { calculatePrice, suggestBasePrice, DEFAULT_FEES, type FeeSettings } from '@/lib/pricing'
 import { getFeeSettings } from '@/lib/settings'
 import { formatKRW, formatScheduled, spaceTypeLabel } from '@/lib/utils'
 import type { SpaceType, ChecklistItem } from '@/lib/types'
@@ -50,8 +50,8 @@ export default function CreateRequestPage() {
   const [scheduledTime, setScheduledTime] = useState<string>('')
   const [isUrgent, setIsUrgent] = useState(false)
 
-  const [extraTrash, setExtraTrash] = useState(false)
-  const [heavySoil, setHeavySoil] = useState(false)
+  const [difficulty, setDifficulty] = useState<'쉬움' | '보통' | '어려움'>('보통')
+  const [customPrice, setCustomPrice] = useState<number | null>(null) // null = 자동추천 사용
   const [instructions, setInstructions] = useState('')
   const [fees, setFees] = useState<FeeSettings>(DEFAULT_FEES)
   const [isRecurring, setIsRecurring] = useState(false)
@@ -98,20 +98,30 @@ export default function CreateRequestPage() {
     return new Date().toISOString()
   }, [when, scheduledDate, scheduledTime])
 
+  // 면적+난이도로 추천 기본가 산출 (요청마다 난이도 다르게 가능)
+  const suggestedPrice = useMemo(() => {
+    if (!selectedSpace) return 0
+    const pyeong = selectedSpace.size_sqm ? selectedSpace.size_sqm / 3.3 : null
+    let p = suggestBasePrice(selectedSpace.type, pyeong, difficulty)
+    if (isUrgent || when === 'now') p += 10000 // 긴급 할증
+    if (isRecurring) p = Math.round(p * 0.95 / 1000) * 1000 // 정기 할인 5%
+    return Math.max(15000, p)
+  }, [selectedSpace, difficulty, isUrgent, when, isRecurring])
+
+  // 실제 가격 = 공간파트너가 조정했으면 그 값, 아니면 추천가
+  const finalPrice = customPrice ?? suggestedPrice
+
   const priceBreakdown = useMemo(() => {
     if (!selectedSpace) return null
+    // 최종가를 base로 넣고 추가 할증 없이 수수료/정산만 계산 (할증은 이미 suggestedPrice에 반영)
     return calculatePrice({
-      base_price: selectedSpace.base_price,
+      base_price: finalPrice,
       space_type: selectedSpace.type,
-      size_sqm: selectedSpace.size_sqm,
       scheduled_at: scheduledAt,
-      is_urgent: isUrgent || when === 'now',
-      extra_trash: extraTrash,
-      has_heavy_soil: heavySoil,
-      recurring_discount: isRecurring,
+      night_premium: false,
       fees,
     })
-  }, [selectedSpace, scheduledAt, isUrgent, when, extraTrash, heavySoil, isRecurring, fees])
+  }, [selectedSpace, finalPrice, scheduledAt, fees])
 
   const canProceed = (() => {
     if (step === 1) return !!spaceId
@@ -319,7 +329,7 @@ export default function CreateRequestPage() {
                   </div>
                   <div className="flex-1 text-left">
                     <p className="text-[13px] font-extrabold text-ink">긴급 요청으로 변경</p>
-                    <p className="text-[11px] text-text-soft font-bold">+10,000원 · 마스터 작업자 우선 배정</p>
+                    <p className="text-[11px] text-text-soft font-bold">+10,000원 · 마스터 클린파트너 우선 배정</p>
                   </div>
                   <ChevronRight size={16} className="text-text-faint" />
                 </button>
@@ -396,8 +406,8 @@ export default function CreateRequestPage() {
           {step === 3 && selectedSpace && priceBreakdown && (
             <motion.div key="s3" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} className="flex flex-col gap-5">
               <div>
-                <h2 className="h-title text-ink">추가 옵션 · 확인</h2>
-                <p className="t-caption mt-1.5">필요한 옵션을 추가하고 가격을 확인하세요.</p>
+                <h2 className="h-title text-ink">난이도 · 가격</h2>
+                <p className="t-caption mt-1.5">이번 청소가 얼마나 더러운지에 따라 가격을 정하세요.</p>
               </div>
 
               <div className="card p-4 flex items-center gap-3">
@@ -412,9 +422,45 @@ export default function CreateRequestPage() {
                 </div>
               </div>
 
-              <div className="flex flex-col gap-2.5">
-                <OptionToggle label="쓰레기 다량" sublabel="+10,000원" checked={extraTrash} onChange={setExtraTrash} />
-                <OptionToggle label="심한 오염" sublabel="+15,000원" checked={heavySoil} onChange={setHeavySoil} />
+              {/* 난이도 */}
+              <div>
+                <label className="t-meta block mb-2 ml-1">청소 난이도</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {(['쉬움', '보통', '어려움'] as const).map((d) => (
+                    <button
+                      key={d}
+                      type="button"
+                      onClick={() => { setDifficulty(d); setCustomPrice(null) }}
+                      className={`rounded-xl border-2 p-3 text-[13px] font-extrabold transition ${difficulty === d ? 'border-brand bg-brand-softer text-brand-dark' : 'border-line-soft bg-surface text-text-muted'}`}
+                    >
+                      {d === '쉬움' ? '🟢 쉬움' : d === '보통' ? '🟡 보통' : '🔴 어려움'}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* 스마트 가격 */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="t-meta ml-1">청소 가격</label>
+                  {customPrice === null
+                    ? <span className="text-[10.5px] font-bold text-brand-dark bg-brand-softer px-2 py-0.5 rounded-full">자동 추천</span>
+                    : <button onClick={() => setCustomPrice(null)} className="text-[10.5px] font-bold text-text-muted underline">추천가로 되돌리기</button>}
+                </div>
+                <div className="card p-4 bg-surface-soft">
+                  <div className="flex items-center justify-between mb-4">
+                    <button type="button" onClick={() => setCustomPrice(Math.max(15000, finalPrice - 1000))}
+                      className="w-10 h-10 rounded-full border-2 border-line-strong flex items-center justify-center text-xl font-black text-ink hover:bg-surface-muted active:scale-95">−</button>
+                    <p className="t-money text-[28px] text-ink">{finalPrice.toLocaleString()}원</p>
+                    <button type="button" onClick={() => setCustomPrice(finalPrice + 1000)}
+                      className="w-10 h-10 rounded-full border-2 border-line-strong flex items-center justify-center text-xl font-black text-ink hover:bg-surface-muted active:scale-95">+</button>
+                  </div>
+                  <input type="range" min={15000} max={150000} step={1000} value={finalPrice}
+                    onChange={(e) => setCustomPrice(parseInt(e.target.value))} className="w-full accent-brand" />
+                  <div className="flex justify-between text-[10px] text-text-faint font-bold mt-1">
+                    <span>최소 1.5만</span><span>최대 15만</span>
+                  </div>
+                </div>
               </div>
 
               <div>
@@ -449,15 +495,15 @@ export default function CreateRequestPage() {
                 </div>
                 <div className="mt-3 pt-3 border-t border-line-soft text-[11.5px] text-text-soft font-bold space-y-1">
                   <div className="flex justify-between">
-                    <span>호스트 수수료 ({Math.round(fees.host_fee_rate * 100 * 10) / 10}%)</span>
+                    <span>공간파트너 수수료 ({Math.round(fees.host_fee_rate * 100 * 10) / 10}%)</span>
                     <span>{formatKRW(priceBreakdown.host_fee)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span>워커 수수료 ({Math.round(fees.worker_fee_rate * 100 * 10) / 10}%)</span>
+                    <span>클린파트너 수수료 ({Math.round(fees.worker_fee_rate * 100 * 10) / 10}%)</span>
                     <span>{formatKRW(priceBreakdown.worker_fee)}</span>
                   </div>
                   <div className="flex justify-between text-brand-dark">
-                    <span>워커 예상 수령 (프리랜서 기준)</span>
+                    <span>클린파트너 예상 수령 (프리랜서 기준)</span>
                     <span>{formatKRW(priceBreakdown.estimated_worker_payout)}</span>
                   </div>
                 </div>
@@ -500,22 +546,5 @@ export default function CreateRequestPage() {
         </div>
       </div>
     </div>
-  )
-}
-
-function OptionToggle({ label, sublabel, checked, onChange }: { label: string; sublabel: string; checked: boolean; onChange: (v: boolean) => void }) {
-  return (
-    <button
-      onClick={() => onChange(!checked)}
-      className={`rounded-2xl border-2 p-4 flex items-center gap-3 text-left transition ${checked ? 'border-brand bg-brand-softer' : 'border-line-soft bg-surface'}`}
-    >
-      <div className={`w-6 h-6 rounded-md flex items-center justify-center shrink-0 ${checked ? 'bg-brand text-white' : 'bg-surface-muted'}`}>
-        {checked && <Check size={15} strokeWidth={3} />}
-      </div>
-      <div className="flex-1">
-        <p className="text-[14px] font-extrabold text-ink">{label}</p>
-      </div>
-      <span className="text-[13px] font-bold text-brand-dark">{sublabel}</span>
-    </button>
   )
 }

@@ -46,7 +46,7 @@ export default async function AdminDashboardPage() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
         <KPI label="총 GMV" value={formatKRW(gmv, { short: true })} icon={<DollarSign size={16} />} tone="brand" />
         <KPI label="플랫폼 수수료" value={formatKRW(fees, { short: true })} icon={<TrendingUp size={16} />} />
-        <KPI label="총 가입자" value={`${usersAll.count ?? 0}`} sub={`파트너 ${usersOp.count ?? 0} · 작업자 ${usersWorker.count ?? 0}`} icon={<Users size={16} />} />
+        <KPI label="총 가입자" value={`${usersAll.count ?? 0}`} sub={`파트너 ${usersOp.count ?? 0} · 클린파트너 ${usersWorker.count ?? 0}`} icon={<Users size={16} />} />
         <KPI label="진행 중 작업" value={`${jobsInProg.count ?? 0}`} sub={`열림 ${jobsOpen.count ?? 0}`} icon={<Briefcase size={16} />} />
       </div>
 

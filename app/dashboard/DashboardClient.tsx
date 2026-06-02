@@ -95,7 +95,7 @@ export default function DashboardClient({
           animate={{ opacity: 1, y: 0 }}
           className="mb-5 pt-2"
         >
-          <p className="t-caption">{greeting}, 공간 파트너님</p>
+          <p className="t-caption">{greeting}, 공간파트너님</p>
           <h1 className="h-hero text-ink mt-1">
             {profile.business_name || profile.name}
             <span className="text-text-faint text-xl font-extrabold">님</span>
@@ -106,7 +106,7 @@ export default function DashboardClient({
         <div className="mb-5">
           <SetupChecklist
             storageKey="sseuksak:host_setup_dismissed"
-            title="공간 파트너 설정을 완료해보세요"
+            title="공간파트너 설정을 완료해보세요"
             items={[
               { key: 'profile', label: '이름 · 연락처 등록', href: '/profile/edit', done: !!profile.name && !!profile.phone },
               { key: 'verify', label: '본인 인증', href: '/profile/verification', done: !!profile.is_verified, badge: '중요' },

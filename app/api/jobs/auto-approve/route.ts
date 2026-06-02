@@ -5,7 +5,7 @@ export const runtime = 'nodejs'
 
 /**
  * 전액 정산 보호 (Auto-Approval)
- * SUBMITTED 상태에서 호스트가 24시간 응답 없으면 자동 승인.
+ * SUBMITTED 상태에서 공간파트너가 24시간 응답 없으면 자동 승인.
  * payments 테이블의 HELD → RELEASED 전환 (실결제 도입 후 유효).
  * Cron job에서 호출 권장.
  */
@@ -65,12 +65,12 @@ export async function POST(req: Request) {
         .eq('job_id', job.id)
         .eq('status', 'HELD')
 
-      // 3. 워커 알림
+      // 3. 클린파트너 알림
       if (job.worker_id) {
         await supabase.from('notifications').insert({
           user_id: job.worker_id,
           title: '작업이 자동 승인되었습니다',
-          message: '호스트의 무응답으로 24시간 후 자동 승인 처리되었어요. 정산이 진행됩니다.',
+          message: '공간파트너의 무응답으로 24시간 후 자동 승인 처리되었어요. 정산이 진행됩니다.',
           url: `/clean/job/${job.id}`,
         })
       }

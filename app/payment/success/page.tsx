@@ -17,7 +17,7 @@ export default async function PaymentSuccessPage({
         <p className="t-body text-text-muted mt-3 leading-relaxed">
           에스크로로 안전하게 보관되었어요.
           <br />
-          작업 승인 후 작업자에게 정산됩니다.
+          작업 승인 후 클린파트너에게 정산됩니다.
         </p>
         {sp.amount && (
           <div className="mt-6 card p-4 w-full max-w-[280px]">

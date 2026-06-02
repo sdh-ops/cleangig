@@ -61,7 +61,7 @@ const STATUS_FLOW: Partial<Record<JobStatus, { next: JobStatus; label: string; b
   IN_PROGRESS: { next: 'SUBMITTED', label: '청소 중', btnLabel: '작업 완료 보고', icon: CheckCircle2 },
 }
 
-// 현장에서 자주 떨어지는 소모품 — 워커가 부족분을 체크하면 공간 파트너에게 전달된다.
+// 현장에서 자주 떨어지는 소모품 — 클린파트너가 부족분을 체크하면 공간파트너에게 전달된다.
 // (지금은 기록·표시만. 추후 앱내 주문/제휴 구매를 이 데이터 위에 얹는다.)
 const SUPPLY_OPTIONS = ['휴지', '물티슈', '종량제봉투', '주방세제', '핸드워시', '섬유유연제', '청소세제', '수세미', '키친타월', '일회용장갑']
 
@@ -166,9 +166,9 @@ export default function WorkerJobDetail() {
         .eq('status', 'OPEN')
         .select('id')
       if (error) throw error
-      // 경합 방지: 0행이면 이미 다른 워커가 선점 (조건부 update는 0행이어도 에러 아님)
+      // 경합 방지: 0행이면 이미 다른 클린파트너가 선점 (조건부 update는 0행이어도 에러 아님)
       if (!updated || updated.length === 0) {
-        setErr('이미 다른 워커가 배정된 작업입니다.')
+        setErr('이미 다른 클린파트너가 배정된 작업입니다.')
         setJob((j) => (j ? { ...j, status: 'ASSIGNED' } : j))
         setTransitioning(false)
         return
@@ -389,7 +389,7 @@ export default function WorkerJobDetail() {
                 H
               </div>
               <div className="flex-1">
-                <p className="text-[11px] font-bold text-text-soft">공간 파트너 연락</p>
+                <p className="text-[11px] font-bold text-text-soft">공간파트너 연락</p>
                 <p className="text-[13px] font-extrabold text-ink">채팅 및 통화 가능</p>
               </div>
               <Link href={`/chat/${job.id}`} className="w-10 h-10 rounded-full bg-surface-muted flex items-center justify-center">
@@ -478,12 +478,12 @@ export default function WorkerJobDetail() {
             </div>
           )}
 
-          {/* 부족 비품 체크 (도착 후) — 공간 파트너에게 전달 */}
+          {/* 부족 비품 체크 (도착 후) — 공간파트너에게 전달 */}
           {isMine && ['ARRIVED', 'IN_PROGRESS'].includes(job.status) && (
             <div className="card p-4 mb-4">
               <h3 className="text-[13.5px] font-extrabold text-ink mb-1">부족한 비품 체크</h3>
               <p className="text-[11.5px] text-text-soft font-medium mb-3 leading-snug">
-                떨어진 소모품을 선택하면 공간 파트너에게 전달돼 다음 청소 전 채워둘 수 있어요.
+                떨어진 소모품을 선택하면 공간파트너에게 전달돼 다음 청소 전 채워둘 수 있어요.
               </p>
               <div className="flex flex-wrap gap-2">
                 {SUPPLY_OPTIONS.map((name) => {
@@ -515,25 +515,20 @@ export default function WorkerJobDetail() {
             <div className="card p-4 mb-4">
               <h3 className="text-[13.5px] font-extrabold text-ink mb-2">이 작업에 지원하시겠어요?</h3>
               <p className="t-caption mb-4">지원하면 바로 배정돼요. 예약 시간에 맞춰 현장으로 방문해주세요.</p>
+              {/* 정산 설정은 지원을 막지 않는다. 첫 정산 전까지만 등록하면 됨 (비차단 안내) */}
               {workerReady && (!workerReady.bank || !workerReady.tax) ? (
-                <div className="p-3.5 rounded-xl bg-warning-soft border border-warning/20 mb-3">
-                  <p className="text-[12.5px] font-extrabold text-[#B45309] mb-1.5">정산 설정이 완료되지 않았어요</p>
-                  <p className="text-[11.5px] font-semibold text-ink-soft mb-2 leading-snug">
-                    작업 수행 전에 아래 항목을 먼저 등록해주세요. 정산이 지연되지 않도록 도와드려요.
+                <div className="p-3 rounded-xl bg-info-soft border border-info/15 mb-3">
+                  <p className="text-[11.5px] font-semibold text-ink-soft leading-snug">
+                    💡 지금 바로 지원할 수 있어요. <b>정산 받기 전</b>까지만{' '}
+                    {!workerReady.bank && <Link href="/profile/bank" className="text-brand-dark underline font-bold">계좌</Link>}
+                    {(!workerReady.bank && !workerReady.tax) && ' · '}
+                    {!workerReady.tax && <Link href="/profile/tax" className="text-brand-dark underline font-bold">세금 유형</Link>}
+                    {' '}등록하면 됩니다.
                   </p>
-                  <div className="flex gap-2">
-                    {!workerReady.bank && (
-                      <Link href="/profile/bank" className="flex-1 btn btn-primary !min-h-[40px] !text-xs">정산 계좌 등록</Link>
-                    )}
-                    {!workerReady.tax && (
-                      <Link href="/profile/tax" className="flex-1 btn btn-secondary !min-h-[40px] !text-xs">세금 유형 선택</Link>
-                    )}
-                  </div>
                 </div>
               ) : null}
               <button
                 onClick={() => setShowConsent(true)}
-                disabled={workerReady ? (!workerReady.bank || !workerReady.tax) : false}
                 className="btn btn-primary w-full"
               >
                 지원하기 <Zap size={18} strokeWidth={2.5} />

@@ -238,7 +238,7 @@ export default function RequestDetailClient({ job, userId, initialIsFavorite = f
                 <div className="flex-1">
                   <p className="text-[13.5px] font-extrabold text-ink">매칭 중입니다</p>
                   <p className="text-[11.5px] font-bold text-text-muted mt-0.5">
-                    근처 마스터 작업자에게 알림을 보냈어요. 평균 4분
+                    근처 마스터 클린파트너에게 알림을 보냈어요. 평균 4분
                   </p>
                 </div>
               </div>
@@ -295,12 +295,12 @@ export default function RequestDetailClient({ job, userId, initialIsFavorite = f
             </div>
           )}
 
-          {/* 부족 비품 (워커가 현장에서 체크) */}
+          {/* 부족 비품 (클린파트너가 현장에서 체크) */}
           {job.supply_shortages && job.supply_shortages.length > 0 && (
             <div className="card p-4 mb-4">
               <h3 className="text-[13.5px] font-extrabold text-ink mb-1">채워야 할 비품</h3>
               <p className="text-[11.5px] text-text-soft font-medium mb-3 leading-snug">
-                작업자가 이번 청소 중 부족을 확인한 소모품이에요. 다음 청소 전 채워주세요.
+                클린파트너가 이번 청소 중 부족을 확인한 소모품이에요. 다음 청소 전 채워주세요.
               </p>
               <div className="flex flex-wrap gap-2">
                 {job.supply_shortages.map((s) => (
@@ -334,16 +334,16 @@ export default function RequestDetailClient({ job, userId, initialIsFavorite = f
                 {(job.price_breakdown.host_fee !== undefined || job.price_breakdown.worker_fee !== undefined) && (
                   <div className="mt-3 pt-3 border-t border-line-soft text-[11.5px] text-text-soft font-bold space-y-1">
                     <div className="flex justify-between">
-                      <span>플랫폼 호스트 수수료</span>
+                      <span>플랫폼 공간파트너 수수료</span>
                       <span>{formatKRW(job.price_breakdown.host_fee || 0)}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span>플랫폼 워커 수수료</span>
+                      <span>플랫폼 클린파트너 수수료</span>
                       <span>{formatKRW(job.price_breakdown.worker_fee || 0)}</span>
                     </div>
                     {job.price_breakdown.estimated_worker_payout !== undefined && (
                       <div className="flex justify-between text-brand-dark">
-                        <span>워커 정산액 (세금 전)</span>
+                        <span>클린파트너 정산액 (세금 전)</span>
                         <span>{formatKRW(job.price_breakdown.worker_payout_if_business || 0)}</span>
                       </div>
                     )}

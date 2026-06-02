@@ -72,7 +72,7 @@ export default function WorkerLiveMap({ jobId, spaceLat, spaceLng, spaceName, he
   const markers = [
     { lat: spaceLat, lng: spaceLng, title: spaceName, tone: 'brand' as const },
   ]
-  if (loc) markers.push({ lat: loc.lat, lng: loc.lng, title: '작업자', tone: 'sun' as any })
+  if (loc) markers.push({ lat: loc.lat, lng: loc.lng, title: '클린파트너', tone: 'sun' as any })
 
   const distanceKm = loc ? haversineKm(loc.lat, loc.lng, spaceLat, spaceLng) : null
 
@@ -94,7 +94,7 @@ export default function WorkerLiveMap({ jobId, spaceLat, spaceLng, spaceName, he
             {updatedAgo && <span className="text-text-faint">· {updatedAgo}</span>}
           </span>
         ) : (
-          <span className="text-[11.5px] font-bold text-text-faint">워커 위치 수신 대기</span>
+          <span className="text-[11.5px] font-bold text-text-faint">클린파트너 위치 수신 대기</span>
         )}
       </div>
       <NaverMap

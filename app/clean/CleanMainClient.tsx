@@ -111,7 +111,7 @@ export default function CleanMainClient({ profile, activeJob, openJobs, weekEarn
         <div className="mb-5">
           <SetupChecklist
             storageKey="sseuksak:worker_setup_dismissed"
-            title="클린 파트너 시작 준비"
+            title="클린파트너 시작 준비"
             items={[
               { key: 'profile', label: '이름 · 연락처 등록', href: '/profile/edit', done: !!profile.name && !!profile.phone },
               { key: 'verify', label: '본인 인증', href: '/profile/verification', done: !!profile.is_verified, badge: '중요' },

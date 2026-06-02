@@ -62,7 +62,7 @@ export default async function AdminJobsPage({ searchParams }: { searchParams?: P
               <tr>
                 <th className="px-4 py-3">공간</th>
                 <th className="px-4 py-3">파트너</th>
-                <th className="px-4 py-3">작업자</th>
+                <th className="px-4 py-3">클린파트너</th>
                 <th className="px-4 py-3">예정</th>
                 <th className="px-4 py-3">가격</th>
                 <th className="px-4 py-3">상태</th>

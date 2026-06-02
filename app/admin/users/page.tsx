@@ -50,7 +50,7 @@ export default async function AdminUsersPage() {
                   </td>
                   <td className="px-4 py-3">
                     <span className={`chip ${u.role === 'worker' ? 'chip-info' : u.role === 'admin' ? 'chip-danger' : 'chip-brand'} !text-[10px]`}>
-                      {u.role === 'operator' ? '파트너' : u.role === 'worker' ? '작업자' : u.role === 'admin' ? 'Admin' : '미정'}
+                      {u.role === 'operator' ? '파트너' : u.role === 'worker' ? '클린파트너' : u.role === 'admin' ? 'Admin' : '미정'}
                     </span>
                   </td>
                   <td className="px-4 py-3"><span className="chip chip-muted !text-[10px]">{u.tier || 'STARTER'}</span></td>

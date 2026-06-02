@@ -40,10 +40,11 @@ const STEPS: { id: StepId; title: string }[] = [
   { id: 1, title: '공간 유형' },
   { id: 2, title: '위치' },
   { id: 3, title: '기본 정보' },
-  { id: 4, title: '청소 안내' },
-  { id: 5, title: '체크리스트' },
-  { id: 6, title: '사업자 정보' },
+  { id: 4, title: '청소 안내 (선택)' },
+  { id: 5, title: '체크리스트 (선택)' },
+  { id: 6, title: '사업자 (선택)' },
 ]
+const ESSENTIAL_STEPS = 3 // 1~3 필수, 4~6 선택 (나중에 공간 수정에서도 가능)
 
 export default function CreateSpacePage() {
   const router = useRouter()
@@ -60,9 +61,7 @@ export default function CreateSpacePage() {
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null)
   const [geoLoading, setGeoLoading] = useState(false)
   const [sizePyeong, setSizePyeong] = useState<string>('')
-  const [difficulty, setDifficulty] = useState<'쉬움' | '보통' | '어려움'>('보통')
-  const [basePrice, setBasePrice] = useState<number>(40000)
-  const [priceManuallySet, setPriceManuallySet] = useState(false)
+  // 가격·난이도는 공간이 아니라 "청소 요청"마다 결정한다 → 여기선 받지 않는다.
 
   const [photos, setPhotos] = useState<string[]>([])
   const [referencePhotos, setReferencePhotos] = useState<string[]>([])
@@ -94,12 +93,6 @@ export default function CreateSpacePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [type])
 
-  // 타입·면적·난이도 변경 시 추천가 자동 계산 (operator가 수동 수정하지 않은 경우에만)
-  useEffect(() => {
-    if (!type || priceManuallySet) return
-    const pyeong = sizePyeong ? parseFloat(sizePyeong) : null
-    setBasePrice(suggestBasePrice(type, pyeong, difficulty))
-  }, [type, sizePyeong, difficulty, priceManuallySet])
 
   const handleGeocode = async () => {
     if (!address.trim()) return
@@ -150,9 +143,10 @@ export default function CreateSpacePage() {
           : null,
         size_pyeong: sizePyeong ? parseFloat(sizePyeong) : null,
         size_sqm: sizeSqm ?? null,
-        base_price: basePrice,
+        // 참고용 기본가(요청 시 면적·난이도로 다시 추천됨). 공간엔 가격을 고정하지 않는다.
+        base_price: suggestBasePrice(type as SpaceType, sizePyeong ? parseFloat(sizePyeong) : null, '보통'),
         estimated_duration: 90,
-        cleaning_difficulty: difficulty,
+        cleaning_difficulty: '보통',
         cleaning_tool_location: toolLocation || null,
         parking_guide: parkingGuide || null,
         trash_guide: trashGuide || null,
@@ -214,7 +208,7 @@ export default function CreateSpacePage() {
           {step === 1 && (
             <motion.div key="s1" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }}>
               <h2 className="h-title text-ink">어떤 공간을 운영하세요?</h2>
-              <p className="t-caption mt-1.5">공간 유형에 맞게 체크리스트 · 기본 가격이 자동 설정됩니다.</p>
+              <p className="t-caption mt-1.5">공간 유형에 맞게 체크리스트가 자동 적용됩니다. 3단계면 등록 끝!</p>
               <div className="grid grid-cols-3 gap-2.5 mt-6">
                 {TYPE_OPTIONS.map((opt) => (
                   <button
@@ -295,7 +289,7 @@ export default function CreateSpacePage() {
             <motion.div key="s3" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} className="flex flex-col gap-5">
               <div>
                 <h2 className="h-title text-ink">공간 기본 정보</h2>
-                <p className="t-caption mt-1.5">작업자에게 보여질 정보입니다.</p>
+                <p className="t-caption mt-1.5">클린파트너에게 보여질 정보입니다.</p>
               </div>
 
               <div>
@@ -311,12 +305,12 @@ export default function CreateSpacePage() {
 
               {/* 면적 */}
               <div>
-                <label className="t-meta block mb-2 ml-1">평수</label>
+                <label className="t-meta block mb-2 ml-1">평수 <span className="text-text-faint font-normal">(선택)</span></label>
                 <div className="relative">
                   <input
                     type="number"
                     value={sizePyeong}
-                    onChange={(e) => { setSizePyeong(e.target.value); setPriceManuallySet(false) }}
+                    onChange={(e) => setSizePyeong(e.target.value)}
                     placeholder="20"
                     className="input pr-10"
                     min={1}
@@ -325,75 +319,8 @@ export default function CreateSpacePage() {
                   <span className="absolute right-4 top-1/2 -translate-y-1/2 text-text-faint text-sm font-bold">평</span>
                 </div>
                 {sizeSqm && <p className="text-[11px] text-text-soft font-bold mt-1 ml-1">≈ {sizeSqm}㎡</p>}
-              </div>
-
-              {/* 청소 난이도 */}
-              <div>
-                <label className="t-meta block mb-2 ml-1">청소 난이도</label>
-                <div className="grid grid-cols-3 gap-2">
-                  {(['쉬움', '보통', '어려움'] as const).map((d) => (
-                    <button
-                      key={d}
-                      type="button"
-                      onClick={() => { setDifficulty(d); setPriceManuallySet(false) }}
-                      className={`rounded-xl border-2 p-3 text-[13px] font-extrabold transition ${difficulty === d ? 'border-brand bg-brand-softer text-brand-dark' : 'border-line-soft bg-surface text-text-muted'}`}
-                    >
-                      {d === '쉬움' ? '🟢 쉬움' : d === '보통' ? '🟡 보통' : '🔴 어려움'}
-                    </button>
-                  ))}
-                </div>
                 <p className="text-[11px] text-text-soft font-medium mt-1.5 ml-1 leading-snug">
-                  {difficulty === '쉬움' && '음식·음료 오염 거의 없음 · 규모 작음'}
-                  {difficulty === '보통' && '일반적인 파티룸·숙박 수준'}
-                  {difficulty === '어려움' && '대규모 파티·음식 오염 심함 · 시설 복잡'}
-                </p>
-              </div>
-
-              {/* 스마트 가격 */}
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <label className="t-meta ml-1">청소 1회 가격</label>
-                  {!priceManuallySet && (
-                    <span className="text-[10.5px] font-bold text-brand-dark bg-brand-softer px-2 py-0.5 rounded-full">
-                      자동 계산됨
-                    </span>
-                  )}
-                </div>
-                <div className="card p-4 bg-surface-soft">
-                  <div className="flex items-center justify-between mb-4">
-                    <button
-                      type="button"
-                      onClick={() => { setBasePrice((p) => Math.max(30000, p - 5000)); setPriceManuallySet(true) }}
-                      className="w-10 h-10 rounded-full border-2 border-line-strong flex items-center justify-center text-xl font-black text-ink hover:bg-surface-muted active:scale-95"
-                    >−</button>
-                    <div className="text-center">
-                      <p className="t-money text-[28px] text-ink">{basePrice.toLocaleString()}원</p>
-                      <p className="text-[11px] text-text-soft font-bold mt-0.5">
-                        워커 예상 수령 ≈ {(Math.round(basePrice * 0.88 / 1000) * 1000).toLocaleString()}원
-                      </p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => { setBasePrice((p) => p + 5000); setPriceManuallySet(true) }}
-                      className="w-10 h-10 rounded-full border-2 border-line-strong flex items-center justify-center text-xl font-black text-ink hover:bg-surface-muted active:scale-95"
-                    >+</button>
-                  </div>
-                  <input
-                    type="range"
-                    min={30000}
-                    max={150000}
-                    step={5000}
-                    value={basePrice}
-                    onChange={(e) => { setBasePrice(parseInt(e.target.value)); setPriceManuallySet(true) }}
-                    className="w-full accent-brand"
-                  />
-                  <div className="flex justify-between text-[10px] text-text-faint font-bold mt-1">
-                    <span>최소 3만</span>
-                    <span>최대 15만</span>
-                  </div>
-                </div>
-                <p className="text-[11px] text-text-soft font-medium mt-1.5 ml-1 leading-snug">
-                  면적·난이도 기반 자동 계산. ±버튼이나 슬라이더로 조정하세요.
+                  청소 가격은 요청할 때마다 면적·난이도로 자동 추천돼요. 여기선 입력만 해두세요.
                 </p>
               </div>
 
@@ -422,7 +349,7 @@ export default function CreateSpacePage() {
           {step === 4 && (
             <motion.div key="s4" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} className="flex flex-col gap-5">
               <div>
-                <h2 className="h-title text-ink">작업자에게 안내할 내용</h2>
+                <h2 className="h-title text-ink">클린파트너에게 안내할 내용</h2>
                 <p className="t-caption mt-1.5">상세한 안내는 작업 품질을 높여줍니다.</p>
               </div>
 
@@ -464,7 +391,7 @@ export default function CreateSpacePage() {
                 onChange={setReferencePhotos}
                 max={4}
                 label="참고 사진 - 완료 예시 (선택)"
-                hint="청소 후 상태 기준 사진입니다. 작업자가 참고해요."
+                hint="청소 후 상태 기준 사진입니다. 클린파트너가 참고해요."
               />
             </motion.div>
           )}
@@ -474,7 +401,7 @@ export default function CreateSpacePage() {
               <div>
                 <h2 className="h-title text-ink">청소 체크리스트</h2>
                 <p className="t-caption mt-1.5">
-                  작업자가 사진과 함께 체크할 항목입니다.{' '}
+                  클린파트너가 사진과 함께 체크할 항목입니다.{' '}
                   {type && <span className="font-bold text-brand-dark">· {spaceTypeLabel(type)} 템플릿 적용됨</span>}
                 </p>
               </div>
@@ -657,16 +584,24 @@ export default function CreateSpacePage() {
       </div>
 
       <div className="fixed bottom-0 inset-x-0 border-t border-line-soft bg-surface/95 backdrop-blur safe-bottom">
-        <div className="max-w-[480px] mx-auto px-5 py-3.5">
-          <button onClick={handleNext} disabled={!canProceed || loading} className="btn btn-primary w-full">
-            {loading ? (
-              <Loader2 size={20} className="animate-spin" />
-            ) : step === 6 ? (
-              <>공간 등록 완료 <Check size={20} /></>
-            ) : (
-              <>다음 <ChevronRight size={20} /></>
-            )}
-          </button>
+        <div className="max-w-[480px] mx-auto px-5 py-3.5 flex flex-col gap-2">
+          {step < ESSENTIAL_STEPS ? (
+            <button onClick={handleNext} disabled={!canProceed || loading} className="btn btn-primary w-full">
+              {loading ? <Loader2 size={20} className="animate-spin" /> : <>다음 <ChevronRight size={20} /></>}
+            </button>
+          ) : (
+            <>
+              {/* 3단계부터 즉시 등록 완료 가능, 선택 정보는 더 채우거나 나중에 수정 */}
+              <button onClick={handleSubmit} disabled={!canProceed || loading} className="btn btn-primary w-full">
+                {loading ? <Loader2 size={20} className="animate-spin" /> : <>공간 등록 완료 <Check size={20} /></>}
+              </button>
+              {step < 6 && (
+                <button onClick={() => setStep((s) => (s + 1) as StepId)} disabled={loading} className="btn btn-ghost w-full !min-h-[44px] !text-[13px]">
+                  추가 정보 입력 ({STEPS[step].title.replace(' (선택)', '')}) <ChevronRight size={16} />
+                </button>
+              )}
+            </>
+          )}
         </div>
       </div>
     </div>

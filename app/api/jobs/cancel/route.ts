@@ -5,7 +5,7 @@ import { cancelRefundRate } from '@/lib/pricing'
 export const runtime = 'nodejs'
 
 /**
- * 호스트 청소 요청 취소 + 환불 정산
+ * 공간파트너 청소 요청 취소 + 환불 정산
  *
  * Body: { job_id }
  *
@@ -14,7 +14,7 @@ export const runtime = 'nodejs'
  * 3. 취소 수수료 계산 (scheduled_at 기준)
  * 4. jobs.status = CANCELED
  * 5. payments 레코드가 있으면 REFUNDED(+ 환불액), 없으면 REFUNDED 레코드 INSERT
- * 6. 워커에게 알림
+ * 6. 클린파트너에게 알림
  */
 export async function POST(req: Request) {
   try {
@@ -70,7 +70,7 @@ export async function POST(req: Request) {
 
     await supabase.from('jobs').update({ status: 'CANCELED', updated_at: new Date().toISOString() }).eq('id', job_id)
 
-    // 워커에게 알림
+    // 클린파트너에게 알림
     if (job.worker_id) {
       await supabase.from('notifications').insert({
         user_id: job.worker_id,

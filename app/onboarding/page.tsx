@@ -137,7 +137,7 @@ export default function OnboardingPage() {
               selected={selectedRole === 'worker'}
               onClick={() => setSelectedRole('worker')}
               icon={<Sparkles size={28} strokeWidth={2.2} />}
-              title="클린 파트너"
+              title="클린파트너"
               subtitle="청소로 부업 수익"
               description="원하는 시간·지역에서 청소 작업을 골라 수행하고 주 1회 정산받아요."
               tags={['자유 근무', '주 1회 정산', '티어 승급']}
@@ -146,7 +146,7 @@ export default function OnboardingPage() {
               selected={selectedRole === 'operator'}
               onClick={() => setSelectedRole('operator')}
               icon={<Building2 size={28} strokeWidth={2.2} />}
-              title="공간 파트너"
+              title="공간파트너"
               subtitle="청소 맡기기"
               description="파티룸·에어비앤비·무인매장을 운영하며 청소를 원클릭으로 맡기고 싶어요."
               tags={['원클릭 요청', '에스크로 결제', 'AI 품질 검수']}

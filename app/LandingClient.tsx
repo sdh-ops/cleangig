@@ -68,7 +68,7 @@ export default function LandingClient() {
             transition={{ delay: 0.2, duration: 0.6 }}
             className="mt-4 text-[14.5px] text-text-muted font-semibold leading-relaxed max-w-[340px]"
           >
-            <b className="text-ink">공간 운영자</b>와 <b className="text-ink">클린 파트너</b>를<br />
+            <b className="text-ink">공간파트너</b>와 <b className="text-ink">클린파트너</b>를<br />
             가장 가깝게 연결합니다.
           </motion.p>
         </div>
@@ -76,8 +76,8 @@ export default function LandingClient() {
         {/* Audience toggle */}
         <div className="relative z-10 px-6 mb-5">
           <div className="bg-white/80 backdrop-blur border border-line-soft rounded-full p-1 flex">
-            <ToggleBtn active={audience === 'host'} onClick={() => setAudience('host')} label="공간 운영자" />
-            <ToggleBtn active={audience === 'worker'} onClick={() => setAudience('worker')} label="클린 파트너" />
+            <ToggleBtn active={audience === 'host'} onClick={() => setAudience('host')} label="공간파트너" />
+            <ToggleBtn active={audience === 'worker'} onClick={() => setAudience('worker')} label="클린파트너" />
           </div>
         </div>
 
@@ -98,7 +98,7 @@ export default function LandingClient() {
                     <Building2 size={20} strokeWidth={2.5} />
                   </div>
                   <div>
-                    <p className="text-[11px] font-black text-brand-dark uppercase tracking-wider">공간 운영자라면</p>
+                    <p className="text-[11px] font-black text-brand-dark uppercase tracking-wider">공간파트너라면</p>
                     <h3 className="text-[17px] font-black text-ink leading-tight">청소 걱정 없는 운영</h3>
                   </div>
                 </div>
@@ -122,7 +122,7 @@ export default function LandingClient() {
                     <Wallet size={20} strokeWidth={2.5} />
                   </div>
                   <div>
-                    <p className="text-[11px] font-black text-[#92580C] uppercase tracking-wider">클린 파트너라면</p>
+                    <p className="text-[11px] font-black text-[#92580C] uppercase tracking-wider">클린파트너라면</p>
                     <h3 className="text-[17px] font-black text-ink leading-tight">원하는 시간, 내 부업</h3>
                   </div>
                 </div>
@@ -141,7 +141,7 @@ export default function LandingClient() {
           <div className="grid grid-cols-3 gap-2">
             {[
               { label: '등록 공간', value: '5,000+' },
-              { label: '클린 파트너', value: '850+' },
+              { label: '클린파트너', value: '850+' },
               { label: '평균 매칭', value: '4분' },
             ].map((s, i) => (
               <motion.div
@@ -163,8 +163,8 @@ export default function LandingClient() {
       <div className="px-5 pt-5 pb-6 safe-bottom bg-gradient-to-t from-canvas via-canvas to-transparent">
         <div className="flex flex-col gap-2 mb-4">
           {[
-            '공간 파트너: 원클릭으로 청소 맡기기',
-            '클린 파트너: 원할 때 원하는 지역에서 부업',
+            '공간파트너: 원클릭으로 청소 맡기기',
+            '클린파트너: 원할 때 원하는 지역에서 부업',
             '플랫폼: 결제 보호 · 품질 보증 · 자동 정산',
           ].map((t, i) => (
             <div key={i} className="flex items-center gap-2">

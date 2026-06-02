@@ -5,11 +5,11 @@ import { computeMatchScore } from '@/lib/matching'
 export const runtime = 'nodejs'
 
 /**
- * 자동 매칭: OPEN job 생성 후 근처 클린 파트너에게 알림
+ * 자동 매칭: OPEN job 생성 후 근처 클린파트너에게 알림
  *
  * Body: { job_id }
  * 1. Job + Space 좌표 조회
- * 2. Active 워커 조회 (반경 내, 가용, 타임윈도우 충돌 없음)
+ * 2. Active 클린파트너 조회 (반경 내, 가용, 타임윈도우 충돌 없음)
  * 3. matching_score 계산 후 상위 N명
  * 4. 각각 notifications 테이블에 INSERT (NotificationOverlay가 실시간 수신)
  * 5. push_subscriptions 있으면 Web Push (internal call to /api/push/send)
@@ -36,7 +36,7 @@ export async function POST(req: Request) {
     const space_lat = coords?.[1] ?? 37.5665
     const space_lng = coords?.[0] ?? 126.978
 
-    // 가용 워커 조회 (can_work + is_active)
+    // 가용 클린파트너 조회 (can_work + is_active)
     const { data: workers } = await supabase
       .from('users')
       .select('id, name, tier, avg_rating, total_jobs, sparkle_score, preferences')
@@ -45,7 +45,7 @@ export async function POST(req: Request) {
       .or('can_work.eq.true,role.eq.worker')
       .limit(200)
 
-    // 해당 시간대 워커 일정 충돌 검사
+    // 해당 시간대 클린파트너 일정 충돌 검사
     const schedTime = new Date((job as any).scheduled_at).getTime()
     const bufferMs = 3 * 60 * 60 * 1000 // 3h 블록
     const busyStart = new Date(schedTime - bufferMs).toISOString()

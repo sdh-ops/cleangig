@@ -58,7 +58,7 @@ export function suggestBasePrice(
   const areaBonus = pyeong ? getAreaBonus(pyeong) : 0
   const multiplier = DIFFICULTY_MULTIPLIER[difficulty] ?? 1.0
   const raw = (base + areaBonus) * multiplier
-  return Math.max(30000, Math.round(raw / 1000) * 1000)
+  return Math.max(15000, Math.round(raw / 1000) * 1000)
 }
 
 export type TaxType = 'FREELANCER' | 'INDIVIDUAL_BUSINESS' | 'BUSINESS'

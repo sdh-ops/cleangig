@@ -84,7 +84,7 @@ export default function RoleSwitcher({ userId, currentRole, canOperate = false, 
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-[14px] font-extrabold text-ink">
-              {isWorker ? '공간 파트너로 전환' : '클린 파트너로 전환'}
+              {isWorker ? '공간파트너로 전환' : '클린파트너로 전환'}
             </p>
             <p className="text-[11.5px] text-text-soft font-bold mt-0.5 leading-snug">
               {isWorker
@@ -121,7 +121,7 @@ export default function RoleSwitcher({ userId, currentRole, canOperate = false, 
             >
               <div className="flex items-center justify-between mb-3">
                 <h3 className="h-section text-ink">
-                  {targetRole === 'operator' ? '공간 파트너' : '클린 파트너'}로 전환
+                  {targetRole === 'operator' ? '공간파트너' : '클린파트너'}로 전환
                 </h3>
                 {!switching && (
                   <button onClick={() => setConfirm(false)} className="w-8 h-8 rounded-full hover:bg-surface-muted flex items-center justify-center">
@@ -144,7 +144,7 @@ export default function RoleSwitcher({ userId, currentRole, canOperate = false, 
                   <>
                     <Bullet icon={<Zap size={14} />}>공간을 등록하고 원클릭 청소 요청</Bullet>
                     <Bullet icon={<Check size={14} />}>에스크로 결제 + AI 품질 검수</Bullet>
-                    <Bullet icon={<Check size={14} />}>기존 클린 파트너 데이터는 그대로 보존</Bullet>
+                    <Bullet icon={<Check size={14} />}>기존 클린파트너 데이터는 그대로 보존</Bullet>
                   </>
                 ) : (
                   <>

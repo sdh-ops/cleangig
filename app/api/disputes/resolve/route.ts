@@ -13,7 +13,7 @@ type Verdict = 'APPROVE_WORK' | 'REFUND' | 'DISMISS'
  * 호출 전 반드시 isPlatformAdmin 검증.
  *
  * Body: { dispute_id, verdict: 'APPROVE_WORK'|'REFUND'|'DISMISS', refund_amount?, note? }
- *  - APPROVE_WORK: 워커 작업 인정 → job APPROVED, 에스크로 RELEASED, 분쟁 RESOLVED
+ *  - APPROVE_WORK: 클린파트너 작업 인정 → job APPROVED, 에스크로 RELEASED, 분쟁 RESOLVED
  *  - REFUND:       요청자 환불 → job CANCELED, 결제 REFUNDED, 분쟁 RESOLVED
  *  - DISMISS:      신고 기각 → 분쟁 CLOSED, job APPROVED(작업 유지)
  */

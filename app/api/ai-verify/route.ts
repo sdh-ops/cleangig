@@ -36,7 +36,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: false, error: 'bad_request' }, { status: 400 })
     }
 
-    // 권한: 해당 작업에 배정된 워커만 검수 제출 가능 (타인 작업 auto_approved 조작 방지)
+    // 권한: 해당 작업에 배정된 클린파트너만 검수 제출 가능 (타인 작업 auto_approved 조작 방지)
     const { data: job } = await supabase
       .from('jobs')
       .select('id, worker_id')

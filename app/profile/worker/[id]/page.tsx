@@ -40,7 +40,7 @@ export default async function WorkerProfilePage({ params }: { params: Promise<{ 
 
   return (
     <div className="sseuksak-shell">
-      <Header title="클린 파트너 프로필" showBack />
+      <Header title="클린파트너 프로필" showBack />
       <div className="flex-1 pb-8">
         <div className="px-5 pt-5 pb-6 bg-gradient-to-br from-brand to-brand-dark text-white relative overflow-hidden">
           <div className="absolute -bottom-8 -right-8 w-48 h-48 bg-white/10 rounded-full blur-3xl" />

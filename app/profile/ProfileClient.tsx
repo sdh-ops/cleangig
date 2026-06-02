@@ -197,7 +197,7 @@ export default function ProfileClient({ profile, totalCompletedJobs, isAdmin = f
               <>
                 <RowLink href="/spaces" icon={<UserIcon size={17} />} label="내 공간 관리" value="보기" />
                 <div className="mx-4 border-t border-line-soft" />
-                <RowLink href="/profile/favorites" icon={<Heart size={17} />} label="단골 작업자" value="관리" />
+                <RowLink href="/profile/favorites" icon={<Heart size={17} />} label="단골 클린파트너" value="관리" />
               </>
             )}
           </section>
