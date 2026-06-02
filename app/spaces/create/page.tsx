@@ -145,7 +145,7 @@ export default function CreateSpacePage() {
         size_sqm: sizeSqm ?? null,
         base_price: basePrice,
         estimated_duration: 90,
-        cleaning_difficulty: 'NORMAL',
+        cleaning_difficulty: '보통',
         cleaning_tool_location: toolLocation || null,
         parking_guide: parkingGuide || null,
         trash_guide: trashGuide || null,
