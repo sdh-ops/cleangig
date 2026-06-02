@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "cleangig",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "cwd": "C:/Users/15Z990/Desktop/공간대여/청소플랫폼/cleangig",
+      "port": 3000
+    }
+  ]
+}

@@ -130,7 +130,7 @@ export default function PaymentModal({ isOpen, onClose, amount, jobName, jobId, 
                     </button>
 
                     <div style={{ fontSize: 13, color: '#64748B', textAlign: 'center', marginTop: 12 }}>
-                        클린긱 에스크로 안전 결제 연동 테스트
+                        쓱싹 에스크로 안전 결제 연동 테스트
                     </div>
                 </div>
             </div>

@@ -6,8 +6,8 @@ import { createClient } from '@/lib/supabase/client'
 import { ChevronLeft, Check, Loader2, Banknote, ShieldCheck } from 'lucide-react'
 
 const BANKS = [
-  'KB국민', '신한', '우리', '하나', 'NH농협', 'IBK기업', 'SC제일', 'KEB하나', '씨티',
-  '카카오뱅크', '토스뱅크', 'K뱅크', '케이뱅크', '새마을금고', '신협', '우체국', 'SC제일', '대구', '부산', '광주', '경남', '수협', '제주',
+  'KB국민', '신한', '우리', '하나', 'NH농협', 'IBK기업', 'SC제일', '씨티',
+  '카카오뱅크', '토스뱅크', '케이뱅크', '새마을금고', '신협', '우체국', '대구', '부산', '광주', '경남', '수협', '제주',
 ]
 
 export default function BankAccountPage() {
@@ -75,7 +75,7 @@ export default function BankAccountPage() {
           <ShieldCheck size={18} className="text-info shrink-0 mt-0.5" />
           <div>
             <p className="text-[13px] font-extrabold text-ink">안전한 정산을 위해 본인 명의 계좌만 등록해주세요.</p>
-            <p className="text-[11.5px] text-text-muted font-semibold mt-1">계좌번호는 암호화되어 저장되며 세무/정산 목적 외에는 사용되지 않습니다.</p>
+            <p className="text-[11.5px] text-text-muted font-semibold mt-1">계좌 정보는 세무/정산 목적 외에는 사용되지 않습니다.</p>
           </div>
         </div>
 

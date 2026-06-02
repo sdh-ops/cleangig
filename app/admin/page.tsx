@@ -108,9 +108,16 @@ function KPI({ label, value, sub, icon, tone }: { label: string; value: string; 
   )
 }
 
-function Dist({ label, value, tone }: { label: string; value: number; tone: string }) {
+function Dist({ label, value, tone }: { label: string; value: number; tone: 'muted' | 'sun' | 'success' | 'danger' }) {
+  // 정적 클래스 맵 (Tailwind JIT가 동적 `bg-${tone}-soft`를 스캔 못 하므로 리터럴로)
+  const toneBg: Record<string, string> = {
+    muted: 'bg-surface-muted',
+    sun: 'bg-sun-soft',
+    success: 'bg-success-soft',
+    danger: 'bg-danger-soft',
+  }
   return (
-    <div className={`rounded-xl p-3 bg-${tone}-soft`}>
+    <div className={`rounded-xl p-3 ${toneBg[tone] ?? 'bg-surface-muted'}`}>
       <div className={`text-[11px] font-bold text-text-soft`}>{label}</div>
       <div className="t-money text-xl text-ink mt-1">{value}</div>
     </div>
