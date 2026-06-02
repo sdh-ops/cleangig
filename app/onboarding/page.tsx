@@ -36,13 +36,17 @@ export default function OnboardingPage() {
       if (meta.name) setName(meta.name)
       else if (meta.full_name) setName(meta.full_name)
       if (meta.phone) setPhone(meta.phone)
-      // 이미 role이 있으면 redirect
-      const { data: profile } = await supabase.from('users').select('role, name').eq('id', user.id).single()
-      if (profile?.role) {
+      // 프로필이 완성(role + 연락처)된 경우에만 redirect.
+      // OAuth 신규 가입은 callback이 role만 미리 넣으므로, phone 없으면 폼을 계속 보여준다.
+      const { data: profile } = await supabase.from('users').select('role, name, phone').eq('id', user.id).single()
+      if (profile?.role && profile?.phone) {
         if (profile.role === 'operator') router.replace('/dashboard')
         else if (profile.role === 'worker') router.replace('/clean')
         else router.replace('/dashboard')
+        return
       }
+      // 미완성 프로필: 기존 role 있으면 선택 단계 프리필
+      if (profile?.role === 'operator' || profile?.role === 'worker') setSelectedRole(profile.role)
       if (profile?.name && !name) setName(profile.name)
     })()
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -273,7 +277,7 @@ function RoleCard({
   return (
     <button
       onClick={onClick}
-      className={`text-left rounded-2xl p-5 border-2 transition-all ${
+      className={`relative text-left rounded-2xl p-5 border-2 transition-all ${
         selected
           ? 'bg-brand-softer border-brand shadow-brand-sm'
           : 'bg-surface border-line-soft hover:border-line-strong'

@@ -37,6 +37,7 @@ type JobFull = {
   is_urgent?: boolean
   special_instructions?: string
   checklist?: ChecklistItem[]
+  price_breakdown?: { estimated_worker_payout?: number } | null
   spaces?: {
     id: string
     name: string
@@ -125,7 +126,7 @@ export default function WorkerJobDetail() {
         .from('jobs')
         .select(`
           id, status, worker_id, operator_id, price, scheduled_at,
-          estimated_duration, is_urgent, special_instructions, checklist,
+          estimated_duration, is_urgent, special_instructions, checklist, price_breakdown,
           spaces(id, name, type, address, address_detail, cleaning_tool_location, parking_guide, trash_guide, photos, location),
           users:worker_id(id, name, phone, profile_image, avg_rating)
         `)
@@ -352,7 +353,7 @@ export default function WorkerJobDetail() {
             <div className="mt-5 flex items-center justify-between">
               <div>
                 <p className="text-[11px] text-white/60 font-bold">예상 정산</p>
-                <p className="t-money text-[26px] text-brand-light">{formatKRW(Math.round(job.price * 0.88))}</p>
+                <p className="t-money text-[26px] text-brand-light">{formatKRW(job.price_breakdown?.estimated_worker_payout ?? Math.round(job.price * 0.88))}</p>
               </div>
               {isMine && (
                 <button
@@ -474,7 +475,7 @@ export default function WorkerJobDetail() {
           {isOpen && (
             <div className="card p-4 mb-4">
               <h3 className="text-[13.5px] font-extrabold text-ink mb-2">이 작업에 지원하시겠어요?</h3>
-              <p className="t-caption mb-4">지원하면 공간 파트너가 확인 후 배정합니다.</p>
+              <p className="t-caption mb-4">지원하면 바로 배정돼요. 예약 시간에 맞춰 현장으로 방문해주세요.</p>
               {workerReady && (!workerReady.bank || !workerReady.tax) ? (
                 <div className="p-3.5 rounded-xl bg-warning-soft border border-warning/20 mb-3">
                   <p className="text-[12.5px] font-extrabold text-[#B45309] mb-1.5">정산 설정이 완료되지 않았어요</p>
