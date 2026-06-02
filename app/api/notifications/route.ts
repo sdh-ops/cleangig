@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { createClient } from '@/lib/supabase/server'
 
 // 솔라피 카카오 알림톡 발송 API
 const SOLAPI_API_KEY = process.env.SOLAPI_API_KEY
@@ -15,6 +16,11 @@ interface NotificationPayload {
 
 export async function POST(req: NextRequest) {
     try {
+        // 인증: 로그인 사용자만 (임의 번호 알림톡 스팸·SOLAPI 과금 남용 방지)
+        const supabase = await createClient()
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
+
         const body: NotificationPayload = await req.json()
 
         // SOLAPI가 없는 경우 (개발 환경) 로그만 출력

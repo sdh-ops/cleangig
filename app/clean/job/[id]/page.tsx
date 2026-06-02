@@ -151,12 +151,20 @@ export default function WorkerJobDetail() {
     if (!userId || !job) return
     setTransitioning(true)
     try {
-      const { error } = await supabase
+      const { data: updated, error } = await supabase
         .from('jobs')
         .update({ worker_id: userId, status: 'ASSIGNED', updated_at: new Date().toISOString() })
         .eq('id', job.id)
         .eq('status', 'OPEN')
+        .select('id')
       if (error) throw error
+      // 경합 방지: 0행이면 이미 다른 워커가 선점 (조건부 update는 0행이어도 에러 아님)
+      if (!updated || updated.length === 0) {
+        setErr('이미 다른 워커가 배정된 작업입니다.')
+        setJob((j) => (j ? { ...j, status: 'ASSIGNED' } : j))
+        setTransitioning(false)
+        return
+      }
       setJob((j) => (j ? { ...j, worker_id: userId, status: 'ASSIGNED' } : j))
       setShowConsent(false)
     } catch (e) {

@@ -1,8 +1,14 @@
 import { NextResponse } from 'next/server'
+import { createClient } from '@/lib/supabase/server'
 
 export const runtime = 'nodejs'
 
 export async function GET(request: Request) {
+  // 인증: 로그인 사용자만 (네이버 지오코딩 쿼터 남용 방지)
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
+
   const { searchParams } = new URL(request.url)
   const query = searchParams.get('query')
 

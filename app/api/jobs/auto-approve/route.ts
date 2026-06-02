@@ -9,8 +9,16 @@ export const runtime = 'nodejs'
  * payments 테이블의 HELD → RELEASED 전환 (실결제 도입 후 유효).
  * Cron job에서 호출 권장.
  */
-export async function POST() {
+export async function POST(req: Request) {
   try {
+    // 크론 전용: CRON_SECRET 일치해야 실행 (무인증 대량 자동승인·에스크로 해제 방지)
+    // Vercel Cron / 외부 스케줄러는 Authorization: Bearer <CRON_SECRET> 헤더 전송
+    const secret = process.env.CRON_SECRET
+    const auth = req.headers.get('authorization')
+    if (!secret || auth !== `Bearer ${secret}`) {
+      return NextResponse.json({ ok: false, error: 'unauthorized' }, { status: 401 })
+    }
+
     const supabase = await createClient()
 
     const oneDayAgo = new Date()
