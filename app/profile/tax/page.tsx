@@ -27,6 +27,7 @@ export default function TaxProfilePage() {
 
   const [taxType, setTaxType] = useState<TaxType | ''>('')
   const [residentLast, setResidentLast] = useState('')
+  const [residentAlreadySet, setResidentAlreadySet] = useState(false)
   const [bizRegNumber, setBizRegNumber] = useState('')
   const [bizRegImage, setBizRegImage] = useState<string | null>(null)
   const [bizName, setBizName] = useState('')
@@ -45,7 +46,8 @@ export default function TaxProfilePage() {
         .eq('id', user.id).single()
       if (data) {
         setTaxType((data.tax_type as TaxType) || '')
-        setResidentLast(data.resident_id_last || '')
+        // 주민번호는 암호화 저장이라 평문을 다시 채우지 않는다. 등록 여부만 표시.
+        setResidentAlreadySet(!!data.resident_id_last)
         setBizRegNumber(data.biz_reg_number || '')
         setBizRegImage(data.biz_reg_image || null)
         setBizName(data.biz_name || '')
@@ -75,12 +77,18 @@ export default function TaxProfilePage() {
     setErr(null)
     if (!taxType) { setErr('세금 유형을 선택해주세요.'); return }
 
+    // 신규 주민번호 입력 여부 (이미 등록돼 있으면 재입력 없이 통과 허용)
+    const enteringResident = taxType === 'FREELANCER' && residentLast.length > 0
     if (taxType === 'FREELANCER') {
-      if (!/^\d{7}$/.test(residentLast)) {
+      if (!residentAlreadySet && !/^\d{7}$/.test(residentLast)) {
         setErr('주민등록번호 뒷자리 7자리를 정확히 입력해주세요.')
         return
       }
-      if (!agreeSensitive) {
+      if (enteringResident && !/^\d{7}$/.test(residentLast)) {
+        setErr('주민등록번호 뒷자리 7자리를 정확히 입력해주세요.')
+        return
+      }
+      if (enteringResident && !agreeSensitive) {
         setErr('민감정보 수집·이용에 동의해주세요.')
         return
       }
@@ -98,9 +106,9 @@ export default function TaxProfilePage() {
 
     setSaving(true)
     try {
-      const payload = {
+      // 주민번호(resident_id_last)는 평문 저장 금지 → 별도 서버 라우트에서 암호화. payload에서 제외.
+      const payload: Record<string, unknown> = {
         tax_type: taxType,
-        resident_id_last: taxType === 'FREELANCER' ? residentLast : null,
         biz_reg_number: taxType !== 'FREELANCER' ? bizRegNumber.replace(/-/g, '') : null,
         biz_reg_image: taxType !== 'FREELANCER' ? bizRegImage : null,
         biz_name: taxType !== 'FREELANCER' ? bizName.trim() : null,
@@ -109,16 +117,27 @@ export default function TaxProfilePage() {
         biz_email: bizEmail.trim() || null,
         updated_at: new Date().toISOString(),
       }
+      // 프리랜서가 아니면 기존 주민번호 제거
+      if (taxType !== 'FREELANCER') payload.resident_id_last = null
+
       const { error } = await supabase.from('users').update(payload).eq('id', userId)
       if (error) throw error
 
-      if (taxType === 'FREELANCER' && agreeSensitive) {
-        await supabase.from('consents').insert({
-          user_id: userId,
-          kind: 'SENSITIVE_ID',
-          agreed: true,
-          version: 'v1',
+      // 신규 주민번호 입력 시: 서버에서 암호화 저장 + 동의 기록
+      if (enteringResident) {
+        const res = await fetch('/api/profile/sensitive', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ resident_id_last: residentLast }),
         })
+        const data = await res.json().catch(() => ({}))
+        if (!data?.ok) {
+          setErr(data?.error === 'server_misconfigured'
+            ? '서버 암호화 설정이 필요합니다. 관리자에게 문의해주세요.'
+            : '주민번호 저장에 실패했습니다. 다시 시도해주세요.')
+          setSaving(false)
+          return
+        }
       }
       router.replace('/profile')
     } catch (e) {
@@ -180,19 +199,21 @@ export default function TaxProfilePage() {
         {taxType === 'FREELANCER' && (
           <>
             <div>
-              <label className="t-meta block mb-2 ml-1">주민번호 뒷자리 7자리 *</label>
+              <label className="t-meta block mb-2 ml-1">
+                주민번호 뒷자리 7자리 {residentAlreadySet ? '(등록됨)' : '*'}
+              </label>
               <input
                 type="password"
                 inputMode="numeric"
                 maxLength={7}
                 value={residentLast}
                 onChange={(e) => setResidentLast(e.target.value.replace(/\D/g, ''))}
-                placeholder="0000000"
+                placeholder={residentAlreadySet ? '등록됨 · 변경하려면 다시 입력' : '0000000'}
                 className="input"
                 autoComplete="off"
               />
               <p className="text-[11px] text-text-faint font-medium mt-1.5 ml-1 leading-snug">
-                원천세 신고에만 사용되며 암호화 저장됩니다. 세무 목적으로 5년간 보관됩니다.
+                원천세 신고에만 사용되며 AES-256으로 암호화 저장됩니다. 세무 목적으로 5년간 보관됩니다.
               </p>
             </div>
             <label className="flex items-start gap-2.5 cursor-pointer">

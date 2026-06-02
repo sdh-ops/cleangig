@@ -4,6 +4,7 @@ import { isPlatformAdmin } from '@/lib/admin'
 import Link from 'next/link'
 import { AlertTriangle } from 'lucide-react'
 import { timeAgo, formatKRW } from '@/lib/utils'
+import DisputeResolveActions from './DisputeResolveActions'
 
 export default async function AdminDisputesPage() {
   const supabase = await createClient()
@@ -64,6 +65,9 @@ export default async function AdminDisputesPage() {
               </div>
               {d.description && (
                 <p className="mt-3 text-[13px] font-medium text-ink-soft leading-snug line-clamp-2">{d.description}</p>
+              )}
+              {!['RESOLVED', 'CLOSED'].includes(d.status) && (
+                <DisputeResolveActions disputeId={d.id} jobPrice={d.jobs?.price || 0} />
               )}
             </li>
           ))}
