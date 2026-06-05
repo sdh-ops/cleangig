@@ -186,7 +186,7 @@ export default function CreateRequestPage() {
       }
       router.replace(data?.id ? `/requests/${data.id}` : '/dashboard')
     } catch (e) {
-      setErr(e instanceof Error ? e.message : '요청 생성에 실패했습니다.')
+      setErr((e as any)?.message || '요청 생성에 실패했습니다.')
       setLoading(false)
     }
   }

@@ -132,30 +132,39 @@ export default function CreateSpacePage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error('로그인이 필요합니다.')
 
-      const payload = {
+      const basePrice = suggestBasePrice(type as SpaceType, sizePyeong ? parseFloat(sizePyeong) : null, '보통')
+
+      // Core payload (columns that definitely exist)
+      const corePayload = {
         operator_id: user.id,
         name: name.trim(),
         type,
         address: address.trim(),
         address_detail: addressDetail.trim() || null,
-        location: coords
-          ? { type: 'Point', coordinates: [coords.lng, coords.lat] }
-          : null,
+        // PostgREST geography type requires WKT format
+        location: coords ? `POINT(${coords.lng} ${coords.lat})` : null,
+        lat: coords?.lat ?? null,
+        lng: coords?.lng ?? null,
         size_pyeong: sizePyeong ? parseFloat(sizePyeong) : null,
-        size_sqm: sizeSqm ?? null,
-        // 참고용 기본가(요청 시 면적·난이도로 다시 추천됨). 공간엔 가격을 고정하지 않는다.
-        base_price: suggestBasePrice(type as SpaceType, sizePyeong ? parseFloat(sizePyeong) : null, '보통'),
+        size_sqm: sizeSqm ? Math.round(sizeSqm) : null,
+        base_price: basePrice,
         estimated_duration: 90,
-        cleaning_difficulty: '보통',
         cleaning_tool_location: toolLocation || null,
         parking_guide: parkingGuide || null,
         trash_guide: trashGuide || null,
+        checklist_template: checklist.map((c) => ({ ...c, completed: false })),
+        photos,
+        is_active: true,
+      }
+
+      // Extended payload (columns added in later migrations — may not exist on older DBs)
+      const extendedPayload = {
+        ...corePayload,
+        cleaning_difficulty: '보통',
         has_toilet: hasToilet,
         has_kitchen: hasKitchen,
         has_bed: hasBed,
         has_balcony: hasBalcony,
-        checklist_template: checklist.map((c) => ({ ...c, completed: false })),
-        photos,
         reference_photos: referencePhotos,
         biz_type: bizTypeSel,
         biz_reg_number: bizTypeSel === 'BUSINESS' ? bizRegNumber.replace(/-/g, '') : null,
@@ -163,15 +172,19 @@ export default function CreateSpacePage() {
         biz_reg_image: bizRegImage[0] || null,
         vat_type: bizTypeSel === 'BUSINESS' ? vatType : 'EXEMPT',
         tax_invoice_required: bizTypeSel === 'BUSINESS' ? taxInvoiceRequired : false,
-        is_active: true,
       }
 
-      const { data, error } = await supabase.from('spaces').insert(payload).select('id').single()
-      if (error) throw error
+      // Try extended first, fall back to core if columns missing
+      let result = await supabase.from('spaces').insert(extendedPayload).select('id').single()
+      if (result.error && result.error.message?.includes('column')) {
+        result = await supabase.from('spaces').insert(corePayload).select('id').single()
+      }
+      if (result.error) throw result.error
 
-      router.replace(data?.id ? `/spaces/${data.id}` : '/spaces')
+      router.replace(result.data?.id ? `/spaces/${result.data.id}` : '/spaces')
     } catch (e) {
-      setErr(e instanceof Error ? e.message : '공간 등록에 실패했습니다.')
+      const msg = (e as any)?.message || (e as any)?.details || (e as any)?.hint || '공간 등록에 실패했습니다.'
+      setErr(msg)
       setLoading(false)
     }
   }
@@ -580,7 +593,15 @@ export default function CreateSpacePage() {
           )}
         </AnimatePresence>
 
-        {err && <div className="mt-4 p-3 bg-danger-soft rounded-xl text-[13px] font-bold text-danger">{err}</div>}
+        {err && (
+          <div
+            ref={(el) => el?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
+            className="mt-4 p-3.5 bg-danger-soft rounded-xl border border-danger/20 flex items-start gap-2.5"
+          >
+            <span className="text-danger text-base shrink-0">⚠️</span>
+            <p className="text-[13px] font-bold text-danger leading-snug">{err}</p>
+          </div>
+        )}
       </div>
 
       <div className="fixed bottom-0 inset-x-0 border-t border-line-soft bg-surface/95 backdrop-blur safe-bottom">
