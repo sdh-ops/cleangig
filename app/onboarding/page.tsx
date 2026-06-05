@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
-import { motion } from 'framer-motion'
 import { Building2, Sparkles, ChevronLeft, ChevronRight, CheckCircle2, Loader2, User as UserIcon, Phone } from 'lucide-react'
 import Link from 'next/link'
 import Logo from '@/components/common/Logo'
@@ -131,11 +130,7 @@ export default function OnboardingPage() {
       </header>
 
       {step === 'role' && (
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex-1 flex flex-col px-6 pt-4"
-        >
+        <div className="flex-1 flex flex-col px-6 pt-4">
           <h1 className="h-hero text-ink">
             공간 청소를 맡기거나,
             <br />
@@ -176,15 +171,11 @@ export default function OnboardingPage() {
               <ChevronRight size={20} />
             </button>
           </div>
-        </motion.div>
+        </div>
       )}
 
       {step === 'profile' && (
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex-1 flex flex-col px-6 pt-4"
-        >
+        <div className="flex-1 flex flex-col px-6 pt-4">
           <h1 className="h-hero text-ink">
             거의 다 왔어요.
             <br />
@@ -292,23 +283,14 @@ export default function OnboardingPage() {
               {loading ? <Loader2 size={20} className="animate-spin" /> : '쓱싹 시작하기'}
             </button>
           </div>
-        </motion.div>
+        </div>
       )}
 
       {step === 'done' && (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="flex-1 flex flex-col items-center justify-center px-6 text-center"
-        >
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ type: 'spring', stiffness: 220, damping: 18, delay: 0.1 }}
-            className="w-24 h-24 rounded-full bg-brand-softer flex items-center justify-center mb-6"
-          >
+        <div className="flex-1 flex flex-col items-center justify-center px-6 text-center">
+          <div className="w-24 h-24 rounded-full bg-brand-softer flex items-center justify-center mb-6">
             <CheckCircle2 size={52} className="text-brand-dark" strokeWidth={2.5} />
-          </motion.div>
+          </div>
           <h2 className="h-hero text-ink">가입 완료!</h2>
           <p className="t-body text-text-muted mt-3">
             곧 {selectedRole === 'operator' ? '대시보드' : '작업 목록'}으로 이동합니다.
@@ -316,7 +298,7 @@ export default function OnboardingPage() {
           <div className="mt-6">
             <Logo size="md" />
           </div>
-        </motion.div>
+        </div>
       )}
     </div>
   )

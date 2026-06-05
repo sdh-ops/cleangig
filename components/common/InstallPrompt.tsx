@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react'
 import { Smartphone, X, Share as ShareIcon, Plus } from 'lucide-react'
-import { motion, AnimatePresence } from 'framer-motion'
 import Logo from './Logo'
 
 type BeforeInstallPromptEvent = Event & {
@@ -96,13 +95,8 @@ export default function InstallPrompt() {
 
   return (
     <>
-      <AnimatePresence>
         {show && (
-          <motion.div
-            initial={{ y: 80, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 80, opacity: 0 }}
-            transition={{ type: 'spring', stiffness: 260, damping: 26 }}
+          <div
             className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[60] w-[calc(100%-24px)] max-w-[420px]"
             style={{ marginBottom: 'env(safe-area-inset-bottom, 0)' }}
           >
@@ -130,23 +124,15 @@ export default function InstallPrompt() {
                 <X size={16} />
               </button>
             </div>
-          </motion.div>
+          </div>
         )}
-      </AnimatePresence>
 
-      <AnimatePresence>
         {showIOSSheet && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[70] bg-ink/50 backdrop-blur-sm flex items-end sm:items-center justify-center"
+          <div
+            className="fixed inset-0 z-[70] bg-ink/50 flex items-end sm:items-center justify-center"
             onClick={() => setShowIOSSheet(false)}
           >
-            <motion.div
-              initial={{ y: 60 }}
-              animate={{ y: 0 }}
-              exit={{ y: 60 }}
+            <div
               className="w-full max-w-[480px] rounded-t-3xl sm:rounded-3xl bg-surface p-6 pb-8"
               style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0) + 2rem)' }}
               onClick={(e) => e.stopPropagation()}
@@ -182,10 +168,9 @@ export default function InstallPrompt() {
               <button onClick={() => { dismiss(); setShowIOSSheet(false) }} className="btn btn-ghost w-full">
                 나중에 하기
               </button>
-            </motion.div>
-          </motion.div>
+            </div>
+          </div>
         )}
-      </AnimatePresence>
     </>
   )
 }

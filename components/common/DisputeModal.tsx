@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
 import { AlertTriangle, X, Loader2, Camera } from 'lucide-react'
 import ImageUploader from './ImageUploader'
 import { haptic } from '@/lib/haptic'
@@ -53,21 +52,14 @@ export default function DisputeModal({ open, onClose, jobId, onSubmitted }: Prop
     }
   }
 
+  if (!open) return null
+
   return (
-    <AnimatePresence>
-      {open && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 bg-ink/50 backdrop-blur-sm flex items-end sm:items-center justify-center"
+        <div
+          className="fixed inset-0 z-50 bg-ink/50 flex items-end sm:items-center justify-center"
           onClick={onClose}
         >
-          <motion.div
-            initial={{ y: 60 }}
-            animate={{ y: 0 }}
-            exit={{ y: 60 }}
-            transition={{ type: 'spring', stiffness: 260, damping: 26 }}
+          <div
             className="w-full max-w-[480px] rounded-t-3xl sm:rounded-3xl bg-surface p-6"
             style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0) + 2rem)' }}
             onClick={(e) => e.stopPropagation()}
@@ -128,9 +120,7 @@ export default function DisputeModal({ open, onClose, jobId, onSubmitted }: Prop
                 {submitting ? <Loader2 size={18} className="animate-spin" /> : '신고 접수'}
               </button>
             </div>
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+          </div>
+        </div>
   )
 }

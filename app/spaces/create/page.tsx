@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import type { SpaceType } from '@/lib/types'
-import { motion, AnimatePresence } from 'framer-motion'
 import {
   ChevronLeft,
   ChevronRight,
@@ -217,9 +216,8 @@ export default function CreateSpacePage() {
       </div>
 
       <div className="flex-1 flex flex-col px-5 pt-5 pb-32">
-        <AnimatePresence mode="wait">
           {step === 1 && (
-            <motion.div key="s1" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }}>
+            <div>
               <h2 className="h-title text-ink">어떤 공간을 운영하세요?</h2>
               <p className="t-caption mt-1.5">공간 유형에 맞게 체크리스트가 자동 적용됩니다. 3단계면 등록 끝!</p>
               <div className="grid grid-cols-3 gap-2.5 mt-6">
@@ -238,11 +236,11 @@ export default function CreateSpacePage() {
                   </button>
                 ))}
               </div>
-            </motion.div>
+            </div>
           )}
 
           {step === 2 && (
-            <motion.div key="s2" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} className="flex flex-col gap-5">
+            <div className="flex flex-col gap-5">
               <div>
                 <h2 className="h-title text-ink">공간이 어디 있나요?</h2>
                 <p className="t-caption mt-1.5">지도에 표시될 위치입니다.</p>
@@ -302,11 +300,11 @@ export default function CreateSpacePage() {
                   </p>
                 </div>
               )}
-            </motion.div>
+            </div>
           )}
 
           {step === 3 && (
-            <motion.div key="s3" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} className="flex flex-col gap-5">
+            <div className="flex flex-col gap-5">
               <div>
                 <h2 className="h-title text-ink">공간 기본 정보</h2>
                 <p className="t-caption mt-1.5">클린파트너에게 보여질 정보입니다.</p>
@@ -363,11 +361,11 @@ export default function CreateSpacePage() {
                 label="공간 사진 (최대 6장)"
                 hint="밝고 깨끗한 사진이 매칭 확률을 높여요."
               />
-            </motion.div>
+            </div>
           )}
 
           {step === 4 && (
-            <motion.div key="s4" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} className="flex flex-col gap-5">
+            <div className="flex flex-col gap-5">
               <div>
                 <h2 className="h-title text-ink">클린파트너에게 안내할 내용</h2>
                 <p className="t-caption mt-1.5">상세한 안내는 작업 품질을 높여줍니다.</p>
@@ -413,11 +411,11 @@ export default function CreateSpacePage() {
                 label="참고 사진 - 완료 예시 (선택)"
                 hint="청소 후 상태 기준 사진입니다. 클린파트너가 참고해요."
               />
-            </motion.div>
+            </div>
           )}
 
           {step === 5 && (
-            <motion.div key="s5" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} className="flex flex-col gap-5">
+            <div className="flex flex-col gap-5">
               <div>
                 <h2 className="h-title text-ink">청소 체크리스트</h2>
                 <p className="t-caption mt-1.5">
@@ -500,11 +498,11 @@ export default function CreateSpacePage() {
                   </div>
                 </div>
               </div>
-            </motion.div>
+            </div>
           )}
 
           {step === 6 && (
-            <motion.div key="s6" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} className="flex flex-col gap-5">
+            <div className="flex flex-col gap-5">
               <div>
                 <h2 className="h-title text-ink">사업자 정보</h2>
                 <p className="t-caption mt-1.5">세금계산서·현금영수증 발행 시 필요합니다. 사업자가 아니어도 OK.</p>
@@ -596,9 +594,8 @@ export default function CreateSpacePage() {
                   입력한 정보는 결제·정산 시 자동 적용되며, 세무 처리 외에는 사용되지 않습니다.
                 </div>
               </div>
-            </motion.div>
+            </div>
           )}
-        </AnimatePresence>
 
         {err && (
           <div

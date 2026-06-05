@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import {
   ChevronLeft,
@@ -901,19 +900,12 @@ export default function WorkerJobDetail() {
       )}
 
       {/* Consent modal */}
-      <AnimatePresence>
         {showConsent && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-ink/40 backdrop-blur-sm flex items-end sm:items-center justify-center"
+          <div
+            className="fixed inset-0 z-50 bg-ink/40 flex items-end sm:items-center justify-center"
             onClick={() => setShowConsent(false)}
           >
-            <motion.div
-              initial={{ y: 60 }}
-              animate={{ y: 0 }}
-              exit={{ y: 60 }}
+            <div
               className="w-full max-w-[480px] rounded-t-3xl sm:rounded-3xl bg-surface p-6 pb-8 safe-bottom"
               onClick={(e) => e.stopPropagation()}
             >
@@ -950,10 +942,9 @@ export default function WorkerJobDetail() {
               <button onClick={apply} disabled={transitioning} className="btn btn-primary w-full">
                 {transitioning ? <Loader2 size={20} className="animate-spin" /> : '동의하고 지원하기'}
               </button>
-            </motion.div>
-          </motion.div>
+            </div>
+          </div>
         )}
-      </AnimatePresence>
 
       {job.operator_id && (
         <ReviewModal

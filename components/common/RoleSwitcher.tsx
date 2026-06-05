@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { motion, AnimatePresence } from 'framer-motion'
 import { Building2, Sparkles, ArrowRightLeft, Loader2, X, Check, Zap, Wallet } from 'lucide-react'
 import { haptic } from '@/lib/haptic'
 
@@ -101,20 +100,12 @@ export default function RoleSwitcher({ userId, currentRole, canOperate = false, 
         </div>
       </section>
 
-      <AnimatePresence>
-        {confirm && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-ink/50 backdrop-blur-sm flex items-end sm:items-center justify-center"
+      {confirm && (
+          <div
+            className="fixed inset-0 z-50 bg-ink/50 flex items-end sm:items-center justify-center"
             onClick={() => !switching && setConfirm(false)}
           >
-            <motion.div
-              initial={{ y: 60 }}
-              animate={{ y: 0 }}
-              exit={{ y: 60 }}
-              transition={{ type: 'spring', stiffness: 250, damping: 24 }}
+            <div
               className="w-full max-w-[480px] rounded-t-3xl sm:rounded-3xl bg-surface p-6"
               style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0) + 2rem)' }}
               onClick={(e) => e.stopPropagation()}
@@ -173,10 +164,9 @@ export default function RoleSwitcher({ userId, currentRole, canOperate = false, 
                   {switching ? <Loader2 size={18} className="animate-spin" /> : '전환하기'}
                 </button>
               </div>
-            </motion.div>
-          </motion.div>
+            </div>
+          </div>
         )}
-      </AnimatePresence>
     </>
   )
 }

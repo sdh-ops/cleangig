@@ -17,8 +17,6 @@ import {
   AlertTriangle,
   X,
 } from 'lucide-react'
-import { motion, AnimatePresence } from 'framer-motion'
-
 const FAQS = [
   {
     q: '쓱싹은 어떤 서비스인가요?',
@@ -247,20 +245,11 @@ export default function SupportPage() {
                   <span className="text-[13.5px] font-extrabold text-ink flex-1">Q. {faq.q}</span>
                   <ChevronDown size={16} className={`shrink-0 text-text-faint transition ${faqOpen === i ? 'rotate-180' : ''}`} />
                 </button>
-                <AnimatePresence initial={false}>
                   {faqOpen === i && (
-                    <motion.div
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: 'auto', opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      className="overflow-hidden"
-                    >
-                      <p className="px-4 pb-4 pt-0 text-[13px] font-medium text-text-muted leading-relaxed border-t border-line-soft">
-                        {faq.a}
-                      </p>
-                    </motion.div>
+                    <p className="px-4 pb-4 pt-0 text-[13px] font-medium text-text-muted leading-relaxed border-t border-line-soft">
+                      {faq.a}
+                    </p>
                   )}
-                </AnimatePresence>
               </li>
             ))}
           </ul>
@@ -285,20 +274,12 @@ export default function SupportPage() {
       <LegalFooter />
 
       {/* 1:1 문의 폼 */}
-      <AnimatePresence>
         {showForm && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-ink/50 backdrop-blur-sm flex items-end sm:items-center justify-center"
+          <div
+            className="fixed inset-0 z-50 bg-ink/50 flex items-end sm:items-center justify-center"
             onClick={resetForm}
           >
-            <motion.div
-              initial={{ y: 60 }}
-              animate={{ y: 0 }}
-              exit={{ y: 60 }}
-              transition={{ type: 'spring', stiffness: 250, damping: 24 }}
+            <div
               className="w-full max-w-[480px] rounded-t-3xl sm:rounded-3xl bg-surface p-6 pb-8 safe-bottom overflow-y-auto max-h-[90dvh]"
               onClick={(e) => e.stopPropagation()}
             >
@@ -381,26 +362,17 @@ export default function SupportPage() {
                   {submitting ? <Loader2 size={18} className="animate-spin" /> : '문의 접수'}
                 </button>
               </div>
-            </motion.div>
-          </motion.div>
+            </div>
+          </div>
         )}
-      </AnimatePresence>
 
       {/* 티켓 상세 모달 */}
-      <AnimatePresence>
         {selectedTicket && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-ink/50 backdrop-blur-sm flex items-end sm:items-center justify-center"
+          <div
+            className="fixed inset-0 z-50 bg-ink/50 flex items-end sm:items-center justify-center"
             onClick={() => setSelectedTicket(null)}
           >
-            <motion.div
-              initial={{ y: 60 }}
-              animate={{ y: 0 }}
-              exit={{ y: 60 }}
-              transition={{ type: 'spring', stiffness: 250, damping: 24 }}
+            <div
               className="w-full max-w-[480px] rounded-t-3xl sm:rounded-3xl bg-surface p-6 pb-8 safe-bottom overflow-y-auto max-h-[85dvh]"
               onClick={(e) => e.stopPropagation()}
             >
@@ -446,10 +418,9 @@ export default function SupportPage() {
                   </div>
                 </div>
               )}
-            </motion.div>
-          </motion.div>
+            </div>
+          </div>
         )}
-      </AnimatePresence>
     </div>
   )
 }

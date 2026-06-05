@@ -3,7 +3,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { motion, AnimatePresence } from 'framer-motion'
 import {
   ChevronLeft,
   ChevronRight,
@@ -253,9 +252,8 @@ export default function CreateRequestPage() {
       </div>
 
       <div className="flex-1 flex flex-col px-5 pt-6 pb-32">
-        <AnimatePresence mode="wait">
           {step === 1 && (
-            <motion.div key="s1" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} className="flex flex-col gap-4">
+            <div className="flex flex-col gap-4">
               <div>
                 <h2 className="h-title text-ink">어느 공간을 청소할까요?</h2>
                 <p className="t-caption mt-1.5">공간을 선택하면 자동으로 체크리스트가 적용돼요.</p>
@@ -280,11 +278,11 @@ export default function CreateRequestPage() {
                   </button>
                 ))}
               </div>
-            </motion.div>
+            </div>
           )}
 
           {step === 2 && (
-            <motion.div key="s2" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} className="flex flex-col gap-5">
+            <div className="flex flex-col gap-5">
               <div>
                 <h2 className="h-title text-ink">언제 청소할까요?</h2>
                 <p className="t-caption mt-1.5">지금 요청 또는 예약을 선택하세요.</p>
@@ -314,7 +312,7 @@ export default function CreateRequestPage() {
               </div>
 
               {when === 'schedule' && (
-                <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="t-meta block mb-2 ml-1">날짜</label>
                     <input type="date" value={scheduledDate} onChange={(e) => setScheduledDate(e.target.value)} className="input" min={new Date().toISOString().slice(0, 10)} />
@@ -323,7 +321,7 @@ export default function CreateRequestPage() {
                     <label className="t-meta block mb-2 ml-1">시간</label>
                     <input type="time" value={scheduledTime} onChange={(e) => setScheduledTime(e.target.value)} className="input" step={1800} />
                   </div>
-                </motion.div>
+                </div>
               )}
 
               {when === 'schedule' && !isUrgent && (
@@ -404,11 +402,11 @@ export default function CreateRequestPage() {
                   )}
                 </div>
               )}
-            </motion.div>
+            </div>
           )}
 
           {step === 3 && selectedSpace && priceBreakdown && (
-            <motion.div key="s3" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} className="flex flex-col gap-5">
+            <div className="flex flex-col gap-5">
               <div>
                 <h2 className="h-title text-ink">난이도 · 가격</h2>
                 <p className="t-caption mt-1.5">이번 청소가 얼마나 더러운지에 따라 가격을 정하세요.</p>
@@ -519,9 +517,8 @@ export default function CreateRequestPage() {
                   <b>베타 기간</b>: 실결제 없이 요청이 생성됩니다. 정식 오픈 시 Toss 에스크로 결제와 자동 정산이 적용됩니다.
                 </div>
               </div>
-            </motion.div>
+            </div>
           )}
-        </AnimatePresence>
 
         {err && <div className="mt-4 p-3 bg-danger-soft rounded-xl text-[13px] font-bold text-danger">{err}</div>}
       </div>

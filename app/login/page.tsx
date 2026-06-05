@@ -3,7 +3,6 @@
 import { Suspense, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useSearchParams, useRouter } from 'next/navigation'
-import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import { ChevronLeft, Mail, Lock, AlertCircle, Loader2, Sparkles } from 'lucide-react'
 import Logo from '@/components/common/Logo'
@@ -99,16 +98,8 @@ function LoginContent() {
       </div>
 
       <div className="relative z-10 flex-1 flex flex-col px-6 pt-2 pb-24">
-        <AnimatePresence mode="wait">
           {mode === 'choose' && (
-            <motion.div
-              key="choose"
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.28 }}
-              className="flex flex-col flex-1"
-            >
+            <div className="flex flex-col flex-1">
               {/* Logo section */}
               <div className="pt-4 pb-8">
                 <Logo size="lg" />
@@ -128,16 +119,12 @@ function LoginContent() {
               </p>
 
               {showError && (
-                <motion.div
-                  initial={{ opacity: 0, y: -4 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="flex items-start gap-2 mb-5 p-3.5 bg-danger-soft rounded-xl border border-danger/10"
-                >
+                <div className="flex items-start gap-2 mb-5 p-3.5 bg-danger-soft rounded-xl border border-danger/10">
                   <AlertCircle size={17} className="text-danger shrink-0 mt-0.5" />
                   <p className="text-[13px] font-bold text-danger leading-snug">
                     {errorMsg ? decodeURIComponent(errorMsg) : message}
                   </p>
-                </motion.div>
+                </div>
               )}
 
               <div className="flex flex-col gap-3">
@@ -192,18 +179,11 @@ function LoginContent() {
                   ))}
                 </div>
               </div>
-            </motion.div>
+            </div>
           )}
 
           {(mode === 'email' || mode === 'signup') && (
-            <motion.div
-              key={mode}
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.28 }}
-              className="flex flex-col flex-1"
-            >
+            <div className="flex flex-col flex-1">
               <div className="pt-4 pb-6">
                 <h1 className="h-hero text-ink">
                   {mode === 'email' ? '이메일 로그인' : '회원가입'}
@@ -250,10 +230,7 @@ function LoginContent() {
                 </div>
 
                 {message && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -4 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className={`flex items-start gap-2 p-3.5 rounded-xl border ${
+                  <div className={`flex items-start gap-2 p-3.5 rounded-xl border ${
                       messageType === 'success'
                         ? 'bg-success-soft border-success/10'
                         : 'bg-danger-soft border-danger/10'
@@ -261,7 +238,7 @@ function LoginContent() {
                   >
                     <AlertCircle size={17} className={`${messageType === 'success' ? 'text-success' : 'text-danger'} shrink-0 mt-0.5`} />
                     <p className={`text-[13px] font-bold ${messageType === 'success' ? 'text-success' : 'text-danger'} leading-snug`}>{message}</p>
-                  </motion.div>
+                  </div>
                 )}
 
                 <button type="submit" disabled={loading} className="btn btn-primary w-full mt-1">
@@ -277,9 +254,8 @@ function LoginContent() {
                   {mode === 'email' ? '아직 계정이 없으신가요? 회원가입' : '이미 계정이 있으신가요? 로그인'}
                 </button>
               </div>
-            </motion.div>
+            </div>
           )}
-        </AnimatePresence>
       </div>
 
       <div className="relative z-10 px-6 pb-6 safe-bottom">

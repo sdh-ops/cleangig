@@ -1,7 +1,6 @@
 'use client'
 
 import Link from 'next/link'
-import { motion } from 'framer-motion'
 import { useRouter } from 'next/navigation'
 import {
   Plus,
@@ -93,17 +92,13 @@ export default function DashboardClient({
       <div className="page-container flex-1">
 
         {/* Greeting */}
-        <motion.section
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-5 pt-2"
-        >
+        <section className="mb-5 pt-2">
           <p className="t-caption">{greeting}, 공간파트너님</p>
           <h1 className="h-hero text-ink mt-0.5">
             {profile.business_name || profile.name}
             <span className="text-text-faint text-xl font-extrabold">님</span>
           </h1>
-        </motion.section>
+        </section>
 
         {/* Setup checklist */}
         <div className="mb-5">
@@ -131,12 +126,7 @@ export default function DashboardClient({
             </div>
           </div>
         ) : (
-        <motion.section
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.05 }}
-          className="mb-5"
-        >
+        <section className="mb-5">
           <div className="card-dark p-5">
             {/* Glow blobs */}
             <div className="absolute -top-10 -right-10 w-48 h-48 bg-brand/25 rounded-full blur-3xl pointer-events-none" />
@@ -187,7 +177,7 @@ export default function DashboardClient({
               </div>
             </div>
           </div>
-        </motion.section>
+        </section>
         )}
 
         {/* Metrics */}
@@ -283,13 +273,8 @@ export default function DashboardClient({
             </div>
           ) : (
             <ul className="flex flex-col gap-2.5">
-              {recentJobs.map((job, i) => (
-                <motion.li
-                  key={job.id}
-                  initial={{ opacity: 0, y: 6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1 + i * 0.04 }}
-                >
+              {recentJobs.map((job) => (
+                <li key={job.id}>
                   <Link href={`/requests/${job.id}`} className="card-interactive p-4 flex items-center gap-3">
                     <div className="icon-box icon-box-md icon-box-brand shrink-0">
                       <Sparkles size={18} />
@@ -317,7 +302,7 @@ export default function DashboardClient({
                       <ChevronRight size={14} className="text-text-faint" />
                     </div>
                   </Link>
-                </motion.li>
+                </li>
               ))}
             </ul>
           )}

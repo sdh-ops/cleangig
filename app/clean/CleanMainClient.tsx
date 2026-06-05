@@ -1,7 +1,6 @@
 'use client'
 
 import Link from 'next/link'
-import { motion } from 'framer-motion'
 import { useRouter } from 'next/navigation'
 import {
   Sparkles,
@@ -78,7 +77,7 @@ export default function CleanMainClient({ profile, activeJob, openJobs, weekEarn
       <div className="page-container flex-1">
 
         {/* Profile strip */}
-        <motion.section initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="mb-5 pt-2">
+        <section className="mb-5 pt-2">
           <div className="flex items-center gap-3">
             {/* Avatar */}
             <div className="relative shrink-0">
@@ -126,7 +125,7 @@ export default function CleanMainClient({ profile, activeJob, openJobs, weekEarn
               프로필 <ChevronRight size={13} />
             </Link>
           </div>
-        </motion.section>
+        </section>
 
         {/* Setup checklist */}
         <div className="mb-5">
@@ -144,12 +143,7 @@ export default function CleanMainClient({ profile, activeJob, openJobs, weekEarn
 
         {/* Active job OR weekly earnings */}
         {activeJob ? (
-          <motion.section
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.05 }}
-            className="mb-6"
-          >
+          <section className="mb-6">
             <Link href={`/clean/job/${activeJob.id}`} className="block">
               <div className="card-dark p-5">
                 <div className="absolute -top-8 -right-8 w-40 h-40 bg-brand/25 rounded-full blur-3xl pointer-events-none" />
@@ -183,14 +177,9 @@ export default function CleanMainClient({ profile, activeJob, openJobs, weekEarn
                 </div>
               </div>
             </Link>
-          </motion.section>
+          </section>
         ) : (
-          <motion.section
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.05 }}
-            className="mb-6"
-          >
+          <section className="mb-6">
             {/* Weekly earnings card */}
             <div className="rounded-3xl overflow-hidden relative" style={{ background: 'linear-gradient(135deg, #FFB800 0%, #F0A500 100%)', boxShadow: '0 12px 28px rgba(255,184,0,0.3)' }}>
               <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: 'radial-gradient(rgba(255,255,255,0.08) 1px, transparent 1px)', backgroundSize: '18px 18px' }} />
@@ -221,7 +210,7 @@ export default function CleanMainClient({ profile, activeJob, openJobs, weekEarn
                 </div>
               </div>
             </div>
-          </motion.section>
+          </section>
         )}
 
         {/* Nearby jobs */}
@@ -246,13 +235,8 @@ export default function CleanMainClient({ profile, activeJob, openJobs, weekEarn
             </div>
           ) : (
             <ul className="flex flex-col gap-2.5">
-              {openJobs.slice(0, 5).map((job, i) => (
-                <motion.li
-                  key={job.id}
-                  initial={{ opacity: 0, y: 6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.12 + i * 0.05 }}
-                >
+              {openJobs.slice(0, 5).map((job) => (
+                <li key={job.id}>
                   <Link href={`/clean/job/${job.id}`} className="card-interactive p-4 flex items-start gap-3">
                     <div className="icon-box icon-box-md icon-box-brand shrink-0 mt-0.5">
                       <Sparkles size={18} />
@@ -279,7 +263,7 @@ export default function CleanMainClient({ profile, activeJob, openJobs, weekEarn
                       <p className="text-[9.5px] font-bold text-text-faint mt-0.5">예상 정산</p>
                     </div>
                   </Link>
-                </motion.li>
+                </li>
               ))}
             </ul>
           )}

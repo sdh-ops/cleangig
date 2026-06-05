@@ -2,7 +2,6 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
-import { motion } from 'framer-motion'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import {
@@ -315,7 +314,7 @@ export default function RequestDetailClient({ job: initialJob, userId, initialIs
         <div className="px-5 -mt-4 relative z-10">
           {/* Worker card */}
           {job.users ? (
-            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="card p-4 mb-4">
+            <div className="card p-4 mb-4">
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 rounded-full bg-gradient-to-br from-brand to-brand-dark flex items-center justify-center text-white font-black shrink-0">
                   {job.users.profile_image ? (
@@ -359,7 +358,7 @@ export default function RequestDetailClient({ job: initialJob, userId, initialIs
                   )}
                 </div>
               )}
-            </motion.div>
+            </div>
           ) : job.status === 'OPEN' ? (
             <div className="card p-4 mb-4 bg-brand-softer border border-brand/15">
               <div className="flex items-center gap-3">
@@ -613,9 +612,7 @@ export default function RequestDetailClient({ job: initialJob, userId, initialIs
           className="fixed inset-0 z-50 bg-ink/40 backdrop-blur-sm flex items-end sm:items-center justify-center"
           onClick={() => setShowCancel(false)}
         >
-          <motion.div
-            initial={{ y: 60 }}
-            animate={{ y: 0 }}
+          <div
             className="w-full max-w-[480px] rounded-t-3xl sm:rounded-3xl bg-surface p-6 pb-8 safe-bottom"
             onClick={(e) => e.stopPropagation()}
           >
@@ -669,7 +666,7 @@ export default function RequestDetailClient({ job: initialJob, userId, initialIs
                 {canceling ? <Loader2 size={18} className="animate-spin" /> : '취소하기'}
               </button>
             </div>
-          </motion.div>
+          </div>
         </div>
       )}
     </div>
