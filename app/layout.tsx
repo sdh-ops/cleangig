@@ -37,8 +37,9 @@ export const metadata: Metadata = {
     description: '공간파트너와 클린파트너를 연결합니다.',
   },
   icons: {
-    icon: '/favicon.ico',
-    apple: '/icons/icon-192.png',
+    icon: [{ url: '/icon', sizes: '512x512', type: 'image/png' }],
+    apple: [{ url: '/apple-icon', sizes: '180x180', type: 'image/png' }],
+    shortcut: '/icon',
   },
 }
 
@@ -56,7 +57,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="ko" suppressHydrationWarning data-scroll-behavior="smooth">
       <head>
-        <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+        <link rel="apple-touch-icon" href="/apple-icon" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="mobile-web-app-capable" content="yes" />

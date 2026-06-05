@@ -4,12 +4,12 @@
   "description": "청소 매칭 플랫폼. 원하는 시간·지역에서 부업 수익 만들고, 공간은 원클릭으로 청소 요청하세요.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#F7F9FC",
-  "theme_color": "#00C896",
+  "background_color": "#F0F9FF",
+  "theme_color": "#0EA5E9",
   "orientation": "portrait",
   "icons": [
-    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
-    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+    { "src": "/icon", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/apple-icon", "sizes": "180x180", "type": "image/png", "purpose": "any" }
   ],
   "categories": ["productivity", "lifestyle", "business"],
   "lang": "ko-KR",
