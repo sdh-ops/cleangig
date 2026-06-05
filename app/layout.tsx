@@ -7,6 +7,7 @@ import ServiceWorkerRegister from '@/components/common/ServiceWorkerRegister'
 import HapticProvider from '@/components/common/HapticProvider'
 import InstallPrompt from '@/components/common/InstallPrompt'
 import BetaBadge from '@/components/common/BetaBadge'
+import PushSubscriptionInit from '@/components/common/PushSubscriptionInit'
 
 export const metadata: Metadata = {
   title: {
@@ -71,6 +72,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body>
         <ServiceWorkerRegister />
+        <PushSubscriptionInit />
         <HapticProvider />
         <BetaBadge />
         <NotificationOverlay />

@@ -169,7 +169,11 @@ export default function NotificationBell() {
                         {/* 권한 요청 버튼 (권한이 없는 경우만 표시) */}
                         {typeof window !== 'undefined' && 'Notification' in window && Notification.permission !== 'granted' && (
                             <button
-                                onClick={() => Notification.requestPermission()}
+                                onClick={async () => {
+                                    const { requestNotificationPermission, subscribeToPush } = await import('@/lib/push')
+                                    const granted = await requestNotificationPermission()
+                                    if (granted) subscribeToPush()
+                                }}
                                 style={{ fontSize: 11, background: 'var(--color-bg)', padding: '4px 8px', borderRadius: 4, border: 'none', cursor: 'pointer' }}
                             >
                                 푸시 알림 켜기

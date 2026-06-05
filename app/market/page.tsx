@@ -75,7 +75,7 @@ export default function MarketPage() {
               const tier = TIER_BENEFITS[w.tier || 'STARTER']
               return (
                 <li key={w.id}>
-                  <div className="card-interactive p-4 flex items-center gap-3">
+                  <Link href={`/profile/worker/${w.id}`} className="card-interactive p-4 flex items-center gap-3">
                     <div className="w-14 h-14 rounded-2xl bg-brand-softer text-brand-dark flex items-center justify-center font-black text-xl overflow-hidden shrink-0">
                       {w.profile_image ? (
                         <img src={w.profile_image} alt="" className="w-full h-full object-cover" />
@@ -103,7 +103,7 @@ export default function MarketPage() {
                       </div>
                       {w.bio && <p className="text-[11.5px] font-medium text-text-muted truncate mt-1">{w.bio}</p>}
                     </div>
-                  </div>
+                  </Link>
                 </li>
               )
             })}

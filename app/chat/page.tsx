@@ -18,6 +18,24 @@ type Chat = {
   unread: boolean
 }
 
+function buildChatMap(messages: any[], userId: string): Map<string, Chat> {
+  const map = new Map<string, Chat>()
+  ;(messages || []).forEach((m: any) => {
+    if (map.has(m.job_id)) return
+    const partnerId = m.sender_id === userId ? m.receiver_id : m.sender_id
+    const unread = m.receiver_id === userId && !m.is_read
+    map.set(m.job_id, {
+      job_id: m.job_id,
+      space_name: m.jobs?.spaces?.name || '대화',
+      partner_id: partnerId,
+      last_message: m.content,
+      last_message_time: m.created_at,
+      unread,
+    })
+  })
+  return map
+}
+
 export default function ChatListPage() {
   const [chats, setChats] = useState<Chat[]>([])
   const [loading, setLoading] = useState(true)
@@ -25,10 +43,15 @@ export default function ChatListPage() {
   const [role, setRole] = useState<'operator' | 'worker'>('operator')
 
   useEffect(() => {
-    (async () => {
-      const supabase = createClient()
+    const supabase = createClient()
+    let userId = ''
+    let channel: ReturnType<typeof supabase.channel> | null = null
+
+    ;(async () => {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { setLoading(false); return }
+      userId = user.id
+
       const { data: profile } = await supabase.from('users').select('role').eq('id', user.id).single()
       if (profile?.role === 'worker') setRole('worker')
 
@@ -39,23 +62,37 @@ export default function ChatListPage() {
         .order('created_at', { ascending: false })
         .limit(200)
 
-      const map = new Map<string, Chat>()
-      ;(messages || []).forEach((m: any) => {
-        if (map.has(m.job_id)) return
-        const partnerId = m.sender_id === user.id ? m.receiver_id : m.sender_id
-        const unread = m.receiver_id === user.id && !m.is_read
-        map.set(m.job_id, {
-          job_id: m.job_id,
-          space_name: m.jobs?.spaces?.name || '대화',
-          partner_id: partnerId,
-          last_message: m.content,
-          last_message_time: m.created_at,
-          unread,
-        })
-      })
-      setChats(Array.from(map.values()))
+      setChats(Array.from(buildChatMap(messages ?? [], userId).values()))
       setLoading(false)
+
+      // 실시간 — 새 메시지 수신 시 목록 최상단으로 올리고 unread 표시
+      channel = supabase
+        .channel('chat-list')
+        .on('postgres_changes', {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages',
+        }, (payload) => {
+          const m = payload.new as any
+          if (m.sender_id !== userId && m.receiver_id !== userId) return
+          setChats((prev) => {
+            const next = prev.filter((c) => c.job_id !== m.job_id)
+            return [{
+              job_id: m.job_id,
+              space_name: prev.find((c) => c.job_id === m.job_id)?.space_name || '대화',
+              partner_id: m.sender_id === userId ? m.receiver_id : m.sender_id,
+              last_message: m.content,
+              last_message_time: m.created_at,
+              unread: m.receiver_id === userId,
+            }, ...next]
+          })
+        })
+        .subscribe()
     })()
+
+    return () => {
+      channel?.unsubscribe()
+    }
   }, [])
 
   const filtered = chats.filter(
