@@ -40,34 +40,30 @@ export default function LandingClient() {
 
   return (
     <div className="sseuksak-shell">
-      <div className="relative flex-1 overflow-hidden">
-        {/* Background — no blur filters (GPU pressure) */}
-        <div className="absolute inset-0 bg-canvas">
-          <div className="absolute inset-0 bg-dot-grid opacity-50" />
-        </div>
-
+      <div className="flex-1">
         {/* Top bar */}
-        <div className="relative z-10 flex items-center justify-between px-5 pt-5 safe-top">
+        <div className="flex items-center justify-between px-5 pt-5 safe-top">
           <Logo size="sm" />
           <Link
             href="/login"
-            className="text-sm font-bold text-ink-soft px-4 py-2 rounded-full bg-surface border border-line-soft hover:bg-surface-muted transition"
+            className="text-sm font-bold text-ink-soft px-4 py-2 rounded-full bg-surface border border-line-soft"
           >
             로그인
           </Link>
         </div>
 
-        {/* Hero — plain divs, no motion.* */}
-        <div className="relative z-10 px-6 pt-8 pb-5">
+        {/* Hero */}
+        <div className="px-6 pt-8 pb-5">
+          {/* Status badge — static dot, no animation */}
           <div className="inline-flex items-center gap-2 bg-surface border border-line-soft rounded-full px-3.5 py-2 mb-6 shadow-xs">
-            <span className="w-2 h-2 rounded-full bg-brand animate-pulse-ring shrink-0" />
+            <span className="w-2 h-2 rounded-full bg-brand shrink-0" />
             <span className="text-[12px] font-bold text-ink-soft">지금 5,000+ 공간이 사용중</span>
           </div>
 
           <h1 className="text-[40px] font-black leading-[1.12] tracking-[-0.035em] text-ink">
-            공간 청소, <span className="text-gradient-brand">원클릭</span>으로.
+            공간 청소, <span className="text-brand font-black">원클릭</span>으로.
             <br />
-            청소로 <span className="text-gradient-brand">부수입</span> 만들기.
+            청소로 <span className="text-brand font-black">부수입</span> 만들기.
           </h1>
 
           <p className="mt-3.5 text-[14.5px] text-text-muted font-semibold leading-relaxed">
@@ -91,22 +87,18 @@ export default function LandingClient() {
         </div>
 
         {/* Audience toggle */}
-        <div className="relative z-10 px-6 mb-4">
+        <div className="px-6 mb-4">
           <div className="bg-surface-muted rounded-full p-1 flex border border-line-soft">
             <ToggleBtn active={audience === 'host'} onClick={() => setAudience('host')} label="🏢  공간파트너" />
             <ToggleBtn active={audience === 'worker'} onClick={() => setAudience('worker')} label="✨  클린파트너" />
           </div>
         </div>
 
-        {/* Audience card — CSS opacity only, both cards always in DOM */}
-        <div className="relative z-10 px-6" style={{ minHeight: 260 }}>
-          {/* Host card */}
-          <div
-            className="absolute inset-x-6 transition-opacity duration-200"
-            style={{ opacity: audience === 'host' ? 1 : 0, pointerEvents: audience === 'host' ? 'auto' : 'none' }}
-          >
-            <div className="bg-surface rounded-3xl p-5 shadow-md border border-line-soft overflow-hidden relative">
-              <div className="flex items-center gap-3 mb-4 relative z-10">
+        {/* Audience card — conditional render, no GPU transitions */}
+        <div className="px-6 mb-4">
+          {audience === 'host' ? (
+            <div className="bg-surface rounded-3xl p-5 border border-line-soft overflow-hidden relative">
+              <div className="flex items-center gap-3 mb-4">
                 <div className="w-12 h-12 rounded-2xl bg-brand text-white flex items-center justify-center shrink-0">
                   <Building2 size={22} strokeWidth={2.5} />
                 </div>
@@ -116,7 +108,7 @@ export default function LandingClient() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-1.5 mb-3 relative z-10">
+              <div className="grid grid-cols-3 gap-1.5 mb-3">
                 {[
                   { step: '01', text: '요청 등록', sub: '30초' },
                   { step: '02', text: '파트너 매칭', sub: '평균 4분' },
@@ -130,21 +122,15 @@ export default function LandingClient() {
                 ))}
               </div>
 
-              <ul className="flex flex-col gap-1.5 relative z-10">
+              <ul className="flex flex-col gap-1.5">
                 <LI icon={<Zap size={12} />}>예약·당일 모두 OK — 앱 하나로 스케줄 관리</LI>
                 <LI icon={<ShieldCheck size={12} />}>에스크로 결제 · AI 사진 검수 · 체크리스트 자동화</LI>
                 <LI icon={<Sparkles size={12} />}>출발·도착·청소 시작·완료 실시간 상태 알림</LI>
               </ul>
             </div>
-          </div>
-
-          {/* Worker card */}
-          <div
-            className="absolute inset-x-6 transition-opacity duration-200"
-            style={{ opacity: audience === 'worker' ? 1 : 0, pointerEvents: audience === 'worker' ? 'auto' : 'none' }}
-          >
-            <div className="bg-surface rounded-3xl p-5 shadow-md border border-line-soft overflow-hidden relative">
-              <div className="flex items-center gap-3 mb-4 relative z-10">
+          ) : (
+            <div className="bg-surface rounded-3xl p-5 border border-line-soft overflow-hidden relative">
+              <div className="flex items-center gap-3 mb-4">
                 <div className="w-12 h-12 rounded-2xl bg-sun text-ink flex items-center justify-center shrink-0">
                   <Wallet size={22} strokeWidth={2.5} />
                 </div>
@@ -154,7 +140,7 @@ export default function LandingClient() {
                 </div>
               </div>
 
-              <div className="bg-sun-soft rounded-2xl p-3.5 mb-3 relative z-10">
+              <div className="bg-sun-soft rounded-2xl p-3.5 mb-3">
                 <p className="text-[11px] font-bold text-[#92580C]">주말 파트타임 평균 월 부수입</p>
                 <div className="flex items-baseline gap-1 mt-1">
                   <span className="t-money text-[28px] text-ink leading-none">40만</span>
@@ -163,17 +149,17 @@ export default function LandingClient() {
                 <p className="text-[10.5px] font-semibold text-[#92580C]/70 mt-0.5">건당 3~5만원 · 주 1회 정산</p>
               </div>
 
-              <ul className="flex flex-col gap-1.5 relative z-10">
+              <ul className="flex flex-col gap-1.5">
                 <LI icon={<ShieldCheck size={12} />}>가입 즉시 시작 — 장비 구매·창업비용 없음</LI>
                 <LI icon={<Clock size={12} />}>원하는 시간·지역만 골라서 본업 눈치 없이</LI>
                 <LI icon={<Star size={12} />}>실적 쌓을수록 수수료 낮아지고 우선 매칭</LI>
               </ul>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Stats */}
-        <div className="relative z-10 px-6 mt-[280px] mb-4">
+        <div className="px-6 mb-4">
           <div className="grid grid-cols-3 gap-2">
             {[
               { label: '등록 공간', value: '5천+', icon: <Building2 size={14} /> },
@@ -199,18 +185,18 @@ export default function LandingClient() {
       <div className="px-5 pt-4 pb-6 safe-bottom bg-surface border-t border-line-soft">
         <Link
           href="/login"
-          className="btn btn-primary w-full min-h-[60px] text-[17px] shadow-brand active:scale-[0.98] transition-transform"
+          className="btn btn-primary w-full min-h-[60px] text-[17px] active:scale-[0.98] transition-transform"
         >
           쓱싹 무료로 시작하기
           <ArrowRight size={20} strokeWidth={2.5} />
         </Link>
 
         <div className="flex items-center gap-3 mt-3 justify-center text-[11.5px] font-bold text-text-soft">
-          <Link href="/login" className="flex items-center gap-1 hover:text-ink transition">
+          <Link href="/login" className="flex items-center gap-1">
             <Building2 size={12} /> 청소 맡기기
           </Link>
           <span className="text-text-faint">·</span>
-          <Link href="/login" className="flex items-center gap-1 hover:text-ink transition">
+          <Link href="/login" className="flex items-center gap-1">
             <Wallet size={12} /> 청소 부수입
           </Link>
         </div>
@@ -236,7 +222,7 @@ function ToggleBtn({ active, onClick, label }: { active: boolean; onClick: () =>
     <button
       type="button"
       onClick={onClick}
-      className={`flex-1 h-9 rounded-full text-[12.5px] font-extrabold transition-all duration-200 ${
+      className={`flex-1 h-9 rounded-full text-[12.5px] font-extrabold ${
         active ? 'bg-ink text-white shadow-sm' : 'text-text-muted'
       }`}
     >

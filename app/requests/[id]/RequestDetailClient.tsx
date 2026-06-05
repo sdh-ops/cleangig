@@ -293,7 +293,7 @@ export default function RequestDetailClient({ job: initialJob, userId, initialIs
                               {step.label}
                             </span>
                             {active && (
-                              <span className="text-[10px] font-black text-brand bg-brand-softer px-2 py-0.5 rounded-full animate-pulse-ring">
+                              <span className="text-[10px] font-black text-brand bg-brand-softer px-2 py-0.5 rounded-full">
                                 현재
                               </span>
                             )}

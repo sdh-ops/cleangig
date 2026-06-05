@@ -170,7 +170,7 @@ export default function CleanMainClient({ profile, activeJob, openJobs, weekEarn
                         {activeJob.status === 'IN_PROGRESS' && '청소 완료 후 사진 제출'}
                       </p>
                     </div>
-                    <div className="w-11 h-11 rounded-full bg-brand flex items-center justify-center shrink-0 animate-pulse-ring ml-3">
+                    <div className="w-11 h-11 rounded-full bg-brand flex items-center justify-center shrink-0 ml-3">
                       <Navigation size={18} className="text-ink" strokeWidth={2.5} />
                     </div>
                   </div>
