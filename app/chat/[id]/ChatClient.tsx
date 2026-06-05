@@ -26,7 +26,9 @@ type Props = {
 
 export default function ChatClient({ jobId, userId, partnerId, partnerName, partnerImage, spaceName }: Props) {
   const router = useRouter()
-  const supabase = createClient()
+  const supabaseRef = useRef<ReturnType<typeof createClient> | null>(null)
+  if (!supabaseRef.current) supabaseRef.current = createClient()
+  const supabase = supabaseRef.current
   const [messages, setMessages] = useState<Message[]>([])
   const [text, setText] = useState('')
   const [sending, setSending] = useState(false)
@@ -52,7 +54,7 @@ export default function ChatClient({ jobId, userId, partnerId, partnerName, part
         .eq('receiver_id', userId)
         .eq('is_read', false)
     })()
-  }, [jobId, userId, supabase])
+  }, [jobId, userId])
 
   // realtime subscription
   useEffect(() => {
@@ -71,7 +73,7 @@ export default function ChatClient({ jobId, userId, partnerId, partnerName, part
       )
       .subscribe()
     return () => { supabase.removeChannel(channel) }
-  }, [jobId, userId, supabase])
+  }, [jobId, userId])
 
   // scroll bottom
   useEffect(() => {

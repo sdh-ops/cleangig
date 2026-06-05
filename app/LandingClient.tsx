@@ -46,12 +46,12 @@ export default function LandingClient() {
         <div className="absolute inset-0 bg-canvas">
           <div className="absolute inset-0 bg-dot-grid opacity-50" />
           <div
-            className="absolute -top-24 -right-24 w-[380px] h-[380px] rounded-full blur-[110px] pointer-events-none"
-            style={{ background: 'radial-gradient(circle, rgba(14,165,233,0.16) 0%, transparent 70%)' }}
+            className="absolute -top-24 -right-24 w-[380px] h-[380px] rounded-full blur-[60px] pointer-events-none"
+            style={{ background: 'radial-gradient(circle, rgba(14,165,233,0.14) 0%, transparent 70%)' }}
           />
           <div
-            className="absolute top-[45%] -left-28 w-[300px] h-[300px] rounded-full blur-[90px] pointer-events-none"
-            style={{ background: 'radial-gradient(circle, rgba(255,184,0,0.14) 0%, transparent 70%)' }}
+            className="absolute top-[45%] -left-28 w-[300px] h-[300px] rounded-full blur-[50px] pointer-events-none"
+            style={{ background: 'radial-gradient(circle, rgba(255,184,0,0.12) 0%, transparent 70%)' }}
           />
         </div>
 
@@ -60,7 +60,7 @@ export default function LandingClient() {
           <Logo size="sm" />
           <Link
             href="/login"
-            className="text-sm font-bold text-ink-soft px-4 py-2 rounded-full bg-surface/80 backdrop-blur border border-line-soft hover:bg-surface transition"
+            className="text-sm font-bold text-ink-soft px-4 py-2 rounded-full bg-surface/90 border border-line-soft hover:bg-surface transition"
           >
             로그인
           </Link>
@@ -72,7 +72,7 @@ export default function LandingClient() {
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="inline-flex items-center gap-2 bg-surface/90 backdrop-blur border border-line-soft rounded-full px-3.5 py-2 mb-6 shadow-xs"
+            className="inline-flex items-center gap-2 bg-surface border border-line-soft rounded-full px-3.5 py-2 mb-6 shadow-xs"
           >
             <span className="w-2 h-2 rounded-full bg-brand animate-pulse-ring shrink-0" />
             <span className="text-[12px] font-bold text-ink-soft">지금 5,000+ 공간이 사용중</span>
@@ -129,13 +129,13 @@ export default function LandingClient() {
 
         {/* Audience card */}
         <div className="relative z-10 px-6">
-          <AnimatePresence mode="wait">
+          <AnimatePresence mode="wait" initial={false}>
             {audience === 'host' ? (
               <motion.div
                 key="host"
-                initial={{ opacity: 0, scale: 0.97 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.97 }}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
                 transition={{ duration: 0.2 }}
                 className="bg-surface rounded-3xl p-5 shadow-md border border-line-soft overflow-hidden relative"
               >
@@ -177,9 +177,9 @@ export default function LandingClient() {
             ) : (
               <motion.div
                 key="worker"
-                initial={{ opacity: 0, scale: 0.97 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.97 }}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
                 transition={{ duration: 0.2 }}
                 className="bg-surface rounded-3xl p-5 shadow-md border border-line-soft overflow-hidden relative"
               >
@@ -230,7 +230,7 @@ export default function LandingClient() {
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.42 + i * 0.07, duration: 0.4 }}
-                className="bg-surface/90 backdrop-blur rounded-2xl p-3 border border-line-soft text-center"
+                className="bg-surface rounded-2xl p-3 border border-line-soft text-center"
               >
                 <div className="w-7 h-7 rounded-lg bg-brand-softer text-brand-dark flex items-center justify-center mx-auto mb-1.5">
                   {s.icon}
@@ -284,6 +284,7 @@ export default function LandingClient() {
 function ToggleBtn({ active, onClick, label }: { active: boolean; onClick: () => void; label: string }) {
   return (
     <button
+      type="button"
       onClick={onClick}
       className={`flex-1 h-9 rounded-full text-[12.5px] font-extrabold transition-all duration-200 ${
         active ? 'bg-ink text-white shadow-sm' : 'text-text-muted'

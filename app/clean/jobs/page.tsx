@@ -46,7 +46,9 @@ const RADIUS_OPTS: { value: Radius; label: string }[] = [
 ]
 
 export default function JobsListPage() {
-  const supabase = createClient()
+  const supabaseRef = useRef<ReturnType<typeof createClient> | null>(null)
+  if (!supabaseRef.current) supabaseRef.current = createClient()
+  const supabase = supabaseRef.current
 
   // ─── state ───────────────────────────────────────────────────────────
   const [jobs, setJobs] = useState<Job[]>([])
@@ -154,7 +156,7 @@ export default function JobsListPage() {
 
     setJobs(list)
     setLoading(false)
-  }, [sort, typeFilter, q, radius, searchCenter, supabase])
+  }, [sort, typeFilter, q, radius, searchCenter])
 
   useEffect(() => {
     clearTimeout(debounceRef.current)
