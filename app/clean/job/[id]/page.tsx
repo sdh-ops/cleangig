@@ -30,7 +30,7 @@ import DisputeModal from '@/components/common/DisputeModal'
 import ReviewModal from '@/components/common/ReviewModal'
 import { formatKRW, formatScheduled, spaceTypeLabel, maskAddress, haversineKm } from '@/lib/utils'
 import { notify } from '@/lib/notifications'
-import { openNaverRoute, openKakaoRoute } from '@/lib/naver'
+import { openNaverRoute, openKakaoRoute, searchNaverAddress, searchKakaoAddress } from '@/lib/naver'
 import type { ChecklistItem, JobStatus, SpaceType } from '@/lib/types'
 
 type SupplyLevel = 'low' | 'out'
@@ -474,7 +474,7 @@ export default function WorkerJobDetail() {
       openNaverRoute({ lat: coords[1], lng: coords[0], name: job.spaces.name })
     } else {
       // 좌표 없으면 주소 검색 fallback
-      window.open(`https://map.naver.com/v5/search/${encodeURIComponent(job.spaces.address)}`, '_blank')
+      searchNaverAddress(job.spaces.address)
     }
   }
 
@@ -484,7 +484,7 @@ export default function WorkerJobDetail() {
     if (coords && coords.length === 2) {
       openKakaoRoute({ lat: coords[1], lng: coords[0], name: job.spaces.name })
     } else {
-      window.open(`https://map.kakao.com/link/search/${encodeURIComponent(job.spaces.address)}`, '_blank')
+      searchKakaoAddress(job.spaces.address)
     }
   }
 

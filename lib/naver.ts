@@ -50,13 +50,32 @@ export function waitForNaverMaps(timeoutMs = 8000): Promise<typeof window.naver 
   })
 }
 
+function openExternalUrl(url: string): void {
+  // <a> click approach: reliable external navigation in all PWA/iOS contexts
+  const a = document.createElement('a')
+  a.href = url
+  a.target = '_blank'
+  a.rel = 'noopener noreferrer'
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+}
+
 export function openNaverRoute(dest: { lat: number; lng: number; name?: string }): void {
   const name = dest.name ? encodeURIComponent(dest.name) : '목적지'
   const url = `https://map.naver.com/v5/directions/-/-/-/driving/?c=${dest.lng},${dest.lat},15,0,0,0,dh&dname=${name}`
-  window.open(url, '_blank')
+  openExternalUrl(url)
 }
 
 export function openKakaoRoute(dest: { lat: number; lng: number; name?: string }): void {
   const url = `https://map.kakao.com/?rt=,,${dest.lng},${dest.lat}&rt1=${dest.lng},${dest.lat}`
-  window.open(url, '_blank')
+  openExternalUrl(url)
+}
+
+export function searchNaverAddress(address: string): void {
+  openExternalUrl(`https://map.naver.com/v5/search/${encodeURIComponent(address)}`)
+}
+
+export function searchKakaoAddress(address: string): void {
+  openExternalUrl(`https://map.kakao.com/link/search/${encodeURIComponent(address)}`)
 }

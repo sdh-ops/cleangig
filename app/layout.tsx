@@ -8,6 +8,7 @@ import HapticProvider from '@/components/common/HapticProvider'
 import InstallPrompt from '@/components/common/InstallPrompt'
 import BetaBadge from '@/components/common/BetaBadge'
 import PushSubscriptionInit from '@/components/common/PushSubscriptionInit'
+import ErrorBoundary from '@/components/common/ErrorBoundary'
 
 export const metadata: Metadata = {
   title: {
@@ -76,7 +77,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <HapticProvider />
         <BetaBadge />
         <NotificationOverlay />
-        <PageTransition>{children}</PageTransition>
+        <ErrorBoundary>
+          <PageTransition>{children}</PageTransition>
+        </ErrorBoundary>
         <InstallPrompt />
       </body>
     </html>

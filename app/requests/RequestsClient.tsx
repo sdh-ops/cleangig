@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import CalendarView from '@/components/common/CalendarView';
 
 interface Job {
@@ -32,6 +33,7 @@ const STATUS_MAP: Record<string, { label: string; textCls: string; bgCls: string
 };
 
 export default function RequestsClient({ jobs, currentTab }: Props) {
+    const router = useRouter();
     const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
 
     const calendarEvents = jobs.map(j => ({
@@ -75,7 +77,7 @@ export default function RequestsClient({ jobs, currentTab }: Props) {
 
             {viewMode === 'calendar' ? (
                 <div className="px-4 animate-in fade-in duration-300">
-                    <CalendarView events={calendarEvents} onEventClick={(id) => window.location.href = `/requests/${id}`} />
+                    <CalendarView events={calendarEvents} onEventClick={(id) => router.push(`/requests/${id}`)} />
                 </div>
             ) : (
                 <div className="flex flex-col animate-in fade-in duration-300">
