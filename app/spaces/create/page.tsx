@@ -280,6 +280,13 @@ export default function CreateSpacePage() {
                 />
               </div>
 
+              {address.trim() && !coords && !geoLoading && (
+                <div className="flex items-center gap-2 p-3 bg-warning-soft rounded-xl border border-warning/20">
+                  <span className="text-warning text-sm">⚠️</span>
+                  <p className="text-[12.5px] font-bold text-[#B45309]">주소를 찾지 못했어요. 정확한 도로명 주소를 입력하거나 검색 버튼을 눌러주세요.</p>
+                </div>
+              )}
+
               {coords ? (
                 <NaverMap
                   height={200}
@@ -565,7 +572,7 @@ export default function CreateSpacePage() {
                       type="checkbox"
                       checked={taxInvoiceRequired}
                       onChange={(e) => setTaxInvoiceRequired(e.target.checked)}
-                      className="mt-1 w-4 h-4 accent-[#00C896]"
+                      className="mt-1 w-4 h-4 accent-[#0EA5E9]"
                     />
                     <span className="text-[12.5px] font-semibold text-ink-soft leading-snug">
                       거래 시 <b>세금계산서 자동 발행</b> 요청

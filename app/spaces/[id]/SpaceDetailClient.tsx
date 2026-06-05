@@ -208,7 +208,11 @@ export default function SpaceDetailClient({ space, isOwner, totalJobs, monthCoun
                 <p className="text-[11.5px] text-text-soft font-bold mt-0.5">비활성 시 신규 요청을 만들 수 없어요.</p>
               </div>
               <button
-                onClick={toggleActive}
+                onClick={() => {
+                  if (!isActive || window.confirm('공간을 비활성화하면 새 요청을 받을 수 없어요. 계속할까요?')) {
+                    toggleActive()
+                  }
+                }}
                 disabled={toggling}
                 className={`w-12 h-7 rounded-full flex items-center px-0.5 transition ${isActive ? 'bg-brand justify-end' : 'bg-line-strong justify-start'}`}
               >

@@ -110,7 +110,7 @@ export default function NaverMap({
 
     markers.forEach((m) => {
       const color =
-        m.tone === 'ink' ? '#0A1F3D' : m.tone === 'sun' ? '#FFB800' : m.tone === 'danger' ? '#EF4444' : '#00C896'
+        m.tone === 'ink' ? '#0A1F3D' : m.tone === 'sun' ? '#FFB800' : m.tone === 'danger' ? '#EF4444' : '#0EA5E9'
       const marker = new naver.maps.Marker({
         position: new naver.maps.LatLng(m.lat, m.lng),
         map: mapInstance.current,

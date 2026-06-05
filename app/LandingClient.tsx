@@ -47,7 +47,7 @@ export default function LandingClient() {
           <div className="absolute inset-0 bg-dot-grid opacity-50" />
           <div
             className="absolute -top-24 -right-24 w-[380px] h-[380px] rounded-full blur-[110px] pointer-events-none"
-            style={{ background: 'radial-gradient(circle, rgba(0,200,150,0.16) 0%, transparent 70%)' }}
+            style={{ background: 'radial-gradient(circle, rgba(14,165,233,0.16) 0%, transparent 70%)' }}
           />
           <div
             className="absolute top-[45%] -left-28 w-[300px] h-[300px] rounded-full blur-[90px] pointer-events-none"
@@ -141,7 +141,7 @@ export default function LandingClient() {
               >
                 <div
                   className="absolute top-0 right-0 w-28 h-28 pointer-events-none"
-                  style={{ background: 'radial-gradient(circle at top right, rgba(0,200,150,0.1) 0%, transparent 70%)' }}
+                  style={{ background: 'radial-gradient(circle at top right, rgba(14,165,233,0.1) 0%, transparent 70%)' }}
                 />
                 <div className="flex items-center gap-3 mb-4 relative z-10">
                   <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-brand to-brand-dark text-white flex items-center justify-center shadow-brand-sm shrink-0">

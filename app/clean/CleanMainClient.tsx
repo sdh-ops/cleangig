@@ -290,7 +290,7 @@ export default function CleanMainClient({ profile, activeJob, openJobs, weekEarn
           <h2 className="h-section text-ink px-0.5 mb-3">쓱싹 꿀팁</h2>
           <div className="flex gap-3 overflow-x-auto no-scrollbar -mx-1 px-1 pb-1">
             {[
-              { icon: TrendingUp, label: '티어 올리는 법', desc: '평점 4.8 이상 유지 · 100건 달성', bg: 'bg-brand-softer', color: '#00C896' },
+              { icon: TrendingUp, label: '티어 올리는 법', desc: '평점 4.8 이상 유지 · 100건 달성', bg: 'bg-brand-softer', color: '#0EA5E9' },
               { icon: Zap, label: '긴급 작업 잡기', desc: '알림 켜두고 가장 먼저 신청하기', bg: 'bg-sun-soft', color: '#FFB800' },
               { icon: CheckCircle2, label: '체크리스트 100%', desc: '사진 모두 제출해 분쟁 방지', bg: 'bg-info-soft', color: '#3B82F6' },
             ].map((t, i) => {

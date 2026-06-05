@@ -221,7 +221,7 @@ export default function TaxProfilePage() {
                 type="checkbox"
                 checked={agreeSensitive}
                 onChange={(e) => setAgreeSensitive(e.target.checked)}
-                className="mt-1 w-4 h-4 accent-[#00C896]"
+                className="mt-1 w-4 h-4 accent-[#0EA5E9]"
               />
               <span className="text-[12.5px] font-semibold text-ink-soft leading-snug">
                 [필수] 원천세 신고 및 세무 처리 목적의 <b>주민번호 수집·이용</b>에 동의합니다. (5년 보관)

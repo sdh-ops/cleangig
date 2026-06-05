@@ -58,13 +58,13 @@ export default function SetupChecklist({ items, title = '계정 설정을 완료
         <div className="flex items-center gap-3 mb-3">
           <div className="relative w-11 h-11">
             <svg viewBox="0 0 36 36" className="w-full h-full -rotate-90">
-              <circle cx="18" cy="18" r="16" fill="none" stroke="#E6FAF3" strokeWidth="4" />
+              <circle cx="18" cy="18" r="16" fill="none" stroke="#E0F2FE" strokeWidth="4" />
               <circle
                 cx="18"
                 cy="18"
                 r="16"
                 fill="none"
-                stroke="#00C896"
+                stroke="#0EA5E9"
                 strokeWidth="4"
                 strokeDasharray={`${(done / total) * 100} 100`}
                 strokeLinecap="round"

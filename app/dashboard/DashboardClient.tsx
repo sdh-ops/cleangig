@@ -120,6 +120,17 @@ export default function DashboardClient({
         </div>
 
         {/* Today hero card */}
+        {spaces.length === 0 ? (
+          <div className="mb-5 rounded-2xl bg-brand-softer border border-brand/20 p-4 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-brand-surface flex items-center justify-center shrink-0">
+              <Building2 size={20} className="text-brand-dark" />
+            </div>
+            <div>
+              <p className="text-[14px] font-extrabold text-ink">공간을 먼저 등록해보세요</p>
+              <p className="text-[12px] text-text-soft font-bold mt-0.5">등록 후 원클릭으로 청소 요청을 보낼 수 있어요.</p>
+            </div>
+          </div>
+        ) : (
         <motion.section
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
@@ -177,6 +188,7 @@ export default function DashboardClient({
             </div>
           </div>
         </motion.section>
+        )}
 
         {/* Metrics */}
         <section className="grid grid-cols-2 gap-3 mb-6">

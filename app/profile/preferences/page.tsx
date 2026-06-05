@@ -105,7 +105,7 @@ export default function PreferencesPage() {
               step={1}
               value={prefs.radius_km}
               onChange={(e) => setPrefs({ ...prefs, radius_km: parseInt(e.target.value) })}
-              className="w-full accent-[#00C896]"
+              className="w-full accent-[#0EA5E9]"
             />
           </div>
           <div>
@@ -120,7 +120,7 @@ export default function PreferencesPage() {
               step={5000}
               value={prefs.min_price}
               onChange={(e) => setPrefs({ ...prefs, min_price: parseInt(e.target.value) })}
-              className="w-full accent-[#00C896]"
+              className="w-full accent-[#0EA5E9]"
             />
           </div>
         </section>

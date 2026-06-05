@@ -295,7 +295,7 @@ export default function CreateRequestPage() {
                     <Zap size={18} strokeWidth={2.6} />
                   </div>
                   <h4 className="text-[14px] font-extrabold text-ink">지금 요청</h4>
-                  <p className="text-[11.5px] text-text-soft font-bold mt-0.5">긴급 수수료 +10,000원</p>
+                  <p className="text-[12px] font-black text-danger mt-0.5">긴급 수수료 +10,000원</p>
                 </button>
                 <button
                   onClick={() => setWhen('schedule')}

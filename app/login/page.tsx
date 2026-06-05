@@ -68,7 +68,7 @@ function LoginContent() {
     <div className="sseuksak-shell relative overflow-hidden">
       {/* Background */}
       <div className="absolute inset-0 bg-canvas pointer-events-none">
-        <div className="absolute -top-20 -right-20 w-[300px] h-[300px] rounded-full blur-[100px]" style={{ background: 'radial-gradient(circle, rgba(0,200,150,0.14) 0%, transparent 70%)' }} />
+        <div className="absolute -top-20 -right-20 w-[300px] h-[300px] rounded-full blur-[100px]" style={{ background: 'radial-gradient(circle, rgba(14,165,233,0.14) 0%, transparent 70%)' }} />
         <div className="absolute bottom-0 -left-16 w-[260px] h-[260px] rounded-full blur-[80px]" style={{ background: 'radial-gradient(circle, rgba(255,184,0,0.12) 0%, transparent 70%)' }} />
       </div>
 

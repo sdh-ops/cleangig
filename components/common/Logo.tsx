@@ -15,7 +15,7 @@ const sizes = {
 
 export default function Logo({ size = 'md', variant = 'full', tone = 'brand' }: Props) {
   const s = sizes[size]
-  const colorMain = tone === 'white' ? '#FFFFFF' : tone === 'ink' ? '#0A1F3D' : '#00C896'
+  const colorMain = tone === 'white' ? '#FFFFFF' : tone === 'ink' ? '#0A1F3D' : '#0EA5E9'
   const colorSub = tone === 'white' ? '#FFFFFF' : tone === 'ink' ? '#0A1F3D' : '#0A1F3D'
 
   const Mark = (
@@ -28,8 +28,8 @@ export default function Logo({ size = 'md', variant = 'full', tone = 'brand' }: 
     >
       <defs>
         <linearGradient id="sk-grad" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#00C896" />
-          <stop offset="100%" stopColor="#00A079" />
+          <stop offset="0%" stopColor="#0EA5E9" />
+          <stop offset="100%" stopColor="#0284C7" />
         </linearGradient>
       </defs>
       <rect x="2" y="2" width="44" height="44" rx="14" fill="url(#sk-grad)" />

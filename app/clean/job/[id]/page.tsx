@@ -20,9 +20,11 @@ import {
   Check,
   X,
   Zap,
+  Star,
 } from 'lucide-react'
 import StatusChip from '@/components/common/StatusChip'
 import DisputeModal from '@/components/common/DisputeModal'
+import ReviewModal from '@/components/common/ReviewModal'
 import { formatKRW, formatScheduled, spaceTypeLabel, maskAddress, haversineKm } from '@/lib/utils'
 import type { ChecklistItem, JobStatus, SpaceType } from '@/lib/types'
 
@@ -79,6 +81,7 @@ export default function WorkerJobDetail() {
   const [supplies, setSupplies] = useState<string[]>([])
   const [showConsent, setShowConsent] = useState(false)
   const [showDispute, setShowDispute] = useState(false)
+  const [showReview, setShowReview] = useState(false)
   const [uploadingIdx, setUploadingIdx] = useState<number | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
   const [currentChecklistIdx, setCurrentChecklistIdx] = useState<number | null>(null)
@@ -536,6 +539,23 @@ export default function WorkerJobDetail() {
             </div>
           )}
 
+          {/* Review prompt (after work submitted/approved) */}
+          {isMine && ['SUBMITTED', 'APPROVED', 'PAID_OUT'].includes(job.status) && job.operator_id && (
+            <div className="card p-4 mb-4 bg-brand-softer border border-brand/15">
+              <div className="flex items-center gap-3 mb-3">
+                <Star size={18} className="text-brand-dark" fill="currentColor" />
+                <p className="text-[13.5px] font-extrabold text-ink">공간파트너를 평가해주세요</p>
+              </div>
+              <p className="text-[12px] font-semibold text-text-soft mb-3 leading-snug">작업을 완료했어요! 공간파트너에 대한 솔직한 리뷰가 다른 클린파트너에게 큰 도움이 됩니다.</p>
+              <button
+                onClick={() => setShowReview(true)}
+                className="btn btn-secondary w-full !text-sm"
+              >
+                <Star size={15} /> 리뷰 남기기
+              </button>
+            </div>
+          )}
+
           {/* Report button (for in-progress/completed jobs the worker is assigned to) */}
           {isMine && ['ASSIGNED', 'EN_ROUTE', 'ARRIVED', 'IN_PROGRESS', 'SUBMITTED', 'APPROVED'].includes(job.status) && (
             <button
@@ -594,10 +614,11 @@ export default function WorkerJobDetail() {
                 </button>
               </div>
               <p className="t-caption mb-5">아래 사항을 확인하고 지원해주세요.</p>
-              <ul className="flex flex-col gap-2.5 mb-5">
+              <ul className="flex flex-col gap-2.5 mb-4">
                 {[
                   '본인은 프리랜서/개인사업자로 작업을 수행합니다',
-                  '노쇼 시 1회 경고, 2회 계정 정지됩니다',
+                  '노쇼 시: 1회 경고 → 2회 30일 정지 → 3회 영구 계정 정지',
+                  '노쇼 발생 시 해당 건 수익은 지급되지 않습니다.',
                   '체크리스트와 사진 인증을 필수로 완료합니다',
                 ].map((t, i) => (
                   <li key={i} className="flex items-start gap-2">
@@ -606,6 +627,11 @@ export default function WorkerJobDetail() {
                   </li>
                 ))}
               </ul>
+              <div className="px-3 py-2.5 rounded-xl bg-info-soft border border-info/20 mb-4">
+                <p className="text-[11.5px] font-semibold text-ink-soft leading-snug">
+                  💳 신규 클린파트너 보증금 3,000원이 첫 작업 수락 시 자동 차감되며, 활동 종료 시 환불됩니다.
+                </p>
+              </div>
               <button onClick={apply} disabled={transitioning} className="btn btn-primary w-full">
                 {transitioning ? <Loader2 size={20} className="animate-spin" /> : '동의하고 지원하기'}
               </button>
@@ -613,6 +639,17 @@ export default function WorkerJobDetail() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {job.operator_id && (
+        <ReviewModal
+          open={showReview}
+          onClose={() => { setShowReview(false); router.refresh() }}
+          onSubmitted={() => router.refresh()}
+          jobId={job.id}
+          revieweeId={job.operator_id}
+          revieweeName={job.spaces?.name ?? '공간파트너'}
+        />
+      )}
 
       <DisputeModal
         open={showDispute}

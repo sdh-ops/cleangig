@@ -23,6 +23,8 @@ const WORKER_TABS: Tab[] = [
   { href: '/profile', label: '내정보', icon: User, match: (p) => p.startsWith('/profile') },
 ]
 
+// TODO: Add a dedicated Chat tab to BottomNav for both operator and worker roles.
+// Currently chat is only accessible from job detail pages (complex architectural change — skipped for now).
 export default function BottomNav({ role }: { role: Role }) {
   const pathname = usePathname() || ''
   const tabs = role === 'operator' ? OPERATOR_TABS : WORKER_TABS

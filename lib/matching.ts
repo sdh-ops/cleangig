@@ -141,5 +141,5 @@ export const TIER_BENEFITS: Record<string, { fee_discount: number; priority: num
   STARTER: { fee_discount: 0, priority: 0, label: '스타터', color: '#94A3B8' },
   SILVER: { fee_discount: 0.01, priority: 1, label: '실버', color: '#64748B' },
   GOLD: { fee_discount: 0.02, priority: 2, label: '골드', color: '#F59E0B' },
-  MASTER: { fee_discount: 0.03, priority: 3, label: '마스터', color: '#00C896' },
+  MASTER: { fee_discount: 0.03, priority: 3, label: '마스터', color: '#0EA5E9' },
 }
