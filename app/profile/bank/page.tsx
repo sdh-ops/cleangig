@@ -45,6 +45,11 @@ export default function BankAccountPage() {
       setErr('모든 항목을 입력해주세요.')
       return
     }
+    const digits = accountNumber.replace(/-/g, '')
+    if (digits.length < 8 || digits.length > 16) {
+      setErr('계좌번호는 8~16자리 숫자여야 합니다.')
+      return
+    }
     setSaving(true)
     setErr(null)
     const { error } = await supabase.from('users').update({

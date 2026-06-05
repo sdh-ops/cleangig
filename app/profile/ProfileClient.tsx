@@ -38,6 +38,7 @@ type Profile = {
   avg_rating?: number
   business_name?: string
   is_verified?: boolean
+  bank_account?: { bank_name: string; account_number: string; account_holder: string } | null
 }
 
 type Props = {
@@ -159,7 +160,9 @@ export default function ProfileClient({ profile, totalCompletedJobs, isAdmin = f
                   href="/profile/bank"
                   icon={<Banknote size={17} />}
                   label="정산 계좌"
-                  value="등록하기"
+                  value={profile.bank_account?.bank_name
+                    ? `${profile.bank_account.bank_name} ****${profile.bank_account.account_number.slice(-4)}`
+                    : '등록하기'}
                 />
                 <div className="mx-4 border-t border-line-soft" />
                 <RowLink

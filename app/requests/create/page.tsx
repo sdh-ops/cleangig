@@ -72,7 +72,11 @@ export default function CreateRequestPage() {
         getFeeSettings(),
       ])
       setSpaces((spaces || []) as Space[])
-      if (spaces && spaces.length > 0) setSpaceId(spaces[0].id)
+      if (spaces && spaces.length > 0) {
+        const paramSpaceId = new URLSearchParams(window.location.search).get('space')
+        const matched = spaces.find((s) => s.id === paramSpaceId)
+        setSpaceId(matched ? matched.id : spaces[0].id)
+      }
       setFees(feeSettings)
       setLoadingSpaces(false)
 
@@ -313,7 +317,7 @@ export default function CreateRequestPage() {
                 <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="t-meta block mb-2 ml-1">날짜</label>
-                    <input type="date" value={scheduledDate} onChange={(e) => setScheduledDate(e.target.value)} className="input" />
+                    <input type="date" value={scheduledDate} onChange={(e) => setScheduledDate(e.target.value)} className="input" min={new Date().toISOString().slice(0, 10)} />
                   </div>
                   <div>
                     <label className="t-meta block mb-2 ml-1">시간</label>

@@ -19,6 +19,7 @@ function LoginContent() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
+  const [messageType, setMessageType] = useState<'error' | 'success'>('error')
 
   const handleKakao = async () => {
     setLoading(true)
@@ -39,21 +40,35 @@ function LoginContent() {
     setMessage(null)
     try {
       if (mode === 'email') {
-        const { error } = await supabase.auth.signInWithPassword({ email, password })
+        const { data: authData, error } = await supabase.auth.signInWithPassword({ email, password })
         if (error) {
           setMessage(error.message === 'Invalid login credentials' ? '이메일 또는 비밀번호가 일치하지 않습니다.' : error.message)
+          setMessageType('error')
           setLoading(false)
           return
         }
-        router.push('/onboarding')
+        const { data: profile } = await supabase
+          .from('users')
+          .select('role, phone')
+          .eq('id', authData.user.id)
+          .maybeSingle()
+        if (profile?.role === 'operator') router.push('/dashboard')
+        else if (profile?.role === 'worker') router.push('/clean')
+        else router.push('/onboarding')
       } else {
         const { error } = await supabase.auth.signUp({
           email,
           password,
           options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
         })
-        if (error) { setMessage(error.message); setLoading(false); return }
+        if (error) {
+          setMessage(error.message)
+          setMessageType('error')
+          setLoading(false)
+          return
+        }
         setMessage('이메일로 인증 링크를 보냈어요. 확인 후 다시 로그인해주세요.')
+        setMessageType('success')
         setLoading(false)
       }
     } catch {
@@ -238,10 +253,14 @@ function LoginContent() {
                   <motion.div
                     initial={{ opacity: 0, y: -4 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="flex items-start gap-2 p-3.5 bg-danger-soft rounded-xl border border-danger/10"
+                    className={`flex items-start gap-2 p-3.5 rounded-xl border ${
+                      messageType === 'success'
+                        ? 'bg-success-soft border-success/10'
+                        : 'bg-danger-soft border-danger/10'
+                    }`}
                   >
-                    <AlertCircle size={17} className="text-danger shrink-0 mt-0.5" />
-                    <p className="text-[13px] font-bold text-danger leading-snug">{message}</p>
+                    <AlertCircle size={17} className={`${messageType === 'success' ? 'text-success' : 'text-danger'} shrink-0 mt-0.5`} />
+                    <p className={`text-[13px] font-bold ${messageType === 'success' ? 'text-success' : 'text-danger'} leading-snug`}>{message}</p>
                   </motion.div>
                 )}
 

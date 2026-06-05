@@ -206,7 +206,6 @@ export default function WorkerJobDetail() {
       if (error) throw error
       if (!updated || updated.length === 0) {
         setErr('이미 다른 클린파트너가 배정된 작업입니다.')
-        setJob((j) => (j ? { ...j, status: 'ASSIGNED' } : j))
         setTransitioning(false)
         return
       }

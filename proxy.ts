@@ -27,7 +27,10 @@ export async function proxy(request: NextRequest) {
         data: { user },
     } = await supabase.auth.getUser()
 
-    const protectedPaths = ['/dashboard', '/clean', '/earnings', '/spaces', '/requests', '/admin']
+    const protectedPaths = [
+      '/dashboard', '/clean', '/earnings', '/spaces', '/requests', '/admin',
+      '/profile', '/calendar', '/chat', '/notifications', '/market', '/onboarding',
+    ]
     const isProtectedPath = protectedPaths.some(path => request.nextUrl.pathname.startsWith(path))
 
     // 로그인하지 않은 사용자가 보호된 경로에 접근할 때

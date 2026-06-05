@@ -636,11 +636,11 @@ export default function RequestDetailClient({ job: initialJob, userId, initialIs
                   <p className="t-caption mb-4">{policy.label}</p>
                   <div className="card p-4 bg-surface-soft mb-4">
                     <div className="flex justify-between text-[13px] font-semibold text-text-muted py-1">
-                      <span>결제 금액</span>
+                      <span>요청 금액</span>
                       <span>{formatKRW(job.price || 0)}</span>
                     </div>
                     <div className="flex justify-between text-[13px] font-semibold text-danger py-1">
-                      <span>취소 수수료</span>
+                      <span>취소 수수료 (정책 기준)</span>
                       <span>−{formatKRW(fee)}</span>
                     </div>
                     <div className="divider my-1" />
@@ -649,6 +649,9 @@ export default function RequestDetailClient({ job: initialJob, userId, initialIs
                       <span>{formatKRW(refund)}</span>
                     </div>
                   </div>
+                  <p className="text-[11px] text-text-faint font-semibold mb-3">
+                    ※ 결제 시스템 연동 전으로, 실제 결제/환불은 정식 오픈 후 적용됩니다.
+                  </p>
                   {willChargeDeposit && (
                     <div className="p-3 rounded-xl bg-danger-soft border border-danger/20 mb-4">
                       <p className="text-[12px] font-bold text-danger leading-snug">

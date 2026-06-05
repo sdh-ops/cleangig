@@ -3,7 +3,7 @@ import Skeleton from '@/components/common/Skeleton'
 
 export default function Loading() {
     return (
-        <div className="bg-background-light dark:bg-background-dark min-h-screen flex justify-center w-full">
+        <div className="bg-canvas min-h-screen flex justify-center w-full">
             <div className="relative flex h-full w-full max-w-md flex-col overflow-hidden pb-[72px] px-4">
                 {/* Header Skeleton */}
                 <div className="flex items-center justify-between py-4 mb-6 pt-6">
