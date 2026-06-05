@@ -1,56 +1,52 @@
-// 쓱싹 Service Worker v2
-const CACHE_NAME = 'sseuksak-v2'
-const SHELL = ['/', '/favicon.ico', '/manifest.json']
+// 쓱싹 Service Worker v3
+// v2 → v3: navigation(SSR HTML) 캐싱 제거 — stale HTML이 React hydration 오류 유발
+const CACHE_NAME = 'sseuksak-v3'
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches
-      .open(CACHE_NAME)
-      .then((cache) => cache.addAll(SHELL))
-      .catch(() => {})
+    caches.open(CACHE_NAME).then((cache) =>
+      cache.addAll(['/favicon.ico', '/manifest.json']).catch(() => {})
+    )
   )
   self.skipWaiting()
 })
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches
-      .keys()
-      .then((keys) => Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k))))
+    caches.keys().then((keys) =>
+      Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))
+    )
   )
   self.clients.claim()
 })
 
-// Network-first for navigation, cache-first for static (images/icons)
+// SSR HTML(navigation)은 캐싱하지 않음 — Next.js가 항상 fresh 응답 반환
+// 정적 에셋(이미지·폰트)만 cache-first
 self.addEventListener('fetch', (event) => {
   const req = event.request
   if (req.method !== 'GET') return
+
   const url = new URL(req.url)
-  // skip supabase / API
-  if (url.pathname.startsWith('/api/') || url.hostname.endsWith('supabase.co')) return
 
-  if (req.mode === 'navigate') {
-    event.respondWith(
-      fetch(req)
-        .then((res) => {
-          const clone = res.clone()
-          caches.open(CACHE_NAME).then((c) => c.put(req, clone))
-          return res
-        })
-        .catch(() => caches.match(req).then((r) => r || caches.match('/')))
-    )
-    return
-  }
+  // supabase / API / navigation → SW 개입 없이 브라우저 직접 처리
+  if (
+    url.pathname.startsWith('/api/') ||
+    url.hostname.endsWith('supabase.co') ||
+    req.mode === 'navigate'
+  ) return
 
+  // 이미지·폰트만 cache-first (stale-while-revalidate)
   if (req.destination === 'image' || req.destination === 'font') {
     event.respondWith(
       caches.match(req).then((cached) => {
-        if (cached) return cached
-        return fetch(req).then((res) => {
-          const clone = res.clone()
-          caches.open(CACHE_NAME).then((c) => c.put(req, clone))
+        const networkFetch = fetch(req).then((res) => {
+          if (res.ok) {
+            const clone = res.clone()
+            caches.open(CACHE_NAME).then((c) => c.put(req, clone))
+          }
           return res
         })
+        return cached ?? networkFetch
       })
     )
   }

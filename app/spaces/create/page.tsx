@@ -106,7 +106,7 @@ export default function CreateSpacePage() {
 
   const canProceed = (() => {
     if (step === 1) return !!type
-    if (step === 2) return !!address.trim()
+    if (step === 2) return !!address.trim() && !!coords && !geoLoading
     if (step === 3) return !!name.trim()
     if (step === 4) return true
     if (step === 5) return checklist.length > 0

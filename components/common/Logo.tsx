@@ -1,4 +1,6 @@
-import React from 'react'
+'use client'
+
+import React, { useId } from 'react'
 
 type Props = {
   size?: 'sm' | 'md' | 'lg' | 'xl'
@@ -14,6 +16,7 @@ const sizes = {
 } as const
 
 export default function Logo({ size = 'md', variant = 'full', tone = 'brand' }: Props) {
+  const uid = useId().replace(/:/g, '')
   const s = sizes[size]
   const colorMain = tone === 'white' ? '#FFFFFF' : tone === 'ink' ? '#0A1F3D' : '#0EA5E9'
   const colorSub = tone === 'white' ? '#FFFFFF' : tone === 'ink' ? '#0A1F3D' : '#0A1F3D'
@@ -27,12 +30,12 @@ export default function Logo({ size = 'md', variant = 'full', tone = 'brand' }: 
       aria-label="쓱싹 로고"
     >
       <defs>
-        <linearGradient id="sk-grad" x1="0" y1="0" x2="1" y2="1">
+        <linearGradient id={`sk-grad-${uid}`} x1="0" y1="0" x2="1" y2="1">
           <stop offset="0%" stopColor="#0EA5E9" />
           <stop offset="100%" stopColor="#0284C7" />
         </linearGradient>
       </defs>
-      <rect x="2" y="2" width="44" height="44" rx="14" fill="url(#sk-grad)" />
+      <rect x="2" y="2" width="44" height="44" rx="14" fill={`url(#sk-grad-${uid})`} />
       {/* Swoosh lines - 쓱싹 */}
       <path
         d="M10 30 Q 18 18, 28 22 T 40 18"
