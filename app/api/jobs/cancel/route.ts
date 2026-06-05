@@ -4,17 +4,20 @@ import { cancelRefundRate } from '@/lib/pricing'
 
 export const runtime = 'nodejs'
 
+const DEPOSIT_AMOUNT = 5000
+
 /**
  * 공간파트너 청소 요청 취소 + 환불 정산
  *
- * Body: { job_id }
+ * Body: { job_id, reason? }
  *
  * 1. 권한 확인 (operator)
  * 2. 취소 가능 상태 확인 (OPEN/ASSIGNED)
  * 3. 취소 수수료 계산 (scheduled_at 기준)
- * 4. jobs.status = CANCELED
- * 5. payments 레코드가 있으면 REFUNDED(+ 환불액), 없으면 REFUNDED 레코드 INSERT
- * 6. 클린파트너에게 알림
+ * 4. 24h 이내 취소 + 배정 클린파트너 있을 경우 보증금 5,000원 추가 차감
+ * 5. jobs.status = CANCELED
+ * 6. payments 레코드 처리
+ * 7. 클린파트너에게 알림
  */
 export async function POST(req: Request) {
   try {
@@ -22,7 +25,8 @@ export async function POST(req: Request) {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ ok: false, error: 'unauthorized' }, { status: 401 })
 
-    const { job_id } = await req.json()
+    const body = await req.json()
+    const { job_id, reason } = body
     if (!job_id) return NextResponse.json({ ok: false, error: 'missing_job_id' }, { status: 400 })
 
     const { data: job } = await supabase
@@ -40,6 +44,11 @@ export async function POST(req: Request) {
     const refundAmount = Math.round((job.price || 0) * policy.rate)
     const cancelFee = (job.price || 0) - refundAmount
 
+    // 24h 이내 취소 + 배정 클린파트너 있으면 보증금 5,000원 추가 차감
+    const scheduled = new Date(job.scheduled_at)
+    const hoursLeft = (scheduled.getTime() - Date.now()) / (1000 * 60 * 60)
+    const depositCharged = hoursLeft < 24 && !!job.worker_id
+
     // 기존 payment 조회 (후속 Toss 연결 시 실제 환불)
     const { data: existingPayment } = await supabase
       .from('payments')
@@ -56,27 +65,43 @@ export async function POST(req: Request) {
         })
         .eq('id', existingPayment.id)
     } else {
-      // 결제 시스템 미도입 단계: 요약 레코드만 생성
       await supabase.from('payments').insert({
         job_id,
         operator_id: job.operator_id,
         worker_id: job.worker_id,
         gross_amount: job.price,
-        platform_fee: 0,
+        platform_fee: depositCharged ? DEPOSIT_AMOUNT : 0,
         worker_payout: 0,
         status: 'REFUNDED',
       })
     }
 
-    await supabase.from('jobs').update({ status: 'CANCELED', updated_at: new Date().toISOString() }).eq('id', job_id)
+    const now = new Date().toISOString()
+    await supabase
+      .from('jobs')
+      .update({
+        status: 'CANCELED',
+        canceled_by: user.id,
+        canceled_at: now,
+        cancel_reason: reason ?? null,
+        cancel_deposit_charged: depositCharged,
+        updated_at: now,
+      })
+      .eq('id', job_id)
 
     // 클린파트너에게 알림
     if (job.worker_id) {
+      const spaceName = (job as any).spaces?.name ?? '작업'
+      const depositMsg = depositCharged
+        ? ` 24시간 이내 취소로 보증금 ${DEPOSIT_AMOUNT.toLocaleString()}원이 차감됩니다.`
+        : ''
       await supabase.from('notifications').insert({
         user_id: job.worker_id,
         title: '배정된 작업이 취소되었어요',
-        message: `${(job as any).spaces?.name ?? '작업'}이 취소됐습니다. ${policy.label}`,
+        message: `${spaceName}이 취소됐습니다. ${policy.label}${depositMsg}`,
         url: `/clean/job/${job_id}`,
+        type: depositCharged ? 'deposit_charged' : 'job_canceled',
+        is_read: false,
       })
     }
 
@@ -85,6 +110,8 @@ export async function POST(req: Request) {
       refund_amount: refundAmount,
       cancel_fee: cancelFee,
       policy_label: policy.label,
+      deposit_charged: depositCharged,
+      deposit_amount: depositCharged ? DEPOSIT_AMOUNT : 0,
     })
   } catch (e) {
     console.error('cancel error', e)

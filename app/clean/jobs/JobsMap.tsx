@@ -1,153 +1,408 @@
-import { useEffect, useRef, useState } from 'react'
-import { LocateFixed } from 'lucide-react'
+'use client'
 
-export default function JobsMap({ jobs }: { jobs: any[] }) {
-    const mapElement = useRef<HTMLDivElement>(null)
-    const [map, setMap] = useState<any>(null)
-    const markersRef = useRef<any[]>([])
-    const [naverLoaded, setNaverLoaded] = useState(false)
-    const [userLocation, setUserLocation] = useState<{ lat: number, lng: number } | null>(null)
+import { useEffect, useRef, useState, useCallback } from 'react'
+import { LocateFixed, Loader2, MapPin, X, Search, RefreshCw } from 'lucide-react'
+import { waitForNaverMaps, openNaverRoute } from '@/lib/naver'
+import { formatKRW, haversineKm, maskAddress, spaceTypeLabel } from '@/lib/utils'
+import type { SpaceType } from '@/lib/types'
 
-    useEffect(() => {
-        const checkNaverMap = setInterval(() => {
-            if ((window as any).naver && (window as any).naver.maps) {
-                setNaverLoaded(true)
-                clearInterval(checkNaverMap)
-            }
-        }, 100)
-        return () => clearInterval(checkNaverMap)
-    }, [])
+export type JobMapItem = {
+  id: string
+  price: number
+  is_urgent?: boolean
+  scheduled_at: string
+  estimated_duration?: number
+  spaces?: {
+    name: string
+    type: SpaceType
+    address: string
+    location?: { coordinates?: [number, number] } | null
+  }
+}
 
-    useEffect(() => {
-        if (!mapElement.current || !naverLoaded) return
+type Props = {
+  jobs: JobMapItem[]
+  selectedJobId?: string | null
+  onJobSelect?: (id: string | null) => void
+  userLat?: number | null
+  userLng?: number | null
+  /** 반경 필터 (km) — circle 오버레이 표시 */
+  radius?: number | null
+  /** 지도 이동 후 "이 지역 검색" 탭 시 콜백 */
+  onRegionSearch?: (lat: number, lng: number) => void
+  /** 지도 초기 중심. GPS 없을 때 서울 기본 */
+  initialCenter?: { lat: number; lng: number }
+}
 
-        const naverMaps = (window as any).naver.maps
+const SEOUL = { lat: 37.5665, lng: 126.978 }
 
-        const mapOptions = {
-            center: new naverMaps.LatLng(37.5666805, 126.9784147),
-            zoom: 14,
-            scaleControl: false,
-            logoControl: false,
-            mapDataControl: false,
-            zoomControl: true,
-            zoomControlOptions: {
-                position: naverMaps.Position.TOP_RIGHT
-            }
-        }
+function pinColor(price: number, urgent: boolean): { bg: string; ring: string } {
+  if (urgent) return { bg: '#EF4444', ring: '#FCA5A5' }
+  if (price >= 60000) return { bg: '#F59E0B', ring: '#FDE68A' }
+  if (price >= 40000) return { bg: '#0EA5E9', ring: '#BAE6FD' }
+  return { bg: '#64748B', ring: '#CBD5E1' }
+}
 
-        const newMap = new naverMaps.Map(mapElement.current, mapOptions)
-        setMap(newMap)
-    }, [naverLoaded])
+function buildPinHtml(job: JobMapItem, selected: boolean): string {
+  const payout = Math.round(job.price * 0.88)
+  const { bg, ring } = pinColor(job.price, !!job.is_urgent)
+  const scale = selected ? 'scale(1.2)' : 'scale(1)'
+  const shadow = selected
+    ? '0 8px 28px rgba(0,0,0,0.32)'
+    : '0 4px 14px rgba(0,0,0,0.18)'
+  const urgentRing = job.is_urgent
+    ? `<div style="position:absolute;inset:-5px;border-radius:999px;border:2.5px solid ${ring};animation:pinpulse 1.5s infinite;pointer-events:none;"></div>`
+    : ''
+  return `
+    <div style="position:relative;display:inline-block;transform-origin:center bottom;transform:${scale}translate(-50%,-100%);transition:transform 0.15s;">
+      ${urgentRing}
+      <div style="
+        background:${bg};
+        color:white;
+        padding:5px 11px;
+        border-radius:22px;
+        font-weight:900;
+        font-size:12px;
+        box-shadow:${shadow};
+        border:2.5px solid ${selected ? 'white' : 'rgba(255,255,255,0.7)'};
+        cursor:pointer;
+        white-space:nowrap;
+        line-height:1.2;
+      ">${job.is_urgent ? '⚡ ' : ''}${formatKRW(payout, { short: true })}</div>
+      <div style="width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:7px solid ${bg};margin:0 auto;"></div>
+    </div>`
+}
 
-    useEffect(() => {
-        if (!map || !naverLoaded) return
-        const naverMaps = (window as any).naver.maps
+export default function JobsMap({
+  jobs,
+  selectedJobId,
+  onJobSelect,
+  userLat,
+  userLng,
+  radius,
+  onRegionSearch,
+  initialCenter,
+}: Props) {
+  const mapRef = useRef<HTMLDivElement>(null)
+  const mapInstance = useRef<any>(null)
+  const markersRef = useRef<Map<string, any>>(new Map())
+  const userMarkerRef = useRef<any>(null)
+  const circleRef = useRef<any>(null)
+  const idleListenerRef = useRef<any>(null)
+  const [ready, setReady] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [selected, setSelected] = useState<JobMapItem | null>(null)
+  const [mapMoved, setMapMoved] = useState(false)
+  const initialFitDone = useRef(false)
 
-        markersRef.current.forEach(m => m.setMap(null))
-        markersRef.current = []
+  // ─── 지도 초기화 ─────────────────────────────────────────────────────
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      const naver = await waitForNaverMaps()
+      if (cancelled || !naver || !mapRef.current) {
+        setLoading(false)
+        return
+      }
+      const center = initialCenter
+        ?? (userLat && userLng ? { lat: userLat, lng: userLng } : SEOUL)
 
-        const validJobs = jobs.filter(j => j.spaces?.lat && j.spaces?.lng)
+      const map = new naver.maps.Map(mapRef.current, {
+        center: new naver.maps.LatLng(center.lat, center.lng),
+        zoom: 13,
+        scaleControl: false,
+        logoControl: true,
+        mapDataControl: false,
+        zoomControl: true,
+        zoomControlOptions: { position: naver.maps.Position.TOP_RIGHT },
+        disableKineticPan: false,
+      })
+      mapInstance.current = map
 
-        validJobs.forEach(job => {
-            const marker = new naverMaps.Marker({
-                position: new naverMaps.LatLng(job.spaces.lat, job.spaces.lng),
-                map: map,
-                icon: {
-                    content: `
-                        <div style="
-                            padding: 8px 14px;
-                            background: #000;
-                            color: white;
-                            border-radius: 24px;
-                            font-weight: 800;
-                            font-size: 13px;
-                            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
-                            border: 2px solid white;
-                            cursor: pointer;
-                            transition: all 0.2s;
-                            white-space: nowrap;
-                        " onmouseover="this.style.transform='scale(1.1)'; this.style.backgroundColor='#4f46e5'" onmouseout="this.style.transform='scale(1)'; this.style.backgroundColor='#000'">
-                            ₩${(job.price / 10000).toFixed(1)}만
-                        </div>
-                    `,
-                    anchor: new naverMaps.Point(30, 15)
-                }
-            })
+      // idle 감지 — 초기 fitBounds 후의 이동만 추적
+      idleListenerRef.current = naver.maps.Event.addListener(map, 'idle', () => {
+        if (initialFitDone.current) setMapMoved(true)
+      })
 
-            naverMaps.Event.addListener(marker, 'click', () => {
-                const element = document.getElementById(`job-${job.id}`)
-                if (element) {
-                    element.scrollIntoView({ behavior: 'smooth', block: 'center' })
-                    element.classList.add('ring-4', 'ring-primary/20', 'border-primary')
-                    setTimeout(() => element.classList.remove('ring-4', 'ring-primary/20', 'border-primary'), 2000)
-                }
-            })
-
-            markersRef.current.push(marker)
-        })
-
-        if (validJobs.length > 0) {
-            const bounds = new naverMaps.LatLngBounds()
-            validJobs.forEach(job => {
-                bounds.extend(new naverMaps.LatLng(job.spaces.lat, job.spaces.lng))
-            })
-            if (validJobs.length === 1) {
-                map.setCenter(new naverMaps.LatLng(validJobs[0].spaces.lat, validJobs[0].spaces.lng))
-                map.setZoom(15)
-            } else {
-                map.fitBounds(bounds, { margin: [40, 40, 40, 40] })
-            }
-        }
-    }, [map, jobs, naverLoaded])
-
-    const goToMyLocation = () => {
-        if (!map || !naverLoaded) return
-        const naverMaps = (window as any).naver.maps
-
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition((position) => {
-                const lat = position.coords.latitude
-                const lng = position.coords.longitude
-                const latLng = new naverMaps.LatLng(lat, lng)
-
-                map.setCenter(latLng)
-                map.setZoom(15)
-
-                new naverMaps.Marker({
-                    position: latLng,
-                    map: map,
-                    icon: {
-                        content: '<div class="size-4 bg-blue-500 border-2 border-white rounded-full shadow-lg pulse"></div>',
-                        anchor: new naverMaps.Point(8, 8)
-                    }
-                })
-            })
-        }
+      setReady(true)
+      setLoading(false)
+    })()
+    return () => {
+      cancelled = true
+      if (mapInstance.current && idleListenerRef.current) {
+        const naver = (window as any).naver
+        naver?.maps?.Event?.removeListener(idleListenerRef.current)
+      }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
-    return (
-        <div className="relative w-full h-full bg-slate-100 overflow-hidden rounded-2xl border border-slate-200 shadow-inner group">
-            <div ref={mapElement} className="w-full h-full" />
+  // ─── 사용자 위치 마커 ────────────────────────────────────────────────
+  useEffect(() => {
+    if (!ready || !mapInstance.current || !userLat || !userLng) return
+    const naver = (window as any).naver
+    if (!naver?.maps?.Marker) return
+    if (userMarkerRef.current) userMarkerRef.current.setMap(null)
+    userMarkerRef.current = new naver.maps.Marker({
+      position: new naver.maps.LatLng(userLat, userLng),
+      map: mapInstance.current,
+      icon: {
+        content: `<div style="width:18px;height:18px;background:#3B82F6;border:3px solid white;border-radius:50%;box-shadow:0 0 0 7px rgba(59,130,246,0.18);"></div>`,
+        anchor: new naver.maps.Point(9, 9),
+      },
+      zIndex: 1000,
+    })
+  }, [ready, userLat, userLng])
 
-            {/* Overlay UI */}
-            <div className="absolute bottom-6 right-6 z-10">
-                <button
-                    onClick={goToMyLocation}
-                    className="p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl active:scale-90 transition-all text-slate-600 hover:text-primary"
-                >
-                    <LocateFixed size={20} />
-                </button>
-            </div>
+  // ─── 반경 원 ─────────────────────────────────────────────────────────
+  useEffect(() => {
+    if (!ready || !mapInstance.current) return
+    const naver = (window as any).naver
+    if (circleRef.current) { circleRef.current.setMap(null); circleRef.current = null }
+    if (radius && userLat && userLng && naver?.maps?.Circle) {
+      circleRef.current = new naver.maps.Circle({
+        map: mapInstance.current,
+        center: new naver.maps.LatLng(userLat, userLng),
+        radius: radius * 1000,
+        strokeColor: '#0EA5E9',
+        strokeOpacity: 0.45,
+        strokeWeight: 1.5,
+        fillColor: '#0EA5E9',
+        fillOpacity: 0.06,
+      })
+      // 원이 지도에 맞게 fitBounds
+      const bounds = new naver.maps.LatLngBounds()
+      const step = Math.PI / 8
+      for (let a = 0; a < 2 * Math.PI; a += step) {
+        const dlat = (radius / 111.32) * Math.cos(a)
+        const dlng = (radius / (111.32 * Math.cos((userLat * Math.PI) / 180))) * Math.sin(a)
+        bounds.extend(new naver.maps.LatLng(userLat + dlat, userLng + dlng))
+      }
+      mapInstance.current.fitBounds(bounds, { top: 60, right: 40, bottom: 200, left: 40 })
+      initialFitDone.current = false
+      setTimeout(() => { initialFitDone.current = true; setMapMoved(false) }, 800)
+    }
+  }, [ready, radius, userLat, userLng])
 
-            {jobs.length === 0 && (
-                <div className="absolute inset-0 bg-slate-900/10 backdrop-blur-[2px] flex items-center justify-center p-8 pointer-events-none">
-                    <div className="bg-white/90 dark:bg-slate-900/90 p-6 rounded-3xl shadow-2xl border border-white/20 text-center max-w-xs animate-in zoom-in duration-300">
-                        <div className="text-4xl mb-3">📍</div>
-                        <h4 className="font-black text-slate-900 dark:text-white mb-1">근처에 활성 요청이 없습니다</h4>
-                        <p className="text-xs text-slate-500 font-medium leading-relaxed">지도상의 다른 지역을 탐색하거나 잠시 후 다시 확인해 주세요.</p>
-                    </div>
-                </div>
-            )}
+  // ─── 핀 렌더링 ───────────────────────────────────────────────────────
+  useEffect(() => {
+    if (!ready || !mapInstance.current) return
+    const naver = (window as any).naver
+    if (!naver?.maps?.Marker) return
+
+    const validJobs = jobs.filter(j => {
+      const c = j.spaces?.location?.coordinates
+      return c && c.length === 2 && !isNaN(c[0]) && !isNaN(c[1])
+    })
+
+    // 제거할 핀 정리
+    const currentIds = new Set(validJobs.map(j => j.id))
+    markersRef.current.forEach((m, id) => {
+      if (!currentIds.has(id)) { m.setMap(null); markersRef.current.delete(id) }
+    })
+
+    validJobs.forEach(job => {
+      const coords = job.spaces!.location!.coordinates!
+      const lat = coords[1], lng = coords[0]
+      const isSel = job.id === selectedJobId
+
+      if (markersRef.current.has(job.id)) {
+        const m = markersRef.current.get(job.id)!
+        m.setIcon({ content: buildPinHtml(job, isSel), anchor: new naver.maps.Point(0, 0) })
+        m.setZIndex(isSel ? 200 : 100)
+      } else {
+        const marker = new naver.maps.Marker({
+          position: new naver.maps.LatLng(lat, lng),
+          map: mapInstance.current,
+          icon: { content: buildPinHtml(job, isSel), anchor: new naver.maps.Point(0, 0) },
+          zIndex: isSel ? 200 : 100,
+        })
+        naver.maps.Event.addListener(marker, 'click', () => {
+          setSelected(job); onJobSelect?.(job.id); setMapMoved(false)
+        })
+        markersRef.current.set(job.id, marker)
+      }
+    })
+
+    // 최초 fitBounds (radius 없을 때만)
+    if (!initialFitDone.current && validJobs.length > 0 && !radius) {
+      if (validJobs.length === 1) {
+        const c = validJobs[0].spaces!.location!.coordinates!
+        mapInstance.current.setCenter(new naver.maps.LatLng(c[1], c[0]))
+        mapInstance.current.setZoom(14)
+      } else {
+        const bounds = new naver.maps.LatLngBounds()
+        validJobs.slice(0, 20).forEach(j => {
+          const c = j.spaces!.location!.coordinates!
+          bounds.extend(new naver.maps.LatLng(c[1], c[0]))
+        })
+        if (userLat && userLng) bounds.extend(new naver.maps.LatLng(userLat, userLng))
+        mapInstance.current.fitBounds(bounds, { top: 60, right: 40, bottom: 200, left: 40 })
+      }
+      initialFitDone.current = false
+      setTimeout(() => { initialFitDone.current = true; setMapMoved(false) }, 800)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ready, jobs, selectedJobId])
+
+  // ─── 선택 핀으로 팬 ──────────────────────────────────────────────────
+  useEffect(() => {
+    if (!ready || !mapInstance.current || !selectedJobId) return
+    const job = jobs.find(j => j.id === selectedJobId)
+    const c = job?.spaces?.location?.coordinates
+    if (!c) return
+    const naver = (window as any).naver
+    mapInstance.current.panTo(new naver.maps.LatLng(c[1], c[0]), { duration: 300 })
+  }, [ready, selectedJobId, jobs])
+
+  // ─── 현위치 버튼 ─────────────────────────────────────────────────────
+  const goToMyLocation = useCallback(() => {
+    if (!mapInstance.current) return
+    const naver = (window as any).naver
+    navigator.geolocation?.getCurrentPosition(pos => {
+      mapInstance.current.panTo(
+        new naver.maps.LatLng(pos.coords.latitude, pos.coords.longitude),
+        { duration: 400 }
+      )
+      mapInstance.current.setZoom(14)
+    }, undefined, { enableHighAccuracy: true, timeout: 8000 })
+  }, [])
+
+  // ─── "이 지역 검색" ──────────────────────────────────────────────────
+  const handleRegionSearch = useCallback(() => {
+    if (!mapInstance.current) return
+    const center = mapInstance.current.getCenter()
+    onRegionSearch?.(center.y, center.x)
+    setMapMoved(false)
+    initialFitDone.current = false
+    setTimeout(() => { initialFitDone.current = true }, 800)
+  }, [onRegionSearch])
+
+  const selJob = selected ?? (selectedJobId ? jobs.find(j => j.id === selectedJobId) ?? null : null)
+  const selCoords = selJob?.spaces?.location?.coordinates
+  const selDist = selCoords && userLat && userLng
+    ? haversineKm(userLat, userLng, selCoords[1], selCoords[0])
+    : null
+  const pinCount = jobs.filter(j => j.spaces?.location?.coordinates).length
+
+  return (
+    <div className="relative w-full h-full overflow-hidden rounded-2xl">
+      <div ref={mapRef} className="w-full h-full" />
+
+      {/* 로딩 */}
+      {loading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-surface-muted">
+          <Loader2 size={24} className="animate-spin text-brand" />
         </div>
-    )
+      )}
+
+      {/* 핀 수 배지 */}
+      {!loading && pinCount > 0 && !selJob && (
+        <div className="absolute top-3 left-3 z-20 bg-surface/90 backdrop-blur rounded-full px-3 py-1.5 shadow border border-line-soft flex items-center gap-1.5">
+          <MapPin size={12} className="text-brand" />
+          <span className="text-[11.5px] font-extrabold text-ink">{pinCount}개 작업</span>
+        </div>
+      )}
+
+      {/* "이 지역 검색" 버튼 */}
+      {mapMoved && !selJob && onRegionSearch && (
+        <div className="absolute top-3 left-1/2 -translate-x-1/2 z-20">
+          <button
+            onClick={handleRegionSearch}
+            className="flex items-center gap-1.5 h-9 px-4 bg-surface shadow-lg rounded-full border border-line-soft text-[12.5px] font-extrabold text-ink active:scale-95 transition"
+          >
+            <Search size={13} /> 이 지역 검색
+          </button>
+        </div>
+      )}
+
+      {/* 현위치 버튼 */}
+      <button
+        onClick={goToMyLocation}
+        className={`absolute z-20 w-10 h-10 bg-surface rounded-xl shadow-md border border-line-soft flex items-center justify-center text-text-muted hover:text-brand active:scale-90 transition ${selJob ? 'bottom-40 right-3' : 'bottom-5 right-3'}`}
+        title="현위치"
+      >
+        <LocateFixed size={18} />
+      </button>
+
+      {/* 핀 없음 */}
+      {!loading && pinCount === 0 && (
+        <div className="absolute inset-0 pointer-events-none flex items-center justify-center px-8">
+          <div className="bg-surface/90 backdrop-blur rounded-2xl px-5 py-4 text-center shadow-md border border-line-soft">
+            <MapPin size={24} className="text-text-faint mx-auto mb-2" />
+            <p className="text-[13px] font-extrabold text-ink">지도에 표시할 작업이 없어요</p>
+            <p className="text-[11.5px] font-medium text-text-soft mt-1">
+              필터를 조정하거나 다른 지역을 탐색해보세요
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* 선택 카드 */}
+      {selJob && (
+        <div className="absolute bottom-0 left-0 right-0 z-20 px-3 pb-3">
+          <div className="bg-surface rounded-2xl shadow-xl border border-line-soft overflow-hidden">
+            <div className="p-4">
+              <div className="flex items-start gap-3">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1 flex-wrap">
+                    <span className="chip chip-brand !text-[10px] !px-2 !py-0.5">
+                      {spaceTypeLabel(selJob.spaces?.type ?? 'other')}
+                    </span>
+                    {selJob.is_urgent && (
+                      <span className="chip chip-danger !text-[10px] !px-2 !py-0.5">⚡ 긴급</span>
+                    )}
+                    {selDist != null && (
+                      <span className="text-[10.5px] font-bold text-text-soft">
+                        📍 {selDist < 1 ? `${Math.round(selDist * 1000)}m` : `${selDist.toFixed(1)}km`}
+                      </span>
+                    )}
+                  </div>
+                  <h4 className="text-[15px] font-extrabold text-ink truncate">{selJob.spaces?.name}</h4>
+                  <p className="text-[11.5px] text-text-soft font-bold mt-0.5 truncate">
+                    {maskAddress(selJob.spaces?.address ?? '')}
+                  </p>
+                </div>
+                <div className="text-right shrink-0">
+                  <div className="t-money text-[17px] text-brand-dark font-black">
+                    {formatKRW(Math.round(selJob.price * 0.88), { short: true })}
+                  </div>
+                  <p className="text-[9.5px] font-bold text-text-faint mt-0.5">예상 정산</p>
+                </div>
+              </div>
+              <div className="flex gap-2 mt-3">
+                {selCoords && (
+                  <button
+                    onClick={() => openNaverRoute({ lat: selCoords[1], lng: selCoords[0], name: selJob.spaces?.name })}
+                    className="flex-1 h-9 rounded-xl bg-brand-softer text-brand-dark text-[12.5px] font-extrabold flex items-center justify-center gap-1.5 border border-brand/20 active:scale-95 transition"
+                  >
+                    🗺 네이버 길찾기
+                  </button>
+                )}
+                <a
+                  href={`/clean/job/${selJob.id}`}
+                  className="flex-1 h-9 rounded-xl bg-brand text-white text-[12.5px] font-extrabold flex items-center justify-center gap-1.5 active:scale-95 transition"
+                >
+                  작업 보기 →
+                </a>
+                <button
+                  onClick={() => { setSelected(null); onJobSelect?.(null) }}
+                  className="w-9 h-9 rounded-xl bg-surface-muted flex items-center justify-center text-text-faint active:scale-95 transition"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <style>{`
+        @keyframes pinpulse {
+          0%,100% { opacity:1; transform:scale(1); }
+          50%      { opacity:0.45; transform:scale(1.1); }
+        }
+      `}</style>
+    </div>
+  )
 }

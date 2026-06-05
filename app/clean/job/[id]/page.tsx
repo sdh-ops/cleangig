@@ -21,12 +21,21 @@ import {
   X,
   Zap,
   Star,
+  Plus,
+  ImageIcon,
+  ChevronDown,
 } from 'lucide-react'
 import StatusChip from '@/components/common/StatusChip'
 import DisputeModal from '@/components/common/DisputeModal'
 import ReviewModal from '@/components/common/ReviewModal'
 import { formatKRW, formatScheduled, spaceTypeLabel, maskAddress, haversineKm } from '@/lib/utils'
+import { notify } from '@/lib/notifications'
+import { openNaverRoute, openKakaoRoute } from '@/lib/naver'
 import type { ChecklistItem, JobStatus, SpaceType } from '@/lib/types'
+
+type SupplyLevel = 'low' | 'out'
+type SupplyStatusItem = { name: string; level: SupplyLevel }
+type ExtraChargeStatus = 'NONE' | 'REQUESTED' | 'APPROVED' | 'REJECTED'
 
 type JobFull = {
   id: string
@@ -40,6 +49,11 @@ type JobFull = {
   special_instructions?: string
   checklist?: ChecklistItem[]
   supply_shortages?: string[] | null
+  supply_status?: SupplyStatusItem[] | null
+  extra_charge_amount?: number | null
+  extra_charge_reason?: string | null
+  extra_charge_status?: ExtraChargeStatus | null
+  extra_charge_photos?: string[] | null
   price_breakdown?: { estimated_worker_payout?: number } | null
   spaces?: {
     id: string
@@ -47,6 +61,8 @@ type JobFull = {
     type: SpaceType
     address: string
     address_detail?: string
+    entry_code?: string
+    caution_notes?: string
     cleaning_tool_location?: string
     parking_guide?: string
     trash_guide?: string
@@ -63,9 +79,17 @@ const STATUS_FLOW: Partial<Record<JobStatus, { next: JobStatus; label: string; b
   IN_PROGRESS: { next: 'SUBMITTED', label: '청소 중', btnLabel: '작업 완료 보고', icon: CheckCircle2 },
 }
 
-// 현장에서 자주 떨어지는 소모품 — 클린파트너가 부족분을 체크하면 공간파트너에게 전달된다.
-// (지금은 기록·표시만. 추후 앱내 주문/제휴 구매를 이 데이터 위에 얹는다.)
 const SUPPLY_OPTIONS = ['휴지', '물티슈', '종량제봉투', '주방세제', '핸드워시', '섬유유연제', '청소세제', '수세미', '키친타월', '일회용장갑']
+
+const LEVEL_LABELS: Record<SupplyLevel, string> = {
+  low: '거의 다 씀',
+  out: '없음',
+}
+
+const LEVEL_COLORS: Record<SupplyLevel, string> = {
+  low: 'bg-sun-soft text-[#92580C] border-sun/40',
+  out: 'bg-danger-soft text-danger border-danger/30',
+}
 
 export default function WorkerJobDetail() {
   const { id } = useParams<{ id: string }>()
@@ -78,16 +102,25 @@ export default function WorkerJobDetail() {
   const [transitioning, setTransitioning] = useState(false)
   const [err, setErr] = useState<string | null>(null)
   const [checklist, setChecklist] = useState<ChecklistItem[]>([])
-  const [supplies, setSupplies] = useState<string[]>([])
+  const [supplyStatus, setSupplyStatus] = useState<SupplyStatusItem[]>([])
   const [showConsent, setShowConsent] = useState(false)
   const [showDispute, setShowDispute] = useState(false)
   const [showReview, setShowReview] = useState(false)
+  const [showExtraCharge, setShowExtraCharge] = useState(false)
   const [uploadingIdx, setUploadingIdx] = useState<number | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
+  const extraPhotoRef = useRef<HTMLInputElement>(null)
   const [currentChecklistIdx, setCurrentChecklistIdx] = useState<number | null>(null)
   const [workerReady, setWorkerReady] = useState<{ bank: boolean; tax: boolean } | null>(null)
 
-  // Periodic GPS ping while worker is traveling/working (host can see live location)
+  // Extra charge state
+  const [extraAmount, setExtraAmount] = useState('')
+  const [extraReason, setExtraReason] = useState('')
+  const [extraPhotos, setExtraPhotos] = useState<string[]>([])
+  const [uploadingExtra, setUploadingExtra] = useState(false)
+  const [submittingExtra, setSubmittingExtra] = useState(false)
+
+  // Periodic GPS ping while worker is traveling/working
   useEffect(() => {
     if (!job || !userId || job.worker_id !== userId) return
     if (!['EN_ROUTE', 'ARRIVED', 'IN_PROGRESS'].includes(job.status)) return
@@ -108,13 +141,13 @@ export default function WorkerJobDetail() {
       )
     }
     ping()
-    const t = setInterval(ping, 45_000) // 45s
+    const t = setInterval(ping, 45_000)
     return () => clearInterval(t)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [job?.status, userId, job?.id])
 
   useEffect(() => {
-    (async () => {
+    ;(async () => {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { router.replace('/login'); return }
       setUserId(user.id)
@@ -135,9 +168,11 @@ export default function WorkerJobDetail() {
         .from('jobs')
         .select(`
           id, status, worker_id, operator_id, price, scheduled_at,
-          estimated_duration, is_urgent, special_instructions, checklist, supply_shortages, price_breakdown,
-          spaces(id, name, type, address, address_detail, cleaning_tool_location, parking_guide, trash_guide, photos, location),
-          users:worker_id(id, name, phone, profile_image, avg_rating)
+          estimated_duration, is_urgent, special_instructions, checklist, supply_shortages,
+          supply_status, extra_charge_status, extra_charge_amount, extra_charge_reason, extra_charge_photos,
+          price_breakdown,
+          spaces(id, name, type, address, address_detail, entry_code, caution_notes, cleaning_tool_location, parking_guide, trash_guide, photos, location),
+          users:operator_id(id, name, phone, profile_image, avg_rating)
         `)
         .eq('id', id)
         .single()
@@ -148,7 +183,7 @@ export default function WorkerJobDetail() {
       }
       setJob(data as any)
       setChecklist(((data as any).checklist as ChecklistItem[]) ?? [])
-      setSupplies(((data as any).supply_shortages as string[]) ?? [])
+      setSupplyStatus(((data as any).supply_status as SupplyStatusItem[]) ?? [])
       setLoading(false)
     })()
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -169,7 +204,6 @@ export default function WorkerJobDetail() {
         .eq('status', 'OPEN')
         .select('id')
       if (error) throw error
-      // 경합 방지: 0행이면 이미 다른 클린파트너가 선점 (조건부 update는 0행이어도 에러 아님)
       if (!updated || updated.length === 0) {
         setErr('이미 다른 클린파트너가 배정된 작업입니다.')
         setJob((j) => (j ? { ...j, status: 'ASSIGNED' } : j))
@@ -178,6 +212,14 @@ export default function WorkerJobDetail() {
       }
       setJob((j) => (j ? { ...j, worker_id: userId, status: 'ASSIGNED' } : j))
       setShowConsent(false)
+      // 공간파트너에게 배정 알림
+      notify({
+        userId: job.operator_id,
+        title: '클린파트너가 배정됐어요!',
+        message: `${job.spaces?.name ?? '작업'}에 클린파트너가 배정됐습니다. 예약 시간에 방문 예정이에요.`,
+        url: `/requests/${job.id}`,
+        type: 'job_assigned',
+      })
     } catch (e) {
       setErr(e instanceof Error ? e.message : '신청 실패')
     }
@@ -186,7 +228,6 @@ export default function WorkerJobDetail() {
 
   const advanceStatus = async () => {
     if (!job || !flow) return
-    // ARRIVED: require GPS proximity verification (simple)
     if (job.status === 'EN_ROUTE') {
       try {
         const pos = await new Promise<GeolocationPosition>((resolve, reject) => {
@@ -218,11 +259,15 @@ export default function WorkerJobDetail() {
         }
         payload.completed_at = new Date().toISOString()
         payload.checklist_completed = checklist
+        // 비품 상태도 최종 저장
+        if (supplyStatus.length > 0) {
+          payload.supply_status = supplyStatus
+          payload.supply_shortages = supplyStatus.map((s) => s.name)
+        }
       }
       const { error } = await supabase.from('jobs').update(payload).eq('id', job.id)
       if (error) throw error
 
-      // GPS 트레일 기록 (EN_ROUTE, ARRIVED 시)
       if (flow.next === 'EN_ROUTE' || flow.next === 'ARRIVED') {
         if (navigator.geolocation && userId) {
           navigator.geolocation.getCurrentPosition(
@@ -240,16 +285,61 @@ export default function WorkerJobDetail() {
         }
       }
 
-      // SUBMITTED 시 AI 검수 호출
+      // 상태별 공간파트너 알림
+      if (flow.next === 'EN_ROUTE') {
+        notify({
+          userId: job.operator_id,
+          title: '클린파트너가 출발했어요 🚶',
+          message: `${job.spaces?.name ?? '작업'}으로 클린파트너가 이동 중입니다.`,
+          url: `/requests/${job.id}`,
+          type: 'job_en_route',
+        })
+      }
+
+      if (flow.next === 'ARRIVED') {
+        notify({
+          userId: job.operator_id,
+          title: '클린파트너가 현장에 도착했어요 📍',
+          message: `${job.spaces?.name ?? '작업'}에 클린파트너가 도착했습니다.`,
+          url: `/requests/${job.id}`,
+          type: 'job_arrived',
+        })
+      }
+
+      if (flow.next === 'IN_PROGRESS') {
+        notify({
+          userId: job.operator_id,
+          title: '청소를 시작했어요 🧹',
+          message: `${job.spaces?.name ?? '작업'} 청소가 시작됐습니다.`,
+          url: `/requests/${job.id}`,
+          type: 'job_in_progress',
+        })
+      }
+
       if (flow.next === 'SUBMITTED') {
         fetch('/api/ai-verify', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            job_id: job.id,
-            checklist_results: checklist,
-          }),
+          body: JSON.stringify({ job_id: job.id, checklist_results: checklist }),
         }).catch(() => {})
+
+        // 공간파트너에게 완료 알림
+        notify({
+          userId: job.operator_id,
+          title: '청소가 완료됐어요! 확인 후 승인해주세요.',
+          message: `${job.spaces?.name ?? '작업'} 청소가 완료됐습니다. 사진 확인 후 승인해주세요.`,
+          url: `/requests/${job.id}`,
+          type: 'job_submitted',
+        })
+        if (supplyStatus.length > 0) {
+          notify({
+            userId: job.operator_id,
+            title: '부족한 비품이 있어요',
+            message: `${supplyStatus.map((s) => `${s.name}(${LEVEL_LABELS[s.level]})`).join(', ')} 보충이 필요합니다.`,
+            url: `/requests/${job.id}`,
+            type: 'supply_shortage',
+          })
+        }
       }
 
       setJob((j) => (j ? { ...j, status: flow.next, ...(payload as any) } : j))
@@ -262,18 +352,28 @@ export default function WorkerJobDetail() {
 
   const toggleChecklist = (idx: number) => {
     setChecklist((list) => list.map((c, i) => (i === idx ? { ...c, completed: !c.completed } : c)))
-    // also persist
     if (job) {
       const updated = checklist.map((c, i) => (i === idx ? { ...c, completed: !c.completed } : c))
       supabase.from('jobs').update({ checklist: updated }).eq('id', job.id)
     }
   }
 
-  const toggleSupply = (name: string) => {
+  // supply_status 2레벨 사이클: none → low → out → none
+  const cycleSupply = (name: string) => {
     if (!job) return
-    const next = supplies.includes(name) ? supplies.filter((s) => s !== name) : [...supplies, name]
-    setSupplies(next)
-    supabase.from('jobs').update({ supply_shortages: next }).eq('id', job.id)
+    setSupplyStatus((prev) => {
+      const existing = prev.find((s) => s.name === name)
+      let next: SupplyStatusItem[]
+      if (!existing) {
+        next = [...prev, { name, level: 'low' }]
+      } else if (existing.level === 'low') {
+        next = prev.map((s) => (s.name === name ? { ...s, level: 'out' as SupplyLevel } : s))
+      } else {
+        next = prev.filter((s) => s.name !== name)
+      }
+      supabase.from('jobs').update({ supply_status: next, supply_shortages: next.map((s) => s.name) }).eq('id', job.id)
+      return next
+    })
   }
 
   const openCamera = (idx: number) => {
@@ -305,10 +405,88 @@ export default function WorkerJobDetail() {
     }
   }
 
+  const handleExtraPhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !job) return
+    setUploadingExtra(true)
+    try {
+      const path = `jobs/${job.id}/extra-${Date.now()}-${file.name}`
+      const { error: upErr } = await supabase.storage.from('photos').upload(path, file, { upsert: true })
+      if (upErr) throw upErr
+      const { data: urlData } = supabase.storage.from('photos').getPublicUrl(path)
+      setExtraPhotos((prev) => [...prev, urlData.publicUrl])
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : '사진 업로드 실패')
+    } finally {
+      setUploadingExtra(false)
+      if (extraPhotoRef.current) extraPhotoRef.current.value = ''
+    }
+  }
+
+  const submitExtraCharge = async () => {
+    if (!job || !userId) return
+    const amount = parseInt(extraAmount.replace(/[^0-9]/g, ''), 10)
+    if (!amount || amount < 1000) {
+      setErr('추가 청구 금액은 1,000원 이상이어야 합니다.')
+      return
+    }
+    if (!extraReason.trim()) {
+      setErr('추가 청구 사유를 입력해주세요.')
+      return
+    }
+    setSubmittingExtra(true)
+    setErr(null)
+    try {
+      const { error } = await supabase.from('jobs').update({
+        extra_charge_amount: amount,
+        extra_charge_reason: extraReason.trim(),
+        extra_charge_status: 'REQUESTED',
+        extra_charge_photos: extraPhotos,
+        updated_at: new Date().toISOString(),
+      }).eq('id', job.id)
+      if (error) throw error
+      setJob((j) => j ? {
+        ...j,
+        extra_charge_amount: amount,
+        extra_charge_reason: extraReason.trim(),
+        extra_charge_status: 'REQUESTED',
+        extra_charge_photos: extraPhotos,
+      } : j)
+      setShowExtraCharge(false)
+      // 공간파트너에게 알림
+      notify({
+        userId: job.operator_id,
+        title: '추가 청구 요청이 왔어요',
+        message: `${job.spaces?.name ?? '작업'}에 ${formatKRW(amount)} 추가 청구 요청이 있습니다. 확인 후 승인/거절해주세요.`,
+        url: `/requests/${job.id}`,
+        type: 'extra_charge_requested',
+      })
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : '추가 청구 요청 실패')
+    } finally {
+      setSubmittingExtra(false)
+    }
+  }
+
   const openNaverDirections = () => {
     if (!job?.spaces) return
-    const dest = encodeURIComponent(job.spaces.address)
-    window.open(`https://map.naver.com/v5/search/${dest}`, '_blank')
+    const coords = job.spaces.location?.coordinates
+    if (coords && coords.length === 2) {
+      openNaverRoute({ lat: coords[1], lng: coords[0], name: job.spaces.name })
+    } else {
+      // 좌표 없으면 주소 검색 fallback
+      window.open(`https://map.naver.com/v5/search/${encodeURIComponent(job.spaces.address)}`, '_blank')
+    }
+  }
+
+  const openKakaoDirections = () => {
+    if (!job?.spaces) return
+    const coords = job.spaces.location?.coordinates
+    if (coords && coords.length === 2) {
+      openKakaoRoute({ lat: coords[1], lng: coords[0], name: job.spaces.name })
+    } else {
+      window.open(`https://map.kakao.com/link/search/${encodeURIComponent(job.spaces.address)}`, '_blank')
+    }
   }
 
   if (loading) {
@@ -332,6 +510,7 @@ export default function WorkerJobDetail() {
   const durationMin = job.estimated_duration ?? 90
   const requiredCount = checklist.filter((c) => c.required).length
   const completedRequired = checklist.filter((c) => c.required && c.completed).length
+  const extraStatus = job.extra_charge_status ?? 'NONE'
 
   return (
     <div className="sseuksak-shell">
@@ -373,12 +552,20 @@ export default function WorkerJobDetail() {
                 <p className="t-money text-[26px] text-brand-light">{formatKRW(job.price_breakdown?.estimated_worker_payout ?? Math.round(job.price * 0.88))}</p>
               </div>
               {isMine && (
-                <button
-                  onClick={openNaverDirections}
-                  className="flex items-center gap-1.5 px-4 h-10 rounded-full bg-white/15 text-white text-sm font-bold hover:bg-white/25"
-                >
-                  <Navigation size={15} /> 길찾기
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={openNaverDirections}
+                    className="flex items-center gap-1.5 px-3 h-9 rounded-full bg-white/15 text-white text-[12px] font-bold hover:bg-white/25 active:scale-95 transition"
+                  >
+                    <Navigation size={14} /> 네이버
+                  </button>
+                  <button
+                    onClick={openKakaoDirections}
+                    className="flex items-center gap-1.5 px-3 h-9 rounded-full bg-white/15 text-white text-[12px] font-bold hover:bg-white/25 active:scale-95 transition"
+                  >
+                    <Navigation size={14} /> 카카오
+                  </button>
+                </div>
               )}
             </div>
           </div>
@@ -389,7 +576,7 @@ export default function WorkerJobDetail() {
           {isMine && job.status !== 'OPEN' && (
             <div className="card p-3 flex items-center gap-3 mb-4">
               <div className="w-10 h-10 rounded-full bg-brand-softer flex items-center justify-center text-brand-dark font-black">
-                H
+                {job.users?.name?.charAt(0) ?? 'H'}
               </div>
               <div className="flex-1">
                 <p className="text-[11px] font-bold text-text-soft">공간파트너 연락</p>
@@ -417,25 +604,50 @@ export default function WorkerJobDetail() {
             </div>
           )}
 
-          {/* Onsite guide (once assigned) */}
+          {/* 출입 안내 (배정 후 즉시 표시) */}
+          {isMine && job.spaces?.entry_code && (
+            <div className="card p-4 mb-4 border-2 border-brand/30 bg-brand-softer">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-[20px]">🔑</span>
+                <h3 className="text-[13.5px] font-extrabold text-ink">출입 방법 / 비밀번호</h3>
+              </div>
+              <div className="bg-white/70 rounded-xl px-4 py-3 border border-brand/15">
+                <p className="text-[15px] font-extrabold text-ink leading-relaxed tracking-wide">
+                  {job.spaces.entry_code}
+                </p>
+              </div>
+              <p className="text-[11px] font-medium text-brand-dark mt-2">
+                ⚠ 이 정보는 본인에게만 공개됩니다. 외부 유출 금지
+              </p>
+            </div>
+          )}
+
+          {/* 주의사항 (caution_notes) */}
+          {isMine && job.spaces?.caution_notes && (
+            <div className="card p-4 mb-4 bg-sun-soft border border-sun/20">
+              <div className="flex items-center gap-2 mb-1.5">
+                <AlertTriangle size={14} className="text-[#92580C]" />
+                <span className="text-[12px] font-black text-[#92580C] uppercase tracking-wide">공간 주의사항</span>
+              </div>
+              <p className="text-[13.5px] font-semibold text-ink leading-snug whitespace-pre-wrap">
+                {job.spaces.caution_notes}
+              </p>
+            </div>
+          )}
+
+          {/* Onsite guide */}
           {isMine && (job.spaces?.cleaning_tool_location || job.spaces?.parking_guide || job.spaces?.trash_guide) && (
             <div className="card p-4 mb-4">
               <h3 className="text-[13.5px] font-extrabold text-ink mb-3">현장 안내</h3>
               <div className="flex flex-col gap-2.5">
-                {job.spaces?.parking_guide && (
-                  <GuideRow label="주차 안내" value={job.spaces.parking_guide} />
-                )}
-                {job.spaces?.cleaning_tool_location && (
-                  <GuideRow label="청소도구 위치" value={job.spaces.cleaning_tool_location} />
-                )}
-                {job.spaces?.trash_guide && (
-                  <GuideRow label="쓰레기 분리" value={job.spaces.trash_guide} />
-                )}
+                {job.spaces?.parking_guide && <GuideRow icon="🚗" label="주차 안내" value={job.spaces.parking_guide} />}
+                {job.spaces?.cleaning_tool_location && <GuideRow icon="🧽" label="청소도구 위치" value={job.spaces.cleaning_tool_location} />}
+                {job.spaces?.trash_guide && <GuideRow icon="🗑" label="쓰레기 분리" value={job.spaces.trash_guide} />}
               </div>
             </div>
           )}
 
-          {/* Checklist (after arrived) */}
+          {/* Checklist */}
           {isMine && ['ARRIVED', 'IN_PROGRESS'].includes(job.status) && checklist.length > 0 && (
             <div className="card p-4 mb-4">
               <div className="flex items-center justify-between mb-3">
@@ -481,28 +693,136 @@ export default function WorkerJobDetail() {
             </div>
           )}
 
-          {/* 부족 비품 체크 (도착 후) — 공간파트너에게 전달 */}
+          {/* 비품 상태 2레벨 체크 */}
           {isMine && ['ARRIVED', 'IN_PROGRESS'].includes(job.status) && (
             <div className="card p-4 mb-4">
-              <h3 className="text-[13.5px] font-extrabold text-ink mb-1">부족한 비품 체크</h3>
+              <h3 className="text-[13.5px] font-extrabold text-ink mb-1">비품 상태 체크</h3>
               <p className="text-[11.5px] text-text-soft font-medium mb-3 leading-snug">
-                떨어진 소모품을 선택하면 공간파트너에게 전달돼 다음 청소 전 채워둘 수 있어요.
+                한 번 탭 → <span className="text-[#92580C] font-bold">거의 다 씀</span>  두 번 탭 → <span className="text-danger font-bold">없음</span>  세 번 탭 → 정상
               </p>
               <div className="flex flex-wrap gap-2">
                 {SUPPLY_OPTIONS.map((name) => {
-                  const on = supplies.includes(name)
+                  const item = supplyStatus.find((s) => s.name === name)
+                  const colorClass = item ? LEVEL_COLORS[item.level] : 'bg-surface text-text-muted border-line-soft hover:border-line-strong'
                   return (
                     <button
                       key={name}
-                      onClick={() => toggleSupply(name)}
-                      className={`px-3 py-1.5 rounded-full text-[12.5px] font-bold border transition ${on ? 'bg-brand text-white border-brand' : 'bg-surface text-text-muted border-line-soft hover:border-line-strong'}`}
+                      onClick={() => cycleSupply(name)}
+                      className={`px-3 py-1.5 rounded-full text-[12.5px] font-bold border transition ${colorClass}`}
                     >
-                      {on && <Check size={12} strokeWidth={3} className="inline mr-1 -mt-0.5" />}
+                      {item && <span className="mr-1 text-[10.5px]">{'●'}</span>}
                       {name}
+                      {item && <span className="ml-1 text-[10.5px]">{LEVEL_LABELS[item.level]}</span>}
                     </button>
                   )
                 })}
               </div>
+            </div>
+          )}
+
+          {/* 추가 청구 */}
+          {isMine && ['IN_PROGRESS', 'SUBMITTED'].includes(job.status) && (
+            <div className="card p-4 mb-4">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-[13.5px] font-extrabold text-ink">추가 청구</h3>
+                {extraStatus === 'NONE' && (
+                  <button
+                    onClick={() => setShowExtraCharge((v) => !v)}
+                    className="flex items-center gap-1 px-3 h-7 rounded-full bg-brand-softer text-brand-dark text-[11.5px] font-bold border border-brand/20"
+                  >
+                    <Plus size={12} /> 요청
+                  </button>
+                )}
+              </div>
+
+              {extraStatus === 'NONE' && !showExtraCharge && (
+                <p className="text-[12px] text-text-soft font-medium leading-snug">
+                  예상보다 심한 오염·처리 추가 비용이 발생하면 공간파트너에게 승인 요청할 수 있어요.
+                </p>
+              )}
+
+              {extraStatus === 'NONE' && showExtraCharge && (
+                <div className="flex flex-col gap-3 mt-2">
+                  <div>
+                    <label className="t-meta block mb-1">추가 금액</label>
+                    <input
+                      type="number"
+                      value={extraAmount}
+                      onChange={(e) => setExtraAmount(e.target.value)}
+                      placeholder="예: 15000"
+                      className="input"
+                      min={1000}
+                      step={1000}
+                    />
+                  </div>
+                  <div>
+                    <label className="t-meta block mb-1">사유</label>
+                    <textarea
+                      value={extraReason}
+                      onChange={(e) => setExtraReason(e.target.value)}
+                      placeholder="예: 심한 기름때로 인한 추가 세제 및 시간 소요"
+                      className="input min-h-[72px]"
+                      rows={2}
+                      maxLength={200}
+                    />
+                  </div>
+                  <div>
+                    <label className="t-meta block mb-1">증거 사진 (선택)</label>
+                    <div className="flex flex-wrap gap-2">
+                      {extraPhotos.map((url, i) => (
+                        <div key={i} className="relative w-16 h-16">
+                          <img src={url} alt="" className="w-full h-full rounded-lg object-cover border border-line-soft" />
+                          <button
+                            onClick={() => setExtraPhotos((p) => p.filter((_, j) => j !== i))}
+                            className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-danger text-white flex items-center justify-center"
+                          >
+                            <X size={11} />
+                          </button>
+                        </div>
+                      ))}
+                      {extraPhotos.length < 4 && (
+                        <button
+                          onClick={() => extraPhotoRef.current?.click()}
+                          disabled={uploadingExtra}
+                          className="w-16 h-16 rounded-lg border-2 border-dashed border-line-strong flex flex-col items-center justify-center gap-1 text-text-faint"
+                        >
+                          {uploadingExtra ? <Loader2 size={14} className="animate-spin" /> : <ImageIcon size={16} />}
+                          <span className="text-[9px] font-bold">추가</span>
+                        </button>
+                      )}
+                    </div>
+                    <input ref={extraPhotoRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleExtraPhotoUpload} />
+                  </div>
+                  <div className="flex gap-2">
+                    <button onClick={() => setShowExtraCharge(false)} className="flex-1 btn btn-ghost !text-sm">취소</button>
+                    <button onClick={submitExtraCharge} disabled={submittingExtra} className="flex-1 btn btn-primary !text-sm">
+                      {submittingExtra ? <Loader2 size={16} className="animate-spin" /> : '요청 보내기'}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {extraStatus === 'REQUESTED' && (
+                <div className="mt-1 p-3 rounded-xl bg-sun-soft border border-sun/20">
+                  <p className="text-[12.5px] font-bold text-[#92580C]">
+                    승인 대기 중 · {formatKRW(job.extra_charge_amount ?? 0)}
+                  </p>
+                  <p className="text-[11.5px] text-text-soft mt-0.5">{job.extra_charge_reason}</p>
+                </div>
+              )}
+              {extraStatus === 'APPROVED' && (
+                <div className="mt-1 p-3 rounded-xl bg-brand-softer border border-brand/20">
+                  <p className="text-[12.5px] font-bold text-brand-dark">
+                    ✅ 승인됨 · {formatKRW(job.extra_charge_amount ?? 0)} 추가 정산 예정
+                  </p>
+                </div>
+              )}
+              {extraStatus === 'REJECTED' && (
+                <div className="mt-1 p-3 rounded-xl bg-danger-soft border border-danger/20">
+                  <p className="text-[12.5px] font-bold text-danger">거절됨</p>
+                  <p className="text-[11.5px] text-text-soft mt-0.5">{job.extra_charge_reason}</p>
+                </div>
+              )}
             </div>
           )}
 
@@ -513,12 +833,11 @@ export default function WorkerJobDetail() {
             </div>
           )}
 
-          {/* Apply / status action */}
+          {/* Apply */}
           {isOpen && (
             <div className="card p-4 mb-4">
               <h3 className="text-[13.5px] font-extrabold text-ink mb-2">이 작업에 지원하시겠어요?</h3>
               <p className="t-caption mb-4">지원하면 바로 배정돼요. 예약 시간에 맞춰 현장으로 방문해주세요.</p>
-              {/* 정산 설정은 지원을 막지 않는다. 첫 정산 전까지만 등록하면 됨 (비차단 안내) */}
               {workerReady && (!workerReady.bank || !workerReady.tax) ? (
                 <div className="p-3 rounded-xl bg-info-soft border border-info/15 mb-3">
                   <p className="text-[11.5px] font-semibold text-ink-soft leading-snug">
@@ -530,33 +849,29 @@ export default function WorkerJobDetail() {
                   </p>
                 </div>
               ) : null}
-              <button
-                onClick={() => setShowConsent(true)}
-                className="btn btn-primary w-full"
-              >
+              <button onClick={() => setShowConsent(true)} className="btn btn-primary w-full">
                 지원하기 <Zap size={18} strokeWidth={2.5} />
               </button>
             </div>
           )}
 
-          {/* Review prompt (after work submitted/approved) */}
+          {/* Review prompt */}
           {isMine && ['SUBMITTED', 'APPROVED', 'PAID_OUT'].includes(job.status) && job.operator_id && (
             <div className="card p-4 mb-4 bg-brand-softer border border-brand/15">
               <div className="flex items-center gap-3 mb-3">
                 <Star size={18} className="text-brand-dark" fill="currentColor" />
                 <p className="text-[13.5px] font-extrabold text-ink">공간파트너를 평가해주세요</p>
               </div>
-              <p className="text-[12px] font-semibold text-text-soft mb-3 leading-snug">작업을 완료했어요! 공간파트너에 대한 솔직한 리뷰가 다른 클린파트너에게 큰 도움이 됩니다.</p>
-              <button
-                onClick={() => setShowReview(true)}
-                className="btn btn-secondary w-full !text-sm"
-              >
+              <p className="text-[12px] font-semibold text-text-soft mb-3 leading-snug">
+                안내 정확도, 소통, 작업 환경에 대한 솔직한 리뷰가 다른 클린파트너에게 큰 도움이 됩니다.
+              </p>
+              <button onClick={() => setShowReview(true)} className="btn btn-secondary w-full !text-sm">
                 <Star size={15} /> 리뷰 남기기
               </button>
             </div>
           )}
 
-          {/* Report button (for in-progress/completed jobs the worker is assigned to) */}
+          {/* Report */}
           {isMine && ['ASSIGNED', 'EN_ROUTE', 'ARRIVED', 'IN_PROGRESS', 'SUBMITTED', 'APPROVED'].includes(job.status) && (
             <button
               onClick={() => setShowDispute(true)}
@@ -568,15 +883,11 @@ export default function WorkerJobDetail() {
         </div>
       </div>
 
-      {/* Bottom action for in-progress work */}
+      {/* Bottom action */}
       {isMine && flow && (
         <div className="fixed bottom-0 inset-x-0 border-t border-line-soft bg-surface/95 backdrop-blur safe-bottom">
           <div className="max-w-[480px] mx-auto px-5 py-3.5">
-            <button
-              onClick={advanceStatus}
-              disabled={transitioning}
-              className="btn btn-primary w-full"
-            >
+            <button onClick={advanceStatus} disabled={transitioning} className="btn btn-primary w-full">
               {transitioning ? (
                 <Loader2 size={20} className="animate-spin" />
               ) : (
@@ -629,7 +940,12 @@ export default function WorkerJobDetail() {
               </ul>
               <div className="px-3 py-2.5 rounded-xl bg-info-soft border border-info/20 mb-4">
                 <p className="text-[11.5px] font-semibold text-ink-soft leading-snug">
-                  💳 신규 클린파트너 보증금 3,000원이 첫 작업 수락 시 자동 차감되며, 활동 종료 시 환불됩니다.
+                  💳 신규 클린파트너 보증금 <b>5,000원</b>이 첫 작업 수락 시 자동 차감되며, 활동 종료 시 전액 환불됩니다.
+                </p>
+              </div>
+              <div className="px-3 py-2.5 rounded-xl bg-danger-soft border border-danger/15 mb-5">
+                <p className="text-[11.5px] font-semibold text-danger leading-snug">
+                  ⚠️ 예약 24시간 이내 취소 또는 노쇼 시 보증금 5,000원이 차감됩니다.
                 </p>
               </div>
               <button onClick={apply} disabled={transitioning} className="btn btn-primary w-full">
@@ -644,10 +960,11 @@ export default function WorkerJobDetail() {
         <ReviewModal
           open={showReview}
           onClose={() => { setShowReview(false); router.refresh() }}
-          onSubmitted={() => router.refresh()}
+          onSubmitted={() => setShowReview(false)}
           jobId={job.id}
           revieweeId={job.operator_id}
           revieweeName={job.spaces?.name ?? '공간파트너'}
+          reviewType="worker_to_operator"
         />
       )}
 
@@ -661,11 +978,14 @@ export default function WorkerJobDetail() {
   )
 }
 
-function GuideRow({ label, value }: { label: string; value: string }) {
+function GuideRow({ icon, label, value }: { icon?: string; label: string; value: string }) {
   return (
-    <div>
-      <p className="text-[11px] font-black text-text-faint uppercase tracking-wide">{label}</p>
-      <p className="text-[13.5px] font-semibold text-ink leading-snug mt-0.5">{value}</p>
+    <div className="flex items-start gap-2.5">
+      {icon && <span className="text-[16px] mt-0.5 shrink-0">{icon}</span>}
+      <div>
+        <p className="text-[11px] font-black text-text-faint uppercase tracking-wide">{label}</p>
+        <p className="text-[13.5px] font-semibold text-ink leading-snug mt-0.5 whitespace-pre-wrap">{value}</p>
+      </div>
     </div>
   )
 }

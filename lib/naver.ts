@@ -38,10 +38,11 @@ declare global {
 export function waitForNaverMaps(timeoutMs = 8000): Promise<typeof window.naver | null> {
   return new Promise((resolve) => {
     if (typeof window === 'undefined') return resolve(null)
-    if (window.naver?.maps) return resolve(window.naver)
+    // Require naver.maps.Marker to be present — auth failure leaves maps stub without Marker
+    if (window.naver?.maps?.Marker) return resolve(window.naver)
     const start = Date.now()
     const tick = () => {
-      if (window.naver?.maps) return resolve(window.naver)
+      if (window.naver?.maps?.Marker) return resolve(window.naver)
       if (Date.now() - start >= timeoutMs) return resolve(null)
       setTimeout(tick, 120)
     }

@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { Building2, Sparkles, ChevronLeft, ChevronRight, CheckCircle2, Loader2, User as UserIcon, Phone } from 'lucide-react'
+import Link from 'next/link'
 import Logo from '@/components/common/Logo'
 
 type Role = 'operator' | 'worker'
@@ -22,6 +23,10 @@ export default function OnboardingPage() {
   const [loading, setLoading] = useState(false)
   const [err, setErr] = useState<string | null>(null)
   const [userEmail, setUserEmail] = useState<string | null>(null)
+  const [agreeTerms, setAgreeTerms] = useState(false)
+  const [agreePrivacy, setAgreePrivacy] = useState(false)
+  const [agreeLocation, setAgreeLocation] = useState(false)
+  const [agreeMarketing, setAgreeMarketing] = useState(false)
 
   useEffect(() => {
     (async () => {
@@ -60,6 +65,14 @@ export default function OnboardingPage() {
   const handleSubmit = async () => {
     if (!selectedRole || !name.trim() || !phone.trim()) {
       setErr('이름과 연락처를 입력해주세요.')
+      return
+    }
+    if (!agreeTerms || !agreePrivacy) {
+      setErr('이용약관 및 개인정보 처리방침에 동의해야 서비스를 이용할 수 있습니다.')
+      return
+    }
+    if (selectedRole === 'worker' && !agreeLocation) {
+      setErr('위치정보 수집에 동의해야 클린파트너로 활동할 수 있습니다.')
       return
     }
     setLoading(true)
@@ -124,12 +137,12 @@ export default function OnboardingPage() {
           className="flex-1 flex flex-col px-6 pt-4"
         >
           <h1 className="h-hero text-ink">
-            맡기러 오셨나요,
+            공간 청소를 맡기거나,
             <br />
-            벌러 오셨나요?
+            청소로 부수입 만드세요.
           </h1>
           <p className="t-body text-text-muted mt-3">
-            어떤 쪽이든 쓱싹은 항상 당신 편입니다.
+            공간파트너·클린파트너 — 쓱싹이 연결해드립니다.
           </p>
 
           <div className="flex flex-col gap-3 mt-8 flex-1">
@@ -218,6 +231,58 @@ export default function OnboardingPage() {
                 />
               </div>
             )}
+          </div>
+
+          {/* 동의 섹션 */}
+          <div className="mt-5 flex flex-col gap-2.5">
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="agreeAll"
+                checked={agreeTerms && agreePrivacy && agreeLocation && agreeMarketing}
+                onChange={(e) => {
+                  setAgreeTerms(e.target.checked)
+                  setAgreePrivacy(e.target.checked)
+                  setAgreeLocation(e.target.checked)
+                  setAgreeMarketing(e.target.checked)
+                }}
+                className="w-5 h-5 rounded-md accent-brand cursor-pointer"
+              />
+              <label htmlFor="agreeAll" className="text-[14px] font-extrabold text-ink cursor-pointer">
+                전체 동의
+              </label>
+            </div>
+            <div className="h-px bg-line-soft" />
+            <ConsentRow
+              id="agreeTerms"
+              checked={agreeTerms}
+              onChange={setAgreeTerms}
+              required
+              label="이용약관"
+              href="/terms"
+            />
+            <ConsentRow
+              id="agreePrivacy"
+              checked={agreePrivacy}
+              onChange={setAgreePrivacy}
+              required
+              label="개인정보 처리방침"
+              href="/privacy"
+            />
+            <ConsentRow
+              id="agreeLocation"
+              checked={agreeLocation}
+              onChange={setAgreeLocation}
+              required={selectedRole === 'worker'}
+              label={selectedRole === 'worker' ? '위치정보 수집 이용 (필수 — 도착 확인)' : '위치정보 수집 이용 (선택)'}
+            />
+            <ConsentRow
+              id="agreeMarketing"
+              checked={agreeMarketing}
+              onChange={setAgreeMarketing}
+              required={false}
+              label="마케팅 정보 수신 (선택 — 할인·이벤트 알림)"
+            />
           </div>
 
           {err && <p className="mt-4 text-[13px] font-bold text-danger">{err}</p>}
@@ -317,5 +382,43 @@ function RoleCard({
         )}
       </div>
     </button>
+  )
+}
+
+function ConsentRow({
+  id,
+  checked,
+  onChange,
+  required,
+  label,
+  href,
+}: {
+  id: string
+  checked: boolean
+  onChange: (v: boolean) => void
+  required: boolean
+  label: string
+  href?: string
+}) {
+  return (
+    <div className="flex items-center gap-2">
+      <input
+        type="checkbox"
+        id={id}
+        checked={checked}
+        onChange={(e) => onChange(e.target.checked)}
+        className="w-4 h-4 rounded accent-brand cursor-pointer shrink-0"
+      />
+      <label htmlFor={id} className="flex-1 text-[13px] font-semibold text-ink-soft cursor-pointer leading-snug">
+        {required && <span className="text-danger font-black mr-1">[필수]</span>}
+        {!required && <span className="text-text-faint font-bold mr-1">[선택]</span>}
+        {label}
+      </label>
+      {href && (
+        <Link href={href} className="text-[11px] font-bold text-brand-dark underline shrink-0" target="_blank">
+          보기
+        </Link>
+      )}
+    </div>
   )
 }

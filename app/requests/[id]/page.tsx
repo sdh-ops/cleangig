@@ -10,7 +10,11 @@ export default async function RequestDetailPage({ params }: { params: Promise<{ 
 
     const { data: job } = await supabase
         .from('jobs')
-        .select('*, spaces(*), users!jobs_worker_id_fkey(id, name, avg_rating, tier, profile_image)')
+        .select(`
+            *,
+            spaces(*),
+            users:jobs_worker_id_fkey(id, name, avg_rating, tier, profile_image, phone)
+        `)
         .eq('id', id)
         .single()
 
@@ -18,8 +22,12 @@ export default async function RequestDetailPage({ params }: { params: Promise<{ 
 
     let isFavorite = false
     if (job.worker_id) {
-        const { data: fav } = await supabase.from('favorite_partners')
-            .select('id').eq('operator_id', user.id).eq('worker_id', job.worker_id).maybeSingle()
+        const { data: fav } = await supabase
+            .from('favorite_partners')
+            .select('id')
+            .eq('operator_id', user.id)
+            .eq('worker_id', job.worker_id)
+            .maybeSingle()
         if (fav) isFavorite = true
     }
 

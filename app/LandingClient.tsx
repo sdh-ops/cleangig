@@ -84,9 +84,9 @@ export default function LandingClient() {
             transition={{ delay: 0.08, duration: 0.6 }}
             className="text-[40px] font-black leading-[1.12] tracking-[-0.035em] text-ink"
           >
-            청소 <span className="text-gradient-brand">맡기고</span>,
+            공간 청소, <span className="text-gradient-brand">원클릭</span>으로.
             <br />
-            청소로 <span className="text-gradient-brand">돈 벌고</span>
+            청소로 <span className="text-gradient-brand">부수입</span> 만들기.
           </motion.h1>
 
           <motion.p
@@ -149,7 +149,7 @@ export default function LandingClient() {
                   </div>
                   <div>
                     <p className="text-[10px] font-black text-brand uppercase tracking-widest">공간파트너</p>
-                    <h3 className="text-[17px] font-black text-ink leading-tight">청소 걱정 없는 운영</h3>
+                    <h3 className="text-[17px] font-black text-ink leading-tight">원할 때 바로, 30초 청소 요청</h3>
                   </div>
                 </div>
 
@@ -169,8 +169,9 @@ export default function LandingClient() {
                 </div>
 
                 <ul className="flex flex-col gap-1.5 relative z-10">
-                  <LI icon={<ShieldCheck size={12} />}>에스크로 결제 · AI 사진 검수로 품질 보장</LI>
-                  <LI icon={<Sparkles size={12} />}>체크리스트 기반 · 완료 사진 자동 보관</LI>
+                  <LI icon={<Zap size={12} />}>예약·당일 모두 OK — 앱 하나로 스케줄 관리</LI>
+                  <LI icon={<ShieldCheck size={12} />}>에스크로 결제 · AI 사진 검수 · 체크리스트 자동화</LI>
+                  <LI icon={<Sparkles size={12} />}>출발·도착·청소 시작·완료 실시간 상태 알림</LI>
                 </ul>
               </motion.div>
             ) : (
@@ -192,13 +193,13 @@ export default function LandingClient() {
                   </div>
                   <div>
                     <p className="text-[10px] font-black text-[#92580C] uppercase tracking-widest">클린파트너</p>
-                    <h3 className="text-[17px] font-black text-ink leading-tight">원하는 시간, 내 부업</h3>
+                    <h3 className="text-[17px] font-black text-ink leading-tight">초기 자본 0원, 눈치 없이 부수입</h3>
                   </div>
                 </div>
 
                 {/* Earnings highlight */}
                 <div className="bg-sun-soft rounded-2xl p-3.5 mb-3 relative z-10">
-                  <p className="text-[11px] font-bold text-[#92580C]">주말 파트타임 평균 월 수익</p>
+                  <p className="text-[11px] font-bold text-[#92580C]">주말 파트타임 평균 월 부수입</p>
                   <div className="flex items-baseline gap-1 mt-1">
                     <span className="t-money text-[28px] text-ink leading-none">40만</span>
                     <span className="text-[15px] font-black text-[#92580C]">원+</span>
@@ -207,8 +208,9 @@ export default function LandingClient() {
                 </div>
 
                 <ul className="flex flex-col gap-1.5 relative z-10">
-                  <LI icon={<Clock size={12} />}>근무 시간 · 지역 자유롭게 선택</LI>
-                  <LI icon={<Star size={12} />}>실력만큼 올라가는 티어 + 단골 수익</LI>
+                  <LI icon={<ShieldCheck size={12} />}>가입 즉시 시작 — 장비 구매·창업비용 없음</LI>
+                  <LI icon={<Clock size={12} />}>원하는 시간·지역만 골라서 본업 눈치 없이</LI>
+                  <LI icon={<Star size={12} />}>실적 쌓을수록 수수료 낮아지고 우선 매칭</LI>
                 </ul>
               </motion.div>
             )}
@@ -259,7 +261,7 @@ export default function LandingClient() {
           </Link>
           <span className="text-text-faint">·</span>
           <Link href="/login" className="flex items-center gap-1 hover:text-ink transition">
-            <Wallet size={12} /> 청소로 돈벌기
+            <Wallet size={12} /> 청소 부수입
           </Link>
         </div>
 

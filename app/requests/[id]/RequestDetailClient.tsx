@@ -18,6 +18,12 @@ import {
   AlertTriangle,
   Trash2,
   Heart,
+  Check,
+  ThumbsUp,
+  ThumbsDown,
+  Navigation,
+  Sparkles,
+  DollarSign,
 } from 'lucide-react'
 import StatusChip from '@/components/common/StatusChip'
 import ReviewModal from '@/components/common/ReviewModal'
@@ -25,11 +31,24 @@ import DisputeModal from '@/components/common/DisputeModal'
 import WorkerLiveMap from '@/components/common/WorkerLiveMap'
 import { formatKRW, formatScheduled, spaceTypeLabel } from '@/lib/utils'
 import { cancelRefundRate } from '@/lib/pricing'
+import { notify } from '@/lib/notifications'
 import type { JobStatus, SpaceType } from '@/lib/types'
+
+type SupplyLevel = 'low' | 'out'
+type SupplyStatusItem = { name: string; level: SupplyLevel }
+type ExtraChargeStatus = 'NONE' | 'REQUESTED' | 'APPROVED' | 'REJECTED'
+
+const SUPPLY_LEVEL_LABELS: Record<SupplyLevel, string> = { low: '거의 다 씀', out: '없음' }
+const SUPPLY_LEVEL_COLORS: Record<SupplyLevel, string> = {
+  low: 'bg-sun-soft text-[#92580C] border-sun/30',
+  out: 'bg-danger-soft text-danger border-danger/25',
+}
 
 type JobFull = {
   id: string
   status: JobStatus
+  operator_id: string
+  worker_id?: string | null
   price: number
   scheduled_at: string
   estimated_duration?: number
@@ -50,6 +69,11 @@ type JobFull = {
   checklist?: { id: string; label: string; required?: boolean; completed?: boolean; photo_url?: string }[]
   checklist_completed?: { id: string; label: string; required?: boolean; completed?: boolean; photo_url?: string }[]
   supply_shortages?: string[] | null
+  supply_status?: SupplyStatusItem[] | null
+  extra_charge_status?: ExtraChargeStatus | null
+  extra_charge_amount?: number | null
+  extra_charge_reason?: string | null
+  extra_charge_photos?: string[] | null
   spaces?: {
     id: string
     name: string
@@ -75,26 +99,29 @@ type Props = {
   initialIsFavorite?: boolean
 }
 
-export default function RequestDetailClient({ job, userId, initialIsFavorite = false }: Props) {
+export default function RequestDetailClient({ job: initialJob, userId, initialIsFavorite = false }: Props) {
   const router = useRouter()
   const supabase = createClient()
+  const [job, setJob] = useState<JobFull>(initialJob)
   const [isFavorite, setIsFavorite] = useState(initialIsFavorite)
   const [approving, setApproving] = useState(false)
   const [canceling, setCanceling] = useState(false)
   const [showCancel, setShowCancel] = useState(false)
   const [showReview, setShowReview] = useState(false)
   const [showDispute, setShowDispute] = useState(false)
+  const [respondingExtra, setRespondingExtra] = useState(false)
   const [err, setErr] = useState<string | null>(null)
 
   const checklist = job.checklist_completed?.length ? job.checklist_completed : (job.checklist || [])
+  const extraStatus = job.extra_charge_status ?? 'NONE'
 
   const toggleFavorite = async () => {
     if (!job.users?.id) return
     setIsFavorite((v) => !v)
     if (!isFavorite) {
-      await supabase.from('favorite_partners').insert({ operator_id: userId, worker_id: job.users.id })
+      await supabase.from('favorite_partners').insert({ operator_id: userId, worker_id: job.users!.id })
     } else {
-      await supabase.from('favorite_partners').delete().eq('operator_id', userId).eq('worker_id', job.users.id)
+      await supabase.from('favorite_partners').delete().eq('operator_id', userId).eq('worker_id', job.users!.id)
     }
   }
 
@@ -107,8 +134,18 @@ export default function RequestDetailClient({ job, userId, initialIsFavorite = f
         .update({ status: 'APPROVED', updated_at: new Date().toISOString() })
         .eq('id', job.id)
       if (error) throw error
+      setJob((j) => ({ ...j, status: 'APPROVED' as JobStatus }))
+      // 클린파트너에게 승인 알림
+      if (job.worker_id) {
+        notify({
+          userId: job.worker_id,
+          title: '작업이 승인됐어요! 정산이 곧 처리됩니다.',
+          message: `${job.spaces?.name ?? '작업'}이 승인됐습니다. 수고하셨어요!`,
+          url: `/clean/job/${job.id}`,
+          type: 'job_approved',
+        })
+      }
       setApproving(false)
-      // 승인 후 곧바로 리뷰 작성 유도
       if (job.users?.id) setShowReview(true)
       else router.refresh()
     } catch (e) {
@@ -136,10 +173,54 @@ export default function RequestDetailClient({ job, userId, initialIsFavorite = f
     setCanceling(false)
   }
 
+  const handleExtraCharge = async (approve: boolean) => {
+    if (!job.worker_id) return
+    setRespondingExtra(true)
+    setErr(null)
+    try {
+      const newStatus: ExtraChargeStatus = approve ? 'APPROVED' : 'REJECTED'
+      const { error } = await supabase
+        .from('jobs')
+        .update({ extra_charge_status: newStatus, updated_at: new Date().toISOString() })
+        .eq('id', job.id)
+      if (error) throw error
+      setJob((j) => ({ ...j, extra_charge_status: newStatus }))
+      // 클린파트너 알림
+      notify({
+        userId: job.worker_id,
+        title: approve ? '추가 청구가 승인됐어요!' : '추가 청구가 거절됐어요',
+        message: approve
+          ? `${formatKRW(job.extra_charge_amount ?? 0)} 추가 청구가 승인됐습니다. 정산에 포함됩니다.`
+          : `${job.spaces?.name ?? '작업'}의 추가 청구 요청이 거절됐습니다.`,
+        url: `/clean/job/${job.id}`,
+        type: approve ? 'extra_charge_approved' : 'extra_charge_rejected',
+      })
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : '처리 실패')
+    } finally {
+      setRespondingExtra(false)
+    }
+  }
+
   const canCancel = ['OPEN', 'ASSIGNED'].includes(job.status)
   const canApprove = job.status === 'SUBMITTED'
   const canReview = ['APPROVED', 'PAID_OUT'].includes(job.status) && !!job.users?.id
   const canDispute = ['EN_ROUTE', 'ARRIVED', 'IN_PROGRESS', 'SUBMITTED', 'APPROVED'].includes(job.status)
+
+  // 상태 타임라인
+  const STATUS_STEPS: { key: string; label: string; icon: React.ReactNode; desc: string }[] = [
+    { key: 'OPEN',        label: '매칭 중',   icon: <Clock size={13} />,         desc: '클린파트너 배정 대기' },
+    { key: 'ASSIGNED',   label: '배정완료',  icon: <CheckCircle2 size={13} />,   desc: '클린파트너 배정 확정' },
+    { key: 'EN_ROUTE',   label: '이동 중',   icon: <Navigation size={13} />,     desc: '현장으로 이동 중' },
+    { key: 'ARRIVED',    label: '도착',      icon: <MapPin size={13} />,         desc: '현장 도착 확인' },
+    { key: 'IN_PROGRESS',label: '청소 중',   icon: <Sparkles size={13} />,       desc: '작업 진행 중' },
+    { key: 'SUBMITTED',  label: '완료 보고', icon: <CheckCircle2 size={13} />,   desc: '결과 확인 요청' },
+    { key: 'APPROVED',   label: '승인 완료', icon: <DollarSign size={13} />,     desc: '정산 처리 중' },
+    { key: 'PAID_OUT',   label: '정산완료',  icon: <Check size={13} />,          desc: '전액 정산 완료' },
+  ]
+  const activeFlowStatuses = ['OPEN','ASSIGNED','EN_ROUTE','ARRIVED','IN_PROGRESS','SUBMITTED','APPROVED','PAID_OUT']
+  const currentStepIdx = STATUS_STEPS.findIndex(s => s.key === job.status)
+  const isActiveFlow = activeFlowStatuses.includes(job.status)
 
   return (
     <div className="sseuksak-shell">
@@ -155,7 +236,7 @@ export default function RequestDetailClient({ job, userId, initialIsFavorite = f
         </div>
       </header>
 
-      <div className="flex-1 pb-28">
+      <div className="flex-1 pb-28 overflow-y-auto">
         {/* Hero */}
         <div className="relative bg-ink text-white px-5 pt-5 pb-8">
           <div className="absolute -top-10 -right-8 w-48 h-48 bg-brand/25 rounded-full blur-3xl" />
@@ -177,9 +258,59 @@ export default function RequestDetailClient({ job, userId, initialIsFavorite = f
             <div className="mt-5">
               <p className="text-[11px] text-white/60 font-bold">총 결제 금액</p>
               <p className="t-money text-[26px] text-white">{formatKRW(job.price)}</p>
+              {extraStatus === 'APPROVED' && job.extra_charge_amount && (
+                <p className="text-[12px] text-brand-light font-bold mt-0.5">
+                  + 추가 청구 {formatKRW(job.extra_charge_amount)} 승인됨
+                </p>
+              )}
             </div>
           </div>
         </div>
+
+        {/* 진행 타임라인 */}
+        {isActiveFlow && (
+          <div className="px-5 pt-3 pb-1 relative z-10">
+            <div className="card p-4 mb-0">
+              <h3 className="text-[12px] font-extrabold text-text-soft uppercase tracking-wide mb-3">진행 현황</h3>
+              <div className="relative">
+                {/* 연결선 */}
+                <div className="absolute left-[15px] top-4 bottom-4 w-0.5 bg-line-soft" />
+                <ul className="flex flex-col gap-3 relative z-10">
+                  {STATUS_STEPS.filter(s => activeFlowStatuses.includes(s.key)).map((step, i) => {
+                    const done = i < currentStepIdx
+                    const active = i === currentStepIdx
+                    return (
+                      <li key={step.key} className="flex items-center gap-3">
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 border-2 transition-all ${
+                          active  ? 'bg-brand border-brand text-white shadow-brand-sm ring-4 ring-brand/20' :
+                          done    ? 'bg-brand border-brand text-white' :
+                                    'bg-surface border-line-soft text-text-faint'
+                        }`}>
+                          {step.icon}
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <span className={`text-[13px] font-extrabold ${active ? 'text-ink' : done ? 'text-text-soft' : 'text-text-faint'}`}>
+                              {step.label}
+                            </span>
+                            {active && (
+                              <span className="text-[10px] font-black text-brand bg-brand-softer px-2 py-0.5 rounded-full animate-pulse-ring">
+                                현재
+                              </span>
+                            )}
+                          </div>
+                          {active && (
+                            <p className="text-[11px] font-medium text-text-soft mt-0.5">{step.desc}</p>
+                          )}
+                        </div>
+                      </li>
+                    )
+                  })}
+                </ul>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="px-5 -mt-4 relative z-10">
           {/* Worker card */}
@@ -245,7 +376,7 @@ export default function RequestDetailClient({ job, userId, initialIsFavorite = f
             </div>
           ) : null}
 
-          {/* Live worker location (active states) */}
+          {/* Live worker location */}
           {['EN_ROUTE', 'ARRIVED', 'IN_PROGRESS'].includes(job.status) && job.spaces?.location?.coordinates && (
             <div className="card p-4 mb-4">
               <h3 className="text-[13.5px] font-extrabold text-ink mb-3">실시간 위치</h3>
@@ -267,6 +398,83 @@ export default function RequestDetailClient({ job, userId, initialIsFavorite = f
                 <span className="text-[12px] font-black text-[#92580C] uppercase tracking-wide">특별 요청사항</span>
               </div>
               <p className="text-[13.5px] font-semibold text-ink leading-snug">{job.special_instructions}</p>
+            </div>
+          )}
+
+          {/* 비품 부족 알림 (supply_status: 2레벨) */}
+          {((job.supply_status && job.supply_status.length > 0) || (job.supply_shortages && job.supply_shortages.length > 0)) && (
+            <div className="card p-4 mb-4">
+              <h3 className="text-[13.5px] font-extrabold text-ink mb-1">채워야 할 비품</h3>
+              <p className="text-[11.5px] text-text-soft font-medium mb-3 leading-snug">
+                클린파트너가 이번 청소 중 부족을 확인한 소모품이에요.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {job.supply_status && job.supply_status.length > 0
+                  ? job.supply_status.map((s) => (
+                      <span
+                        key={s.name}
+                        className={`px-3 py-1.5 rounded-full text-[12.5px] font-bold border ${SUPPLY_LEVEL_COLORS[s.level]}`}
+                      >
+                        {s.name}
+                        <span className="ml-1 text-[10.5px]">({SUPPLY_LEVEL_LABELS[s.level]})</span>
+                      </span>
+                    ))
+                  : job.supply_shortages?.map((s) => (
+                      <span key={s} className="px-3 py-1.5 rounded-full text-[12.5px] font-bold bg-sun-soft text-[#92580C] border border-sun/30">
+                        {s}
+                      </span>
+                    ))}
+              </div>
+            </div>
+          )}
+
+          {/* 추가 청구 요청 (host 승인/거절) */}
+          {extraStatus === 'REQUESTED' && job.extra_charge_amount && (
+            <div className="card p-4 mb-4 border-2 border-sun/30">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="w-2 h-2 rounded-full bg-sun animate-pulse" />
+                <h3 className="text-[13.5px] font-extrabold text-ink">추가 청구 요청</h3>
+              </div>
+              <p className="text-[13px] font-bold text-ink mb-0.5">{formatKRW(job.extra_charge_amount)}</p>
+              <p className="text-[12px] text-text-soft font-medium mb-3 leading-snug">{job.extra_charge_reason}</p>
+              {job.extra_charge_photos && job.extra_charge_photos.length > 0 && (
+                <div className="flex gap-2 mb-3 flex-wrap">
+                  {job.extra_charge_photos.map((url, i) => (
+                    <img key={i} src={url} alt="" className="w-20 h-20 rounded-lg object-cover border border-line-soft" />
+                  ))}
+                </div>
+              )}
+              {err && <p className="text-[12px] text-danger font-bold mb-2">{err}</p>}
+              <div className="flex gap-2">
+                <button
+                  onClick={() => handleExtraCharge(false)}
+                  disabled={respondingExtra}
+                  className="flex-1 btn btn-ghost !text-danger !border-danger/20 !text-sm"
+                >
+                  {respondingExtra ? <Loader2 size={14} className="animate-spin" /> : <><ThumbsDown size={14} /> 거절</>}
+                </button>
+                <button
+                  onClick={() => handleExtraCharge(true)}
+                  disabled={respondingExtra}
+                  className="flex-1 btn btn-primary !text-sm"
+                >
+                  {respondingExtra ? <Loader2 size={14} className="animate-spin" /> : <><ThumbsUp size={14} /> 승인</>}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {extraStatus === 'APPROVED' && job.extra_charge_amount && (
+            <div className="card p-3 mb-4 bg-brand-softer border border-brand/20">
+              <p className="text-[12.5px] font-bold text-brand-dark flex items-center gap-1.5">
+                <Check size={14} /> 추가 청구 {formatKRW(job.extra_charge_amount)} 승인 완료
+              </p>
+            </div>
+          )}
+
+          {extraStatus === 'REJECTED' && (
+            <div className="card p-3 mb-4 bg-surface-muted border border-line-soft">
+              <p className="text-[12.5px] font-bold text-text-soft">추가 청구 거절됨</p>
             </div>
           )}
 
@@ -292,23 +500,6 @@ export default function RequestDetailClient({ job, userId, initialIsFavorite = f
                   </li>
                 ))}
               </ul>
-            </div>
-          )}
-
-          {/* 부족 비품 (클린파트너가 현장에서 체크) */}
-          {job.supply_shortages && job.supply_shortages.length > 0 && (
-            <div className="card p-4 mb-4">
-              <h3 className="text-[13.5px] font-extrabold text-ink mb-1">채워야 할 비품</h3>
-              <p className="text-[11.5px] text-text-soft font-medium mb-3 leading-snug">
-                클린파트너가 이번 청소 중 부족을 확인한 소모품이에요. 다음 청소 전 채워주세요.
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {job.supply_shortages.map((s) => (
-                  <span key={s} className="px-3 py-1.5 rounded-full text-[12.5px] font-bold bg-sun-soft text-[#92580C] border border-sun/30">
-                    {s}
-                  </span>
-                ))}
-              </div>
             </div>
           )}
 
@@ -353,7 +544,7 @@ export default function RequestDetailClient({ job, userId, initialIsFavorite = f
             </div>
           )}
 
-          {err && (
+          {err && extraStatus !== 'REQUESTED' && (
             <div className="p-3.5 rounded-xl bg-danger-soft border border-danger/15 mb-4 flex items-start gap-2">
               <AlertTriangle size={16} className="text-danger shrink-0 mt-0.5" />
               <p className="text-[13px] font-bold text-danger leading-snug">{err}</p>
@@ -390,10 +581,22 @@ export default function RequestDetailClient({ job, userId, initialIsFavorite = f
         <ReviewModal
           open={showReview}
           onClose={() => { setShowReview(false); router.refresh() }}
-          onSubmitted={() => router.refresh()}
+          onSubmitted={() => {
+            if (job.worker_id) {
+              notify({
+                userId: job.worker_id,
+                title: '공간파트너가 리뷰를 남겼어요',
+                message: `${job.spaces?.name ?? '작업'}에 대한 리뷰가 등록됐습니다.`,
+                url: `/clean/job/${job.id}`,
+                type: 'review_received',
+              })
+            }
+            setShowReview(false)
+          }}
           jobId={job.id}
           revieweeId={job.users.id}
           revieweeName={job.users.name}
+          reviewType="operator_to_worker"
         />
       )}
 
@@ -406,7 +609,10 @@ export default function RequestDetailClient({ job, userId, initialIsFavorite = f
 
       {/* Cancel modal */}
       {showCancel && (
-        <div className="fixed inset-0 z-50 bg-ink/40 backdrop-blur-sm flex items-end sm:items-center justify-center" onClick={() => setShowCancel(false)}>
+        <div
+          className="fixed inset-0 z-50 bg-ink/40 backdrop-blur-sm flex items-end sm:items-center justify-center"
+          onClick={() => setShowCancel(false)}
+        >
           <motion.div
             initial={{ y: 60 }}
             animate={{ y: 0 }}
@@ -423,10 +629,12 @@ export default function RequestDetailClient({ job, userId, initialIsFavorite = f
               const policy = cancelRefundRate(job.scheduled_at)
               const refund = Math.round((job.price || 0) * policy.rate)
               const fee = (job.price || 0) - refund
+              const hoursLeft = (new Date(job.scheduled_at).getTime() - Date.now()) / (1000 * 60 * 60)
+              const willChargeDeposit = hoursLeft < 24 && !!job.worker_id
               return (
                 <>
                   <p className="t-caption mb-4">{policy.label}</p>
-                  <div className="card p-4 bg-surface-soft mb-5">
+                  <div className="card p-4 bg-surface-soft mb-4">
                     <div className="flex justify-between text-[13px] font-semibold text-text-muted py-1">
                       <span>결제 금액</span>
                       <span>{formatKRW(job.price || 0)}</span>
@@ -441,9 +649,17 @@ export default function RequestDetailClient({ job, userId, initialIsFavorite = f
                       <span>{formatKRW(refund)}</span>
                     </div>
                   </div>
+                  {willChargeDeposit && (
+                    <div className="p-3 rounded-xl bg-danger-soft border border-danger/20 mb-4">
+                      <p className="text-[12px] font-bold text-danger leading-snug">
+                        ⚠️ 24시간 이내 취소 + 클린파트너 배정 상태입니다. 보증금 5,000원이 추가로 차감됩니다.
+                      </p>
+                    </div>
+                  )}
                 </>
               )
             })()}
+            {err && <p className="text-[12.5px] text-danger font-bold mb-3">{err}</p>}
             <div className="flex gap-2">
               <button onClick={() => setShowCancel(false)} className="flex-1 btn btn-ghost">유지하기</button>
               <button onClick={handleCancel} disabled={canceling} className="flex-1 btn btn-primary !bg-danger">

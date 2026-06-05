@@ -128,18 +128,54 @@ export function computeMatchScore(inp: MatchInputs): MatchScore {
 
 /**
  * 작업자 Tier 계산
+ *
+ * 플랫폼 초기 현실성 반영 — 신규 파트너도 단기간에 Silver 도달 가능하도록 설계.
+ * STARTER → SILVER: 10건 이상 + 4.0점
+ * SILVER  → GOLD:   50건 이상 + 4.5점
+ * GOLD    → MASTER: 150건 이상 + 4.8점
  */
 export function computeWorkerTier(stats: { total_jobs: number; avg_rating: number }):
   'STARTER' | 'SILVER' | 'GOLD' | 'MASTER' {
-  if (stats.total_jobs >= 300 && stats.avg_rating >= 4.8) return 'MASTER'
-  if (stats.total_jobs >= 100 && stats.avg_rating >= 4.5) return 'GOLD'
-  if (stats.total_jobs >= 30 && stats.avg_rating >= 4.0) return 'SILVER'
+  if (stats.total_jobs >= 150 && stats.avg_rating >= 4.8) return 'MASTER'
+  if (stats.total_jobs >= 50 && stats.avg_rating >= 4.5) return 'GOLD'
+  if (stats.total_jobs >= 10 && stats.avg_rating >= 4.0) return 'SILVER'
   return 'STARTER'
 }
 
-export const TIER_BENEFITS: Record<string, { fee_discount: number; priority: number; label: string; color: string }> = {
-  STARTER: { fee_discount: 0, priority: 0, label: '스타터', color: '#94A3B8' },
-  SILVER: { fee_discount: 0.01, priority: 1, label: '실버', color: '#64748B' },
-  GOLD: { fee_discount: 0.02, priority: 2, label: '골드', color: '#F59E0B' },
-  MASTER: { fee_discount: 0.03, priority: 3, label: '마스터', color: '#0EA5E9' },
+/**
+ * 티어별 혜택
+ *
+ * fee_rate: 플랫폼 수수료율 (작업 수익에서 차감)
+ * fee_discount: 스타터(15%) 대비 절감율
+ * priority: 매칭 우선순위 (높을수록 우선)
+ */
+export const TIER_BENEFITS: Record<string, {
+  fee_rate: number       // 실제 수수료율 (예: 0.15 = 15%)
+  fee_discount: number   // 스타터 대비 절감 (예: 0.04 = 4%p 절감)
+  priority: number
+  label: string
+  color: string
+  badge: string          // 표시용 뱃지 텍스트
+  perks: string[]        // 혜택 요약
+}> = {
+  STARTER: {
+    fee_rate: 0.15, fee_discount: 0, priority: 0,
+    label: '스타터', color: '#94A3B8', badge: 'STARTER',
+    perks: ['수수료 15%', '기본 매칭'],
+  },
+  SILVER: {
+    fee_rate: 0.13, fee_discount: 0.02, priority: 1,
+    label: '실버', color: '#64748B', badge: 'SILVER',
+    perks: ['수수료 13% (-2%p)', '매칭 우선순위 ↑', '실버 배지'],
+  },
+  GOLD: {
+    fee_rate: 0.11, fee_discount: 0.04, priority: 2,
+    label: '골드', color: '#F59E0B', badge: 'GOLD',
+    perks: ['수수료 11% (-4%p)', '매칭 최우선', '골드 배지', '주간 정산 가능'],
+  },
+  MASTER: {
+    fee_rate: 0.09, fee_discount: 0.06, priority: 3,
+    label: '마스터', color: '#0EA5E9', badge: 'MASTER',
+    perks: ['수수료 9% (-6%p)', '단독 공간 제안', '마스터 배지', '전담 매니저'],
+  },
 }

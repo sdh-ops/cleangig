@@ -34,7 +34,8 @@ export default function NaverMap({
 }: Props) {
   const mapRef = useRef<HTMLDivElement>(null)
   const mapInstance = useRef<any>(null)
-  const markerObjs = useRef<any[]>([])
+  const markerObjs = useRef<any[]>([])   // data markers — cleared on update
+  const currentMarker = useRef<any>(null) // user "blue dot" — never cleared by marker update
   const [loading, setLoading] = useState(true)
   const [err, setErr] = useState<string | null>(null)
 
@@ -75,6 +76,7 @@ export default function NaverMap({
       if (showCurrent && navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
           (pos) => {
+            if (canceled) return
             const me = new naver.maps.Marker({
               position: new naver.maps.LatLng(pos.coords.latitude, pos.coords.longitude),
               map,
@@ -83,8 +85,9 @@ export default function NaverMap({
                   '<div style="width:16px;height:16px;background:#3B82F6;border:3px solid white;border-radius:50%;box-shadow:0 0 0 4px rgba(59,130,246,0.25)"></div>',
                 anchor: new naver.maps.Point(8, 8),
               },
+              zIndex: 500,
             })
-            markerObjs.current.push(me)
+            currentMarker.current = me
           },
           () => {},
           { enableHighAccuracy: true },
@@ -95,13 +98,14 @@ export default function NaverMap({
       canceled = true
       markerObjs.current.forEach((m) => m.setMap?.(null))
       markerObjs.current = []
+      if (currentMarker.current) { currentMarker.current.setMap(null); currentMarker.current = null }
       mapInstance.current = null
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {
-    if (!mapInstance.current || !window.naver) return
+    if (!mapInstance.current || !window.naver?.maps?.Marker) return
     const naver = window.naver
 
     // clear previous markers
@@ -125,8 +129,15 @@ export default function NaverMap({
       markerObjs.current.push(marker)
     })
 
+    // center override or fitBounds for multiple markers
     if (center) {
       mapInstance.current.setCenter(new naver.maps.LatLng(center.lat, center.lng))
+    } else if (markers.length > 1) {
+      const bounds = new naver.maps.LatLngBounds()
+      markers.forEach(m => bounds.extend(new naver.maps.LatLng(m.lat, m.lng)))
+      mapInstance.current.fitBounds(bounds, { top: 40, right: 40, bottom: 40, left: 40 })
+    } else if (markers.length === 1) {
+      mapInstance.current.setCenter(new naver.maps.LatLng(markers[0].lat, markers[0].lng))
     }
   }, [markers, center])
 

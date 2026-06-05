@@ -10,7 +10,7 @@ import BetaBadge from '@/components/common/BetaBadge'
 
 export const metadata: Metadata = {
   title: {
-    default: '쓱싹 - 청소 맡기고, 청소로 돈 벌고',
+    default: '쓱싹 - 공간 청소 원클릭 · 청소 부수입',
     template: '%s | 쓱싹',
   },
   description:
@@ -27,13 +27,13 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'ko_KR',
-    title: '쓱싹 - 청소 맡기고, 청소로 돈 벌고',
+    title: '쓱싹 - 공간 청소 원클릭 · 청소 부수입',
     description: '공간파트너와 클린파트너를 연결하는 청소 매칭 플랫폼.',
     siteName: '쓱싹',
   },
   twitter: {
     card: 'summary_large_image',
-    title: '쓱싹 - 청소 맡기고, 청소로 돈 벌고',
+    title: '쓱싹 - 공간 청소 원클릭 · 청소 부수입',
     description: '공간파트너와 클린파트너를 연결합니다.',
   },
   icons: {

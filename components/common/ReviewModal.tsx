@@ -5,12 +5,23 @@ import { createClient } from '@/lib/supabase/client'
 import { Star, X, Loader2 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
-type Category = 'cleanliness' | 'communication' | 'punctuality'
-const CATEGORIES: { key: Category; label: string }[] = [
-  { key: 'cleanliness', label: '청결도' },
-  { key: 'communication', label: '소통' },
-  { key: 'punctuality', label: '시간 준수' },
-]
+export type ReviewType = 'operator_to_worker' | 'worker_to_operator'
+
+const CATS_BY_TYPE: Record<ReviewType, { key: string; label: string }[]> = {
+  operator_to_worker: [
+    { key: 'cleanliness', label: '청결도' },
+    { key: 'communication', label: '소통' },
+    { key: 'punctuality', label: '시간 준수' },
+  ],
+  worker_to_operator: [
+    { key: 'guide_accuracy', label: '안내 정확도' },
+    { key: 'communication', label: '소통' },
+    { key: 'work_environment', label: '작업 환경' },
+  ],
+}
+
+const DEFAULT_BREAKDOWN = (reviewType: ReviewType) =>
+  Object.fromEntries(CATS_BY_TYPE[reviewType].map((c) => [c.key, 5]))
 
 type Props = {
   open: boolean
@@ -20,19 +31,32 @@ type Props = {
   revieweeId: string
   revieweeName?: string
   title?: string
+  reviewType?: ReviewType
 }
 
-export default function ReviewModal({ open, onClose, onSubmitted, jobId, revieweeId, revieweeName, title }: Props) {
+export default function ReviewModal({
+  open,
+  onClose,
+  onSubmitted,
+  jobId,
+  revieweeId,
+  revieweeName,
+  title,
+  reviewType = 'operator_to_worker',
+}: Props) {
   const supabase = createClient()
-  const [rating, setRating] = useState(5)
-  const [breakdown, setBreakdown] = useState<Record<Category, number>>({
-    cleanliness: 5,
-    communication: 5,
-    punctuality: 5,
-  })
+  const cats = CATS_BY_TYPE[reviewType]
+  const [breakdown, setBreakdown] = useState<Record<string, number>>(DEFAULT_BREAKDOWN(reviewType))
   const [comment, setComment] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [err, setErr] = useState<string | null>(null)
+
+  const avg = cats.reduce((sum, c) => sum + (breakdown[c.key] ?? 5), 0) / cats.length
+  const displayRating = Math.round(avg * 10) / 10
+
+  const updateBreakdown = (key: string, val: number) => {
+    setBreakdown((b) => ({ ...b, [key]: val }))
+  }
 
   const submit = async () => {
     setSubmitting(true)
@@ -40,17 +64,16 @@ export default function ReviewModal({ open, onClose, onSubmitted, jobId, reviewe
     try {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error('로그인이 필요해요')
-      const avg = (breakdown.cleanliness + breakdown.communication + breakdown.punctuality) / 3
-      const finalRating = Math.round(avg * 10) / 10
 
       const { error } = await supabase.from('reviews').insert({
         job_id: jobId,
         reviewer_id: user.id,
         reviewee_id: revieweeId,
-        rating: finalRating,
+        rating: displayRating,
         rating_breakdown: breakdown,
         comment: comment || null,
         is_public: true,
+        review_type: reviewType,
       })
       if (error) throw error
       onSubmitted?.()
@@ -81,36 +104,42 @@ export default function ReviewModal({ open, onClose, onSubmitted, jobId, reviewe
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-2">
-              <h3 className="h-section text-ink">{title || (revieweeName ? `${revieweeName}님과의 경험` : '리뷰 작성')}</h3>
-              <button onClick={onClose} className="w-8 h-8 rounded-full hover:bg-surface-muted flex items-center justify-center">
+              <h3 className="h-section text-ink">
+                {title || (revieweeName ? `${revieweeName}님과의 경험` : '리뷰 작성')}
+              </h3>
+              <button
+                onClick={onClose}
+                className="w-8 h-8 rounded-full hover:bg-surface-muted flex items-center justify-center"
+              >
                 <X size={18} />
               </button>
             </div>
-            <p className="t-caption mb-5">별점이 매너 온도와 티어에 반영돼요.</p>
+            <p className="t-caption mb-5">
+              {reviewType === 'worker_to_operator'
+                ? '안내·소통·환경을 솔직하게 평가해주세요.'
+                : '별점이 매너 온도와 티어에 반영돼요.'}
+            </p>
 
-            {CATEGORIES.map((cat) => (
+            {cats.map((cat) => (
               <div key={cat.key} className="mb-4">
                 <div className="flex items-center justify-between">
                   <span className="text-[13.5px] font-extrabold text-ink">{cat.label}</span>
-                  <span className="text-[12px] font-bold text-brand-dark">{breakdown[cat.key].toFixed(1)}</span>
+                  <span className="text-[12px] font-bold text-brand-dark">
+                    {(breakdown[cat.key] ?? 5).toFixed(1)}
+                  </span>
                 </div>
                 <div className="flex items-center gap-1.5 mt-1.5">
                   {[1, 2, 3, 4, 5].map((n) => (
                     <button
                       key={n}
-                      onClick={() => {
-                        setBreakdown((b) => ({ ...b, [cat.key]: n }))
-                        const next = { ...breakdown, [cat.key]: n }
-                        const avg = (next.cleanliness + next.communication + next.punctuality) / 3
-                        setRating(Math.round(avg * 10) / 10)
-                      }}
+                      onClick={() => updateBreakdown(cat.key, n)}
                       className="w-9 h-9 flex items-center justify-center"
                       aria-label={`${n}점`}
                     >
                       <Star
                         size={24}
-                        className={n <= breakdown[cat.key] ? 'text-sun' : 'text-line-strong'}
-                        fill={n <= breakdown[cat.key] ? 'currentColor' : 'none'}
+                        className={n <= (breakdown[cat.key] ?? 5) ? 'text-sun' : 'text-line-strong'}
+                        fill={n <= (breakdown[cat.key] ?? 5) ? 'currentColor' : 'none'}
                       />
                     </button>
                   ))}
@@ -130,10 +159,18 @@ export default function ReviewModal({ open, onClose, onSubmitted, jobId, reviewe
               />
             </div>
 
-            {err && <div className="mb-3 p-2.5 bg-danger-soft rounded-xl text-[12.5px] font-bold text-danger">{err}</div>}
+            {err && (
+              <div className="mb-3 p-2.5 bg-danger-soft rounded-xl text-[12.5px] font-bold text-danger">
+                {err}
+              </div>
+            )}
 
             <button onClick={submit} disabled={submitting} className="btn btn-primary w-full">
-              {submitting ? <Loader2 size={18} className="animate-spin" /> : `${rating.toFixed(1)}점 등록`}
+              {submitting ? (
+                <Loader2 size={18} className="animate-spin" />
+              ) : (
+                `${displayRating.toFixed(1)}점 등록`
+              )}
             </button>
           </motion.div>
         </motion.div>

@@ -30,13 +30,17 @@ export async function POST(req: Request) {
       .eq('id', user.id)
     if (error) throw error
 
-    // 민감정보 수집 동의 기록
-    await supabase.from('consents').insert({
-      user_id: user.id,
-      kind: 'SENSITIVE_ID',
-      agreed: true,
-      version: 'v1',
-    })
+    // 민감정보 수집 동의 기록 (테이블 없으면 무시)
+    try {
+      await supabase.from('consents').insert({
+        user_id: user.id,
+        kind: 'SENSITIVE_ID',
+        agreed: true,
+        version: 'v1',
+      })
+    } catch {
+      // consents 테이블 미배포 환경에서도 주 기능은 정상 작동
+    }
 
     return NextResponse.json({ ok: true })
   } catch (e) {

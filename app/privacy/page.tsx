@@ -51,14 +51,29 @@ export default function PrivacyPage() {
           </Section>
 
           <Section title="6. 위치정보 이용">
-            이용자가 동의한 경우에 한하여 위치정보를 수집하며, 실시간 작업 매칭과 도착 확인 목적으로만 사용됩니다. 동의 철회는 기기 설정에서 가능합니다. (위치정보의 보호 및 이용 등에 관한 법률 준수)
+            <ul className="list-disc pl-5">
+              <li><b>수집 근거</b>: 이용자의 별도 동의 (위치정보의 보호 및 이용 등에 관한 법률 준수)</li>
+              <li><b>수집 목적</b>: 실시간 작업 매칭, 도착 확인, 경로 안내</li>
+              <li><b>수집 항목</b>: GPS 기반 위도·경도, 수집 시각</li>
+              <li><b>보유 기간</b>: 작업 완료 후 30일, 이후 자동 삭제</li>
+              <li><b>동의 철회</b>: 앱 알림 설정 또는 기기 설정에서 언제든 철회 가능. 철회 시 클린파트너 도착 확인 기능이 제한됩니다.</li>
+            </ul>
           </Section>
 
-          <Section title="7. 이용자의 권리">
-            이용자는 언제든지 개인정보 열람, 수정, 삭제, 처리정지를 요구할 수 있으며, 회사는 지체 없이 조치합니다. 요청은 아래 연락처로 가능합니다.
+          <Section title="7. 마케팅 정보 수신">
+            회원 가입 시 선택적으로 동의한 경우에 한하여 이메일·앱 푸시를 통해 할인·이벤트 정보를 발송합니다. 수신을 원치 않으시면 프로필 &gt; 알림 설정에서 언제든 거부할 수 있습니다.
           </Section>
 
-          <Section title="8. 개인정보의 안전성 확보 조치">
+          <Section title="8. 이용자의 권리">
+            <ul className="list-disc pl-5">
+              <li>개인정보 열람, 수정, 삭제, 처리정지를 언제든 요구할 수 있습니다.</li>
+              <li>회사는 요청을 받은 날로부터 10일 이내에 조치합니다.</li>
+              <li>만 14세 미만 아동의 가입은 법정대리인 동의가 필요합니다.</li>
+              <li>요청: privacy@sseuksak.com 또는 고객센터</li>
+            </ul>
+          </Section>
+
+          <Section title="9. 개인정보의 안전성 확보 조치">
             <ul className="list-disc pl-5">
               <li>개인정보 암호화 저장 (AES-256)</li>
               <li>접근 권한 최소화 및 접근 로그 기록</li>
@@ -67,7 +82,7 @@ export default function PrivacyPage() {
             </ul>
           </Section>
 
-          <Section title="9. 개인정보 보호 책임자">
+          <Section title="10. 개인정보 보호 책임자">
             <div className="rounded-xl bg-surface-muted p-3 text-[13px]">
               <b>개인정보 보호 책임자</b>: 쓱싹 개인정보팀<br />
               <b>이메일</b>: privacy@sseuksak.com<br />
