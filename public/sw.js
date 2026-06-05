@@ -1,5 +1,5 @@
-// 쓱싹 Service Worker v1
-const CACHE_NAME = 'sseuksak-v1'
+// 쓱싹 Service Worker v2
+const CACHE_NAME = 'sseuksak-v2'
 const SHELL = ['/', '/favicon.ico', '/manifest.json']
 
 self.addEventListener('install', (event) => {
@@ -64,8 +64,8 @@ self.addEventListener('push', (event) => {
   const title = data.title || '쓱싹'
   const options = {
     body: data.message || '',
-    icon: '/icons/icon-192.png',
-    badge: '/icons/icon-192.png',
+    icon: '/icon',
+    badge: '/icon',
     vibrate: [80, 40, 80],
     tag: data.tag || 'sseuksak',
     data: { url: data.url || '/', ts: Date.now() },
