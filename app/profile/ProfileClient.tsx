@@ -252,14 +252,14 @@ function RowLink({
   badge?: boolean
 }) {
   return (
-    <Link href={href} className="flex items-center gap-3 px-4 py-3.5 hover:bg-surface-muted active:scale-[0.99] transition">
-      <div className="w-9 h-9 rounded-full bg-surface-muted text-text-muted flex items-center justify-center shrink-0">
+    <Link href={href} className="flex items-center gap-3 px-4 py-3.5 hover:bg-surface-muted active:scale-[0.99] transition-all">
+      <div className="w-9 h-9 rounded-xl bg-brand-softer text-brand-dark flex items-center justify-center shrink-0">
         {icon}
       </div>
       <div className="flex-1 text-[14px] font-extrabold text-ink">{label}</div>
-      {badge && <span className="chip chip-danger !text-[10px] !px-2 !py-0">필요</span>}
+      {badge && <span className="chip chip-danger text-[10px] px-2 py-0">필요</span>}
       {value && <span className="text-[12.5px] font-bold text-text-soft">{value}</span>}
-      <ChevronRight size={16} className="text-text-faint" />
+      <ChevronRight size={15} className="text-text-faint" />
     </Link>
   )
 }

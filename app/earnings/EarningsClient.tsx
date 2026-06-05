@@ -39,11 +39,12 @@ export default function EarningsClient({ profile, payments, totalEarned, pending
       <div className="flex-1 pb-28">
         {/* Hero */}
         <div className="px-5 pt-4">
-          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="rounded-3xl bg-ink text-white p-5 overflow-hidden relative">
-            <div className="absolute -top-8 -right-8 w-40 h-40 bg-brand/25 rounded-full blur-3xl" />
+          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="card-dark p-5">
+            <div className="absolute -top-10 -right-10 w-44 h-44 bg-brand/25 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute bottom-0 left-0 w-32 h-32 bg-sun/10 rounded-full blur-2xl pointer-events-none" />
             <div className="relative z-10">
-              <p className="text-[11px] text-white/70 font-bold">총 수익 (정산 완료)</p>
-              <p className="t-money text-[32px] text-white leading-tight mt-1">{formatKRW(totalEarned)}</p>
+              <p className="text-[10.5px] text-white/60 font-bold uppercase tracking-widest mb-1">총 수익 (정산 완료)</p>
+              <p className="t-money text-[36px] text-white leading-tight">{formatKRW(totalEarned)}</p>
               <div className="mt-4 grid grid-cols-2 gap-2">
                 <Stat label="이번 달" value={formatKRW(monthEarned, { short: true })} icon={<TrendingUp size={14} />} />
                 <Stat label="정산 대기" value={formatKRW(pendingAmount, { short: true })} icon={<Clock size={14} />} />

@@ -5,7 +5,6 @@ import { usePathname } from 'next/navigation'
 import { Home, Briefcase, MapPinned, User, Wallet, Building2, Calendar } from 'lucide-react'
 
 type Role = 'operator' | 'worker'
-
 type Tab = { href: string; label: string; icon: React.ElementType; match: (p: string) => boolean }
 
 const OPERATOR_TABS: Tab[] = [
@@ -44,11 +43,29 @@ export default function BottomNav({ role }: { role: Role }) {
               <li key={t.href} className="flex-1">
                 <Link
                   href={t.href}
-                  className={`tab-item ${active ? 'active' : ''}`}
+                  className={`flex flex-col items-center justify-center gap-0.5 pt-2.5 pb-2 flex-1 w-full transition-colors relative ${
+                    active ? 'text-brand-dark' : 'text-text-faint'
+                  }`}
                   aria-current={active ? 'page' : undefined}
                 >
-                  <Icon size={22} strokeWidth={active ? 2.5 : 2} />
-                  <span className="text-[11px] font-bold tracking-tight">{t.label}</span>
+                  {/* Active pill indicator */}
+                  {active && (
+                    <span
+                      className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full bg-brand"
+                    />
+                  )}
+                  <Icon
+                    size={22}
+                    strokeWidth={active ? 2.5 : 1.8}
+                    className={active ? 'text-brand-dark' : 'text-text-faint'}
+                  />
+                  <span
+                    className={`text-[10.5px] tracking-tight font-bold transition-all ${
+                      active ? 'text-brand-dark' : 'text-text-faint'
+                    }`}
+                  >
+                    {t.label}
+                  </span>
                 </Link>
               </li>
             )

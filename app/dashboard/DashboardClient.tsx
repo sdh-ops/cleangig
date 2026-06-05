@@ -12,6 +12,7 @@ import {
   TrendingUp,
   Zap,
   Wallet,
+  ArrowRight,
 } from 'lucide-react'
 import Header from '@/components/common/Header'
 import BottomNav from '@/components/common/BottomNav'
@@ -76,13 +77,13 @@ export default function DashboardClient({
   unreadCount,
 }: Props) {
   const router = useRouter()
-  const greeting = (() => {
-    const h = new Date().getHours()
-    if (h < 5) return '늦은 밤입니다'
-    if (h < 12) return '좋은 아침이에요'
-    if (h < 18) return '안녕하세요'
-    return '좋은 저녁이에요'
-  })()
+  const hour = new Date().getHours()
+  const greeting =
+    hour < 5 ? '늦은 밤이에요' :
+    hour < 12 ? '좋은 아침이에요' :
+    hour < 18 ? '안녕하세요' : '좋은 저녁이에요'
+
+  const completionRate = monthCount > 0 ? Math.round((monthApproved / monthCount) * 100) : 0
 
   return (
     <div className="sseuksak-shell">
@@ -90,13 +91,15 @@ export default function DashboardClient({
       <Header showLogo showBell unreadCount={unreadCount} />
 
       <div className="page-container flex-1">
+
+        {/* Greeting */}
         <motion.section
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           className="mb-5 pt-2"
         >
           <p className="t-caption">{greeting}, 공간파트너님</p>
-          <h1 className="h-hero text-ink mt-1">
+          <h1 className="h-hero text-ink mt-0.5">
             {profile.business_name || profile.name}
             <span className="text-text-faint text-xl font-extrabold">님</span>
           </h1>
@@ -116,52 +119,66 @@ export default function DashboardClient({
           />
         </div>
 
+        {/* Today hero card */}
         <motion.section
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.05 }}
           className="mb-5"
         >
-          <div className="rounded-3xl bg-ink text-white p-5 overflow-hidden relative">
-            <div className="absolute -top-8 -right-8 w-40 h-40 bg-brand/30 rounded-full blur-3xl" />
+          <div className="card-dark p-5">
+            {/* Glow blobs */}
+            <div className="absolute -top-10 -right-10 w-48 h-48 bg-brand/25 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute bottom-0 left-0 w-32 h-32 bg-sun/15 rounded-full blur-2xl pointer-events-none" />
+
             <div className="relative z-10">
-              <p className="text-white/70 text-xs font-bold">오늘의 작업</p>
-              <div className="mt-1 flex items-baseline gap-2">
-                <span className="t-money text-4xl">{todayJobs.length}</span>
-                <span className="text-white/70 text-sm font-bold">건 예정</span>
+              <div className="flex items-center justify-between mb-1">
+                <p className="text-white/60 text-[11px] font-bold uppercase tracking-widest">오늘의 작업</p>
+                <span className="text-[11px] font-black text-brand-light bg-brand/20 px-2.5 py-1 rounded-full">
+                  {new Date().toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' })}
+                </span>
               </div>
+
+              <div className="flex items-baseline gap-2 mt-2">
+                <span className="t-money text-[48px] text-white leading-none">{todayJobs.length}</span>
+                <span className="text-white/60 text-[15px] font-bold mb-1">건 예정</span>
+              </div>
+
               {todayJobs.length > 0 ? (
-                <div className="mt-4 text-[13px] font-semibold text-white/85 leading-snug">
-                  가장 빠른 작업:{' '}
-                  <span className="text-brand-light font-extrabold">
+                <div className="mt-3 p-3 rounded-2xl bg-white/10 backdrop-blur-sm">
+                  <p className="text-[11px] text-white/60 font-bold mb-0.5">가장 빠른 작업</p>
+                  <p className="text-[14px] font-extrabold text-brand-light">
                     {formatScheduled(todayJobs[0].scheduled_at)}
-                  </span>{' '}
-                  · {todayJobs[0].spaces?.name}
+                  </p>
+                  <p className="text-[12px] text-white/70 font-semibold mt-0.5">
+                    {todayJobs[0].spaces?.name}
+                  </p>
                 </div>
               ) : (
-                <p className="mt-4 text-[13px] font-semibold text-white/75">
-                  오늘 예정된 작업이 없어요. 새로운 요청을 만들어보세요.
+                <p className="mt-3 text-[13px] font-semibold text-white/60 leading-relaxed">
+                  오늘 예정된 작업이 없어요.<br />새로운 청소 요청을 만들어보세요.
                 </p>
               )}
 
-              <div className="mt-5 flex gap-2">
+              <div className="mt-4 flex gap-2">
                 <Link
                   href="/requests/create"
-                  className="flex-1 flex items-center justify-center gap-1.5 h-11 rounded-xl bg-brand text-ink font-black text-sm shadow-sm active:scale-[0.98] transition"
+                  className="flex-1 flex items-center justify-center gap-1.5 h-11 rounded-xl bg-brand text-ink font-black text-[13.5px] active:scale-[0.98] transition shadow-sm"
                 >
-                  <Zap size={16} strokeWidth={2.6} /> 즉시 요청
+                  <Zap size={15} strokeWidth={2.6} /> 즉시 요청
                 </Link>
                 <Link
                   href="/requests"
-                  className="flex items-center justify-center h-11 px-4 rounded-xl bg-white/10 text-white font-bold text-sm active:scale-[0.98] transition"
+                  className="flex items-center justify-center gap-1.5 h-11 px-4 rounded-xl bg-white/10 text-white font-bold text-[13.5px] active:scale-[0.98] transition"
                 >
-                  요청 전체보기
+                  전체보기 <ArrowRight size={14} />
                 </Link>
               </div>
             </div>
           </div>
         </motion.section>
 
+        {/* Metrics */}
         <section className="grid grid-cols-2 gap-3 mb-6">
           <MetricCard
             label="이번 달 지출"
@@ -171,18 +188,18 @@ export default function DashboardClient({
           />
           <MetricCard
             label="완료율"
-            value={monthCount > 0 ? Math.round((monthApproved / monthCount) * 100) : 0}
+            value={completionRate}
             unit="%"
             icon={<TrendingUp size={16} />}
+            delta={monthCount > 0 ? { value: completionRate, positive: completionRate >= 80 } : undefined}
           />
         </section>
 
+        {/* Spaces */}
         <section className="mb-7">
-          <div className="flex items-center justify-between mb-3 px-1">
-            <h2 className="h-section text-ink">내 공간</h2>
-            <Link href="/spaces" className="text-xs font-bold text-text-muted flex items-center gap-0.5">
-              전체 <ChevronRight size={14} />
-            </Link>
+          <div className="section-header">
+            <h2>내 공간</h2>
+            <Link href="/spaces">전체 <ChevronRight size={14} /></Link>
           </div>
 
           {spaces.length === 0 ? (
@@ -198,45 +215,48 @@ export default function DashboardClient({
           ) : (
             <div className="flex gap-3 overflow-x-auto no-scrollbar -mx-1 px-1 pb-1">
               {spaces.map((s) => (
-                <Link key={s.id} href={`/spaces/${s.id}`} className="shrink-0 w-[200px] card-interactive p-4">
-                  <div className="w-full aspect-[16/10] rounded-xl bg-surface-muted overflow-hidden mb-3 relative">
+                <Link key={s.id} href={`/spaces/${s.id}`} className="shrink-0 w-[200px] card-interactive p-0 overflow-hidden">
+                  {/* Photo */}
+                  <div className="w-full aspect-[16/10] bg-brand-softer overflow-hidden relative">
                     {s.photos?.[0] ? (
                       <img src={s.photos[0]} alt={s.name} className="w-full h-full object-cover" />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-text-faint">
+                      <div className="w-full h-full flex items-center justify-center text-brand-dark">
                         <Building2 size={28} />
                       </div>
                     )}
                     {s.is_active && (
-                      <span className="absolute top-2 right-2 chip chip-brand text-[10px] px-2 py-0.5">운영중</span>
+                      <span className="absolute top-2 right-2 chip chip-success text-[10px] px-2 py-0.5 shadow-sm">운영중</span>
                     )}
                   </div>
-                  <h3 className="text-[14px] font-extrabold text-ink truncate">{s.name}</h3>
-                  <p className="text-[11.5px] text-text-soft font-bold mt-0.5">
-                    {spaceTypeLabel(s.type)} · 기본 {formatKRW(s.base_price, { short: true })}
-                  </p>
+                  {/* Info */}
+                  <div className="p-3.5">
+                    <h3 className="text-[13.5px] font-extrabold text-ink truncate">{s.name}</h3>
+                    <p className="text-[11px] text-text-soft font-bold mt-0.5">
+                      {spaceTypeLabel(s.type)} · {formatKRW(s.base_price, { short: true })}
+                    </p>
+                  </div>
                 </Link>
               ))}
               <Link
                 href="/spaces/create"
-                className="shrink-0 w-[140px] card-interactive flex flex-col items-center justify-center text-center p-4"
-                style={{ borderStyle: 'dashed' }}
+                className="shrink-0 w-[120px] card-interactive flex flex-col items-center justify-center text-center p-4"
+                style={{ borderStyle: 'dashed', minHeight: '150px' }}
               >
                 <div className="w-10 h-10 rounded-full bg-brand-softer text-brand-dark flex items-center justify-center mb-2">
                   <Plus size={20} />
                 </div>
-                <span className="text-[13px] font-extrabold text-ink">공간 추가</span>
+                <span className="text-[12px] font-extrabold text-ink">공간 추가</span>
               </Link>
             </div>
           )}
         </section>
 
+        {/* Recent requests */}
         <section>
-          <div className="flex items-center justify-between mb-3 px-1">
-            <h2 className="h-section text-ink">최근 요청</h2>
-            <Link href="/requests" className="text-xs font-bold text-text-muted flex items-center gap-0.5">
-              전체 <ChevronRight size={14} />
-            </Link>
+          <div className="section-header">
+            <h2>최근 요청</h2>
+            <Link href="/requests">전체 <ChevronRight size={14} /></Link>
           </div>
 
           {recentJobs.length === 0 ? (
@@ -250,35 +270,42 @@ export default function DashboardClient({
               />
             </div>
           ) : (
-            <ul className="flex flex-col gap-3">
-              {recentJobs.map((job) => (
-                <li key={job.id}>
+            <ul className="flex flex-col gap-2.5">
+              {recentJobs.map((job, i) => (
+                <motion.li
+                  key={job.id}
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 + i * 0.04 }}
+                >
                   <Link href={`/requests/${job.id}`} className="card-interactive p-4 flex items-center gap-3">
-                    <div className="w-11 h-11 rounded-xl bg-brand-softer flex items-center justify-center shrink-0">
-                      <Sparkles size={18} className="text-brand-dark" />
+                    <div className="icon-box icon-box-md icon-box-brand shrink-0">
+                      <Sparkles size={18} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1.5">
+                      <div className="flex items-center gap-1.5 mb-1">
                         <StatusChip kind="job" status={job.status} size="sm" />
-                        {job.is_urgent && <span className="chip chip-danger text-[10px] px-1.5 py-0">긴급</span>}
+                        {job.is_urgent && (
+                          <span className="chip chip-danger text-[10px] px-1.5 py-0">긴급</span>
+                        )}
                       </div>
-                      <h4 className="text-[14.5px] font-extrabold text-ink truncate mt-1">
+                      <h4 className="text-[14px] font-extrabold text-ink truncate">
                         {job.spaces?.name || '공간'}
                       </h4>
-                      <p className="text-[11.5px] text-text-soft font-bold truncate flex items-center gap-1 mt-0.5">
-                        <Clock size={11} />
+                      <p className="text-[11.5px] text-text-soft font-bold flex items-center gap-1 mt-0.5 truncate">
+                        <Clock size={10} />
                         {formatScheduled(job.scheduled_at)}
-                        {job.users?.name && <span className="ml-1">· {job.users.name}</span>}
+                        {job.users?.name && <span className="ml-1 truncate">· {job.users.name}</span>}
                       </p>
                     </div>
-                    <div className="text-right shrink-0">
-                      <div className="t-money text-[15px] text-ink">
+                    <div className="text-right shrink-0 flex flex-col items-end gap-1">
+                      <div className="t-money text-[14.5px] text-ink font-black">
                         {formatKRW(job.price, { short: true })}
                       </div>
-                      <ChevronRight size={16} className="text-text-faint ml-auto mt-0.5" />
+                      <ChevronRight size={14} className="text-text-faint" />
                     </div>
                   </Link>
-                </li>
+                </motion.li>
               ))}
             </ul>
           )}
