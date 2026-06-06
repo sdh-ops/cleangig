@@ -33,7 +33,7 @@ export default async function HostPaymentsPage() {
 
   return (
     <div className="sseuksak-shell">
-      <Header title="결제 내역" />
+      <Header title="결제 내역" showBack />
       <div className="flex-1 pb-28 px-5 pt-4">
         <div className="grid grid-cols-2 gap-3 mb-5">
           <SummaryCard label="이번 달 지출" value={formatKRW(monthPaid, { short: true })} />

@@ -35,7 +35,7 @@ type Props = {
 export default function EarningsClient({ profile, payments, totalEarned, pendingAmount, monthEarned, ytdWht = 0 }: Props) {
   return (
     <div className="sseuksak-shell">
-      <Header title="수익 관리" />
+      <Header showLogo showBell />
       <div className="flex-1 pb-28">
         {/* Hero */}
         <div className="px-5 pt-4">

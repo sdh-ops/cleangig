@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { ChevronLeft, Check, Loader2, Banknote, ShieldCheck } from 'lucide-react'
+import Link from 'next/link'
+import { ChevronLeft, Home, Check, Loader2, Banknote, ShieldCheck } from 'lucide-react'
 
 const BANKS = [
   'KB국민', '신한', '우리', '하나', 'NH농협', 'IBK기업', 'SC제일', '씨티',
@@ -68,9 +69,14 @@ export default function BankAccountPage() {
   return (
     <div className="sseuksak-shell">
       <header className="flex items-center h-14 px-3 safe-top border-b border-line-soft bg-surface">
-        <button onClick={() => router.back()} className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-muted">
-          <ChevronLeft size={22} />
-        </button>
+        <div className="flex items-center gap-0.5">
+          <button onClick={() => router.back()} className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-muted">
+            <ChevronLeft size={22} />
+          </button>
+          <Link href="/profile" aria-label="내 정보" className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-surface-muted">
+            <Home size={16} className="text-text-soft" />
+          </Link>
+        </div>
         <h1 className="flex-1 text-center text-[15px] font-extrabold">정산 계좌</h1>
         <div className="w-10" />
       </header>

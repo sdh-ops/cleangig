@@ -78,7 +78,7 @@ export default function CalendarClient({ role, jobs, year, month }: Props) {
 
   return (
     <div className="sseuksak-shell">
-      <Header title="캘린더" showBell />
+      <Header showLogo showBell />
 
       <div className="flex-1 pb-28 px-5 pt-4">
         {/* Month nav */}

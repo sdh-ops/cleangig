@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useState } from 'react'
 import {
   ChevronLeft,
+  Home,
   MapPin,
   Edit3,
   Calendar,
@@ -92,9 +93,14 @@ export default function SpaceDetailClient({ space, isOwner, totalJobs, monthCoun
     <div className="sseuksak-shell">
       <header className="sticky top-0 z-20 glass border-b border-line-soft safe-top">
         <div className="flex items-center h-14 px-3">
-          <button onClick={() => router.back()} className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-muted">
-            <ChevronLeft size={22} />
-          </button>
+          <div className="flex items-center gap-0.5">
+            <button onClick={() => router.back()} className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-muted">
+              <ChevronLeft size={22} />
+            </button>
+            <Link href="/spaces" aria-label="공간 목록" className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-surface-muted">
+              <Home size={16} className="text-text-soft" />
+            </Link>
+          </div>
           <div className="flex-1 text-center">
             <h1 className="text-[14.5px] font-extrabold text-ink truncate">{space.name}</h1>
           </div>

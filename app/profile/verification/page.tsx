@@ -4,7 +4,8 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { uploadImage } from '@/lib/storage'
-import { ChevronLeft, ShieldCheck, Check, Loader2, Upload, AlertCircle, BadgeCheck } from 'lucide-react'
+import Link from 'next/link'
+import { ChevronLeft, Home, ShieldCheck, Check, Loader2, Upload, AlertCircle, BadgeCheck } from 'lucide-react'
 
 export default function VerificationPage() {
   const router = useRouter()
@@ -56,9 +57,14 @@ export default function VerificationPage() {
   return (
     <div className="sseuksak-shell">
       <header className="flex items-center h-14 px-3 safe-top border-b border-line-soft bg-surface">
-        <button onClick={() => router.back()} className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-muted">
-          <ChevronLeft size={22} />
-        </button>
+        <div className="flex items-center gap-0.5">
+          <button onClick={() => router.back()} className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-muted">
+            <ChevronLeft size={22} />
+          </button>
+          <Link href="/profile" aria-label="내 정보" className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-surface-muted">
+            <Home size={16} className="text-text-soft" />
+          </Link>
+        </div>
         <h1 className="flex-1 text-center text-[15px] font-extrabold">본인 인증</h1>
         <div className="w-10" />
       </header>

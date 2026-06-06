@@ -214,9 +214,8 @@ export default function JobsListPage() {
 
       {/* 헤더 */}
       <Header
-        title="작업 찾기"
-        showBack={false}
-        showLogo={false}
+        showLogo
+        showBell
         sticky
         rightSlot={
           <div className="flex items-center gap-0.5 bg-surface-muted rounded-xl p-0.5 mr-1">

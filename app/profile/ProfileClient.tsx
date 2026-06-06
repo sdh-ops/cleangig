@@ -61,7 +61,7 @@ export default function ProfileClient({ profile, totalCompletedJobs, isAdmin = f
 
   return (
     <div className="sseuksak-shell">
-      <Header title="내 정보" sticky />
+      <Header showLogo sticky />
 
       <div className="flex-1 pb-28">
         <div className="px-5 pt-5 pb-6 bg-gradient-to-br from-brand to-brand-dark text-white relative overflow-hidden">

@@ -36,7 +36,7 @@ export default async function RequestsPage(props: { searchParams?: Promise<{ tab
   return (
     <div className="sseuksak-shell">
       <RequestsRefreshBridge />
-      <Header title="내 요청 내역" showBell />
+      <Header showLogo showBell />
       {/* Tabs */}
       <div className="sticky top-14 z-10 bg-canvas/95 backdrop-blur border-b border-line-soft">
         <div className="flex px-3">

@@ -23,7 +23,7 @@ export default async function SpacesListPage() {
   return (
     <div className="sseuksak-shell">
       <Header
-        title="내 공간"
+        showLogo
         rightSlot={
           <Link
             href="/spaces/create"

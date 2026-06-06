@@ -35,7 +35,7 @@ export default async function ActiveJobsPage() {
 
   return (
     <div className="sseuksak-shell">
-      <Header title="진행 중 작업" showBell />
+      <Header title="진행 중 작업" showBack showBell />
       <div className="flex-1 pb-28">
         {jobs.length === 0 ? (
           <div className="px-5 pt-5">

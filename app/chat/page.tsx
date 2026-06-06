@@ -101,7 +101,7 @@ export default function ChatListPage() {
 
   return (
     <div className="sseuksak-shell">
-      <Header title="메시지" />
+      <Header title="메시지" showBack />
       <div className="sticky top-14 z-10 px-5 py-3 bg-canvas/95 backdrop-blur border-b border-line-soft">
         <div className="relative">
           <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-text-faint" />
