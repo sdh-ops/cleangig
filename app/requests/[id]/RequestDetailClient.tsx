@@ -374,7 +374,7 @@ export default function RequestDetailClient({ job: initialJob, userId, initialIs
                 <div className="flex-1">
                   <p className="text-[13.5px] font-extrabold text-ink">매칭 중입니다</p>
                   <p className="text-[11.5px] font-bold text-text-muted mt-0.5">
-                    근처 마스터 클린파트너에게 알림을 보냈어요. 평균 4분
+                    근처 클린파트너에게 알림을 보냈어요. 곧 매칭돼요
                   </p>
                 </div>
               </div>

@@ -74,7 +74,7 @@ export default function LandingClient() {
               <div className="grid grid-cols-3 gap-1.5 mb-3">
                 {[
                   { step: '01', text: '요청 등록', sub: '30초' },
-                  { step: '02', text: '파트너 매칭', sub: '평균 4분' },
+                  { step: '02', text: '파트너 매칭', sub: '빠른 매칭' },
                   { step: '03', text: '완료 확인', sub: 'AI 검수' },
                 ].map((s, i) => (
                   <div key={i} className="bg-brand-surface rounded-xl p-2.5 text-center">
@@ -104,12 +104,12 @@ export default function LandingClient() {
               </div>
 
               <div className="bg-sun-soft rounded-2xl p-3.5 mb-3">
-                <p className="text-[11px] font-bold text-[#92580C]">주말 파트타임 평균 월 부수입</p>
+                <p className="text-[11px] font-bold text-[#92580C]">청소 1건당 예상 수입</p>
                 <div className="flex items-baseline gap-1 mt-1">
-                  <span className="t-money text-[28px] text-ink leading-none">40만</span>
-                  <span className="text-[15px] font-black text-[#92580C]">원+</span>
+                  <span className="t-money text-[28px] text-ink leading-none">3~5만</span>
+                  <span className="text-[15px] font-black text-[#92580C]">원</span>
                 </div>
-                <p className="text-[10.5px] font-semibold text-[#92580C]/70 mt-0.5">건당 3~5만원 · 주 1회 정산</p>
+                <p className="text-[10.5px] font-semibold text-[#92580C]/70 mt-0.5">난이도·면적별 차등 · 주 1회 정산</p>
               </div>
 
               <ul className="flex flex-col gap-1.5">
