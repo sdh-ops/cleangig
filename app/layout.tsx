@@ -66,7 +66,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="format-detection" content="telephone=no" />
         {naverId && (
           <Script
-            strategy="beforeInteractive"
+            strategy="afterInteractive"
             src={`https://oapi.map.naver.com/openapi/v3/maps.js?ncpClientId=${naverId}&submodules=geocoder`}
           />
         )}

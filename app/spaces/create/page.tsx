@@ -105,7 +105,7 @@ export default function CreateSpacePage() {
 
   const canProceed = (() => {
     if (step === 1) return !!type
-    if (step === 2) return !!address.trim() && !!coords && !geoLoading
+    if (step === 2) return !!address.trim() && !geoLoading
     if (step === 3) return !!name.trim()
     if (step === 4) return true
     if (step === 5) return checklist.length > 0
@@ -283,9 +283,9 @@ export default function CreateSpacePage() {
               </div>
 
               {address.trim() && !coords && !geoLoading && (
-                <div className="flex items-center gap-2 p-3 bg-warning-soft rounded-xl border border-warning/20">
-                  <span className="text-warning text-sm">⚠️</span>
-                  <p className="text-[12.5px] font-bold text-[#B45309]">주소를 찾지 못했어요. 정확한 도로명 주소를 입력하거나 검색 버튼을 눌러주세요.</p>
+                <div className="flex items-center gap-2 p-3 bg-info-soft rounded-xl border border-info/20">
+                  <span className="text-info text-sm">ℹ️</span>
+                  <p className="text-[12.5px] font-bold text-ink-soft">지도 표시를 건너뛰고 계속 진행할 수 있어요. 공간 등록 후 위치를 수정할 수 있습니다.</p>
                 </div>
               )}
 
