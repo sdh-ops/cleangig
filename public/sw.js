@@ -1,6 +1,6 @@
-// 쓱싹 Service Worker v3
-// v2 → v3: navigation(SSR HTML) 캐싱 제거 — stale HTML이 React hydration 오류 유발
-const CACHE_NAME = 'sseuksak-v3'
+// 쓱싹 Service Worker v4
+// v3 → v4: 캐시 강제 갱신
+const CACHE_NAME = 'sseuksak-v4'
 
 self.addEventListener('install', (event) => {
   event.waitUntil(

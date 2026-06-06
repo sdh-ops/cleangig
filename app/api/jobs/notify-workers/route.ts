@@ -104,7 +104,7 @@ export async function POST(req: Request) {
     // 알림 INSERT (NotificationOverlay가 realtime 수신)
     if (scored.length > 0) {
       await supabase.from('notifications').insert(
-        scored.map((s) => ({ user_id: s.worker_id, title, message, url })),
+        scored.map((s) => ({ user_id: s.worker_id, title, message, url, type: 'general' })),
       )
     }
 

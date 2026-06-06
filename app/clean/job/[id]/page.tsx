@@ -350,11 +350,10 @@ export default function WorkerJobDetail() {
   }
 
   const toggleChecklist = (idx: number) => {
-    setChecklist((list) => list.map((c, i) => (i === idx ? { ...c, completed: !c.completed } : c)))
-    if (job) {
-      const updated = checklist.map((c, i) => (i === idx ? { ...c, completed: !c.completed } : c))
-      supabase.from('jobs').update({ checklist: updated }).eq('id', job.id)
-    }
+    if (!job) return
+    const updated = checklist.map((c, i) => (i === idx ? { ...c, completed: !c.completed } : c))
+    setChecklist(updated)
+    supabase.from('jobs').update({ checklist: updated }).eq('id', job.id)
   }
 
   // supply_status 2레벨 사이클: none → low → out → none
