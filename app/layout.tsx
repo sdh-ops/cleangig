@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from 'next'
-import Script from 'next/script'
 import './globals.css'
 import NotificationOverlay from '@/components/common/NotificationOverlay'
 import PageTransition from '@/components/common/PageTransition'
@@ -55,7 +54,6 @@ export const viewport: Viewport = {
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
-  const naverId = process.env.NEXT_PUBLIC_NAVER_MAP_CLIENT_ID
   return (
     <html lang="ko" suppressHydrationWarning data-scroll-behavior="smooth">
       <head>
@@ -64,12 +62,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="format-detection" content="telephone=no" />
-        {naverId && (
-          <Script
-            strategy="afterInteractive"
-            src={`https://oapi.map.naver.com/openapi/v3/maps.js?ncpClientId=${naverId}&submodules=geocoder`}
-          />
-        )}
       </head>
       <body>
         <ServiceWorkerRegister />
