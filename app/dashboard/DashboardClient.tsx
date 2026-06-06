@@ -129,8 +129,8 @@ export default function DashboardClient({
         <section className="mb-5">
           <div className="card-dark p-5">
             {/* Glow blobs */}
-            <div className="absolute -top-10 -right-10 w-48 h-48 bg-brand/25 rounded-full blur-3xl pointer-events-none" />
-            <div className="absolute bottom-0 left-0 w-32 h-32 bg-sun/15 rounded-full blur-2xl pointer-events-none" />
+            <div className="absolute -top-10 -right-10 w-48 h-48 rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(14,165,233,0.25) 0%, transparent 70%)' }} />
+            <div className="absolute bottom-0 left-0 w-32 h-32 rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(255,184,0,0.15) 0%, transparent 70%)' }} />
 
             <div className="relative z-10">
               <div className="flex items-center justify-between mb-1">

@@ -40,8 +40,8 @@ export default function EarningsClient({ profile, payments, totalEarned, pending
         {/* Hero */}
         <div className="px-5 pt-4">
           <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="card-dark p-5">
-            <div className="absolute -top-10 -right-10 w-44 h-44 bg-brand/25 rounded-full blur-3xl pointer-events-none" />
-            <div className="absolute bottom-0 left-0 w-32 h-32 bg-sun/10 rounded-full blur-2xl pointer-events-none" />
+            <div className="absolute -top-10 -right-10 w-44 h-44 rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(14,165,233,0.25) 0%, transparent 70%)' }} />
+            <div className="absolute bottom-0 left-0 w-32 h-32 rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(255,184,0,0.10) 0%, transparent 70%)' }} />
             <div className="relative z-10">
               <p className="text-[10.5px] text-white/60 font-bold uppercase tracking-widest mb-1">총 수익 (정산 완료)</p>
               <p className="t-money text-[36px] text-white leading-tight">{formatKRW(totalEarned)}</p>

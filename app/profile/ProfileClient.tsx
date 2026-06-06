@@ -65,7 +65,7 @@ export default function ProfileClient({ profile, totalCompletedJobs, isAdmin = f
 
       <div className="flex-1 pb-28">
         <div className="px-5 pt-5 pb-6 bg-gradient-to-br from-brand to-brand-dark text-white relative overflow-hidden">
-          <div className="absolute -bottom-8 -right-8 w-48 h-48 bg-white/10 rounded-full blur-3xl" />
+          <div className="absolute -bottom-8 -right-8 w-48 h-48 rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(255,255,255,0.10) 0%, transparent 70%)' }} />
           <div className="relative z-10 flex items-center gap-4">
             <div className="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center text-white font-black text-2xl overflow-hidden">
               {profile.profile_image ? (

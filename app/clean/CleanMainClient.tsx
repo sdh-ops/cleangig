@@ -146,7 +146,7 @@ export default function CleanMainClient({ profile, activeJob, openJobs, weekEarn
           <section className="mb-6">
             <Link href={`/clean/job/${activeJob.id}`} className="block">
               <div className="card-dark p-5">
-                <div className="absolute -top-8 -right-8 w-40 h-40 bg-brand/25 rounded-full blur-3xl pointer-events-none" />
+                <div className="absolute -top-8 -right-8 w-40 h-40 rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(14,165,233,0.25) 0%, transparent 70%)' }} />
                 <div className="relative z-10">
                   <div className="flex items-center gap-2 mb-3">
                     <StatusChip kind="job" status={activeJob.status} />

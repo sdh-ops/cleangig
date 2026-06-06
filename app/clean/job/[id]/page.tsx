@@ -532,7 +532,7 @@ export default function WorkerJobDetail() {
       <div className="flex-1 pb-40">
         {/* Hero */}
         <div className="relative bg-ink text-white px-5 pt-5 pb-8">
-          <div className="absolute -top-10 -right-8 w-48 h-48 bg-brand/25 rounded-full blur-3xl" />
+          <div className="absolute -top-10 -right-8 w-48 h-48 rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(14,165,233,0.25) 0%, transparent 70%)' }} />
           <div className="relative z-10">
             <div className="flex items-center gap-2 mb-3">
               <StatusChip kind="job" status={job.status} />
