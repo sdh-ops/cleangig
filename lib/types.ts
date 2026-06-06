@@ -79,6 +79,10 @@ export interface Space {
     has_kitchen?: boolean
     has_bed?: boolean
     has_balcony?: boolean
+    toilet_count?: number
+    kitchen_count?: number
+    bed_count?: number
+    balcony_count?: number
     created_at: string
     updated_at: string
 }

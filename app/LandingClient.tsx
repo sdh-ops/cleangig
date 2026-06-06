@@ -11,32 +11,14 @@ import {
   Clock,
   Star,
   Building2,
-  Users,
 } from 'lucide-react'
 import Logo from '@/components/common/Logo'
 
 type Audience = 'host' | 'worker'
 
-function AvatarStack() {
-  const initials = ['김', '이', '박', '최']
-  const bgs = ['bg-brand', 'bg-sun', 'bg-brand-dark', 'bg-ink/70']
-  return (
-    <div className="flex items-center">
-      {initials.map((ch, i) => (
-        <div
-          key={i}
-          className={`w-7 h-7 rounded-full ${bgs[i]} border-2 border-white flex items-center justify-center`}
-          style={{ marginLeft: i === 0 ? 0 : -9 }}
-        >
-          <span className="text-white text-[10px] font-black">{ch}</span>
-        </div>
-      ))}
-    </div>
-  )
-}
 
 export default function LandingClient() {
-  const [audience, setAudience] = useState<Audience>('host')
+  const [audience, setAudience] = useState<Audience>('worker')
 
   return (
     <div className="sseuksak-shell">
@@ -54,12 +36,6 @@ export default function LandingClient() {
 
         {/* Hero */}
         <div className="px-6 pt-8 pb-5">
-          {/* Status badge — static dot, no animation */}
-          <div className="inline-flex items-center gap-2 bg-surface border border-line-soft rounded-full px-3.5 py-2 mb-6 shadow-xs">
-            <span className="w-2 h-2 rounded-full bg-brand shrink-0" />
-            <span className="text-[12px] font-bold text-ink-soft">지금 5,000+ 공간이 사용중</span>
-          </div>
-
           <h1 className="text-[40px] font-black leading-[1.12] tracking-[-0.035em] text-ink">
             공간 청소, <span className="text-brand font-black">원클릭</span>으로.
             <br />
@@ -71,19 +47,6 @@ export default function LandingClient() {
             가장 가깝게 연결합니다.
           </p>
 
-          {/* Social proof */}
-          <div className="flex items-center gap-3 mt-4">
-            <AvatarStack />
-            <div>
-              <div className="flex items-center gap-0.5">
-                {[1, 2, 3, 4, 5].map((i) => (
-                  <Star key={i} size={11} fill="#FFB800" className="text-sun" />
-                ))}
-                <span className="text-[12px] font-black text-ink ml-1.5">4.9</span>
-              </div>
-              <p className="text-[11px] font-semibold text-text-faint mt-0.5">850+ 클린파트너 활동중</p>
-            </div>
-          </div>
         </div>
 
         {/* Audience toggle */}
@@ -158,27 +121,6 @@ export default function LandingClient() {
           )}
         </div>
 
-        {/* Stats */}
-        <div className="px-6 mb-4">
-          <div className="grid grid-cols-3 gap-2">
-            {[
-              { label: '등록 공간', value: '5천+', icon: <Building2 size={14} /> },
-              { label: '클린파트너', value: '850+', icon: <Users size={14} /> },
-              { label: '평균 매칭', value: '4분', icon: <Zap size={14} /> },
-            ].map((s, i) => (
-              <div
-                key={i}
-                className="bg-surface rounded-2xl p-3 border border-line-soft text-center"
-              >
-                <div className="w-7 h-7 rounded-lg bg-brand-softer text-brand-dark flex items-center justify-center mx-auto mb-1.5">
-                  {s.icon}
-                </div>
-                <div className="t-money text-[17px] text-ink leading-none">{s.value}</div>
-                <div className="text-[10px] font-bold text-text-soft mt-1">{s.label}</div>
-              </div>
-            ))}
-          </div>
-        </div>
       </div>
 
       {/* Bottom CTA */}

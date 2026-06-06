@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ChevronLeft, Bell } from 'lucide-react'
+import { ChevronLeft, Bell, Home } from 'lucide-react'
 import Logo from './Logo'
 import React from 'react'
 
@@ -38,13 +38,22 @@ export default function Header({
     >
       <div className="flex items-center h-14 px-3">
         {showBack && (
-          <button
-            onClick={handleBack}
-            aria-label="뒤로가기"
-            className="flex items-center justify-center w-10 h-10 rounded-full hover:bg-surface-muted active:scale-95 transition"
-          >
-            <ChevronLeft size={22} />
-          </button>
+          <div className="flex items-center gap-0.5">
+            <button
+              onClick={handleBack}
+              aria-label="뒤로가기"
+              className="flex items-center justify-center w-10 h-10 rounded-full hover:bg-surface-muted active:scale-95 transition"
+            >
+              <ChevronLeft size={22} />
+            </button>
+            <Link
+              href="/"
+              aria-label="홈"
+              className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-surface-muted active:scale-95 transition"
+            >
+              <Home size={16} className="text-text-soft" />
+            </Link>
+          </div>
         )}
         {showLogo && !showBack && (
           <div className="pl-2">

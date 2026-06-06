@@ -68,10 +68,10 @@ export default function CreateSpacePage() {
   const [toolLocation, setToolLocation] = useState('')
   const [parkingGuide, setParkingGuide] = useState('')
   const [trashGuide, setTrashGuide] = useState('')
-  const [hasToilet, setHasToilet] = useState(true)
-  const [hasKitchen, setHasKitchen] = useState(false)
-  const [hasBed, setHasBed] = useState(false)
-  const [hasBalcony, setHasBalcony] = useState(false)
+  const [toiletCount, setToiletCount] = useState(1)
+  const [kitchenCount, setKitchenCount] = useState(0)
+  const [bedCount, setBedCount] = useState(0)
+  const [balconyCount, setBalconyCount] = useState(0)
 
   const [checklist, setChecklist] = useState<{ id: string; label: string; required: boolean }[]>([])
   const [newItem, setNewItem] = useState('')
@@ -160,10 +160,14 @@ export default function CreateSpacePage() {
       const extendedPayload = {
         ...corePayload,
         cleaning_difficulty: '보통',
-        has_toilet: hasToilet,
-        has_kitchen: hasKitchen,
-        has_bed: hasBed,
-        has_balcony: hasBalcony,
+        has_toilet: toiletCount > 0,
+        has_kitchen: kitchenCount > 0,
+        has_bed: bedCount > 0,
+        has_balcony: balconyCount > 0,
+        toilet_count: toiletCount,
+        kitchen_count: kitchenCount,
+        bed_count: bedCount,
+        balcony_count: balconyCount,
         reference_photos: referencePhotos,
         biz_type: bizTypeSel,
         biz_reg_number: bizTypeSel === 'BUSINESS' ? bizRegNumber.replace(/-/g, '') : null,
@@ -343,12 +347,12 @@ export default function CreateSpacePage() {
               </div>
 
               <div>
-                <label className="t-meta block mb-2 ml-1">공간 시설</label>
-                <div className="flex flex-wrap gap-2">
-                  <FacilityChip selected={hasToilet} onClick={() => setHasToilet((v) => !v)} label="화장실" />
-                  <FacilityChip selected={hasKitchen} onClick={() => setHasKitchen((v) => !v)} label="주방" />
-                  <FacilityChip selected={hasBed} onClick={() => setHasBed((v) => !v)} label="침구" />
-                  <FacilityChip selected={hasBalcony} onClick={() => setHasBalcony((v) => !v)} label="발코니" />
+                <label className="t-meta block mb-2 ml-1">공간 시설 <span className="text-text-faint font-normal">(개수 입력)</span></label>
+                <div className="grid grid-cols-2 gap-2.5">
+                  <FacilityCounter label="화장실 🚽" count={toiletCount} onChange={setToiletCount} />
+                  <FacilityCounter label="주방 🍳" count={kitchenCount} onChange={setKitchenCount} />
+                  <FacilityCounter label="침구 🛏️" count={bedCount} onChange={setBedCount} />
+                  <FacilityCounter label="발코니 🌿" count={balconyCount} onChange={setBalconyCount} />
                 </div>
               </div>
 
@@ -633,15 +637,24 @@ export default function CreateSpacePage() {
   )
 }
 
-function FacilityChip({ selected, onClick, label }: { selected: boolean; onClick: () => void; label: string }) {
+function FacilityCounter({ label, count, onChange }: { label: string; count: number; onChange: (n: number) => void }) {
+  const active = count > 0
   return (
-    <button
-      onClick={onClick}
-      className={`chip ${selected ? 'chip-brand' : 'chip-muted'} !px-4 !py-2 !text-[13px] border-2 ${
-        selected ? 'border-brand/30' : 'border-transparent'
-      }`}
-    >
-      {label}
-    </button>
+    <div className={`flex items-center justify-between p-3 rounded-2xl border-2 transition ${active ? 'border-brand bg-brand-softer' : 'border-line-soft bg-surface'}`}>
+      <span className={`text-[13px] font-extrabold ${active ? 'text-brand-dark' : 'text-text-soft'}`}>{label}</span>
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={() => onChange(Math.max(0, count - 1))}
+          className="w-7 h-7 rounded-full bg-surface border border-line-soft flex items-center justify-center text-ink font-black text-[16px] active:scale-90 transition"
+        >−</button>
+        <span className={`w-5 text-center text-[15px] font-black tabular-nums ${active ? 'text-brand-dark' : 'text-text-faint'}`}>{count}</span>
+        <button
+          type="button"
+          onClick={() => onChange(count + 1)}
+          className="w-7 h-7 rounded-full bg-brand text-white flex items-center justify-center font-black text-[16px] active:scale-90 transition"
+        >+</button>
+      </div>
+    </div>
   )
 }
