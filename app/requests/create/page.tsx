@@ -104,17 +104,20 @@ export default function CreateRequestPage() {
     )
   }, [spaceId]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  const [nowBase, setNowBase] = useState<string>('')
+  useEffect(() => {
+    const d = new Date()
+    d.setMinutes(d.getMinutes() + 30)
+    setNowBase(d.toISOString())
+  }, [])
+
   const scheduledAt = useMemo(() => {
-    if (when === 'now') {
-      const d = new Date()
-      d.setMinutes(d.getMinutes() + 30)
-      return d.toISOString()
-    }
+    if (when === 'now') return nowBase || new Date().toISOString()
     if (scheduledDate && scheduledTime) {
       return new Date(`${scheduledDate}T${scheduledTime}:00`).toISOString()
     }
-    return new Date().toISOString()
-  }, [when, scheduledDate, scheduledTime])
+    return nowBase || new Date().toISOString()
+  }, [when, scheduledDate, scheduledTime, nowBase])
 
   // 면적+난이도로 추천 기본가 산출 (요청마다 난이도 다르게 가능)
   const suggestedPrice = useMemo(() => {

@@ -35,12 +35,8 @@ function CheckoutInner() {
         if (!mounted) return
         widgetRef.current = widget
 
-        await widget.renderPaymentMethods(
-          '#payment-widget',
-          { value: amount },
-          { variantKey: 'DEFAULT' },
-        )
-        await widget.renderAgreement('#agreement', { variantKey: 'AGREEMENT' })
+        await widget.renderPaymentMethods('#payment-widget', { value: amount })
+        await widget.renderAgreement('#agreement')
 
         if (mounted) setWidgetReady(true)
       } catch (e) {
