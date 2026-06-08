@@ -12,7 +12,7 @@ export function loadNaverMapsScript(): void {
   if (document.getElementById('naver-maps-script')) return
   const script = document.createElement('script')
   script.id = 'naver-maps-script'
-  script.src = `https://oapi.map.naver.com/openapi/v3/maps.js?ncpClientId=${clientId}&submodules=geocoder`
+  script.src = `https://oapi.map.naver.com/openapi/v3/maps.js?ncpClientId=${clientId}`
   script.async = true
   document.head.appendChild(script)
 }
