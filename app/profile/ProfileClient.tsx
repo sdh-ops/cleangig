@@ -237,7 +237,17 @@ export default function ProfileClient({ profile, totalCompletedJobs, isAdmin = f
             <LogOut size={15} /> 로그아웃
           </button>
 
-          <p className="text-center text-[10.5px] text-text-faint font-medium mt-1">쓱싹 v1.0 · Made in Seoul</p>
+          {/* 사업자 정보 — 전자상거래법 의무 표시 */}
+          <div className="mt-2 px-4 py-4 rounded-2xl bg-surface-muted text-[10.5px] text-text-faint font-medium leading-relaxed space-y-0.5">
+            <p className="font-extrabold text-text-soft mb-1">쓱싹 서비스 정보</p>
+            <p>운영사: 디스퀘어 · 대표: 신동현</p>
+            <p>사업자등록번호: 102-07-08646</p>
+            <p>주소: 서울 마포구 양화로12길 16, 7층</p>
+            <p>문의: sdh@thenanbiz.com</p>
+            <p className="pt-0.5 text-[10px]">쓱싹은 통신판매중개자로서 거래 당사자가 아닙니다.</p>
+          </div>
+
+          <p className="text-center text-[10.5px] text-text-faint font-medium mt-3">쓱싹 v1.0 · Made in Seoul</p>
         </div>
       </div>
 

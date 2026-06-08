@@ -10,6 +10,7 @@ export default function PrivacyPage() {
       <div className="flex-1 px-6 py-6 pb-16">
         <article className="prose prose-sm max-w-none text-ink-soft">
           <h2 className="h-section text-ink mb-2">쓱싹 개인정보 처리방침</h2>
+          <p className="t-caption mb-2 text-text-muted">운영사: 디스퀘어 (사업자등록번호: 102-07-08646)</p>
           <p className="t-caption mb-6">시행일: 2026년 4월 20일</p>
 
           <Section title="1. 수집하는 개인정보 항목">
@@ -84,9 +85,9 @@ export default function PrivacyPage() {
 
           <Section title="10. 개인정보 보호 책임자">
             <div className="rounded-xl bg-surface-muted p-3 text-[13px]">
-              <b>개인정보 보호 책임자</b>: 쓱싹 개인정보팀<br />
-              <b>이메일</b>: privacy@sseuksak.com<br />
-              <b>전화</b>: 1533-0000 (평일 10:00–18:00)
+              <b>개인정보 보호 책임자</b>: 신동현 (디스퀘어 대표)<br />
+              <b>이메일</b>: sdh@thenanbiz.com<br />
+              <b>전화</b>: (고객센터 번호 추가 예정, 평일 10:00–18:00)
             </div>
           </Section>
 

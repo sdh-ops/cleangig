@@ -13,7 +13,7 @@ export default function TermsPage() {
           <p className="t-caption mb-6">시행일: 2026년 4월 20일</p>
 
           <Section title="제1조 (목적)">
-            본 약관은 주식회사 쓱싹(이하 &ldquo;회사&rdquo;)이 운영하는 공간 운영 인프라 플랫폼 &ldquo;쓱싹&rdquo;(이하 &ldquo;서비스&rdquo;)의 이용과 관련하여 회사와 이용자 간의 권리, 의무 및 책임사항, 기타 필요한 사항을 규정함을 목적으로 합니다.
+            본 약관은 디스퀘어(서비스명: 쓱싹, 이하 &ldquo;회사&rdquo;)이 운영하는 공간 운영 인프라 플랫폼 &ldquo;쓱싹&rdquo;(이하 &ldquo;서비스&rdquo;)의 이용과 관련하여 회사와 이용자 간의 권리, 의무 및 책임사항, 기타 필요한 사항을 규정함을 목적으로 합니다.
           </Section>
 
           <Section title="제2조 (정의)">
