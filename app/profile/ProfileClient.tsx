@@ -64,8 +64,22 @@ export default function ProfileClient({ profile, totalCompletedJobs, isAdmin = f
       <Header showLogo sticky />
 
       <div className="flex-1 pb-28">
-        <div className="px-5 pt-5 pb-6 bg-gradient-to-br from-brand to-brand-dark text-white relative overflow-hidden">
-          <div className="absolute -bottom-8 -right-8 w-48 h-48 rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(255,255,255,0.10) 0%, transparent 70%)' }} />
+        <div
+          className="px-5 pt-5 pb-6 text-white relative overflow-hidden"
+          style={{ background: 'linear-gradient(160deg, #0E2244 0%, #0A1F3D 60%, #061633 100%)' }}
+        >
+          {/* Dot grid overlay */}
+          <div
+            aria-hidden
+            className="absolute inset-0 pointer-events-none"
+            style={{ backgroundImage: 'radial-gradient(rgba(255,255,255,0.04) 1px, transparent 1px)', backgroundSize: '18px 18px' }}
+          />
+          {/* Light leak */}
+          <div
+            aria-hidden
+            className="absolute -top-10 -right-10 w-48 h-48 rounded-full pointer-events-none"
+            style={{ background: 'radial-gradient(circle, rgba(14,165,233,0.20) 0%, transparent 70%)' }}
+          />
           <div className="relative z-10 flex items-center gap-4">
             <div className="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center text-white font-black text-2xl overflow-hidden">
               {profile.profile_image ? (
@@ -235,8 +249,8 @@ export default function ProfileClient({ profile, totalCompletedJobs, isAdmin = f
 function TinyStat({ label, value }: { label: string; value: string | number }) {
   return (
     <div className="rounded-xl bg-white/15 px-3 py-2.5 text-center">
-      <div className="text-[11px] font-bold text-white/70">{label}</div>
-      <div className="text-[15px] font-black text-white mt-0.5">{value}</div>
+      <div className="text-[10px] font-bold text-white/60 uppercase tracking-wide">{label}</div>
+      <div className="num-display text-[20px] text-white mt-0.5">{value}</div>
     </div>
   )
 }
