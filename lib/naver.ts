@@ -3,17 +3,16 @@
  * Client-side geocoding via /api/geocode + map lifecycle
  */
 
-const NAVER_MAP_CLIENT_ID =
-  typeof process !== 'undefined' ? process.env.NEXT_PUBLIC_NAVER_MAP_CLIENT_ID : undefined
-
 /** 네이버 지도 SDK 스크립트를 head에 주입 (중복 방지). NaverMap·JobsMap 모두 사용 */
 export function loadNaverMapsScript(): void {
   if (typeof document === 'undefined') return
-  if (!NAVER_MAP_CLIENT_ID) return
+  // process.env.NEXT_PUBLIC_* 는 함수 내부에서 직접 참조해야 빌드 타임 정적 치환이 적용됨
+  const clientId = process.env.NEXT_PUBLIC_NAVER_MAP_CLIENT_ID
+  if (!clientId) return
   if (document.getElementById('naver-maps-script')) return
   const script = document.createElement('script')
   script.id = 'naver-maps-script'
-  script.src = `https://oapi.map.naver.com/openapi/v3/maps.js?ncpClientId=${NAVER_MAP_CLIENT_ID}&submodules=geocoder`
+  script.src = `https://oapi.map.naver.com/openapi/v3/maps.js?ncpClientId=${clientId}&submodules=geocoder`
   script.async = true
   document.head.appendChild(script)
 }
