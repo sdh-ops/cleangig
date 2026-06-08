@@ -195,9 +195,10 @@ export default function RequestDetailClient({ job: initialJob, userId, initialIs
     }
   }
 
-  const canCancel = ['OPEN', 'ASSIGNED'].includes(job.status)
-  const canApprove = job.status === 'SUBMITTED'
-  const canReview = ['APPROVED', 'PAID_OUT'].includes(job.status) && !!job.users?.id
+  const isOwner = job.operator_id === userId
+  const canCancel = isOwner && ['OPEN', 'ASSIGNED'].includes(job.status)
+  const canApprove = isOwner && job.status === 'SUBMITTED'
+  const canReview = isOwner && ['APPROVED', 'PAID_OUT'].includes(job.status) && !!job.users?.id
   const canDispute = ['EN_ROUTE', 'ARRIVED', 'IN_PROGRESS', 'SUBMITTED', 'APPROVED'].includes(job.status)
 
   // 상태 타임라인
