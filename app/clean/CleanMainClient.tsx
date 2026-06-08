@@ -180,30 +180,65 @@ export default function CleanMainClient({ profile, activeJob, openJobs, weekEarn
           </section>
         ) : (
           <section className="mb-6">
-            {/* Weekly earnings card */}
-            <div className="rounded-3xl overflow-hidden relative" style={{ background: 'linear-gradient(135deg, #FFB800 0%, #F0A500 100%)', boxShadow: '0 12px 28px rgba(255,184,0,0.3)' }}>
-              <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: 'radial-gradient(rgba(255,255,255,0.08) 1px, transparent 1px)', backgroundSize: '18px 18px' }} />
+            {/* Weekly earnings card — sun gradient with light leak */}
+            <div
+              className="rounded-3xl overflow-hidden relative"
+              style={{
+                background: 'linear-gradient(145deg, #FCD34D 0%, #F59E0B 50%, #D97706 100%)',
+                boxShadow: '0 16px 40px rgba(245,158,11,0.28), 0 4px 12px rgba(245,158,11,0.16)',
+              }}
+            >
+              {/* Dot grid */}
+              <div
+                aria-hidden
+                className="absolute inset-0 pointer-events-none"
+                style={{ backgroundImage: 'radial-gradient(rgba(255,255,255,0.1) 1px, transparent 1px)', backgroundSize: '18px 18px' }}
+              />
+              {/* Light leak top-left */}
+              <div
+                aria-hidden
+                className="absolute -top-6 -left-6 w-36 h-36 rounded-full pointer-events-none"
+                style={{ background: 'radial-gradient(circle, rgba(252,211,77,0.7) 0%, transparent 70%)' }}
+              />
+              {/* Inner shine */}
+              <div
+                aria-hidden
+                className="absolute inset-0 pointer-events-none"
+                style={{ background: 'linear-gradient(135deg, rgba(255,255,255,0.18) 0%, transparent 55%)' }}
+              />
+
               <div className="relative z-10 p-5">
                 <div className="flex items-start justify-between">
                   <div>
-                    <p className="text-[10.5px] font-black text-ink/60 uppercase tracking-widest">이번 주 수익</p>
-                    <div className="flex items-baseline gap-1 mt-1">
-                      <span className="t-money text-[36px] text-ink leading-none">{formatKRW(weekEarnings, { withUnit: false })}</span>
-                      <span className="text-[15px] font-black text-ink/70">원</span>
+                    <p className="t-overline text-ink/50 mb-2">이번 주 수익</p>
+                    <div className="flex items-baseline gap-1.5">
+                      <span
+                        className="num-display text-ink"
+                        style={{ fontSize: 42, lineHeight: 1 }}
+                      >
+                        {formatKRW(weekEarnings, { withUnit: false })}
+                      </span>
+                      <span style={{ fontSize: 18, fontWeight: 900, color: 'rgba(28,16,0,0.65)' }}>원</span>
                     </div>
                   </div>
-                  <div className="w-12 h-12 rounded-2xl bg-white/25 flex items-center justify-center">
+                  <div
+                    className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0"
+                    style={{ background: 'rgba(255,255,255,0.3)' }}
+                  >
                     <Wallet size={22} className="text-ink" strokeWidth={2.5} />
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between mt-4">
-                  <span className="text-[12px] font-bold text-ink/60 flex items-center gap-1.5">
+                <div
+                  className="mt-4 rounded-2xl p-3 flex items-center justify-between"
+                  style={{ background: 'rgba(255,255,255,0.25)' }}
+                >
+                  <span className="text-[12px] font-bold text-ink/70 flex items-center gap-1.5">
                     <Clock size={12} /> 정산 대기 {pendingCount}건
                   </span>
                   <Link
                     href="/earnings"
-                    className="flex items-center gap-1 text-[12.5px] font-black text-ink bg-white/30 px-3 py-1.5 rounded-full"
+                    className="flex items-center gap-1 text-[12.5px] font-black text-ink bg-white/40 px-3 py-1.5 rounded-full"
                   >
                     자세히 <ArrowRight size={13} />
                   </Link>

@@ -43,9 +43,9 @@ export default function MetricCard({ label, value, unit, delta, icon, tone = 'de
           )}
         </div>
 
-        <div className="flex items-baseline gap-1">
-          <span className={`t-money text-[24px] leading-none ${valueCls}`}>{value}</span>
-          {unit && <span className={`text-[11px] font-bold ${labelCls}`}>{unit}</span>}
+        <div className="flex items-baseline gap-1 mt-1">
+          <span className={`num-display text-[28px] leading-none ${valueCls}`}>{value}</span>
+          {unit && <span className={`text-[13px] font-bold ${labelCls}`}>{unit}</span>}
         </div>
 
         {delta && (
