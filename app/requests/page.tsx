@@ -26,7 +26,7 @@ export default async function RequestsPage(props: { searchParams?: Promise<{ tab
   const tab = TABS.find((t) => t.key === currentTab) || TABS[0]
   const { data } = await supabase
     .from('jobs')
-    .select('id, status, price, scheduled_at, is_urgent, spaces(name, type, address, has_toilet, has_kitchen, has_bed, toilet_count, kitchen_count, bed_count), users:worker_id(name)')
+    .select('id, status, price, scheduled_at, is_urgent, spaces(name, type, address, has_toilet, has_kitchen, has_bed), users:worker_id(name)')
     .eq('operator_id', user.id)
     .in('status', tab.statuses)
     .order('scheduled_at', { ascending: false })
@@ -93,17 +93,17 @@ export default async function RequestsPage(props: { searchParams?: Promise<{ tab
                       <div className="flex items-center gap-1 mt-1.5 flex-wrap">
                         {j.spaces?.has_toilet && (
                           <span className="text-[10.5px] font-bold bg-sky-50 text-sky-700 px-1.5 py-0.5 rounded-md border border-sky-100">
-                            🚽 {j.spaces.toilet_count > 1 ? `화장실 ${j.spaces.toilet_count}개` : '화장실'}
+                            🚽 화장실
                           </span>
                         )}
                         {j.spaces?.has_kitchen && (
                           <span className="text-[10.5px] font-bold bg-orange-50 text-orange-700 px-1.5 py-0.5 rounded-md border border-orange-100">
-                            🍳 {j.spaces.kitchen_count > 1 ? `주방 ${j.spaces.kitchen_count}개` : '주방'}
+                            🍳 주방
                           </span>
                         )}
                         {j.spaces?.has_bed && (
                           <span className="text-[10.5px] font-bold bg-purple-50 text-purple-700 px-1.5 py-0.5 rounded-md border border-purple-100">
-                            🛏️ {j.spaces.bed_count > 1 ? `침구 ${j.spaces.bed_count}개` : '침구'}
+                            🛏️ 침구
                           </span>
                         )}
                       </div>

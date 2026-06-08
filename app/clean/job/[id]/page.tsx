@@ -890,6 +890,12 @@ export default function WorkerJobDetail() {
       {isMine && flow && (
         <div className="fixed bottom-0 inset-x-0 border-t border-line-soft bg-surface/95 backdrop-blur safe-bottom">
           <div className="max-w-[480px] mx-auto px-5 py-3.5">
+            {err && (
+              <div className="mb-2.5 p-2.5 rounded-xl bg-danger-soft border border-danger/20 flex items-start gap-2">
+                <AlertTriangle size={14} className="text-danger shrink-0 mt-0.5" />
+                <p className="text-[12px] font-bold text-danger leading-snug">{err}</p>
+              </div>
+            )}
             <button onClick={advanceStatus} disabled={transitioning} className="btn btn-primary w-full">
               {transitioning ? (
                 <Loader2 size={20} className="animate-spin" />
