@@ -121,7 +121,17 @@ export default function JobsListPage() {
     else query = query.order('created_at', { ascending: false })
 
     const { data } = await query.limit(200)
-    let list = ((data ?? []) as unknown) as Job[]
+    // Supabase REST: geometry → WKB hex → parseGeoPoint으로 { coordinates } 변환
+    let list: Job[] = ((data ?? []) as unknown as Job[]).map(j => ({
+      ...j,
+      spaces: j.spaces ? {
+        ...j.spaces,
+        location: (() => {
+          const geo = parseGeoPoint(j.spaces?.location)
+          return geo ? { coordinates: [geo.lng, geo.lat] as [number, number] } : null
+        })(),
+      } : undefined,
+    }))
 
     // 공간 유형 필터
     if (typeFilter !== 'all') list = list.filter(j => j.spaces?.type === typeFilter)
@@ -198,22 +208,15 @@ export default function JobsListPage() {
     { value: 'other',        label: '기타' },
   ]
 
-  const mapJobs: JobMapItem[] = jobs.map(j => {
-    // Supabase PostGIS geometry는 REST API에서 WKB hex 문자열로 반환됨
-    // parseGeoPoint()로 { lat, lng } 추출 후 GeoJSON 형태로 재구성
-    const geoPoint = parseGeoPoint(j.spaces?.location)
-    const parsedLocation = geoPoint
-      ? { coordinates: [geoPoint.lng, geoPoint.lat] as [number, number] }
-      : undefined
-    return {
-      id: j.id, price: j.price, is_urgent: j.is_urgent,
-      scheduled_at: j.scheduled_at, estimated_duration: j.estimated_duration,
-      spaces: j.spaces ? {
-        name: j.spaces.name, type: j.spaces.type,
-        address: j.spaces.address, location: parsedLocation,
-      } : undefined,
-    }
-  })
+  // fetchJobs에서 이미 WKB 파싱 완료 → 직접 사용
+  const mapJobs: JobMapItem[] = jobs.map(j => ({
+    id: j.id, price: j.price, is_urgent: j.is_urgent,
+    scheduled_at: j.scheduled_at, estimated_duration: j.estimated_duration,
+    spaces: j.spaces ? {
+      name: j.spaces.name, type: j.spaces.type,
+      address: j.spaces.address, location: j.spaces.location ?? undefined,
+    } : undefined,
+  }))
 
   const activeFilterCount = (typeFilter !== 'all' ? 1 : 0) + (radius ? 1 : 0)
 
