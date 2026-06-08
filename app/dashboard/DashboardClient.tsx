@@ -146,7 +146,7 @@ export default function DashboardClient({
               </div>
 
               {todayJobs.length > 0 ? (
-                <div className="mt-3 p-3 rounded-2xl bg-white/10 backdrop-blur-sm">
+                <div className="mt-3 p-3 rounded-2xl bg-white/10">
                   <p className="text-[11px] text-white/60 font-bold mb-0.5">가장 빠른 작업</p>
                   <p className="text-[14px] font-extrabold text-brand-light">
                     {formatScheduled(todayJobs[0].scheduled_at)}

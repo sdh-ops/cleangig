@@ -44,7 +44,7 @@ export default function EarningsClient({ profile, payments, totalEarned, pending
             <div className="absolute bottom-0 left-0 w-32 h-32 rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(255,184,0,0.10) 0%, transparent 70%)' }} />
             <div className="relative z-10">
               <p className="text-[10.5px] text-white/60 font-bold uppercase tracking-widest mb-1">총 수익 (정산 완료)</p>
-              <p className="t-money text-[36px] text-white leading-tight">{formatKRW(totalEarned)}</p>
+              <p className="num-display text-white" style={{ fontSize: 44, lineHeight: 1.1 }}>{formatKRW(totalEarned)}</p>
               <div className="mt-4 grid grid-cols-2 gap-2">
                 <Stat label="이번 달" value={formatKRW(monthEarned, { short: true })} icon={<TrendingUp size={14} />} />
                 <Stat label="정산 대기" value={formatKRW(pendingAmount, { short: true })} icon={<Clock size={14} />} />
