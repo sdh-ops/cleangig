@@ -39,12 +39,20 @@ export default function CalendarClient({ role, jobs, year, month }: Props) {
   const startOffset = firstDay.getDay()
   const daysInMonth = lastDay.getDate()
 
-  // jobs indexed by date (YYYY-MM-DD local)
+  // Convert a UTC timestamp to a YYYY-MM-DD string in KST (UTC+9).
+  // Using a fixed +9h offset ensures server (UTC) and client (KST) produce
+  // identical keys, preventing React hydration mismatches.
+  const toKSTDateKey = (isoString: string): string => {
+    const utcMs = new Date(isoString).getTime()
+    const kstDate = new Date(utcMs + 9 * 60 * 60 * 1000)
+    return `${kstDate.getUTCFullYear()}-${String(kstDate.getUTCMonth() + 1).padStart(2, '0')}-${String(kstDate.getUTCDate()).padStart(2, '0')}`
+  }
+
+  // jobs indexed by KST date (YYYY-MM-DD)
   const byDate = useMemo(() => {
     const map = new Map<string, Job[]>()
     jobs.forEach((j) => {
-      const d = new Date(j.scheduled_at)
-      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+      const key = toKSTDateKey(j.scheduled_at)
       const arr = map.get(key) ?? []
       arr.push(j)
       map.set(key, arr)
@@ -53,8 +61,9 @@ export default function CalendarClient({ role, jobs, year, month }: Props) {
   }, [jobs])
 
   const todayKey = (() => {
-    const d = new Date()
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+    const nowMs = Date.now()
+    const kstDate = new Date(nowMs + 9 * 60 * 60 * 1000)
+    return `${kstDate.getUTCFullYear()}-${String(kstDate.getUTCMonth() + 1).padStart(2, '0')}-${String(kstDate.getUTCDate()).padStart(2, '0')}`
   })()
 
   const cells: { date: number | null; key: string | null }[] = []
@@ -167,7 +176,9 @@ export default function CalendarClient({ role, jobs, year, month }: Props) {
             ) : (
               <ul className="flex flex-col gap-2">
                 {selectedJobs.map((j) => {
-                  const time = new Date(j.scheduled_at).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })
+                  const kstMs = new Date(j.scheduled_at).getTime() + 9 * 60 * 60 * 1000
+                  const kst = new Date(kstMs)
+                  const time = `${String(kst.getUTCHours()).padStart(2, '0')}:${String(kst.getUTCMinutes()).padStart(2, '0')}`
                   const href = role === 'operator' ? `/requests/${j.id}` : `/clean/job/${j.id}`
                   return (
                     <li key={j.id}>

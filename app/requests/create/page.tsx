@@ -532,7 +532,7 @@ export default function CreateRequestPage() {
             </div>
           )}
           <button
-            onClick={step === 3 ? handleSubmit : () => setStep((s) => (s + 1) as StepId)}
+            onClick={step === 3 ? handleSubmit : () => setStep((s) => (Math.min(s + 1, 3)) as StepId)}
             disabled={!canProceed || loading}
             className="btn btn-primary w-full"
           >
