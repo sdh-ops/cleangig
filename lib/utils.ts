@@ -133,6 +133,52 @@ export function spaceTypeLabel(type: string): string {
 }
 
 /**
+ * Supabase PostGIS geometry 컬럼을 파싱하여 { lat, lng } 반환
+ * Supabase REST API는 geometry를 WKB hex 문자열로 반환함
+ * (예: "0101000020E610000030D80DDB16BB5F4038B41204D9C64240")
+ * 일반 GeoJSON 객체 { coordinates: [lng, lat] } 형태도 허용
+ */
+export function parseGeoPoint(
+  location: unknown
+): { lat: number; lng: number } | null {
+  if (!location) return null
+
+  // 이미 GeoJSON 좌표 배열 형태인 경우
+  if (
+    typeof location === 'object' &&
+    location !== null &&
+    'coordinates' in location
+  ) {
+    const coords = (location as { coordinates?: unknown[] }).coordinates
+    if (Array.isArray(coords) && coords.length >= 2) {
+      const lng = Number(coords[0])
+      const lat = Number(coords[1])
+      if (!isNaN(lat) && !isNaN(lng)) return { lat, lng }
+    }
+    return null
+  }
+
+  // WKB hex 문자열 파싱
+  if (typeof location !== 'string') return null
+  try {
+    const hex = location
+    const bytes = new Uint8Array(hex.match(/.{1,2}/g)!.map(h => parseInt(h, 16)))
+    const view = new DataView(bytes.buffer)
+    const isLE = view.getUint8(0) === 1
+    const geomType = isLE ? view.getUint32(1, true) : view.getUint32(1, false)
+    const hasSRID = (geomType & 0x20000000) !== 0
+    const offset = 5 + (hasSRID ? 4 : 0)
+    const lng = view.getFloat64(offset, isLE)
+    const lat = view.getFloat64(offset + 8, isLE)
+    if (isNaN(lat) || isNaN(lng)) return null
+    if (lat < -90 || lat > 90 || lng < -180 || lng > 180) return null
+    return { lat, lng }
+  } catch {
+    return null
+  }
+}
+
+/**
  * 무작위 ID (nanoid-like)
  */
 export function rid(prefix = 'id'): string {

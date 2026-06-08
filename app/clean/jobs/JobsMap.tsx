@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState, useCallback } from 'react'
-import { LocateFixed, Loader2, MapPin, X, Search, RefreshCw } from 'lucide-react'
+import { LocateFixed, Loader2, MapPin, X, Search } from 'lucide-react'
 import { waitForNaverMaps, loadNaverMapsScript, openNaverRoute } from '@/lib/naver'
 import { formatKRW, haversineKm, maskAddress, spaceTypeLabel } from '@/lib/utils'
 import type { SpaceType } from '@/lib/types'
@@ -36,40 +36,64 @@ type Props = {
 
 const SEOUL = { lat: 37.5665, lng: 126.978 }
 
-function pinColor(price: number, urgent: boolean): { bg: string; ring: string } {
-  if (urgent) return { bg: '#EF4444', ring: '#FCA5A5' }
-  if (price >= 60000) return { bg: '#F59E0B', ring: '#FDE68A' }
-  if (price >= 40000) return { bg: '#0EA5E9', ring: '#BAE6FD' }
-  return { bg: '#64748B', ring: '#CBD5E1' }
+// ─── 핀 색상 (브랜드 블루 기본, 긴급=빨강, 고수익=황금) ────────────────
+function pinStyle(price: number, urgent: boolean): { bg: string; gradient: string; ring: string; icon: string } {
+  if (urgent) return {
+    bg: '#EF4444',
+    gradient: 'linear-gradient(145deg,#F87171,#EF4444)',
+    ring: '#FCA5A5',
+    icon: '⚡',
+  }
+  if (price >= 60000) return {
+    bg: '#F59E0B',
+    gradient: 'linear-gradient(145deg,#FCD34D,#F59E0B)',
+    ring: '#FDE68A',
+    icon: '💰',
+  }
+  // 기본 — 브랜드 블루
+  return {
+    bg: '#0EA5E9',
+    gradient: 'linear-gradient(145deg,#38BDF8,#0EA5E9)',
+    ring: '#BAE6FD',
+    icon: '🧹',
+  }
 }
 
 function buildPinHtml(job: JobMapItem, selected: boolean): string {
   const payout = Math.round(job.price * 0.88)
-  const { bg, ring } = pinColor(job.price, !!job.is_urgent)
-  const scale = selected ? 'scale(1.2)' : 'scale(1)'
+  const { gradient, bg, ring, icon } = pinStyle(job.price, !!job.is_urgent)
+  const scale = selected ? 1.18 : 1
   const shadow = selected
-    ? '0 8px 28px rgba(0,0,0,0.32)'
-    : '0 4px 14px rgba(0,0,0,0.18)'
+    ? '0 6px 22px rgba(0,0,0,0.28), 0 0 0 3px rgba(255,255,255,0.9)'
+    : '0 3px 12px rgba(0,0,0,0.22)'
   const urgentRing = job.is_urgent
-    ? `<div style="position:absolute;inset:-5px;border-radius:999px;border:2.5px solid ${ring};animation:pinpulse 1.5s infinite;pointer-events:none;"></div>`
+    ? `<div style="position:absolute;inset:-6px;border-radius:999px;border:2px solid ${ring};animation:pinpulse 1.4s infinite ease-in-out;pointer-events:none;opacity:0.7;"></div>`
     : ''
+  const priceText = formatKRW(payout, { short: true })
   return `
-    <div style="position:relative;display:inline-block;transform-origin:center bottom;transform:${scale}translate(-50%,-100%);transition:transform 0.15s;">
+    <div style="position:relative;display:inline-flex;flex-direction:column;align-items:center;transform:translate(-50%,-100%) scale(${scale});transform-origin:center bottom;transition:transform 0.18s cubic-bezier(.34,1.56,.64,1);">
       ${urgentRing}
       <div style="
-        background:${bg};
-        color:white;
-        padding:5px 11px;
-        border-radius:22px;
-        font-weight:900;
+        background:${gradient};
+        color:#fff;
+        padding:5px 11px 5px 8px;
+        border-radius:24px;
         font-size:12px;
+        font-weight:900;
         box-shadow:${shadow};
-        border:2.5px solid ${selected ? 'white' : 'rgba(255,255,255,0.7)'};
+        border:2px solid rgba(255,255,255,${selected ? '1' : '0.75'});
         cursor:pointer;
         white-space:nowrap;
-        line-height:1.2;
-      ">${job.is_urgent ? '⚡ ' : ''}${formatKRW(payout, { short: true })}</div>
-      <div style="width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:7px solid ${bg};margin:0 auto;"></div>
+        display:flex;
+        align-items:center;
+        gap:4px;
+        letter-spacing:-0.2px;
+        line-height:1;
+      ">
+        <span style="font-size:13px;line-height:1;">${icon}</span>
+        <span>${priceText}</span>
+      </div>
+      <div style="width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:7px solid ${bg};margin-top:-1px;filter:drop-shadow(0 2px 2px rgba(0,0,0,0.15));"></div>
     </div>`
 }
 
@@ -94,6 +118,7 @@ export default function JobsMap({
   const [selected, setSelected] = useState<JobMapItem | null>(null)
   const [mapMoved, setMapMoved] = useState(false)
   const initialFitDone = useRef(false)
+  const centeredOnUserRef = useRef(false) // GPS 최초 취득 시 1회 중심화 여부
 
   // ─── 지도 초기화 ─────────────────────────────────────────────────────
   useEffect(() => {
@@ -105,12 +130,16 @@ export default function JobsMap({
         setLoading(false)
         return
       }
-      const center = initialCenter
-        ?? (userLat && userLng ? { lat: userLat, lng: userLng } : SEOUL)
+      // GPS가 이미 취득됐으면 내 위치로, 아니면 initialCenter, 최후는 서울
+      const center = (userLat && userLng)
+        ? { lat: userLat, lng: userLng }
+        : initialCenter ?? SEOUL
+
+      if (userLat && userLng) centeredOnUserRef.current = true
 
       const map = new naver.maps.Map(mapRef.current, {
         center: new naver.maps.LatLng(center.lat, center.lng),
-        zoom: 13,
+        zoom: 14,
         scaleControl: false,
         logoControl: true,
         mapDataControl: false,
@@ -120,7 +149,6 @@ export default function JobsMap({
       })
       mapInstance.current = map
 
-      // idle 감지 — 초기 fitBounds 후의 이동만 추적
       idleListenerRef.current = naver.maps.Event.addListener(map, 'idle', () => {
         if (initialFitDone.current) setMapMoved(true)
       })
@@ -138,7 +166,17 @@ export default function JobsMap({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // ─── 사용자 위치 마커 ────────────────────────────────────────────────
+  // ─── GPS 최초 취득 시 지도 중심화 (지도 탭 열었는데 GPS가 늦게 올 때) ──
+  useEffect(() => {
+    if (!ready || !mapInstance.current || !userLat || !userLng) return
+    if (centeredOnUserRef.current) return // 이미 중심화 완료
+    centeredOnUserRef.current = true
+    const naver = (window as any).naver
+    mapInstance.current.setCenter(new naver.maps.LatLng(userLat, userLng))
+    mapInstance.current.setZoom(14)
+  }, [ready, userLat, userLng])
+
+  // ─── 사용자 위치 마커 (파란 점) ──────────────────────────────────────
   useEffect(() => {
     if (!ready || !mapInstance.current || !userLat || !userLng) return
     const naver = (window as any).naver
@@ -148,8 +186,8 @@ export default function JobsMap({
       position: new naver.maps.LatLng(userLat, userLng),
       map: mapInstance.current,
       icon: {
-        content: `<div style="width:18px;height:18px;background:#3B82F6;border:3px solid white;border-radius:50%;box-shadow:0 0 0 7px rgba(59,130,246,0.18);"></div>`,
-        anchor: new naver.maps.Point(9, 9),
+        content: `<div style="width:16px;height:16px;background:#3B82F6;border:2.5px solid white;border-radius:50%;box-shadow:0 0 0 6px rgba(59,130,246,0.2);"></div>`,
+        anchor: new naver.maps.Point(8, 8),
       },
       zIndex: 1000,
     })
@@ -171,7 +209,6 @@ export default function JobsMap({
         fillColor: '#0EA5E9',
         fillOpacity: 0.06,
       })
-      // 원이 지도에 맞게 fitBounds
       const bounds = new naver.maps.LatLngBounds()
       const step = Math.PI / 8
       for (let a = 0; a < 2 * Math.PI; a += step) {
@@ -196,7 +233,7 @@ export default function JobsMap({
       return c && c.length === 2 && !isNaN(c[0]) && !isNaN(c[1])
     })
 
-    // 제거할 핀 정리
+    // 사라진 핀 제거
     const currentIds = new Set(validJobs.map(j => j.id))
     markersRef.current.forEach((m, id) => {
       if (!currentIds.has(id)) { m.setMap(null); markersRef.current.delete(id) }
@@ -225,7 +262,7 @@ export default function JobsMap({
       }
     })
 
-    // 최초 fitBounds (radius 없을 때만)
+    // 핀 있을 때 fitBounds (radius 없고 아직 fit 안 된 경우)
     if (!initialFitDone.current && validJobs.length > 0 && !radius) {
       if (validJobs.length === 1) {
         const c = validJobs[0].spaces!.location!.coordinates!
@@ -265,7 +302,7 @@ export default function JobsMap({
         new naver.maps.LatLng(pos.coords.latitude, pos.coords.longitude),
         { duration: 400 }
       )
-      mapInstance.current.setZoom(14)
+      mapInstance.current.setZoom(15)
     }, undefined, { enableHighAccuracy: true, timeout: 8000 })
   }, [])
 
@@ -300,7 +337,7 @@ export default function JobsMap({
       {/* 핀 수 배지 */}
       {!loading && pinCount > 0 && !selJob && (
         <div className="absolute top-3 left-3 z-20 bg-surface/90 backdrop-blur rounded-full px-3 py-1.5 shadow border border-line-soft flex items-center gap-1.5">
-          <MapPin size={12} className="text-brand" />
+          <span className="text-[13px]">🧹</span>
           <span className="text-[11.5px] font-extrabold text-ink">{pinCount}개 작업</span>
         </div>
       )}
@@ -330,7 +367,7 @@ export default function JobsMap({
       {!loading && pinCount === 0 && (
         <div className="absolute inset-0 pointer-events-none flex items-center justify-center px-8">
           <div className="bg-surface/90 backdrop-blur rounded-2xl px-5 py-4 text-center shadow-md border border-line-soft">
-            <MapPin size={24} className="text-text-faint mx-auto mb-2" />
+            <div className="text-3xl mb-2">🧹</div>
             <p className="text-[13px] font-extrabold text-ink">지도에 표시할 작업이 없어요</p>
             <p className="text-[11.5px] font-medium text-text-soft mt-1">
               필터를 조정하거나 다른 지역을 탐색해보세요
@@ -400,8 +437,8 @@ export default function JobsMap({
 
       <style>{`
         @keyframes pinpulse {
-          0%,100% { opacity:1; transform:scale(1); }
-          50%      { opacity:0.45; transform:scale(1.1); }
+          0%,100% { opacity:0.7; transform:scale(1); }
+          50%      { opacity:0.25; transform:scale(1.15); }
         }
       `}</style>
     </div>

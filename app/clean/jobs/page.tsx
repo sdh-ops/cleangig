@@ -14,7 +14,7 @@ import BottomNav from '@/components/common/BottomNav'
 import EmptyState from '@/components/common/EmptyState'
 import PullToRefresh from '@/components/common/PullToRefresh'
 import JobsMap, { type JobMapItem } from './JobsMap'
-import { formatKRW, formatScheduled, spaceTypeLabel, shortAddress, haversineKm, difficultyLabel } from '@/lib/utils'
+import { formatKRW, formatScheduled, spaceTypeLabel, shortAddress, haversineKm, difficultyLabel, parseGeoPoint } from '@/lib/utils'
 import type { JobStatus, SpaceType } from '@/lib/types'
 
 type Job = {
@@ -198,14 +198,22 @@ export default function JobsListPage() {
     { value: 'other',        label: '기타' },
   ]
 
-  const mapJobs: JobMapItem[] = jobs.map(j => ({
-    id: j.id, price: j.price, is_urgent: j.is_urgent,
-    scheduled_at: j.scheduled_at, estimated_duration: j.estimated_duration,
-    spaces: j.spaces ? {
-      name: j.spaces.name, type: j.spaces.type,
-      address: j.spaces.address, location: j.spaces.location,
-    } : undefined,
-  }))
+  const mapJobs: JobMapItem[] = jobs.map(j => {
+    // Supabase PostGIS geometry는 REST API에서 WKB hex 문자열로 반환됨
+    // parseGeoPoint()로 { lat, lng } 추출 후 GeoJSON 형태로 재구성
+    const geoPoint = parseGeoPoint(j.spaces?.location)
+    const parsedLocation = geoPoint
+      ? { coordinates: [geoPoint.lng, geoPoint.lat] as [number, number] }
+      : undefined
+    return {
+      id: j.id, price: j.price, is_urgent: j.is_urgent,
+      scheduled_at: j.scheduled_at, estimated_duration: j.estimated_duration,
+      spaces: j.spaces ? {
+        name: j.spaces.name, type: j.spaces.type,
+        address: j.spaces.address, location: parsedLocation,
+      } : undefined,
+    }
+  })
 
   const activeFilterCount = (typeFilter !== 'all' ? 1 : 0) + (radius ? 1 : 0)
 
@@ -227,7 +235,11 @@ export default function JobsListPage() {
               <List size={14} /> 목록
             </button>
             <button
-              onClick={() => setView('map')}
+              onClick={() => {
+                setView('map')
+                // 지도 탭 전환 시 GPS 없으면 즉시 요청 → 내 위치 중심화
+                if (!userLat) requestGps()
+              }}
               className={`flex items-center gap-1 px-2.5 py-1.5 rounded-[10px] text-[11.5px] font-extrabold transition ${view === 'map' ? 'bg-surface shadow-sm text-ink' : 'text-text-muted'}`}
             >
               <MapIcon size={14} /> 지도
