@@ -15,11 +15,16 @@ import {
   AlertCircle,
   Calendar,
   MessageSquare,
+  Plus,
+  X,
+  ListChecks,
 } from 'lucide-react'
 import { calculatePrice, suggestBasePrice, DEFAULT_FEES, type FeeSettings } from '@/lib/pricing'
 import { getFeeSettings } from '@/lib/settings'
-import { formatKRW, formatScheduled, spaceTypeLabel } from '@/lib/utils'
+import { formatKRW, formatScheduled, spaceTypeLabel, rid } from '@/lib/utils'
 import type { SpaceType, ChecklistItem } from '@/lib/types'
+
+type EditableCheck = { id: string; label: string; required: boolean }
 
 type Space = {
   id: string
@@ -52,6 +57,8 @@ export default function CreateRequestPage() {
   const [difficulty, setDifficulty] = useState<'쉬움' | '보통' | '어려움'>('보통')
   const [customPrice, setCustomPrice] = useState<number | null>(null) // null = 자동추천 사용
   const [instructions, setInstructions] = useState('')
+  const [checklist, setChecklist] = useState<EditableCheck[]>([]) // 이번 청소용 (공간 템플릿에서 복제)
+  const [newCheckItem, setNewCheckItem] = useState('')
   const [fees, setFees] = useState<FeeSettings>(DEFAULT_FEES)
   const [isRecurring, setIsRecurring] = useState(false)
   const [frequency, setFrequency] = useState<'WEEKLY' | 'BIWEEKLY' | 'MONTHLY'>('WEEKLY')
@@ -88,6 +95,14 @@ export default function CreateRequestPage() {
   }, [])
 
   const selectedSpace = useMemo(() => spaces.find((s) => s.id === spaceId), [spaces, spaceId])
+
+  // 공간 선택 시 해당 공간 체크리스트 템플릿을 이번 청소용으로 복제 (여기서 자유 수정 가능)
+  useEffect(() => {
+    const tpl = selectedSpace?.checklist_template ?? []
+    setChecklist(
+      tpl.map((c: any) => ({ id: rid('ck'), label: c.label, required: !!c.required })),
+    )
+  }, [spaceId]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const scheduledAt = useMemo(() => {
     if (when === 'now') {
@@ -152,7 +167,7 @@ export default function CreateRequestPage() {
             estimated_duration: 90,
             price: priceBreakdown.total,
             price_breakdown: priceBreakdown,
-            checklist: selectedSpace.checklist_template ?? [],
+            checklist: checklist.map((c) => ({ ...c, completed: false })),
             special_instructions: instructions || null,
             frequency,
             occurrences,
@@ -172,7 +187,7 @@ export default function CreateRequestPage() {
         estimated_duration: 90,
         price: priceBreakdown.total,
         price_breakdown: priceBreakdown as unknown as Record<string, number>,
-        checklist: selectedSpace.checklist_template ?? [],
+        checklist: checklist.map((c) => ({ ...c, completed: false })),
         special_instructions: instructions || null,
         is_urgent: isUrgent || when === 'now',
         is_recurring: false,
@@ -461,6 +476,71 @@ export default function CreateRequestPage() {
                     onChange={(e) => setCustomPrice(parseInt(e.target.value))} className="w-full accent-brand" />
                   <div className="flex justify-between text-[10px] text-text-faint font-bold mt-1">
                     <span>최소 1.5만</span><span>최대 15만</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* 이번 청소 체크리스트 (공간 템플릿에서 복제 → 자유 수정) */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="t-meta ml-1 flex items-center gap-1.5">
+                    <ListChecks size={13} /> 이번 청소 체크리스트
+                  </label>
+                  <span className="text-[10.5px] font-bold text-text-faint">{checklist.length}개 · 이번 요청만 적용</span>
+                </div>
+                <div className="flex flex-col gap-2">
+                  {checklist.map((item) => (
+                    <div key={item.id} className="card p-3 flex items-center gap-2.5">
+                      <input
+                        value={item.label}
+                        onChange={(e) =>
+                          setChecklist((list) => list.map((c) => (c.id === item.id ? { ...c, label: e.target.value } : c)))
+                        }
+                        className="flex-1 bg-transparent outline-none text-[13.5px] font-semibold text-ink min-w-0"
+                      />
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setChecklist((list) => list.map((c) => (c.id === item.id ? { ...c, required: !c.required } : c)))
+                        }
+                        className={`chip ${item.required ? 'chip-brand' : 'chip-muted'} !text-[10px] px-2 py-0.5 shrink-0`}
+                      >
+                        {item.required ? '필수' : '선택'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setChecklist((list) => list.filter((c) => c.id !== item.id))}
+                        className="text-text-faint hover:text-danger transition p-0.5 shrink-0"
+                        aria-label="삭제"
+                      >
+                        <X size={15} />
+                      </button>
+                    </div>
+                  ))}
+                  <div className="flex gap-2">
+                    <input
+                      value={newCheckItem}
+                      onChange={(e) => setNewCheckItem(e.target.value)}
+                      placeholder="항목 추가 (예: 냉장고 내부 정리)"
+                      className="input flex-1 !min-h-[46px]"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && newCheckItem.trim()) {
+                          setChecklist((l) => [...l, { id: rid('ck'), label: newCheckItem.trim(), required: false }])
+                          setNewCheckItem('')
+                        }
+                      }}
+                    />
+                    <button
+                      type="button"
+                      disabled={!newCheckItem.trim()}
+                      onClick={() => {
+                        setChecklist((l) => [...l, { id: rid('ck'), label: newCheckItem.trim(), required: false }])
+                        setNewCheckItem('')
+                      }}
+                      className="btn btn-secondary !min-h-[46px] !px-4 shrink-0"
+                    >
+                      <Plus size={17} />
+                    </button>
                   </div>
                 </div>
               </div>

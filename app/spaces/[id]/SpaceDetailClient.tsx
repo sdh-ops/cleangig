@@ -40,6 +40,8 @@ type Space = {
   cleaning_tool_location?: string
   parking_guide?: string
   trash_guide?: string
+  access_codes?: { label: string; value: string }[]
+  caution_notes?: string
   has_toilet?: boolean
   has_kitchen?: boolean
   has_bed?: boolean
@@ -166,6 +168,28 @@ export default function SpaceDetailClient({ space, isOwner, totalJobs, monthCoun
               {facilities.length > 0 && <Row label="시설" value={facilities.join(' · ')} />}
             </div>
           </div>
+
+          {Array.isArray(space.access_codes) && space.access_codes.filter((c) => c?.value).length > 0 && (
+            <div className="card p-4 border-2 border-brand/20 bg-brand-softer">
+              <h3 className="text-[13px] font-black text-brand-dark uppercase tracking-wide mb-2 flex items-center gap-1.5">🔑 출입 비밀번호</h3>
+              <div className="flex flex-col gap-2">
+                {space.access_codes.filter((c) => c?.value).map((c, i) => (
+                  <div key={i} className="flex items-center justify-between bg-white/70 rounded-xl px-3.5 py-2.5 border border-brand/15">
+                    <span className="text-[13px] font-extrabold text-brand-dark">{c.label}</span>
+                    <span className="text-[15px] font-extrabold text-ink tracking-wide">{c.value}</span>
+                  </div>
+                ))}
+              </div>
+              <p className="text-[11px] font-semibold text-brand-dark mt-2">배정된 클린파트너에게만 공개됩니다.</p>
+            </div>
+          )}
+
+          {space.caution_notes && (
+            <div className="card p-4 bg-sun-soft border border-sun/20">
+              <h3 className="text-[13px] font-black text-[#92580C] uppercase tracking-wide mb-1.5">⚠️ 주의사항</h3>
+              <p className="text-[13.5px] font-semibold text-ink leading-relaxed whitespace-pre-wrap">{space.caution_notes}</p>
+            </div>
+          )}
 
           {(space.cleaning_tool_location || space.parking_guide || space.trash_guide) && (
             <div className="card p-4">

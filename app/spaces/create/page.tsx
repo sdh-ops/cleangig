@@ -17,6 +17,7 @@ import {
 } from 'lucide-react'
 import ImageUploader from '@/components/common/ImageUploader'
 import NaverMap from '@/components/common/NaverMap'
+import AccessCodesEditor, { makeAccessCode, type AccessCode } from '@/components/common/AccessCodesEditor'
 import { makeChecklist, DEFAULT_CHECKLISTS } from '@/lib/checklists'
 import { suggestBasePrice } from '@/lib/pricing'
 import { spaceTypeLabel, rid } from '@/lib/utils'
@@ -39,11 +40,10 @@ const STEPS: { id: StepId; title: string }[] = [
   { id: 1, title: '공간 유형' },
   { id: 2, title: '위치' },
   { id: 3, title: '기본 정보' },
-  { id: 4, title: '청소 안내 (선택)' },
-  { id: 5, title: '체크리스트 (선택)' },
-  { id: 6, title: '사업자 (선택)' },
+  { id: 4, title: '출입·현장 안내' },
+  { id: 5, title: '체크리스트' },
+  { id: 6, title: '사업자 정보' },
 ]
-const ESSENTIAL_STEPS = 3 // 1~3 필수, 4~6 선택 (나중에 공간 수정에서도 가능)
 
 export default function CreateSpacePage() {
   const router = useRouter()
@@ -60,7 +60,8 @@ export default function CreateSpacePage() {
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null)
   const [geoLoading, setGeoLoading] = useState(false)
   const [sizePyeong, setSizePyeong] = useState<string>('')
-  const [difficulty, setDifficulty] = useState<'쉬움' | '보통' | '어려움'>('보통')
+  // 난이도는 청소 요청 단계에서 매번 선택. 공간 기본가는 '보통' 기준으로 산출.
+  const difficulty = '보통' as const
 
   const [photos, setPhotos] = useState<string[]>([])
   const [referencePhotos, setReferencePhotos] = useState<string[]>([])
@@ -68,6 +69,9 @@ export default function CreateSpacePage() {
   const [toolLocation, setToolLocation] = useState('')
   const [parkingGuide, setParkingGuide] = useState('')
   const [trashGuide, setTrashGuide] = useState('')
+  // 출입 보안정보 (공간 단위로 1회 저장 → 매 청소 재사용) — 가변 목록
+  const [accessCodes, setAccessCodes] = useState<AccessCode[]>([makeAccessCode('출입문', '')])
+  const [cautionNotes, setCautionNotes] = useState('') // 주의사항
   const [toiletCount, setToiletCount] = useState(1)
   const [kitchenCount, setKitchenCount] = useState(0)
   const [bedCount, setBedCount] = useState(0)
@@ -103,15 +107,19 @@ export default function CreateSpacePage() {
 
   const sizeSqm = sizePyeong ? Math.round(parseFloat(sizePyeong) * 3.3 * 10) / 10 : undefined
 
+  // 출입 비밀번호: 라벨+값 모두 채운 항목이 최소 1개 필요
+  const hasValidAccessCode = accessCodes.some((c) => c.label.trim() && c.value.trim())
+
   const canProceed = (() => {
     if (step === 1) return !!type
-    if (step === 2) return !!address.trim() && !geoLoading
+    if (step === 2) return !!coords && !geoLoading // 지도 핀(좌표) 필수
     if (step === 3) return !!name.trim()
-    if (step === 4) return true
+    if (step === 4) return hasValidAccessCode // 출입 방법 1개 이상 필수
     if (step === 5) return checklist.length > 0
     if (step === 6) {
       if (bizTypeSel === 'BUSINESS') {
-        return /^\d{10}$/.test(bizRegNumber.replace(/-/g, ''))
+        // 사업자 운영: 등록번호 + 등록증 사본 필수
+        return /^\d{10}$/.test(bizRegNumber.replace(/-/g, '')) && !!bizRegImage[0]
       }
       return true
     }
@@ -133,6 +141,11 @@ export default function CreateSpacePage() {
 
       const basePrice = suggestBasePrice(type as SpaceType, sizePyeong ? parseFloat(sizePyeong) : null, difficulty)
 
+      // 채워진 출입 비밀번호만 저장 (라벨·값 모두 있는 항목)
+      const filledCodes = accessCodes
+        .map((c) => ({ label: c.label.trim(), value: c.value.trim() }))
+        .filter((c) => c.label && c.value)
+
       // Core payload (columns that definitely exist)
       const corePayload = {
         operator_id: user.id,
@@ -140,10 +153,8 @@ export default function CreateSpacePage() {
         type,
         address: address.trim(),
         address_detail: addressDetail.trim() || null,
-        // PostgREST geography type requires WKT format
-        location: coords ? `POINT(${coords.lng} ${coords.lat})` : null,
-        lat: coords?.lat ?? null,
-        lng: coords?.lng ?? null,
+        // 코드베이스 전역에서 location.coordinates(GeoJSON)로 읽으므로 GeoJSON으로 저장
+        location: coords ? { type: 'Point', coordinates: [coords.lng, coords.lat] } : null,
         size_pyeong: sizePyeong ? parseFloat(sizePyeong) : null,
         size_sqm: sizeSqm ? Math.round(sizeSqm) : null,
         base_price: basePrice,
@@ -151,6 +162,7 @@ export default function CreateSpacePage() {
         cleaning_tool_location: toolLocation || null,
         parking_guide: parkingGuide || null,
         trash_guide: trashGuide || null,
+        entry_code: filledCodes[0]?.value || null, // 하위호환
         checklist_template: checklist.map((c) => ({ ...c, completed: false })),
         photos,
         is_active: true,
@@ -159,6 +171,8 @@ export default function CreateSpacePage() {
       // Extended payload (columns added in later migrations — may not exist on older DBs)
       const extendedPayload = {
         ...corePayload,
+        access_codes: filledCodes,
+        caution_notes: cautionNotes.trim() || null,
         cleaning_difficulty: difficulty,
         has_toilet: toiletCount > 0,
         has_kitchen: kitchenCount > 0,
@@ -283,24 +297,30 @@ export default function CreateSpacePage() {
               </div>
 
               {address.trim() && !coords && !geoLoading && (
-                <div className="flex items-center gap-2 p-3 bg-info-soft rounded-xl border border-info/20">
-                  <span className="text-info text-sm">ℹ️</span>
-                  <p className="text-[12.5px] font-bold text-ink-soft">지도 표시를 건너뛰고 계속 진행할 수 있어요. 공간 등록 후 위치를 수정할 수 있습니다.</p>
+                <div className="flex items-center gap-2 p-3 bg-sun-soft rounded-xl border border-sun/30">
+                  <span className="text-sm">📍</span>
+                  <p className="text-[12.5px] font-bold text-ink-soft">검색 버튼을 눌러 위치를 확인하세요. 핀이 틀리면 지도를 눌러 직접 옮길 수 있어요.</p>
                 </div>
               )}
 
               {coords ? (
-                <NaverMap
-                  height={200}
-                  center={coords}
-                  markers={[{ lat: coords.lat, lng: coords.lng, title: name || '공간 위치', tone: 'brand' }]}
-                  interactive={false}
-                />
+                <div>
+                  <NaverMap
+                    height={220}
+                    center={coords}
+                    markers={[{ lat: coords.lat, lng: coords.lng, title: name || '공간 위치', tone: 'brand' }]}
+                    interactive
+                    onMapClick={(lat, lng) => setCoords({ lat, lng })}
+                  />
+                  <p className="text-[11.5px] font-bold text-text-soft mt-2 ml-1 flex items-center gap-1">
+                    <MapPin size={12} className="text-brand" /> 핀 위치가 정확하지 않으면 지도를 눌러 옮겨주세요.
+                  </p>
+                </div>
               ) : (
                 <div className="rounded-2xl border-2 border-dashed border-line p-6 text-center">
                   <MapPin size={22} className="mx-auto text-text-faint mb-2" />
                   <p className="text-[12.5px] font-bold text-text-soft">
-                    주소를 입력하면 지도에 위치가 표시됩니다.
+                    주소를 입력하고 검색하면 지도에 위치가 표시됩니다.
                   </p>
                 </div>
               )}
@@ -342,39 +362,8 @@ export default function CreateSpacePage() {
                 </div>
                 {sizeSqm && <p className="text-[11px] text-text-soft font-bold mt-1 ml-1">≈ {sizeSqm}㎡</p>}
                 <p className="text-[11px] text-text-soft font-medium mt-1.5 ml-1 leading-snug">
-                  청소 가격은 요청할 때마다 면적·난이도로 자동 추천돼요. 여기선 입력만 해두세요.
+                  청소 난이도·가격은 <b className="text-brand-dark">청소를 요청할 때마다</b> 면적 기준으로 정하게 돼요.
                 </p>
-              </div>
-
-              {/* 난이도 */}
-              <div>
-                <label className="t-meta block mb-2 ml-1">청소 난이도</label>
-                <div className="grid grid-cols-3 gap-2">
-                  {([
-                    { value: '쉬움', emoji: '😊', desc: '단순 정리·소규모' },
-                    { value: '보통', emoji: '🧹', desc: '일반 청소' },
-                    { value: '어려움', emoji: '💪', desc: '대형·특수 공간' },
-                  ] as const).map(opt => (
-                    <button
-                      key={opt.value}
-                      type="button"
-                      onClick={() => setDifficulty(opt.value)}
-                      className={`flex flex-col items-center gap-1 p-3 rounded-2xl border-2 transition ${
-                        difficulty === opt.value
-                          ? 'border-brand bg-brand-softer'
-                          : 'border-line bg-surface'
-                      }`}
-                    >
-                      <span className="text-xl">{opt.emoji}</span>
-                      <span className={`text-[12.5px] font-extrabold ${difficulty === opt.value ? 'text-brand-dark' : 'text-ink'}`}>
-                        {opt.value}
-                      </span>
-                      <span className="text-[10px] font-medium text-text-faint text-center leading-tight">
-                        {opt.desc}
-                      </span>
-                    </button>
-                  ))}
-                </div>
               </div>
 
               <div>
@@ -402,8 +391,31 @@ export default function CreateSpacePage() {
           {step === 4 && (
             <div className="flex flex-col gap-5">
               <div>
-                <h2 className="h-title text-ink">클린파트너에게 안내할 내용</h2>
-                <p className="t-caption mt-1.5">상세한 안내는 작업 품질을 높여줍니다.</p>
+                <h2 className="h-title text-ink">출입·현장 안내</h2>
+                <p className="t-caption mt-1.5">클린파트너가 현장에 들어가 작업할 수 있도록 알려주세요.</p>
+              </div>
+
+              {/* 출입 비밀번호 — 가변 목록 */}
+              <div>
+                <label className="t-meta block mb-2 ml-1 flex items-center gap-1">
+                  🔑 출입 비밀번호 <span className="text-danger">*</span>
+                </label>
+                <AccessCodesEditor codes={accessCodes} onChange={setAccessCodes} />
+                <p className="text-[11px] text-text-soft font-medium mt-2 ml-1 leading-snug">
+                  공동현관·출입문·청소도구함 등 필요한 만큼 추가하세요. 배정된 클린파트너에게만 공개되며 안전하게 보관됩니다.
+                </p>
+              </div>
+
+              {/* 주의사항 */}
+              <div>
+                <label className="t-meta block mb-2 ml-1">⚠️ 주의사항 <span className="text-text-faint font-normal">(선택)</span></label>
+                <textarea
+                  value={cautionNotes}
+                  onChange={(e) => setCautionNotes(e.target.value)}
+                  placeholder="예) 반려동물 있음, 특정 가구 손대지 말 것, 소음 주의 시간대 등"
+                  className="input min-h-[80px]"
+                  rows={2}
+                />
               </div>
 
               <div>
@@ -617,9 +629,14 @@ export default function CreateSpacePage() {
                     value={bizRegImage}
                     onChange={setBizRegImage}
                     max={1}
-                    label="사업자등록증 사본 (권장)"
-                    hint="과세/면세 구분 및 세무 처리 시 활용됩니다."
+                    label="사업자등록증 사본 *"
+                    hint="세금계산서 발행·정산을 위해 필수입니다. 사진 또는 PDF 캡처를 올려주세요."
                   />
+                  {!bizRegImage[0] && (
+                    <p className="text-[12px] font-bold text-danger ml-1 -mt-2">
+                      사업자 운영은 사업자등록증 사본 등록이 필요합니다.
+                    </p>
+                  )}
                 </>
               )}
 
@@ -645,23 +662,15 @@ export default function CreateSpacePage() {
 
       <div className="fixed bottom-0 inset-x-0 border-t border-line-soft bg-surface/95 backdrop-blur safe-bottom">
         <div className="max-w-[480px] mx-auto px-5 py-3.5 flex flex-col gap-2">
-          {step < ESSENTIAL_STEPS ? (
-            <button onClick={handleNext} disabled={!canProceed || loading} className="btn btn-primary w-full">
-              {loading ? <Loader2 size={20} className="animate-spin" /> : <>다음 <ChevronRight size={20} /></>}
-            </button>
-          ) : (
-            <>
-              {/* 3단계부터 즉시 등록 완료 가능, 선택 정보는 더 채우거나 나중에 수정 */}
-              <button onClick={handleSubmit} disabled={!canProceed || loading} className="btn btn-primary w-full">
-                {loading ? <Loader2 size={20} className="animate-spin" /> : <>공간 등록 완료 <Check size={20} /></>}
-              </button>
-              {step < 6 && (
-                <button onClick={() => setStep((s) => (s + 1) as StepId)} disabled={loading} className="btn btn-ghost w-full !min-h-[44px] !text-[13px]">
-                  추가 정보 입력 ({STEPS[step].title.replace(' (선택)', '')}) <ChevronRight size={16} />
-                </button>
-              )}
-            </>
-          )}
+          <button onClick={handleNext} disabled={!canProceed || loading} className="btn btn-primary w-full">
+            {loading ? (
+              <Loader2 size={20} className="animate-spin" />
+            ) : step === STEPS.length ? (
+              <>공간 등록 완료 <Check size={20} /></>
+            ) : (
+              <>다음 <ChevronRight size={20} /></>
+            )}
+          </button>
         </div>
       </div>
     </div>

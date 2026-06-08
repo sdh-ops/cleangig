@@ -37,6 +37,7 @@ export default function NaverMap({
   const markerObjs = useRef<any[]>([])   // data markers — cleared on update
   const currentMarker = useRef<any>(null) // user "blue dot" — never cleared by marker update
   const [loading, setLoading] = useState(true)
+  const [ready, setReady] = useState(false) // map instance created — gates marker effect
   const [err, setErr] = useState<string | null>(null)
 
   useEffect(() => {
@@ -67,6 +68,7 @@ export default function NaverMap({
       })
       mapInstance.current = map
       setLoading(false)
+      setReady(true) // triggers marker effect now that the map exists
 
       if (onMapClick) {
         naver.maps.Event.addListener(map, 'click', (e: any) => {
@@ -140,7 +142,7 @@ export default function NaverMap({
     } else if (markers.length === 1) {
       mapInstance.current.setCenter(new naver.maps.LatLng(markers[0].lat, markers[0].lng))
     }
-  }, [markers, center])
+  }, [markers, center, ready])
 
   return (
     <div className={`relative ${className ?? ''} overflow-hidden rounded-2xl bg-surface-muted`} style={{ height }}>

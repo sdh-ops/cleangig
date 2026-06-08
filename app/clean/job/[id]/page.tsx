@@ -64,6 +64,7 @@ type JobFull = {
     address: string
     address_detail?: string
     entry_code?: string
+    access_codes?: { label: string; value: string }[]
     caution_notes?: string
     cleaning_tool_location?: string
     parking_guide?: string
@@ -174,7 +175,7 @@ export default function WorkerJobDetail() {
           estimated_duration, is_urgent, special_instructions, checklist, supply_shortages,
           supply_status, extra_charge_status, extra_charge_amount, extra_charge_reason, extra_charge_photos,
           price_breakdown,
-          spaces(id, name, type, address, address_detail, entry_code, caution_notes, cleaning_tool_location, parking_guide, trash_guide, photos, location),
+          spaces(id, name, type, address, address_detail, entry_code, access_codes, caution_notes, cleaning_tool_location, parking_guide, trash_guide, photos, location),
           users:operator_id(id, name, phone, profile_image, avg_rating)
         `)
         .eq('id', id)
@@ -621,34 +622,51 @@ export default function WorkerJobDetail() {
             </div>
           )}
 
-          {/* 출입 안내 — 기본 마스킹, 탭하면 열람 */}
-          {isMine && job.spaces?.entry_code && (
-            <div className="card p-4 mb-4 border-2 border-brand/30 bg-brand-softer">
-              <div className="flex items-center gap-2 mb-3">
-                <span className="text-[20px]">🔑</span>
-                <h3 className="text-[15px] font-extrabold text-ink">출입 방법 / 비밀번호</h3>
-              </div>
-              <div className="bg-white/70 rounded-xl px-4 py-3.5 border border-brand/15 flex items-center justify-between gap-3">
-                <p
-                  className={`text-[18px] font-extrabold text-ink leading-relaxed flex-1 ${
-                    codeRevealed ? 'tracking-widest' : 'tracking-[0.3em] text-text-soft select-none'
-                  }`}
-                >
-                  {codeRevealed ? job.spaces.entry_code : '● ● ● ● ● ●'}
+          {/* 출입 안내 — 기본 마스킹, 탭하면 열람. access_codes(다중) 우선, 없으면 entry_code */}
+          {(() => {
+            if (!isMine) return null
+            const rawCodes = (job.spaces?.access_codes as { label: string; value: string }[] | null) || []
+            const codes = rawCodes.length > 0
+              ? rawCodes.filter((c) => c?.value)
+              : job.spaces?.entry_code
+                ? [{ label: '출입문', value: job.spaces.entry_code }]
+                : []
+            if (codes.length === 0) return null
+            return (
+              <div className="card p-4 mb-4 border-2 border-brand/30 bg-brand-softer">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[20px]">🔑</span>
+                    <h3 className="text-[15px] font-extrabold text-ink">출입 방법 / 비밀번호</h3>
+                  </div>
+                  <button
+                    onClick={() => setCodeRevealed((v) => !v)}
+                    className="shrink-0 flex items-center gap-1.5 px-3.5 h-9 rounded-xl bg-brand text-white text-[13px] font-extrabold active:scale-95 transition"
+                  >
+                    {codeRevealed ? <EyeOff size={15} /> : <Eye size={15} />}
+                    {codeRevealed ? '숨기기' : '모두 보기'}
+                  </button>
+                </div>
+                <div className="flex flex-col gap-2">
+                  {codes.map((c, i) => (
+                    <div key={i} className="bg-white/70 rounded-xl px-4 py-3 border border-brand/15 flex items-center justify-between gap-3">
+                      <span className="text-[13px] font-extrabold text-brand-dark shrink-0">{c.label}</span>
+                      <p
+                        className={`text-[17px] font-extrabold leading-relaxed text-right flex-1 ${
+                          codeRevealed ? 'tracking-wide text-ink' : 'tracking-[0.25em] text-text-soft select-none'
+                        }`}
+                      >
+                        {codeRevealed ? c.value : '● ● ● ●'}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-[12px] font-semibold text-brand-dark mt-2.5">
+                  ⚠ 이 정보는 배정된 클린파트너 본인에게만 공개됩니다. 외부 유출 금지
                 </p>
-                <button
-                  onClick={() => setCodeRevealed((v) => !v)}
-                  className="shrink-0 flex items-center gap-1.5 px-3.5 h-10 rounded-xl bg-brand text-white text-[13.5px] font-extrabold active:scale-95 transition"
-                >
-                  {codeRevealed ? <EyeOff size={16} /> : <Eye size={16} />}
-                  {codeRevealed ? '숨기기' : '보기'}
-                </button>
               </div>
-              <p className="text-[12px] font-semibold text-brand-dark mt-2.5">
-                ⚠ 이 정보는 배정된 클린파트너 본인에게만 공개됩니다. 외부 유출 금지
-              </p>
-            </div>
-          )}
+            )
+          })()}
 
           {/* 주의사항 (caution_notes) */}
           {isMine && job.spaces?.caution_notes && (

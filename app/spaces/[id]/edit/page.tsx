@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 import { ChevronLeft, Check, Loader2, MapPin, Search } from 'lucide-react'
 import ImageUploader from '@/components/common/ImageUploader'
 import NaverMap from '@/components/common/NaverMap'
+import AccessCodesEditor, { makeAccessCode, type AccessCode } from '@/components/common/AccessCodesEditor'
 import { geocode } from '@/lib/naver'
 import { spaceTypeLabel } from '@/lib/utils'
 import type { SpaceType } from '@/lib/types'
@@ -31,7 +32,8 @@ export default function EditSpacePage() {
   const [parkingGuide, setParkingGuide] = useState('')
   const [trashGuide, setTrashGuide] = useState('')
   const [geoLoading, setGeoLoading] = useState(false)
-  const [difficulty, setDifficulty] = useState<'쉬움' | '보통' | '어려움'>('보통')
+  const [accessCodes, setAccessCodes] = useState<AccessCode[]>([])
+  const [cautionNotes, setCautionNotes] = useState('')
 
   useEffect(() => {
     (async () => {
@@ -51,9 +53,14 @@ export default function EditSpacePage() {
       setToolLocation(data.cleaning_tool_location || '')
       setParkingGuide(data.parking_guide || '')
       setTrashGuide(data.trash_guide || '')
-      const d = data.cleaning_difficulty
-      if (d === '쉬움' || d === '어려움') setDifficulty(d)
-      else setDifficulty('보통')
+      setCautionNotes(data.caution_notes || '')
+      // access_codes(신규) 우선, 없으면 기존 entry_code를 '출입문' 한 줄로 변환
+      const loaded: AccessCode[] = Array.isArray(data.access_codes) && data.access_codes.length > 0
+        ? data.access_codes.map((c: any) => makeAccessCode(c.label || '출입문', c.value || ''))
+        : data.entry_code
+          ? [makeAccessCode('출입문', data.entry_code)]
+          : [makeAccessCode('출입문', '')]
+      setAccessCodes(loaded)
       if (data.location?.coordinates) {
         setCoords({ lat: data.location.coordinates[1], lng: data.location.coordinates[0] })
       }
@@ -74,7 +81,11 @@ export default function EditSpacePage() {
     setSaving(true)
     setErr(null)
     try {
-      const payload = {
+      const filledCodes = accessCodes
+        .map((c) => ({ label: c.label.trim(), value: c.value.trim() }))
+        .filter((c) => c.label && c.value)
+
+      const basePayload = {
         name: name.trim(),
         address: address.trim(),
         address_detail: addressDetail.trim() || null,
@@ -87,10 +98,17 @@ export default function EditSpacePage() {
         cleaning_tool_location: toolLocation || null,
         parking_guide: parkingGuide || null,
         trash_guide: trashGuide || null,
-        cleaning_difficulty: difficulty,
+        entry_code: filledCodes[0]?.value || null,
         location: coords ? { type: 'Point', coordinates: [coords.lng, coords.lat] } : null,
       }
-      const { error } = await supabase.from('spaces').update(payload).eq('id', id)
+      // access_codes / caution_notes 컬럼 미존재 DB 대비 fallback
+      let { error } = await supabase
+        .from('spaces')
+        .update({ ...basePayload, access_codes: filledCodes, caution_notes: cautionNotes.trim() || null })
+        .eq('id', id)
+      if (error && error.message?.includes('column')) {
+        ;({ error } = await supabase.from('spaces').update(basePayload).eq('id', id))
+      }
       if (error) throw error
       router.replace(`/spaces/${id}`)
     } catch (e) {
@@ -149,7 +167,16 @@ export default function EditSpacePage() {
           <input value={addressDetail} onChange={(e) => setAddressDetail(e.target.value)} className="input" />
         </div>
         {coords && (
-          <NaverMap height={180} center={coords} markers={[{ lat: coords.lat, lng: coords.lng, title: name, tone: 'brand' }]} interactive={false} />
+          <div>
+            <NaverMap
+              height={180}
+              center={coords}
+              markers={[{ lat: coords.lat, lng: coords.lng, title: name, tone: 'brand' }]}
+              interactive
+              onMapClick={(lat, lng) => setCoords({ lat, lng })}
+            />
+            <p className="text-[11.5px] font-bold text-text-soft mt-1.5 ml-1">📍 핀이 틀리면 지도를 눌러 옮겨주세요.</p>
+          </div>
         )}
 
         <div className="grid grid-cols-2 gap-3">
@@ -163,34 +190,16 @@ export default function EditSpacePage() {
           </div>
         </div>
 
+        {/* 출입 비밀번호 */}
         <div>
-          <label className="t-meta block mb-2 ml-1">청소 난이도</label>
-          <div className="grid grid-cols-3 gap-2">
-            {([
-              { value: '쉬움', emoji: '😊', desc: '단순 정리·소규모' },
-              { value: '보통', emoji: '🧹', desc: '일반 청소' },
-              { value: '어려움', emoji: '💪', desc: '대형·특수 공간' },
-            ] as const).map(opt => (
-              <button
-                key={opt.value}
-                type="button"
-                onClick={() => setDifficulty(opt.value)}
-                className={`flex flex-col items-center gap-1 p-3 rounded-2xl border-2 transition ${
-                  difficulty === opt.value
-                    ? 'border-brand bg-brand-softer'
-                    : 'border-line bg-surface'
-                }`}
-              >
-                <span className="text-xl">{opt.emoji}</span>
-                <span className={`text-[12.5px] font-extrabold ${difficulty === opt.value ? 'text-brand-dark' : 'text-ink'}`}>
-                  {opt.value}
-                </span>
-                <span className="text-[10px] font-medium text-text-faint text-center leading-tight">
-                  {opt.desc}
-                </span>
-              </button>
-            ))}
-          </div>
+          <label className="t-meta block mb-2 ml-1">🔑 출입 비밀번호</label>
+          <AccessCodesEditor codes={accessCodes} onChange={setAccessCodes} />
+        </div>
+
+        {/* 주의사항 */}
+        <div>
+          <label className="t-meta block mb-2 ml-1">⚠️ 주의사항</label>
+          <textarea value={cautionNotes} onChange={(e) => setCautionNotes(e.target.value)} className="input min-h-[80px]" rows={2} placeholder="예) 반려동물 있음, 특정 가구 손대지 말 것 등" />
         </div>
 
         <ImageUploader bucket="spaces" folder="photos" value={photos} onChange={setPhotos} max={6} label="공간 사진" />
