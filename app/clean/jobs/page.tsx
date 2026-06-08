@@ -57,6 +57,7 @@ export default function JobsListPage() {
   const [sort, setSort] = useState<Sort>('latest')
   const [q, setQ] = useState('')
   const [typeFilter, setTypeFilter] = useState<SpaceType | 'all'>('all')
+  const [difficultyFilter, setDifficultyFilter] = useState<'all' | '쉬움' | '보통' | '어려움'>('all')
   const [showFilters, setShowFilters] = useState(false)
   const [view, setView] = useState<View>('list')
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null)
@@ -136,6 +137,9 @@ export default function JobsListPage() {
     // 공간 유형 필터
     if (typeFilter !== 'all') list = list.filter(j => j.spaces?.type === typeFilter)
 
+    // 난이도 필터
+    if (difficultyFilter !== 'all') list = list.filter(j => j.spaces?.cleaning_difficulty === difficultyFilter)
+
     // 검색어
     if (q.trim()) {
       const kw = q.trim().toLowerCase()
@@ -167,7 +171,7 @@ export default function JobsListPage() {
 
     setJobs(list)
     setLoading(false)
-  }, [sort, typeFilter, q, radius, searchCenter])
+  }, [sort, typeFilter, difficultyFilter, q, radius, searchCenter])
 
   useEffect(() => {
     clearTimeout(debounceRef.current)
@@ -218,7 +222,7 @@ export default function JobsListPage() {
     } : undefined,
   }))
 
-  const activeFilterCount = (typeFilter !== 'all' ? 1 : 0) + (radius ? 1 : 0)
+  const activeFilterCount = (typeFilter !== 'all' ? 1 : 0) + (difficultyFilter !== 'all' ? 1 : 0) + (radius ? 1 : 0)
 
   return (
     <div className="sseuksak-shell">
@@ -362,6 +366,27 @@ export default function JobsListPage() {
                   </div>
                 </div>
 
+                {/* 난이도 */}
+                <div>
+                  <p className="text-[11px] font-extrabold text-text-muted mb-2">청소 난이도</p>
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    {([
+                      { value: 'all',  label: '전체' },
+                      { value: '쉬움', label: '😊 쉬움' },
+                      { value: '보통', label: '🧹 보통' },
+                      { value: '어려움', label: '💪 어려움' },
+                    ] as const).map(o => (
+                      <button
+                        key={o.value}
+                        onClick={() => setDifficultyFilter(o.value)}
+                        className={`chip !text-[11.5px] !px-3 !py-1 ${difficultyFilter === o.value ? 'chip-brand' : 'chip-muted'}`}
+                      >
+                        {o.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
                 {/* 공간 유형 */}
                 <div>
                   <p className="text-[11px] font-extrabold text-text-muted mb-2">공간 유형</p>
@@ -381,7 +406,7 @@ export default function JobsListPage() {
                 {/* 필터 초기화 */}
                 {activeFilterCount > 0 && (
                   <button
-                    onClick={() => { setTypeFilter('all'); setRadius(null) }}
+                    onClick={() => { setTypeFilter('all'); setDifficultyFilter('all'); setRadius(null) }}
                     className="text-[12px] font-extrabold text-danger"
                   >
                     필터 초기화
