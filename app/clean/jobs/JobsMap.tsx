@@ -44,7 +44,7 @@ function pinStyle(price: number, urgent: boolean): { bg: string; gradient: strin
     ring: '#FCA5A5',
     icon: '⚡',
   }
-  if (price >= 60000) return {
+  if (price >= 50000) return {
     bg: '#F59E0B',
     gradient: 'linear-gradient(145deg,#FCD34D,#F59E0B)',
     ring: '#FDE68A',
