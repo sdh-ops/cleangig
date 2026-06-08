@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Header from '@/components/common/Header'
+import BottomNav from '@/components/common/BottomNav'
 import EmptyState from '@/components/common/EmptyState'
 import { Sparkles, Star, Heart, Search } from 'lucide-react'
 import { TIER_BENEFITS } from '@/lib/matching'
@@ -23,17 +24,25 @@ export default function MarketPage() {
   const [workers, setWorkers] = useState<Worker[]>([])
   const [q, setQ] = useState('')
   const [loading, setLoading] = useState(true)
+  const [role, setRole] = useState<'operator' | 'worker'>('operator')
 
   useEffect(() => {
     (async () => {
-      const { data } = await supabase
-        .from('users')
-        .select('id, name, profile_image, tier, avg_rating, total_jobs, bio, is_active')
-        .eq('role', 'worker')
-        .eq('is_active', true)
-        .order('avg_rating', { ascending: false })
-        .limit(60)
-      setWorkers((data || []) as Worker[])
+      const [{ data: { user } }, { data: workersData }] = await Promise.all([
+        supabase.auth.getUser(),
+        supabase
+          .from('users')
+          .select('id, name, profile_image, tier, avg_rating, total_jobs, bio, is_active')
+          .eq('role', 'worker')
+          .eq('is_active', true)
+          .order('avg_rating', { ascending: false })
+          .limit(60),
+      ])
+      if (user) {
+        const { data: profile } = await supabase.from('users').select('role').eq('id', user.id).single()
+        if (profile?.role === 'worker') setRole('worker')
+      }
+      setWorkers((workersData || []) as Worker[])
       setLoading(false)
     })()
   }, [])
@@ -110,6 +119,7 @@ export default function MarketPage() {
           </ul>
         )}
       </div>
+      <BottomNav role={role} />
     </div>
   )
 }

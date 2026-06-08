@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import { isPlatformAdmin } from '@/lib/admin'
 import RequestDetailClient from './RequestDetailClient'
 
 export default async function RequestDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -19,6 +20,13 @@ export default async function RequestDetailPage({ params }: { params: Promise<{ 
         .single()
 
     if (!job) redirect('/dashboard')
+
+    // 접근 제어: 공간파트너(operator), 배정된 클린파트너(worker), 플랫폼 관리자만 열람 허용
+    const { data: profile } = await supabase.from('users').select('role').eq('id', user.id).single()
+    const isAdmin = isPlatformAdmin(user.email, profile?.role)
+    const isOwner = job.operator_id === user.id
+    const isAssignedWorker = !!job.worker_id && job.worker_id === user.id
+    if (!isOwner && !isAssignedWorker && !isAdmin) redirect('/dashboard')
 
     let isFavorite = false
     if (job.worker_id) {
