@@ -156,7 +156,7 @@ export default function CreateRequestPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error('로그인이 필요합니다.')
 
-      // 고정 청소 분기
+      // 고정 청소: 결제 없이 생성 (정기 요금은 별도 정산)
       if (isRecurring) {
         const res = await fetch('/api/jobs/recurring', {
           method: 'POST',
@@ -179,30 +179,32 @@ export default function CreateRequestPage() {
         return
       }
 
-      const payload = {
-        space_id: selectedSpace.id,
-        operator_id: user.id,
-        status: 'OPEN',
-        scheduled_at: scheduledAt,
-        estimated_duration: 90,
-        price: priceBreakdown.total,
-        price_breakdown: priceBreakdown as unknown as Record<string, number>,
-        checklist: checklist.map((c) => ({ ...c, completed: false })),
-        special_instructions: instructions || null,
-        is_urgent: isUrgent || when === 'now',
-        is_recurring: false,
-        auto_approved: false,
-      }
-      const { data, error } = await supabase.from('jobs').insert(payload).select('id').single()
-      if (error) throw error
-      if (data?.id) {
-        fetch('/api/jobs/notify-workers', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ job_id: data.id }),
-        }).catch(() => {})
-      }
-      router.replace(data?.id ? `/requests/${data.id}` : '/dashboard')
+      // 일반 청소: Toss 결제 플로우
+      const res = await fetch('/api/payments/create-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          space_id: selectedSpace.id,
+          scheduled_at: scheduledAt,
+          estimated_duration: 90,
+          price: priceBreakdown.total,
+          price_breakdown: priceBreakdown,
+          checklist: checklist.map((c) => ({ ...c, completed: false })),
+          special_instructions: instructions || null,
+          is_urgent: isUrgent || when === 'now',
+          is_recurring: false,
+        }),
+      })
+      const orderData = await res.json()
+      if (!orderData?.ok) throw new Error(orderData?.error || '주문 생성 실패')
+
+      const params = new URLSearchParams({
+        orderId: orderData.orderId,
+        amount: String(orderData.amount),
+        orderName: encodeURIComponent(orderData.orderName),
+        customerName: encodeURIComponent(user.user_metadata?.name ?? ''),
+      })
+      router.replace(`/payment/checkout?${params.toString()}`)
     } catch (e) {
       setErr((e as any)?.message || '요청 생성에 실패했습니다.')
       setLoading(false)
@@ -591,10 +593,10 @@ export default function CreateRequestPage() {
                 </div>
               </div>
 
-              <div className="p-4 rounded-2xl bg-info-soft border border-info/15 flex items-start gap-2.5">
-                <AlertCircle size={16} className="text-info shrink-0 mt-0.5" />
-                <div className="text-[12.5px] text-ink-soft font-semibold leading-snug">
-                  <b>베타 기간</b>: 실결제 없이 요청이 생성됩니다. 정식 오픈 시 Toss 에스크로 결제와 자동 정산이 적용됩니다.
+              <div className="p-4 rounded-2xl bg-brand-softer border border-brand/15 flex items-start gap-2.5">
+                <AlertCircle size={16} className="text-brand-dark shrink-0 mt-0.5" />
+                <div className="text-[12.5px] text-brand-dark font-semibold leading-snug">
+                  <b>에스크로 안전 결제</b>: 청소 완료 후 공간파트너가 승인하면 클린파트너에게 자동 정산됩니다.
                 </div>
               </div>
             </div>
@@ -607,7 +609,7 @@ export default function CreateRequestPage() {
         <div className="max-w-[480px] mx-auto px-5 py-3.5">
           {step === 3 && priceBreakdown && (
             <div className="flex items-baseline justify-between mb-2.5 px-1">
-              <span className="text-[12px] font-bold text-text-soft">결제 예정</span>
+              <span className="text-[12px] font-bold text-text-soft">결제 금액</span>
               <span className="t-money text-[18px] text-ink">{formatKRW(priceBreakdown.total)}</span>
             </div>
           )}
@@ -619,7 +621,9 @@ export default function CreateRequestPage() {
             {loading ? (
               <Loader2 size={20} className="animate-spin" />
             ) : step === 3 ? (
-              <>요청 보내기 <ChevronRight size={20} /></>
+              isRecurring
+                ? <>고정 청소 신청하기 <ChevronRight size={20} /></>
+                : <>결제하고 요청하기 <ChevronRight size={20} /></>
             ) : (
               <>다음 <ChevronRight size={20} /></>
             )}

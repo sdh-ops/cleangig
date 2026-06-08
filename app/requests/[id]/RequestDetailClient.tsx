@@ -647,7 +647,7 @@ export default function RequestDetailClient({ job: initialJob, userId, initialIs
                     </div>
                   </div>
                   <p className="text-[11px] text-text-faint font-semibold mb-3">
-                    ※ 결제 시스템 연동 전으로, 실제 결제/환불은 정식 오픈 후 적용됩니다.
+                    ※ 취소 정책에 따라 환불이 처리됩니다. 환불은 결제 수단으로 3~5 영업일 내 입금됩니다.
                   </p>
                   {willChargeDeposit && (
                     <div className="p-3 rounded-xl bg-danger-soft border border-danger/20 mb-4">
