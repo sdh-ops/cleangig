@@ -31,6 +31,7 @@ export default function EditSpacePage() {
   const [parkingGuide, setParkingGuide] = useState('')
   const [trashGuide, setTrashGuide] = useState('')
   const [geoLoading, setGeoLoading] = useState(false)
+  const [difficulty, setDifficulty] = useState<'쉬움' | '보통' | '어려움'>('보통')
 
   useEffect(() => {
     (async () => {
@@ -50,6 +51,9 @@ export default function EditSpacePage() {
       setToolLocation(data.cleaning_tool_location || '')
       setParkingGuide(data.parking_guide || '')
       setTrashGuide(data.trash_guide || '')
+      const d = data.cleaning_difficulty
+      if (d === '쉬움' || d === '어려움') setDifficulty(d)
+      else setDifficulty('보통')
       if (data.location?.coordinates) {
         setCoords({ lat: data.location.coordinates[1], lng: data.location.coordinates[0] })
       }
@@ -83,6 +87,7 @@ export default function EditSpacePage() {
         cleaning_tool_location: toolLocation || null,
         parking_guide: parkingGuide || null,
         trash_guide: trashGuide || null,
+        cleaning_difficulty: difficulty,
         location: coords ? { type: 'Point', coordinates: [coords.lng, coords.lat] } : null,
       }
       const { error } = await supabase.from('spaces').update(payload).eq('id', id)
@@ -155,6 +160,36 @@ export default function EditSpacePage() {
           <div>
             <label className="t-meta block mb-2 ml-1">기본 가격</label>
             <input type="number" step={1000} value={basePrice} onChange={(e) => setBasePrice(parseInt(e.target.value) || 0)} className="input" />
+          </div>
+        </div>
+
+        <div>
+          <label className="t-meta block mb-2 ml-1">청소 난이도</label>
+          <div className="grid grid-cols-3 gap-2">
+            {([
+              { value: '쉬움', emoji: '😊', desc: '단순 정리·소규모' },
+              { value: '보통', emoji: '🧹', desc: '일반 청소' },
+              { value: '어려움', emoji: '💪', desc: '대형·특수 공간' },
+            ] as const).map(opt => (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => setDifficulty(opt.value)}
+                className={`flex flex-col items-center gap-1 p-3 rounded-2xl border-2 transition ${
+                  difficulty === opt.value
+                    ? 'border-brand bg-brand-softer'
+                    : 'border-line bg-surface'
+                }`}
+              >
+                <span className="text-xl">{opt.emoji}</span>
+                <span className={`text-[12.5px] font-extrabold ${difficulty === opt.value ? 'text-brand-dark' : 'text-ink'}`}>
+                  {opt.value}
+                </span>
+                <span className="text-[10px] font-medium text-text-faint text-center leading-tight">
+                  {opt.desc}
+                </span>
+              </button>
+            ))}
           </div>
         </div>
 
