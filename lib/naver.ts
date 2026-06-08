@@ -12,7 +12,8 @@ export function loadNaverMapsScript(): void {
   if (document.getElementById('naver-maps-script')) return
   const script = document.createElement('script')
   script.id = 'naver-maps-script'
-  script.src = `https://oapi.map.naver.com/openapi/v3/maps.js?ncpClientId=${clientId}`
+  // 2025년 네이버 인증 체계 변경: ncpClientId → ncpKeyId (기존 Client ID 그대로 사용)
+  script.src = `https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=${clientId}`
   script.async = true
   document.head.appendChild(script)
 }
