@@ -129,22 +129,15 @@ export default function RequestDetailClient({ job: initialJob, userId, initialIs
     setApproving(true)
     setErr(null)
     try {
-      const { error } = await supabase
-        .from('jobs')
-        .update({ status: 'APPROVED', updated_at: new Date().toISOString() })
-        .eq('id', job.id)
-      if (error) throw error
+      const res = await fetch('/api/jobs/approve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ job_id: job.id }),
+      })
+      const data = await res.json()
+      if (!data?.ok) throw new Error(data?.error || '승인 실패')
+
       setJob((j) => ({ ...j, status: 'APPROVED' as JobStatus }))
-      // 클린파트너에게 승인 알림
-      if (job.worker_id) {
-        notify({
-          userId: job.worker_id,
-          title: '작업이 승인됐어요! 정산이 곧 처리됩니다.',
-          message: `${job.spaces?.name ?? '작업'}이 승인됐습니다. 수고하셨어요!`,
-          url: `/clean/job/${job.id}`,
-          type: 'job_approved',
-        })
-      }
       setApproving(false)
       if (job.users?.id) setShowReview(true)
       else router.refresh()
