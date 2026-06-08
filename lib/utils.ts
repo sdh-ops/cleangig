@@ -9,6 +9,17 @@ export function maskAddress(address: string): string {
 }
 
 /**
+ * 청소 난이도 레이블 + 이모지
+ */
+export function difficultyLabel(val?: string | null): { label: string; emoji: string; color: string } {
+  switch (val) {
+    case '쉬움': return { label: '쉬움', emoji: '😊', color: 'text-success' }
+    case '어려움': return { label: '어려움', emoji: '💪', color: 'text-danger' }
+    default: return { label: '보통', emoji: '🧹', color: 'text-text-soft' }
+  }
+}
+
+/**
  * 공개용 짧은 주소 — 시/도 + 구/군 + 동/읍/면 단위까지만 표시
  * "서울특별시 마포구 합정동 123-45" → "서울 마포구 합정동"
  * "서울 마포구 월드컵북로 90" → "서울 마포구"

@@ -14,7 +14,7 @@ import BottomNav from '@/components/common/BottomNav'
 import EmptyState from '@/components/common/EmptyState'
 import PullToRefresh from '@/components/common/PullToRefresh'
 import JobsMap, { type JobMapItem } from './JobsMap'
-import { formatKRW, formatScheduled, spaceTypeLabel, shortAddress, haversineKm } from '@/lib/utils'
+import { formatKRW, formatScheduled, spaceTypeLabel, shortAddress, haversineKm, difficultyLabel } from '@/lib/utils'
 import type { JobStatus, SpaceType } from '@/lib/types'
 
 type Job = {
@@ -31,6 +31,7 @@ type Job = {
     address: string
     photos?: string[]
     location?: { coordinates?: [number, number] } | null
+    cleaning_difficulty?: string | null
   }
 }
 
@@ -110,7 +111,7 @@ export default function JobsListPage() {
 
     let query = supabase
       .from('jobs')
-      .select('id, status, price, scheduled_at, estimated_duration, is_urgent, spaces(id, name, type, address, photos, location)')
+      .select('id, status, price, scheduled_at, estimated_duration, is_urgent, spaces(id, name, type, address, photos, location, cleaning_difficulty)')
       .eq('status', 'OPEN')
 
     // DB 정렬: urgent 필터 / price desc / latest
@@ -505,6 +506,14 @@ export default function JobsListPage() {
                             <span className="chip chip-brand !text-[10px] !px-2 !py-0.5">
                               {spaceTypeLabel(job.spaces?.type ?? 'other')}
                             </span>
+                            {(() => {
+                              const d = difficultyLabel(job.spaces?.cleaning_difficulty)
+                              return (
+                                <span className={`text-[10px] font-extrabold bg-surface-muted px-2 py-0.5 rounded-full ${d.color}`}>
+                                  {d.emoji} {d.label}
+                                </span>
+                              )
+                            })()}
                             {dist != null && (
                               <span className="text-[10px] font-extrabold text-brand-dark bg-brand-softer px-2 py-0.5 rounded-full">
                                 {dist < 1 ? `${Math.round(dist * 1000)}m` : `${dist.toFixed(1)}km`}

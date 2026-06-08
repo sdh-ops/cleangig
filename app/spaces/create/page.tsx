@@ -60,7 +60,7 @@ export default function CreateSpacePage() {
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null)
   const [geoLoading, setGeoLoading] = useState(false)
   const [sizePyeong, setSizePyeong] = useState<string>('')
-  // 가격·난이도는 공간이 아니라 "청소 요청"마다 결정한다 → 여기선 받지 않는다.
+  const [difficulty, setDifficulty] = useState<'쉬움' | '보통' | '어려움'>('보통')
 
   const [photos, setPhotos] = useState<string[]>([])
   const [referencePhotos, setReferencePhotos] = useState<string[]>([])
@@ -131,7 +131,7 @@ export default function CreateSpacePage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error('로그인이 필요합니다.')
 
-      const basePrice = suggestBasePrice(type as SpaceType, sizePyeong ? parseFloat(sizePyeong) : null, '보통')
+      const basePrice = suggestBasePrice(type as SpaceType, sizePyeong ? parseFloat(sizePyeong) : null, difficulty)
 
       // Core payload (columns that definitely exist)
       const corePayload = {
@@ -159,7 +159,7 @@ export default function CreateSpacePage() {
       // Extended payload (columns added in later migrations — may not exist on older DBs)
       const extendedPayload = {
         ...corePayload,
-        cleaning_difficulty: '보통',
+        cleaning_difficulty: difficulty,
         has_toilet: toiletCount > 0,
         has_kitchen: kitchenCount > 0,
         has_bed: bedCount > 0,
@@ -344,6 +344,37 @@ export default function CreateSpacePage() {
                 <p className="text-[11px] text-text-soft font-medium mt-1.5 ml-1 leading-snug">
                   청소 가격은 요청할 때마다 면적·난이도로 자동 추천돼요. 여기선 입력만 해두세요.
                 </p>
+              </div>
+
+              {/* 난이도 */}
+              <div>
+                <label className="t-meta block mb-2 ml-1">청소 난이도</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {([
+                    { value: '쉬움', emoji: '😊', desc: '단순 정리·소규모' },
+                    { value: '보통', emoji: '🧹', desc: '일반 청소' },
+                    { value: '어려움', emoji: '💪', desc: '대형·특수 공간' },
+                  ] as const).map(opt => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => setDifficulty(opt.value)}
+                      className={`flex flex-col items-center gap-1 p-3 rounded-2xl border-2 transition ${
+                        difficulty === opt.value
+                          ? 'border-brand bg-brand-softer'
+                          : 'border-line bg-surface'
+                      }`}
+                    >
+                      <span className="text-xl">{opt.emoji}</span>
+                      <span className={`text-[12.5px] font-extrabold ${difficulty === opt.value ? 'text-brand-dark' : 'text-ink'}`}>
+                        {opt.value}
+                      </span>
+                      <span className="text-[10px] font-medium text-text-faint text-center leading-tight">
+                        {opt.desc}
+                      </span>
+                    </button>
+                  ))}
+                </div>
               </div>
 
               <div>
