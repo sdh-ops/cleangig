@@ -237,7 +237,7 @@ export default function CreateSpacePage() {
           {step === 1 && (
             <div>
               <h2 className="h-title text-ink">어떤 공간을 운영하세요?</h2>
-              <p className="t-caption mt-1.5">공간 유형에 맞게 체크리스트가 자동 적용됩니다. 3단계면 등록 끝!</p>
+              <p className="t-caption mt-1.5">공간 유형에 맞게 체크리스트가 자동 적용됩니다.</p>
               <div className="grid grid-cols-3 gap-2.5 mt-6">
                 {TYPE_OPTIONS.map((opt) => (
                   <button
