@@ -24,6 +24,8 @@ import {
   Plus,
   ImageIcon,
   ChevronDown,
+  Eye,
+  EyeOff,
 } from 'lucide-react'
 import StatusChip from '@/components/common/StatusChip'
 import DisputeModal from '@/components/common/DisputeModal'
@@ -112,6 +114,7 @@ export default function WorkerJobDetail() {
   const extraPhotoRef = useRef<HTMLInputElement>(null)
   const [currentChecklistIdx, setCurrentChecklistIdx] = useState<number | null>(null)
   const [workerReady, setWorkerReady] = useState<{ bank: boolean; tax: boolean } | null>(null)
+  const [codeRevealed, setCodeRevealed] = useState(false)
 
   // Extra charge state
   const [extraAmount, setExtraAmount] = useState('')
@@ -549,32 +552,43 @@ export default function WorkerJobDetail() {
               <MapPin size={13} /> {isMine ? job.spaces?.address : maskAddress(job.spaces?.address || '')}
               {job.spaces?.address_detail && isMine ? ` ${job.spaces.address_detail}` : ''}
             </p>
-            <div className="mt-5 flex items-center justify-between">
-              <div>
-                <p className="text-[11px] text-white/60 font-bold">예상 정산</p>
-                <p className="t-money text-[26px] text-brand-light">{formatKRW(job.price_breakdown?.estimated_worker_payout ?? Math.round(job.price * 0.88))}</p>
-              </div>
-              {isMine && (
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={openNaverDirections}
-                    className="flex items-center gap-1.5 px-3 h-9 rounded-full bg-white/15 text-white text-[12px] font-bold hover:bg-white/25 active:scale-95 transition"
-                  >
-                    <Navigation size={14} /> 네이버
-                  </button>
-                  <button
-                    onClick={openKakaoDirections}
-                    className="flex items-center gap-1.5 px-3 h-9 rounded-full bg-white/15 text-white text-[12px] font-bold hover:bg-white/25 active:scale-95 transition"
-                  >
-                    <Navigation size={14} /> 카카오
-                  </button>
-                </div>
-              )}
+            <div className="mt-5">
+              <p className="text-[11px] text-white/60 font-bold">예상 정산</p>
+              <p className="t-money text-[26px] text-brand-light">{formatKRW(job.price_breakdown?.estimated_worker_payout ?? Math.round(job.price * 0.88))}</p>
             </div>
           </div>
         </div>
 
         <div className="px-5 -mt-4 relative z-10">
+          {/* 지도 네비게이션 카드 — 40-60대 타겟: 큰 버튼, 명확한 레이블 */}
+          {isMine && job.status !== 'OPEN' && job.spaces?.address && (
+            <div className="card p-4 mb-4">
+              <h3 className="text-[15px] font-extrabold text-ink mb-3 flex items-center gap-2">
+                <MapPin size={17} className="text-brand-dark" />
+                현장으로 출발하기
+              </h3>
+              <p className="text-[13px] text-text-soft font-semibold mb-3 leading-snug">{job.spaces.address}{job.spaces.address_detail ? ` ${job.spaces.address_detail}` : ''}</p>
+              <div className="grid grid-cols-2 gap-2.5">
+                <button
+                  onClick={openNaverDirections}
+                  className="flex items-center justify-center gap-2 h-13 py-3.5 rounded-xl font-extrabold text-[15px] text-white active:scale-95 transition"
+                  style={{ background: '#03C75A' }}
+                >
+                  <Navigation size={18} strokeWidth={2.5} />
+                  네이버지도
+                </button>
+                <button
+                  onClick={openKakaoDirections}
+                  className="flex items-center justify-center gap-2 h-13 py-3.5 rounded-xl font-extrabold text-[15px] active:scale-95 transition"
+                  style={{ background: '#FEE500', color: '#3C1E1E' }}
+                >
+                  <Navigation size={18} strokeWidth={2.5} />
+                  카카오맵
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Contact host */}
           {isMine && job.status !== 'OPEN' && (
             <div className="card p-3 flex items-center gap-3 mb-4">
@@ -607,20 +621,31 @@ export default function WorkerJobDetail() {
             </div>
           )}
 
-          {/* 출입 안내 (배정 후 즉시 표시) */}
+          {/* 출입 안내 — 기본 마스킹, 탭하면 열람 */}
           {isMine && job.spaces?.entry_code && (
             <div className="card p-4 mb-4 border-2 border-brand/30 bg-brand-softer">
               <div className="flex items-center gap-2 mb-3">
                 <span className="text-[20px]">🔑</span>
-                <h3 className="text-[13.5px] font-extrabold text-ink">출입 방법 / 비밀번호</h3>
+                <h3 className="text-[15px] font-extrabold text-ink">출입 방법 / 비밀번호</h3>
               </div>
-              <div className="bg-white/70 rounded-xl px-4 py-3 border border-brand/15">
-                <p className="text-[15px] font-extrabold text-ink leading-relaxed tracking-wide">
-                  {job.spaces.entry_code}
+              <div className="bg-white/70 rounded-xl px-4 py-3.5 border border-brand/15 flex items-center justify-between gap-3">
+                <p
+                  className={`text-[18px] font-extrabold text-ink leading-relaxed flex-1 ${
+                    codeRevealed ? 'tracking-widest' : 'tracking-[0.3em] text-text-soft select-none'
+                  }`}
+                >
+                  {codeRevealed ? job.spaces.entry_code : '● ● ● ● ● ●'}
                 </p>
+                <button
+                  onClick={() => setCodeRevealed((v) => !v)}
+                  className="shrink-0 flex items-center gap-1.5 px-3.5 h-10 rounded-xl bg-brand text-white text-[13.5px] font-extrabold active:scale-95 transition"
+                >
+                  {codeRevealed ? <EyeOff size={16} /> : <Eye size={16} />}
+                  {codeRevealed ? '숨기기' : '보기'}
+                </button>
               </div>
-              <p className="text-[11px] font-medium text-brand-dark mt-2">
-                ⚠ 이 정보는 본인에게만 공개됩니다. 외부 유출 금지
+              <p className="text-[12px] font-semibold text-brand-dark mt-2.5">
+                ⚠ 이 정보는 배정된 클린파트너 본인에게만 공개됩니다. 외부 유출 금지
               </p>
             </div>
           )}
@@ -628,11 +653,11 @@ export default function WorkerJobDetail() {
           {/* 주의사항 (caution_notes) */}
           {isMine && job.spaces?.caution_notes && (
             <div className="card p-4 mb-4 bg-sun-soft border border-sun/20">
-              <div className="flex items-center gap-2 mb-1.5">
-                <AlertTriangle size={14} className="text-[#92580C]" />
-                <span className="text-[12px] font-black text-[#92580C] uppercase tracking-wide">공간 주의사항</span>
+              <div className="flex items-center gap-2 mb-2">
+                <AlertTriangle size={16} className="text-[#92580C]" />
+                <span className="text-[14px] font-black text-[#92580C]">공간 주의사항</span>
               </div>
-              <p className="text-[13.5px] font-semibold text-ink leading-snug whitespace-pre-wrap">
+              <p className="text-[15px] font-semibold text-ink leading-relaxed whitespace-pre-wrap">
                 {job.spaces.caution_notes}
               </p>
             </div>
@@ -641,7 +666,7 @@ export default function WorkerJobDetail() {
           {/* Onsite guide */}
           {isMine && (job.spaces?.cleaning_tool_location || job.spaces?.parking_guide || job.spaces?.trash_guide) && (
             <div className="card p-4 mb-4">
-              <h3 className="text-[13.5px] font-extrabold text-ink mb-3">현장 안내</h3>
+              <h3 className="text-[15px] font-extrabold text-ink mb-3">현장 안내</h3>
               <div className="flex flex-col gap-2.5">
                 {job.spaces?.parking_guide && <GuideRow icon="🚗" label="주차 안내" value={job.spaces.parking_guide} />}
                 {job.spaces?.cleaning_tool_location && <GuideRow icon="🧽" label="청소도구 위치" value={job.spaces.cleaning_tool_location} />}
@@ -670,9 +695,9 @@ export default function WorkerJobDetail() {
                         {c.completed && <Check size={15} strokeWidth={3} />}
                       </button>
                       <div className="flex-1">
-                        <p className="text-[13.5px] font-semibold text-ink leading-snug">
+                        <p className="text-[15px] font-semibold text-ink leading-snug">
                           {c.label}
-                          {c.required && <span className="ml-1.5 text-[10.5px] font-black text-danger">필수</span>}
+                          {c.required && <span className="ml-2 text-[12px] font-black text-danger">필수</span>}
                         </p>
                         {c.photo_url && (
                           <div className="mt-2">
@@ -700,9 +725,11 @@ export default function WorkerJobDetail() {
           {isMine && ['ARRIVED', 'IN_PROGRESS'].includes(job.status) && (
             <div className="card p-4 mb-4">
               <h3 className="text-[13.5px] font-extrabold text-ink mb-1">비품 상태 체크</h3>
-              <p className="text-[11.5px] text-text-soft font-medium mb-3 leading-snug">
-                한 번 탭 → <span className="text-[#92580C] font-bold">거의 다 씀</span>  두 번 탭 → <span className="text-danger font-bold">없음</span>  세 번 탭 → 정상
-              </p>
+              <div className="flex items-center gap-3 mb-3 text-[13px] font-semibold">
+                <span className="px-2.5 py-1 rounded-full bg-sun-soft text-[#92580C] border border-sun/30 font-bold">1번 탭: 거의 다 씀</span>
+                <span className="px-2.5 py-1 rounded-full bg-danger-soft text-danger border border-danger/20 font-bold">2번 탭: 없음</span>
+                <span className="px-2.5 py-1 rounded-full bg-surface text-text-muted border border-line-soft font-bold">3번 탭: 정상</span>
+              </div>
               <div className="flex flex-wrap gap-2">
                 {SUPPLY_OPTIONS.map((name) => {
                   const item = supplyStatus.find((s) => s.name === name)
@@ -981,11 +1008,11 @@ export default function WorkerJobDetail() {
 
 function GuideRow({ icon, label, value }: { icon?: string; label: string; value: string }) {
   return (
-    <div className="flex items-start gap-2.5">
-      {icon && <span className="text-[16px] mt-0.5 shrink-0">{icon}</span>}
-      <div>
-        <p className="text-[11px] font-black text-text-faint uppercase tracking-wide">{label}</p>
-        <p className="text-[13.5px] font-semibold text-ink leading-snug mt-0.5 whitespace-pre-wrap">{value}</p>
+    <div className="flex items-start gap-3 py-1">
+      {icon && <span className="text-[20px] mt-0.5 shrink-0">{icon}</span>}
+      <div className="flex-1">
+        <p className="text-[12.5px] font-black text-text-soft mb-0.5">{label}</p>
+        <p className="text-[15px] font-semibold text-ink leading-relaxed whitespace-pre-wrap">{value}</p>
       </div>
     </div>
   )
