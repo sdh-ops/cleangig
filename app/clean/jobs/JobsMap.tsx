@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { LocateFixed, Loader2, MapPin, X, Search, RefreshCw } from 'lucide-react'
-import { waitForNaverMaps, openNaverRoute } from '@/lib/naver'
+import { waitForNaverMaps, loadNaverMapsScript, openNaverRoute } from '@/lib/naver'
 import { formatKRW, haversineKm, maskAddress, spaceTypeLabel } from '@/lib/utils'
 import type { SpaceType } from '@/lib/types'
 
@@ -98,6 +98,7 @@ export default function JobsMap({
   // ─── 지도 초기화 ─────────────────────────────────────────────────────
   useEffect(() => {
     let cancelled = false
+    loadNaverMapsScript()
     ;(async () => {
       const naver = await waitForNaverMaps()
       if (cancelled || !naver || !mapRef.current) {

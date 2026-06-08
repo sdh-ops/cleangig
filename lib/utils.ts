@@ -1,11 +1,33 @@
 /**
- * 주소 마스킹 처리
+ * 주소 마스킹 처리 (상세 번지 숨김)
  */
 export function maskAddress(address: string): string {
   if (!address) return ''
   const parts = address.split(' ')
   if (parts.length <= 2) return address + ' ***'
   return parts.slice(0, -1).join(' ') + ' ***'
+}
+
+/**
+ * 공개용 짧은 주소 — 시/도 + 구/군 + 동/읍/면 단위까지만 표시
+ * "서울특별시 마포구 합정동 123-45" → "서울 마포구 합정동"
+ * "서울 마포구 월드컵북로 90" → "서울 마포구"
+ */
+export function shortAddress(address: string): string {
+  if (!address) return ''
+  const parts = address.split(' ')
+  // 시/도 축약 (서울특별시→서울, 경기도→경기 등)
+  const city = parts[0]
+    .replace('특별시', '')
+    .replace('광역시', '')
+    .replace('특별자치시', '')
+    .replace('특별자치도', '')
+    .replace('도', (_, offset) => offset > 0 ? '' : '도') // 경기도는 유지
+  const result = [city]
+  if (parts[1]) result.push(parts[1]) // 구/군
+  // 세 번째가 동/읍/면/로/길로 끝나면 동급만 포함
+  if (parts[2] && /[동읍면리]$/.test(parts[2])) result.push(parts[2])
+  return result.join(' ')
 }
 
 /**

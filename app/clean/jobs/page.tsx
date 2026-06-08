@@ -14,7 +14,7 @@ import BottomNav from '@/components/common/BottomNav'
 import EmptyState from '@/components/common/EmptyState'
 import PullToRefresh from '@/components/common/PullToRefresh'
 import JobsMap, { type JobMapItem } from './JobsMap'
-import { formatKRW, formatScheduled, spaceTypeLabel, maskAddress, haversineKm } from '@/lib/utils'
+import { formatKRW, formatScheduled, spaceTypeLabel, shortAddress, haversineKm } from '@/lib/utils'
 import type { JobStatus, SpaceType } from '@/lib/types'
 
 type Job = {
@@ -506,14 +506,14 @@ export default function JobsListPage() {
                               {spaceTypeLabel(job.spaces?.type ?? 'other')}
                             </span>
                             {dist != null && (
-                              <span className="text-[10px] font-extrabold text-text-soft bg-surface-muted px-2 py-0.5 rounded-full">
-                                📍 {dist < 1 ? `${Math.round(dist * 1000)}m` : `${dist.toFixed(1)}km`}
+                              <span className="text-[10px] font-extrabold text-brand-dark bg-brand-softer px-2 py-0.5 rounded-full">
+                                {dist < 1 ? `${Math.round(dist * 1000)}m` : `${dist.toFixed(1)}km`}
                               </span>
                             )}
                           </div>
                           <h4 className="text-[14px] font-extrabold text-ink truncate">{job.spaces?.name}</h4>
                           <p className="text-[11.5px] text-text-soft font-bold flex items-center gap-1 mt-0.5 truncate">
-                            <MapPin size={10} /> {maskAddress(job.spaces?.address ?? '')}
+                            <MapPin size={10} /> {shortAddress(job.spaces?.address ?? '')}
                           </p>
                           <div className="flex items-center justify-between mt-1.5">
                             <p className="text-[11px] text-text-soft font-bold flex items-center gap-1">

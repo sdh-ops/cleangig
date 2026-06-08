@@ -1,20 +1,8 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { waitForNaverMaps } from '@/lib/naver'
+import { waitForNaverMaps, loadNaverMapsScript } from '@/lib/naver'
 import { Loader2, MapPin } from 'lucide-react'
-
-const NAVER_MAP_CLIENT_ID = process.env.NEXT_PUBLIC_NAVER_MAP_CLIENT_ID
-
-function loadNaverMapsScript(): void {
-  if (!NAVER_MAP_CLIENT_ID) return
-  if (document.getElementById('naver-maps-script')) return
-  const script = document.createElement('script')
-  script.id = 'naver-maps-script'
-  script.src = `https://oapi.map.naver.com/openapi/v3/maps.js?ncpClientId=${NAVER_MAP_CLIENT_ID}&submodules=geocoder`
-  script.async = true
-  document.head.appendChild(script)
-}
 
 type Marker = {
   lat: number
