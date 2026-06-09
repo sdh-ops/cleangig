@@ -70,7 +70,7 @@ export async function PATCH(req: Request) {
 
     if (error) throw error
 
-    return NextResponse.json({ ok: true, job_id, worker_id: job.worker_id, worker_payout })
+    return NextResponse.json({ ok: true, job_id, worker_id: job.worker_id, worker_payout: workerPayout })
   } catch (e) {
     console.error('fix-payment-worker error', e)
     return NextResponse.json({ ok: false, error: 'internal', detail: String(e) }, { status: 500 })
