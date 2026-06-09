@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { notifyWorkerPayout } from '@/lib/solapi'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -81,18 +80,6 @@ export async function GET(request: Request) {
           type: 'general',
           is_read: false,
         })
-        // SMS 알림 (Solapi 키 있을 때만 실발송)
-        const { data: workerProfile } = await admin
-          .from('users')
-          .select('phone')
-          .eq('id', workerId)
-          .single()
-        if (workerProfile?.phone) {
-          notifyWorkerPayout({
-            phone: workerProfile.phone,
-            workerPayout: payment.worker_payout ?? 0,
-          }).catch((e) => console.warn('[release-payments] SMS 발송 실패', e))
-        }
       }
 
       results.push({ id: job.id, ok: true, worker_payout: payment.worker_payout ?? 0 })

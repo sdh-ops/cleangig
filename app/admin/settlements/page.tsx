@@ -68,12 +68,20 @@ export default async function SettlementsPage() {
             key={p.id}
             payment={p}
             action={
-              <SettlementActions
-                paymentId={p.id}
-                action="release"
-                label="즉시 정산"
-                tone="warning"
-              />
+              <div className="flex gap-2 justify-end">
+                <SettlementActions
+                  paymentId={p.id}
+                  action="release"
+                  label="즉시 정산"
+                  tone="warning"
+                />
+                <SettlementActions
+                  paymentId={p.id}
+                  action="refund"
+                  label="환불"
+                  tone="danger"
+                />
+              </div>
             }
           />
         ))}

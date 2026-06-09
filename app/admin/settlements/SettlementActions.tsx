@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { Loader2, Zap, CheckCircle2 } from 'lucide-react'
 
-type Action = 'release' | 'mark_paid'
+type Action = 'release' | 'mark_paid' | 'refund'
 
 export default function SettlementActions({
   paymentId,
@@ -14,7 +14,7 @@ export default function SettlementActions({
   paymentId: string
   action: Action
   label: string
-  tone: 'warning' | 'success'
+  tone: 'warning' | 'success' | 'danger'
 }) {
   const [loading, setLoading] = useState(false)
   const [done, setDone] = useState(false)
@@ -52,9 +52,9 @@ export default function SettlementActions({
   }
 
   const cls =
-    tone === 'warning'
-      ? 'bg-amber-400 hover:bg-amber-500 text-amber-900'
-      : 'bg-emerald-500 hover:bg-emerald-600 text-white'
+    tone === 'warning' ? 'bg-amber-400 hover:bg-amber-500 text-amber-900' :
+    tone === 'danger'  ? 'bg-red-500 hover:bg-red-600 text-white' :
+                         'bg-emerald-500 hover:bg-emerald-600 text-white'
 
   return (
     <div>

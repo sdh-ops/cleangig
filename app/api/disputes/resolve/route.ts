@@ -72,16 +72,50 @@ export async function POST(req: Request) {
         .update({ status: newJobStatus, updated_at: new Date().toISOString() })
         .eq('id', job.id)
 
-      // 결제 상태 갱신 (있을 경우)
-      const payStatus = verdict === 'REFUND' ? 'REFUNDED' : 'RELEASED'
-      await admin
+      // 결제 레코드 조회
+      const { data: payment } = await admin
         .from('payments')
-        .update({
-          status: payStatus,
-          ...(verdict !== 'REFUND' ? { escrow_released_at: new Date().toISOString() } : {}),
-          updated_at: new Date().toISOString(),
-        })
+        .select('id, status, gross_amount, pg_payment_key')
         .eq('job_id', job.id)
+        .single()
+
+      if (payment) {
+        const payStatus = verdict === 'REFUND' ? 'REFUNDED' : 'RELEASED'
+
+        // REFUND: Toss 환불 API 호출 (pg_payment_key 있을 때만)
+        if (verdict === 'REFUND' && payment.pg_payment_key) {
+          const cancelAmount = refundAmount > 0 ? refundAmount : payment.gross_amount
+          const encKey = Buffer.from(`${process.env.TOSS_SECRET_KEY}:`).toString('base64')
+          const tossRes = await fetch(
+            `https://api.tosspayments.com/v1/payments/${payment.pg_payment_key}/cancel`,
+            {
+              method: 'POST',
+              headers: {
+                Authorization: `Basic ${encKey}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                cancelReason: note || '관리자 환불 처리',
+                cancelAmount,
+              }),
+            },
+          )
+          if (!tossRes.ok) {
+            const tossErr = await tossRes.json().catch(() => ({}))
+            console.error('[dispute/refund] Toss cancel failed', tossErr)
+            // Toss 환불 실패해도 DB는 REFUNDED로 처리 (수동 대응 가능하게)
+          }
+        }
+
+        await admin
+          .from('payments')
+          .update({
+            status: payStatus,
+            ...(verdict !== 'REFUND' ? { escrow_released_at: new Date().toISOString() } : {}),
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', payment.id)
+      }
     }
 
     // 당사자 알림
