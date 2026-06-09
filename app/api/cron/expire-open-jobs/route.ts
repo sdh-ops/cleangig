@@ -38,12 +38,14 @@ export async function GET(request: Request) {
     const results: { id: string; ok: boolean; error?: string }[] = []
 
     for (const job of jobs) {
+      const now = new Date().toISOString()
       const { error: updateError } = await supabase
         .from('jobs')
         .update({
-          status: 'CANCELLED',
+          status: 'CANCELED', // single L — matches job_status enum
           cancel_reason: '매칭 파트너 없음 (자동 만료)',
-          updated_at: new Date().toISOString(),
+          canceled_at: now,
+          updated_at: now,
         })
         .eq('id', job.id)
         .eq('status', 'OPEN') // 동시성 보호
@@ -53,12 +55,44 @@ export async function GET(request: Request) {
         continue
       }
 
+      // 결제 전액 환불 처리 (매칭 실패 = 플랫폼 책임 → 100% 환불)
+      const { data: payment } = await supabase
+        .from('payments')
+        .select('id, pg_payment_key, gross_amount')
+        .eq('job_id', job.id)
+        .eq('status', 'HELD')
+        .maybeSingle()
+
+      if (payment) {
+        // Toss 환불 (pg_payment_key 있을 때)
+        if (payment.pg_payment_key && process.env.TOSS_SECRET_KEY) {
+          const encKey = Buffer.from(`${process.env.TOSS_SECRET_KEY}:`).toString('base64')
+          const tossRes = await fetch(
+            `https://api.tosspayments.com/v1/payments/${payment.pg_payment_key}/cancel`,
+            {
+              method: 'POST',
+              headers: { Authorization: `Basic ${encKey}`, 'Content-Type': 'application/json' },
+              body: JSON.stringify({ cancelReason: '매칭 파트너 없음 — 자동 전액 환불', cancelAmount: payment.gross_amount }),
+            },
+          )
+          if (!tossRes.ok) {
+            const tossErr = await tossRes.json().catch(() => ({}))
+            console.error('[expire-open-jobs] Toss cancel failed', tossErr)
+          }
+        }
+
+        await supabase
+          .from('payments')
+          .update({ status: 'REFUNDED', updated_at: now })
+          .eq('id', payment.id)
+      }
+
       // 공간파트너에게 알림
       const spaceName = (job as any).spaces?.name ?? '작업'
       await supabase.from('notifications').insert({
         user_id: job.operator_id,
         title: '청소 요청이 자동 취소됐어요',
-        message: `${spaceName} 작업에 4시간 내 매칭된 클린파트너가 없어 취소됐습니다. 다시 요청해보세요.`,
+        message: `${spaceName} 작업에 4시간 내 매칭된 클린파트너가 없어 취소됐습니다. 결제가 전액 환불됩니다.`,
         url: `/requests`,
         type: 'job_expired',
         is_read: false,
