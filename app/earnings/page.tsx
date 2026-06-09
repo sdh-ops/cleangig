@@ -18,15 +18,17 @@ export default async function EarningsPage() {
     .limit(50)
 
   const list = (payments || []) as any[]
-  const totalEarned = list.filter((p) => p.status === 'RELEASED').reduce((s, p) => s + (p.worker_payout || 0), 0)
+  // RELEASED = 정산 처리됨(이체 예정), PAID_OUT = 실제 입금 완료. 둘 다 수령 완료로 카운트.
+  const isSettled = (status: string) => status === 'RELEASED' || status === 'PAID_OUT'
+  const totalEarned = list.filter((p) => isSettled(p.status)).reduce((s, p) => s + (p.worker_payout || 0), 0)
   const pendingAmount = list.filter((p) => p.status === 'HELD').reduce((s, p) => s + (p.worker_payout || 0), 0)
   const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1)
   const monthEarned = list
-    .filter((p) => p.status === 'RELEASED' && new Date(p.created_at) >= monthStart)
+    .filter((p) => isSettled(p.status) && new Date(p.created_at) >= monthStart)
     .reduce((s, p) => s + (p.worker_payout || 0), 0)
   const yearStart = new Date(new Date().getFullYear(), 0, 1)
   const ytdWht = list
-    .filter((p) => p.status === 'RELEASED' && new Date(p.created_at) >= yearStart)
+    .filter((p) => isSettled(p.status) && new Date(p.created_at) >= yearStart)
     .reduce((s, p) => s + (p.withholding_tax || 0), 0)
 
   return (

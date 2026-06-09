@@ -26,10 +26,11 @@ export default async function HostPaymentsPage() {
 
   const list = (data || []) as any[]
   const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString()
+  const PAID_STATUSES = ['HELD', 'RELEASED', 'PAID_OUT'] as const
   const monthPaid = list
-    .filter((p) => p.created_at >= monthStart && ['HELD', 'RELEASED'].includes(p.status))
+    .filter((p) => p.created_at >= monthStart && PAID_STATUSES.includes(p.status))
     .reduce((s, p) => s + (p.gross_amount || 0), 0)
-  const ytd = list.filter((p) => ['HELD', 'RELEASED'].includes(p.status)).reduce((s, p) => s + (p.gross_amount || 0), 0)
+  const ytd = list.filter((p) => PAID_STATUSES.includes(p.status)).reduce((s, p) => s + (p.gross_amount || 0), 0)
 
   return (
     <div className="sseuksak-shell">
