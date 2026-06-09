@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { isPlatformAdmin } from '@/lib/admin'
 import {
   LayoutDashboard, Users, Briefcase, AlertTriangle,
-  Home, Shield, Settings, ChevronRight,
+  Home, Shield, Settings, ChevronRight, Wallet,
 } from 'lucide-react'
 import Logo from '@/components/common/Logo'
 
@@ -21,12 +21,14 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   if (!profile || !isPlatformAdmin(profile.email, profile.role)) redirect('/')
 
-  // 즉시 처리 필요 카운트 (분쟁 + 검수대기)
-  const [disputeRes, submittedRes] = await Promise.all([
+  // 즉시 처리 필요 카운트 (분쟁 + 검수대기 + 정산 이체 필요)
+  const [disputeRes, submittedRes, releasedRes] = await Promise.all([
     supabase.from('disputes').select('id', { count: 'exact', head: true }).eq('status', 'OPEN'),
     supabase.from('jobs').select('id', { count: 'exact', head: true }).eq('status', 'SUBMITTED'),
+    supabase.from('payments').select('id', { count: 'exact', head: true }).eq('status', 'RELEASED'),
   ])
   const urgentCount = (disputeRes.count ?? 0) + (submittedRes.count ?? 0)
+  const releasedCount = releasedRes.count ?? 0
 
   return (
     <div className="flex min-h-screen bg-[#F4F6FA]">
@@ -57,6 +59,13 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
           <p className="px-3 pt-4 pb-2 text-[10px] font-black text-white/30 uppercase tracking-widest">관리</p>
           <SideLink href="/admin/users" icon={<Users size={15} />} label="회원 관리" />
+          <SideLink
+            href="/admin/settlements"
+            icon={<Wallet size={15} />}
+            label="정산 관리"
+            badge={releasedCount}
+            badgeTone="warning"
+          />
           <SideLink href="/admin/settings" icon={<Settings size={15} />} label="수수료·세율" />
         </nav>
 
@@ -99,8 +108,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         <MobileTab href="/admin" icon={<LayoutDashboard size={20} />} label="대시보드" />
         <MobileTab href="/admin/jobs" icon={<Briefcase size={20} />} label="작업" badge={submittedRes.count ?? 0} />
         <MobileTab href="/admin/disputes" icon={<AlertTriangle size={20} />} label="분쟁" badge={disputeRes.count ?? 0} danger />
+        <MobileTab href="/admin/settlements" icon={<Wallet size={20} />} label="정산" badge={releasedCount} />
         <MobileTab href="/admin/users" icon={<Users size={20} />} label="회원" />
-        <MobileTab href="/admin/settings" icon={<Settings size={20} />} label="설정" />
       </nav>
 
       {/* ── 메인 컨텐츠 */}

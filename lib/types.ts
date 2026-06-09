@@ -5,7 +5,7 @@ export type JobStatus =
     | 'IN_PROGRESS' | 'SUBMITTED' | 'APPROVED'
     | 'DISPUTED' | 'PAID_OUT' | 'CANCELED'
 export type WorkerTier = 'STARTER' | 'SILVER' | 'GOLD' | 'MASTER'
-export type PaymentStatus = 'PENDING' | 'HELD' | 'RELEASED' | 'REFUNDED' | 'FAILED'
+export type PaymentStatus = 'PENDING' | 'HELD' | 'RELEASED' | 'PAID_OUT' | 'REFUNDED' | 'FAILED'
 export type DisputeStatus = 'OPEN' | 'AUTO_RESOLVED' | 'ESCALATED' | 'RESOLVED' | 'CLOSED'
 export type TaxType = 'FREELANCER' | 'INDIVIDUAL_BUSINESS' | 'BUSINESS'
 export type VatType = 'GENERAL' | 'SIMPLE' | 'EXEMPT'

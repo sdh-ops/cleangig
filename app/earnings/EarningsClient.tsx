@@ -148,6 +148,7 @@ function statusLabel(s: PaymentStatus): string {
     PENDING: '결제 대기',
     HELD: '에스크로 보관',
     RELEASED: '정산 완료',
+    PAID_OUT: '입금 완료',
     REFUNDED: '환불',
     FAILED: '결제 실패',
   }

@@ -20,6 +20,7 @@ const PAYMENT_MAP: Record<PaymentStatus, { label: string; tone: Tone }> = {
   PENDING: { label: '결제 대기', tone: 'warning' },
   HELD: { label: '에스크로 보관', tone: 'info' },
   RELEASED: { label: '정산 완료', tone: 'success' },
+  PAID_OUT: { label: '입금 완료', tone: 'success' },
   REFUNDED: { label: '환불', tone: 'muted' },
   FAILED: { label: '결제 실패', tone: 'danger' },
 }
