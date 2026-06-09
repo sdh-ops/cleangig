@@ -9,17 +9,27 @@ export const runtime = 'nodejs'
  * PATCH /api/admin/fix-payment-worker?job_id=xxx
  *
  * payments 레코드에 worker_id가 누락된 경우 (confirm→approve 순서 버그)
- * job의 worker_id를 payments에 반영한다. 플랫폼 관리자만 호출 가능.
+ * job의 worker_id를 payments에 반영한다.
+ * - 플랫폼 관리자 세션 or
+ * - Authorization: Bearer {CRON_SECRET} 헤더로 호출 가능
  */
 export async function PATCH(req: Request) {
   try {
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return NextResponse.json({ ok: false, error: 'unauthorized' }, { status: 401 })
+    // CRON_SECRET 기반 인증 (관리자 세션 없이 호출 가능)
+    const authHeader = req.headers.get('authorization')
+    const cronSecret = process.env.CRON_SECRET
+    const bearerToken = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null
+    const isCronAuth = cronSecret && bearerToken === cronSecret
 
-    const { data: profile } = await supabase.from('users').select('role').eq('id', user.id).single()
-    if (!isPlatformAdmin(user.email, profile?.role)) {
-      return NextResponse.json({ ok: false, error: 'forbidden' }, { status: 403 })
+    if (!isCronAuth) {
+      const supabase = await createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return NextResponse.json({ ok: false, error: 'unauthorized' }, { status: 401 })
+
+      const { data: profile } = await supabase.from('users').select('role').eq('id', user.id).single()
+      if (!isPlatformAdmin(user.email, profile?.role)) {
+        return NextResponse.json({ ok: false, error: 'forbidden' }, { status: 403 })
+      }
     }
 
     const { searchParams } = new URL(req.url)
