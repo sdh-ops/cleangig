@@ -6,6 +6,10 @@
     "outputDirectory": ".next",
     "crons": [
         {
+            "path": "/api/cron/expire-open-jobs",
+            "schedule": "30 * * * *"
+        },
+        {
             "path": "/api/cron/auto-approve",
             "schedule": "0 2 * * *"
         },
