@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { computeMatchScore } from '@/lib/matching'
+import { notifyWorkerNewJob } from '@/lib/solapi'
 
 export const runtime = 'nodejs'
 
@@ -121,6 +123,32 @@ export async function POST(req: Request) {
             body: JSON.stringify({ user_id: s.worker_id, title, message, url }),
           }).catch(() => null),
         ),
+      )
+    }
+
+    // SMS 알림 (상위 5명, Solapi 키 있을 때만 실발송)
+    if (scored.length > 0) {
+      const top5 = scored.slice(0, 5)
+      const admin = createAdminClient()
+      const { data: phones } = await admin
+        .from('users')
+        .select('id, phone')
+        .in('id', top5.map((s) => s.worker_id))
+      const phoneMap = new Map((phones || []).map((u) => [u.id, u.phone]))
+
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://cleangig.vercel.app'
+      await Promise.allSettled(
+        top5.map((s) => {
+          const phone = phoneMap.get(s.worker_id)
+          if (!phone) return Promise.resolve()
+          return notifyWorkerNewJob({
+            phone,
+            spaceName,
+            scheduledAt: (job as any).scheduled_at,
+            price: (job as any).price ?? 0,
+            jobUrl: `${appUrl}${url}`,
+          })
+        }),
       )
     }
 
