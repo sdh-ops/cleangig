@@ -82,15 +82,6 @@ export function openNaverRoute(dest: { lat: number; lng: number; name?: string }
   openExternalUrl(url)
 }
 
-export function openKakaoRoute(dest: { lat: number; lng: number; name?: string }): void {
-  const url = `https://map.kakao.com/?rt=,,${dest.lng},${dest.lat}&rt1=${dest.lng},${dest.lat}`
-  openExternalUrl(url)
-}
-
 export function searchNaverAddress(address: string): void {
   openExternalUrl(`https://map.naver.com/v5/search/${encodeURIComponent(address)}`)
-}
-
-export function searchKakaoAddress(address: string): void {
-  openExternalUrl(`https://map.kakao.com/link/search/${encodeURIComponent(address)}`)
 }

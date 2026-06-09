@@ -32,7 +32,7 @@ import DisputeModal from '@/components/common/DisputeModal'
 import ReviewModal from '@/components/common/ReviewModal'
 import { formatKRW, formatScheduled, spaceTypeLabel, maskAddress, haversineKm } from '@/lib/utils'
 import { notify } from '@/lib/notifications'
-import { openNaverRoute, openKakaoRoute, searchNaverAddress, searchKakaoAddress } from '@/lib/naver'
+import { openNaverRoute, searchNaverAddress } from '@/lib/naver'
 import type { ChecklistItem, JobStatus, SpaceType } from '@/lib/types'
 
 type SupplyLevel = 'low' | 'out'
@@ -481,15 +481,6 @@ export default function WorkerJobDetail() {
     }
   }
 
-  const openKakaoDirections = () => {
-    if (!job?.spaces) return
-    const coords = job.spaces.location?.coordinates
-    if (coords && coords.length === 2) {
-      openKakaoRoute({ lat: coords[1], lng: coords[0], name: job.spaces.name })
-    } else {
-      searchKakaoAddress(job.spaces.address)
-    }
-  }
 
   if (loading) {
     return (
@@ -569,24 +560,14 @@ export default function WorkerJobDetail() {
                 현장으로 출발하기
               </h3>
               <p className="text-[13px] text-text-soft font-semibold mb-3 leading-snug">{job.spaces.address}{job.spaces.address_detail ? ` ${job.spaces.address_detail}` : ''}</p>
-              <div className="grid grid-cols-2 gap-2.5">
-                <button
-                  onClick={openNaverDirections}
-                  className="flex items-center justify-center gap-2 h-13 py-3.5 rounded-xl font-extrabold text-[15px] text-white active:scale-95 transition"
-                  style={{ background: '#03C75A' }}
-                >
-                  <Navigation size={18} strokeWidth={2.5} />
-                  네이버지도
-                </button>
-                <button
-                  onClick={openKakaoDirections}
-                  className="flex items-center justify-center gap-2 h-13 py-3.5 rounded-xl font-extrabold text-[15px] active:scale-95 transition"
-                  style={{ background: '#FEE500', color: '#3C1E1E' }}
-                >
-                  <Navigation size={18} strokeWidth={2.5} />
-                  카카오맵
-                </button>
-              </div>
+              <button
+                onClick={openNaverDirections}
+                className="w-full flex items-center justify-center gap-2 h-13 py-3.5 rounded-xl font-extrabold text-[15px] text-white active:scale-95 transition"
+                style={{ background: '#03C75A' }}
+              >
+                <Navigation size={18} strokeWidth={2.5} />
+                네이버지도로 출발
+              </button>
             </div>
           )}
 
