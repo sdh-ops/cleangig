@@ -5,6 +5,7 @@
 export const ADMIN_EMAILS = [
     'admin@cleangig.com', // 기본 관리자
     'brianshin0815@gmail.com', // 사용자 관리자 계정
+    'worker@sseuksak-test.com', // E2E 테스트 계정 (임시)
 ];
 
 /**
