@@ -120,11 +120,14 @@ export async function POST(req: Request) {
     // 4. payment 레코드 생성 (HELD = 에스크로 보관)
     const pb = jd.price_breakdown ?? {}
     const hostFee = pb.host_fee ?? Math.round(jd.price * 0.05)
-    const workerFee = pb.worker_fee ?? Math.round(jd.price * 0.05)
+    const workerFee = pb.worker_fee ?? Math.round(jd.price * 0.15)
     const platformFee = pb.platform_revenue ?? hostFee + workerFee
     const workerSubtotal = jd.price - workerFee
     const withholdingTax = pb.estimated_withholding ?? Math.round(workerSubtotal * 0.033)
     const workerPayout = pb.estimated_worker_payout ?? workerSubtotal - withholdingTax
+    // Derive actual fee rates from breakdown amounts (avoids stale hardcoded values)
+    const hostFeeRate = jd.price > 0 ? Math.round((hostFee / jd.price) * 1000) / 1000 : 0.05
+    const workerFeeRate = jd.price > 0 ? Math.round((workerFee / jd.price) * 1000) / 1000 : 0.15
 
     await admin.from('payments').insert({
       job_id: job.id,
@@ -132,9 +135,9 @@ export async function POST(req: Request) {
       gross_amount: jd.price,
       platform_fee: platformFee,
       host_fee: hostFee,
-      host_fee_rate: 0.05,
+      host_fee_rate: hostFeeRate,
       worker_fee: workerFee,
-      worker_fee_rate: 0.05,
+      worker_fee_rate: workerFeeRate,
       withholding_tax: withholdingTax,
       withholding_tax_rate: 0.033,
       worker_payout: workerPayout,
