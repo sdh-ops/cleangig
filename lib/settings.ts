@@ -66,8 +66,7 @@ export async function saveFeeSettings(
     const supabase = createBrowserClient()
     const { error } = await supabase
       .from('platform_settings')
-      .update({ value: newFees, updated_at: new Date().toISOString() })
-      .eq('key', 'fees')
+      .upsert({ key: 'fees', value: newFees, updated_at: new Date().toISOString() }, { onConflict: 'key' })
     if (error) return { ok: false, error: error.message }
     _feeCache = newFees
     _feeCacheTs = Date.now()

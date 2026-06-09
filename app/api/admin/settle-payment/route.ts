@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { createAdminClient } from '@/lib/supabase/admin'
 import { isPlatformAdmin } from '@/lib/admin'
 
 export const runtime = 'nodejs'
@@ -35,7 +34,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: false, error: 'missing_params' }, { status: 400 })
     }
 
-    const admin = createAdminClient()
+    // admin RLS policies (auth.jwt() email-based) bypass need for service role key
+    const admin = supabase
 
     // 현재 payment 조회
     const { data: payment, error: fetchErr } = await admin

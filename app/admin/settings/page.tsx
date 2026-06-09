@@ -14,8 +14,8 @@ export default function AdminFeeSettingsPage() {
   const [err, setErr] = useState<string | null>(null)
   const [ok, setOk] = useState(false)
 
-  const [host, setHost] = useState(5) // percent
-  const [worker, setWorker] = useState(5)
+  const [host, setHost] = useState(DEFAULT_FEES.host_fee_rate * 100) // percent
+  const [worker, setWorker] = useState(DEFAULT_FEES.worker_fee_rate * 100)
   const [wht, setWht] = useState(3.3)
   const [vat, setVat] = useState(10)
 
@@ -43,7 +43,10 @@ export default function AdminFeeSettingsPage() {
   })
 
   const reset = () => {
-    setHost(5); setWorker(5); setWht(3.3); setVat(10)
+    setHost(DEFAULT_FEES.host_fee_rate * 100)
+    setWorker(DEFAULT_FEES.worker_fee_rate * 100)
+    setWht(DEFAULT_FEES.withholding_tax_rate * 100)
+    setVat(DEFAULT_FEES.vat_rate * 100)
   }
 
   const save = async () => {
@@ -68,7 +71,7 @@ export default function AdminFeeSettingsPage() {
     <div>
       <div className="mb-6">
         <h1 className="h-hero text-ink">수수료 · 세율 설정</h1>
-        <p className="t-caption mt-1">트랜잭션별로 적용되는 수수료율을 조정하세요. 기본값: 공간파트너 5% · 클린파트너 5% · 원천징수 3.3% · 부가세 10%.</p>
+        <p className="t-caption mt-1">트랜잭션별로 적용되는 수수료율을 조정하세요. 기본값: 공간파트너 5% · 클린파트너 15% · 원천징수 3.3% · 부가세 10%.</p>
       </div>
 
       <div className="grid md:grid-cols-2 gap-4">
