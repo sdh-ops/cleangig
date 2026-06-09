@@ -1,9 +1,9 @@
 'use client'
 
-import { useEffect, useRef, useState, Suspense } from 'react'
+import { useState, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { loadTossPayments, ANONYMOUS } from '@tosspayments/tosspayments-sdk'
-import { ChevronLeft, ShieldCheck, Loader2, AlertCircle } from 'lucide-react'
+import { ChevronLeft, ShieldCheck, Loader2, AlertCircle, CreditCard } from 'lucide-react'
 import { formatKRW } from '@/lib/utils'
 
 const TOSS_CLIENT_KEY = process.env.NEXT_PUBLIC_TOSS_CLIENT_KEY!
@@ -17,57 +17,35 @@ function CheckoutInner() {
   const orderName = decodeURIComponent(searchParams.get('orderName') ?? '쓱싹 청소')
   const customerName = decodeURIComponent(searchParams.get('customerName') ?? '')
 
-  const widgetsRef = useRef<Awaited<ReturnType<Awaited<ReturnType<typeof loadTossPayments>>['widgets']>> | null>(null)
-  const [widgetReady, setWidgetReady] = useState(false)
   const [paying, setPaying] = useState(false)
   const [err, setErr] = useState<string | null>(null)
 
-  useEffect(() => {
-    if (!orderId || !amount) {
-      router.replace('/requests/create')
-      return
-    }
-
-    let mounted = true
-    ;(async () => {
-      try {
-        const tossPayments = await loadTossPayments(TOSS_CLIENT_KEY)
-        if (!mounted) return
-
-        const widgets = tossPayments.widgets({ customerKey: ANONYMOUS })
-        widgetsRef.current = widgets
-
-        await widgets.setAmount({ currency: 'KRW', value: amount })
-        await widgets.renderPaymentMethods({ selector: '#payment-widget' })
-        await widgets.renderAgreement({ selector: '#agreement' })
-
-        if (mounted) setWidgetReady(true)
-      } catch (e: any) {
-        console.error('[checkout] widget error', e)
-        if (mounted) setErr('결제 위젯을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.')
-      }
-    })()
-
-    return () => {
-      mounted = false
-    }
-  }, [orderId, amount]) // eslint-disable-line react-hooks/exhaustive-deps
+  if (!orderId || !amount) {
+    router.replace('/requests/create')
+    return null
+  }
 
   const handlePay = async () => {
-    if (!widgetsRef.current || !widgetReady || paying) return
+    if (paying) return
     setPaying(true)
     setErr(null)
     try {
       const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://cleangig.vercel.app'
-      await widgetsRef.current.requestPayment({
+      const tossPayments = await loadTossPayments(TOSS_CLIENT_KEY)
+      const payment = tossPayments.payment({ customerKey: ANONYMOUS })
+
+      await payment.requestPayment({
+        method: 'CARD',
+        amount: { currency: 'KRW', value: amount },
         orderId,
         orderName,
         customerName: customerName || undefined,
         successUrl: `${appUrl}/payment/success`,
         failUrl: `${appUrl}/payment/fail`,
       })
+      // 성공 시 Toss가 successUrl로 리다이렉트 → 여기 도달 안 함
     } catch (e: any) {
-      if (e?.code === 'USER_CANCEL') {
+      if (e?.code === 'PAYMENT_REQUEST_ABORTED' || e?.code === 'USER_CANCEL') {
         setPaying(false)
         return
       }
@@ -106,46 +84,51 @@ function CheckoutInner() {
           </p>
         </div>
 
-        {/* 로딩 상태 */}
-        {!widgetReady && !err && (
-          <div className="flex flex-col items-center justify-center h-48 gap-3 mt-5">
-            <Loader2 size={32} className="animate-spin text-brand" />
-            <p className="text-[13px] font-semibold text-text-soft">결제 수단 불러오는 중...</p>
+        {/* 결제 수단 안내 */}
+        <div className="mx-5 mt-4 card p-4">
+          <div className="flex items-center gap-2.5 mb-3">
+            <CreditCard size={16} className="text-text-soft" />
+            <p className="text-[13px] font-bold text-ink">결제 수단</p>
           </div>
-        )}
+          <p className="text-[13px] text-text-soft leading-relaxed">
+            신용카드 · 체크카드 · 간편결제(카카오페이, 네이버페이 등)
+          </p>
+          <p className="text-[12px] text-text-faint mt-2">
+            결제 버튼을 누르면 토스페이먼츠 결제창이 열립니다
+          </p>
+        </div>
 
         {/* 오류 */}
         {err && (
-          <div className="mx-5 mt-5 p-4 rounded-2xl bg-danger-soft border border-danger/20 flex items-start gap-2.5">
+          <div className="mx-5 mt-4 p-4 rounded-2xl bg-danger-soft border border-danger/20 flex items-start gap-2.5">
             <AlertCircle size={17} className="text-danger shrink-0 mt-0.5" />
             <div>
               <p className="text-[13px] font-bold text-danger leading-snug">{err}</p>
               <button
-                onClick={() => window.location.reload()}
+                onClick={() => setErr(null)}
                 className="mt-2 text-[12px] font-bold text-danger underline"
               >
-                새로고침
+                닫기
               </button>
             </div>
           </div>
         )}
 
-        {/* Toss 결제 위젯 */}
-        <div id="payment-widget" className="mt-5" />
-        <div id="agreement" className="mx-5 mt-2" />
+        {/* 약관 동의 안내 */}
+        <div className="mx-5 mt-4 text-[12px] text-text-faint leading-relaxed">
+          결제 진행 시 토스페이먼츠 이용약관 및 개인정보 처리방침에 동의하는 것으로 간주됩니다.
+        </div>
       </div>
 
       {/* 하단 결제 버튼 */}
       <div className="fixed bottom-0 inset-x-0 border-t border-line-soft bg-surface/95 backdrop-blur safe-bottom">
         <div className="max-w-[480px] mx-auto px-5 py-3.5">
-          {widgetReady && (
-            <p className="text-center text-[11.5px] font-bold text-text-soft mb-2">
-              위 내용에 동의하고 결제를 진행합니다
-            </p>
-          )}
+          <p className="text-center text-[11.5px] font-bold text-text-soft mb-2">
+            위 내용을 확인하고 결제를 진행합니다
+          </p>
           <button
             onClick={handlePay}
-            disabled={!widgetReady || paying}
+            disabled={paying}
             className="btn btn-primary w-full !py-4 !text-[16px] !font-extrabold disabled:opacity-50"
           >
             {paying ? (
