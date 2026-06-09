@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
-import { loadPaymentWidget, type PaymentWidgetInstance } from '@tosspayments/payment-widget-sdk'
+import { loadTossPayments, ANONYMOUS } from '@tosspayments/tosspayments-sdk'
 import { ChevronLeft, ShieldCheck, Loader2, AlertCircle } from 'lucide-react'
 import { formatKRW } from '@/lib/utils'
 
@@ -17,7 +17,7 @@ function CheckoutInner() {
   const orderName = decodeURIComponent(searchParams.get('orderName') ?? '쓱싹 청소')
   const customerName = decodeURIComponent(searchParams.get('customerName') ?? '')
 
-  const widgetRef = useRef<PaymentWidgetInstance | null>(null)
+  const widgetsRef = useRef<Awaited<ReturnType<Awaited<ReturnType<typeof loadTossPayments>>['widgets']>> | null>(null)
   const [widgetReady, setWidgetReady] = useState(false)
   const [paying, setPaying] = useState(false)
   const [err, setErr] = useState<string | null>(null)
@@ -31,15 +31,18 @@ function CheckoutInner() {
     let mounted = true
     ;(async () => {
       try {
-        const widget = await loadPaymentWidget(TOSS_CLIENT_KEY, 'ANONYMOUS')
+        const tossPayments = await loadTossPayments(TOSS_CLIENT_KEY)
         if (!mounted) return
-        widgetRef.current = widget
 
-        await widget.renderPaymentMethods('#payment-widget', { value: amount })
-        await widget.renderAgreement('#agreement')
+        const widgets = tossPayments.widgets({ customerKey: ANONYMOUS })
+        widgetsRef.current = widgets
+
+        await widgets.setAmount({ currency: 'KRW', value: amount })
+        await widgets.renderPaymentMethods({ selector: '#payment-widget' })
+        await widgets.renderAgreement({ selector: '#agreement' })
 
         if (mounted) setWidgetReady(true)
-      } catch (e) {
+      } catch (e: any) {
         console.error('[checkout] widget error', e)
         if (mounted) setErr('결제 위젯을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.')
       }
@@ -51,22 +54,20 @@ function CheckoutInner() {
   }, [orderId, amount]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handlePay = async () => {
-    if (!widgetRef.current || !widgetReady || paying) return
+    if (!widgetsRef.current || !widgetReady || paying) return
     setPaying(true)
     setErr(null)
     try {
       const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://cleangig.vercel.app'
-      await widgetRef.current.requestPayment({
+      await widgetsRef.current.requestPayment({
         orderId,
         orderName,
         customerName: customerName || undefined,
         successUrl: `${appUrl}/payment/success`,
         failUrl: `${appUrl}/payment/fail`,
       })
-      // requestPayment가 성공하면 Toss가 successUrl로 리다이렉트 → 여기 도달 안 함
     } catch (e: any) {
       if (e?.code === 'USER_CANCEL') {
-        // 사용자가 직접 취소
         setPaying(false)
         return
       }

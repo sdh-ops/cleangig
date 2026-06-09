@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { loadPaymentWidget, PaymentWidgetInstance } from '@tosspayments/payment-widget-sdk'
+import { loadTossPayments, ANONYMOUS } from '@tosspayments/tosspayments-sdk'
 
 interface Props {
     isOpen: boolean
@@ -16,7 +16,7 @@ interface Props {
 
 export default function PaymentModal({ isOpen, onClose, amount, jobName, jobId, paymentContext, workerId, appId }: Props) {
     const [isProcessing, setIsProcessing] = useState(false)
-    const [paymentWidget, setPaymentWidget] = useState<PaymentWidgetInstance | null>(null)
+    const [widgets, setWidgets] = useState<Awaited<ReturnType<Awaited<ReturnType<typeof loadTossPayments>>['widgets']>> | null>(null)
 
     useEffect(() => {
         if (!isOpen) return
@@ -24,21 +24,16 @@ export default function PaymentModal({ isOpen, onClose, amount, jobName, jobId, 
         let mounted = true;
         (async () => {
             try {
-                // 토스페이먼츠 공식 테스트 환경 연동 키
-                const clientKey = "test_gck_docs_Ovk5rk1EwkEbP0W43n07xlzm"
-                const customerKey = `USER_${Math.random().toString(36).substring(2, 10)}`
-
-                const widget = await loadPaymentWidget(clientKey, customerKey)
+                const clientKey = process.env.NEXT_PUBLIC_TOSS_CLIENT_KEY ?? "test_ck_ex6BJGQOVDx5ZRKQjQ2nVW4w2zNb"
+                const tossPayments = await loadTossPayments(clientKey)
                 if (!mounted) return
 
-                setPaymentWidget(widget)
+                const w = tossPayments.widgets({ customerKey: ANONYMOUS })
+                await w.setAmount({ currency: 'KRW', value: amount })
+                await w.renderPaymentMethods({ selector: '#payment-widget' })
+                await w.renderAgreement({ selector: '#agreement' })
 
-                // 결제창 위젯 렌더링
-                const paymentMethodsWidget = widget.renderPaymentMethods('#payment-widget', { value: amount }, { variantKey: 'DEFAULT' })
-
-                // 이용약관 위젯 렌더링
-                widget.renderAgreement('#agreement', { variantKey: 'AGREEMENT' })
-
+                if (mounted) setWidgets(w)
             } catch (err) {
                 console.error("토스페이먼츠 위젯 로드 실패:", err)
             }
@@ -50,13 +45,12 @@ export default function PaymentModal({ isOpen, onClose, amount, jobName, jobId, 
     if (!isOpen) return null
 
     const handlePay = async () => {
-        if (!paymentWidget) return
+        if (!widgets) return
         setIsProcessing(true)
 
         try {
             const orderId = `ORDER_${Date.now()}_${jobId.substring(0, 8)}`
 
-            // 콜백 URL 구성 (Toss 결제 후 돌아올 라우트)
             const originURL = typeof window !== 'undefined' ? window.location.origin : ''
             const successUrl = new URL(`${originURL}/payment/success`)
             successUrl.searchParams.append('context', paymentContext)
@@ -64,7 +58,7 @@ export default function PaymentModal({ isOpen, onClose, amount, jobName, jobId, 
             if (workerId) successUrl.searchParams.append('workerId', workerId)
             if (appId) successUrl.searchParams.append('appId', appId)
 
-            await paymentWidget.requestPayment({
+            await widgets.requestPayment({
                 orderId,
                 orderName: jobName,
                 successUrl: successUrl.toString(),
@@ -106,7 +100,7 @@ export default function PaymentModal({ isOpen, onClose, amount, jobName, jobId, 
                     <button
                         className="btn btn-primary btn-full btn-lg"
                         onClick={handlePay}
-                        disabled={isProcessing || !paymentWidget}
+                        disabled={isProcessing || !widgets}
                         style={{ height: 54, fontSize: 16 }}
                     >
                         {isProcessing ? <span className="spinner" style={{ borderColor: '#fff', borderTopColor: 'transparent' }} /> : `${amount.toLocaleString()}원 결제하기`}
