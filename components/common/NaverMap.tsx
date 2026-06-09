@@ -102,7 +102,11 @@ export default function NaverMap({
       markerObjs.current.forEach((m) => m.setMap?.(null))
       markerObjs.current = []
       if (currentMarker.current) { currentMarker.current.setMap(null); currentMarker.current = null }
-      mapInstance.current = null
+      if (mapInstance.current) {
+        // destroy() removes internal event listeners, preventing freeze on unmount
+        try { mapInstance.current.destroy?.() } catch (_) {}
+        mapInstance.current = null
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])

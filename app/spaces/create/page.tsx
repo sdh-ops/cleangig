@@ -130,7 +130,11 @@ export default function CreateSpacePage() {
   const handleNext = () => {
     if (!canProceed) return
     if (step === 6) return handleSubmit()
-    setStep((s) => (s + 1) as StepId)
+    // defer step change so NaverMap (step 2) fully unmounts before step 3 mounts,
+    // preventing renderer freeze on map destruction
+    requestAnimationFrame(() => {
+      setStep((s) => (s + 1) as StepId)
+    })
   }
 
   const handleSubmit = async () => {
