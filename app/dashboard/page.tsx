@@ -53,7 +53,7 @@ export default async function DashboardPage() {
       .select('id, status, price, scheduled_at, estimated_duration, recurring_config, spaces(id, name, type)')
       .eq('operator_id', user.id)
       .eq('is_recurring', true)
-      .not('status', 'in', '("CANCELLED","PAID_OUT")')
+      .not('status', 'in', '("CANCELED","PAID_OUT")')
       .gte('scheduled_at', new Date().toISOString())
       .order('scheduled_at')
       .limit(5),

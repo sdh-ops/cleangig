@@ -34,7 +34,7 @@ export default async function RequestsPage(props: { searchParams?: Promise<{ tab
     .eq('operator_id', user.id)
 
   if (currentTab === 'recurring') {
-    query = query.eq('is_recurring', true).not('status', 'eq', 'CANCELLED')
+    query = query.eq('is_recurring', true).not('status', 'eq', 'CANCELED')
   } else {
     query = query.in('status', tab.statuses)
   }
