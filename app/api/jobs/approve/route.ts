@@ -45,25 +45,26 @@ export async function POST(req: Request) {
       .eq('id', job_id)
     if (jobErr) throw jobErr
 
-    // 3. payments 레코드 생성 (admin client — RLS 우회)
+    // 3. payments 레코드 생성/업데이트 (admin client — RLS 우회)
     if (job.worker_id) {
       const admin = createAdminClient()
 
-      // 기존 레코드 없을 때만 생성
-      const { count } = await admin
+      // 기존 레코드 조회 (confirm 시 worker_id=null로 선생성될 수 있음)
+      const { data: existing, count } = await admin
         .from('payments')
-        .select('id', { count: 'exact', head: true })
+        .select('id', { count: 'exact' })
         .eq('job_id', job_id)
 
-      if (!count || count === 0) {
-        const pb: any = job.price_breakdown ?? {}
-        const hostFee = pb.host_fee ?? Math.round(job.price * 0.05)
-        const workerFee = pb.worker_fee ?? Math.round(job.price * 0.05)
-        const platformFee = pb.platform_revenue ?? hostFee + workerFee
-        const workerSubtotal = job.price - workerFee
-        const withholdingTax = pb.estimated_withholding ?? Math.round(workerSubtotal * 0.033)
-        const workerPayout = pb.estimated_worker_payout ?? workerSubtotal - withholdingTax
+      const pb: any = job.price_breakdown ?? {}
+      const hostFee = pb.host_fee ?? Math.round(job.price * 0.05)
+      const workerFee = pb.worker_fee ?? Math.round(job.price * 0.05)
+      const platformFee = pb.platform_revenue ?? hostFee + workerFee
+      const workerSubtotal = job.price - workerFee
+      const withholdingTax = pb.estimated_withholding ?? Math.round(workerSubtotal * 0.033)
+      const workerPayout = pb.estimated_worker_payout ?? workerSubtotal - withholdingTax
 
+      if (!count || count === 0) {
+        // 레코드 없음 → 새로 생성
         await admin.from('payments').insert({
           job_id,
           operator_id: job.operator_id,
@@ -80,6 +81,19 @@ export async function POST(req: Request) {
           worker_tax_type: 'FREELANCER',
           status: 'HELD',
         })
+      } else {
+        // 레코드 있음 → worker_id + 정산액 업데이트 (confirm 시 worker_id=null로 생성된 케이스)
+        await admin.from('payments')
+          .update({
+            worker_id: job.worker_id,
+            worker_fee: workerFee,
+            worker_fee_rate: 0.05,
+            withholding_tax: withholdingTax,
+            withholding_tax_rate: 0.033,
+            worker_payout: workerPayout,
+            worker_tax_type: 'FREELANCER',
+          })
+          .eq('job_id', job_id)
       }
 
       // 4. 클린파트너에게 승인 알림
