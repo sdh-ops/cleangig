@@ -23,9 +23,13 @@ function LoginContent() {
   const handleKakao = async () => {
     setLoading(true)
     try {
+      const role = searchParams.get('role')
+      const callbackUrl = role
+        ? `${window.location.origin}/auth/callback?role=${role}`
+        : `${window.location.origin}/auth/callback`
       await supabase.auth.signInWithOAuth({
         provider: 'kakao',
-        options: { redirectTo: `${window.location.origin}/auth/callback` },
+        options: { redirectTo: callbackUrl },
       })
     } catch {
       setLoading(false)
