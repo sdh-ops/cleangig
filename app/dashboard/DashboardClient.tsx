@@ -13,6 +13,7 @@ import {
   Zap,
   Wallet,
   ArrowRight,
+  RefreshCcw,
 } from 'lucide-react'
 import Header from '@/components/common/Header'
 import BottomNav from '@/components/common/BottomNav'
@@ -46,6 +47,16 @@ type Job = {
   users?: { name: string; avg_rating?: number } | null
 }
 
+type RecurringJob = {
+  id: string
+  status: JobStatus
+  price: number
+  scheduled_at: string
+  estimated_duration?: number
+  recurring_config?: { interval?: string; day_of_week?: number } | null
+  spaces?: { id: string; name: string; type: SpaceType } | null
+}
+
 type Space = {
   id: string
   name: string
@@ -60,10 +71,19 @@ type Props = {
   todayJobs: Job[]
   spaces: Space[]
   recentJobs: Job[]
+  recurringJobs: RecurringJob[]
   monthTotal: number
   monthCount: number
   monthApproved: number
   unreadCount: number
+}
+
+const INTERVAL_LABELS: Record<string, string> = {
+  weekly:    '매주',
+  biweekly:  '격주',
+  monthly:   '매월',
+  daily:     '매일',
+  weekdays:  '평일마다',
 }
 
 export default function DashboardClient({
@@ -71,6 +91,7 @@ export default function DashboardClient({
   todayJobs,
   spaces,
   recentJobs,
+  recurringJobs,
   monthTotal,
   monthCount,
   monthApproved,
@@ -262,6 +283,95 @@ export default function DashboardClient({
             </div>
           )}
         </section>
+
+        {/* Recurring cleaning contracts */}
+        {(recurringJobs.length > 0 || spaces.length > 0) && (
+          <section className="mb-7">
+            <div className="section-header">
+              <h2 className="flex items-center gap-1.5">
+                <RefreshCcw size={14} className="text-brand-dark" />
+                정기 청소 계약
+              </h2>
+              <Link href="/requests?filter=recurring">전체 <ChevronRight size={14} /></Link>
+            </div>
+
+            {recurringJobs.length === 0 ? (
+              <div
+                className="rounded-2xl p-4 flex items-center gap-3"
+                style={{ background: 'rgba(14,165,233,0.05)', border: '1px dashed rgba(14,165,233,0.25)' }}
+              >
+                <div
+                  className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                  style={{ background: 'rgba(14,165,233,0.10)' }}
+                >
+                  <RefreshCcw size={18} className="text-brand-dark" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-[13px] font-extrabold text-ink">정기 청소 계약이 없어요</p>
+                  <p className="text-[11.5px] text-text-soft font-semibold mt-0.5">
+                    매주·격주·매월 반복되는 청소를 등록하면 자동으로 관리돼요.
+                  </p>
+                </div>
+                <Link
+                  href="/requests/create?recurring=true"
+                  className="shrink-0 text-[11.5px] font-black text-brand-dark underline"
+                >
+                  등록
+                </Link>
+              </div>
+            ) : (
+              <ul className="flex flex-col gap-2.5">
+                {recurringJobs.map((job) => {
+                  const interval = job.recurring_config?.interval
+                  const intervalLabel = interval ? (INTERVAL_LABELS[interval] ?? interval) : '반복'
+                  return (
+                    <li key={job.id}>
+                      <Link href={`/requests/${job.id}`} className="card-interactive p-4 flex items-center gap-3">
+                        <div
+                          className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                          style={{ background: 'rgba(14,165,233,0.10)' }}
+                        >
+                          <RefreshCcw size={16} className="text-brand-dark" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1.5 mb-0.5">
+                            <span
+                              className="px-2 py-0.5 rounded-full text-[10px] font-black"
+                              style={{ background: 'rgba(14,165,233,0.12)', color: '#0369A1' }}
+                            >
+                              {intervalLabel}
+                            </span>
+                            <StatusChip kind="job" status={job.status} size="sm" />
+                          </div>
+                          <h4 className="text-[13.5px] font-extrabold text-ink truncate">
+                            {job.spaces?.name || '공간'}
+                          </h4>
+                          <p className="text-[11.5px] text-text-soft font-bold flex items-center gap-1 mt-0.5">
+                            <Clock size={10} /> {formatScheduled(job.scheduled_at)}
+                          </p>
+                        </div>
+                        <div className="text-right shrink-0 flex flex-col items-end gap-1">
+                          <div className="t-money text-[14px] text-ink font-black">
+                            {formatKRW(job.price, { short: true })}
+                          </div>
+                          <ChevronRight size={14} className="text-text-faint" />
+                        </div>
+                      </Link>
+                    </li>
+                  )
+                })}
+                <li>
+                  <Link
+                    href="/requests/create?recurring=true"
+                    className="flex items-center gap-2 px-4 py-3 rounded-2xl border border-dashed border-line text-[12.5px] font-bold text-text-soft hover:border-brand hover:text-brand-dark transition-colors"
+                  >
+                    <Plus size={14} /> 새 정기 청소 계약 추가
+                  </Link>
+                </li>
+              </ul>
+            )}
+          </section>
+        )}
 
         {/* Recent requests */}
         <section>

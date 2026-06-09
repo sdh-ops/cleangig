@@ -12,6 +12,10 @@
         {
             "path": "/api/cron/release-payments",
             "schedule": "0 3 * * *"
+        },
+        {
+            "path": "/api/cron/expire-open-jobs",
+            "schedule": "30 * * * *"
         }
     ]
 }

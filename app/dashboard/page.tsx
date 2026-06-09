@@ -19,7 +19,7 @@ export default async function DashboardPage() {
   const todayEnd = new Date(); todayEnd.setHours(23, 59, 59, 999)
   const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1)
 
-  const [todayJobsRes, spacesRes, recentJobsRes, monthJobsRes, unreadRes] = await Promise.all([
+  const [todayJobsRes, spacesRes, recentJobsRes, monthJobsRes, unreadRes, recurringRes] = await Promise.all([
     supabase
       .from('jobs')
       .select('id, status, price, scheduled_at, estimated_duration, is_urgent, spaces(name, type, address)')
@@ -48,6 +48,15 @@ export default async function DashboardPage() {
       .select('id', { count: 'exact', head: true })
       .eq('user_id', user.id)
       .eq('is_read', false),
+    supabase
+      .from('jobs')
+      .select('id, status, price, scheduled_at, estimated_duration, recurring_config, spaces(id, name, type)')
+      .eq('operator_id', user.id)
+      .eq('is_recurring', true)
+      .not('status', 'in', '("CANCELLED","PAID_OUT")')
+      .gte('scheduled_at', new Date().toISOString())
+      .order('scheduled_at')
+      .limit(5),
   ])
 
   const monthJobs = (monthJobsRes.data as { status: string; price: number }[] | null) || []
@@ -61,6 +70,7 @@ export default async function DashboardPage() {
       todayJobs={(todayJobsRes.data || []) as any}
       spaces={(spacesRes.data || []) as any}
       recentJobs={(recentJobsRes.data || []) as any}
+      recurringJobs={(recurringRes.data || []) as any}
       monthTotal={monthTotal}
       monthCount={monthCount}
       monthApproved={monthApproved}

@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { useState, useEffect } from 'react'
 import {
   Sparkles,
   Clock,
@@ -14,7 +15,10 @@ import {
   Navigation,
   CheckCircle2,
   ArrowRight,
+  Bell,
+  X,
 } from 'lucide-react'
+import { requestNotificationPermission, subscribeToPush } from '@/lib/push'
 import Header from '@/components/common/Header'
 import BottomNav from '@/components/common/BottomNav'
 import StatusChip from '@/components/common/StatusChip'
@@ -61,6 +65,8 @@ type Props = {
 
 const TIER_ORDER = { STARTER: 0, SILVER: 1, GOLD: 2, MASTER: 3 }
 
+const PUSH_DISMISSED_KEY = 'sseuksak:push_dismissed'
+
 export default function CleanMainClient({ profile, activeJob, openJobs, weekEarnings, pendingCount, unreadCount }: Props) {
   const router = useRouter()
   const tier = profile.tier ?? 'STARTER'
@@ -69,10 +75,67 @@ export default function CleanMainClient({ profile, activeJob, openJobs, weekEarn
   const jobsCount = profile.total_jobs ?? 0
   const tierProgress = (TIER_ORDER[tier] / 3) * 100
 
+  const [showPushBanner, setShowPushBanner] = useState(false)
+  const [pushLoading, setPushLoading] = useState(false)
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    if (!('Notification' in window)) return
+    if (Notification.permission === 'granted') return
+    const dismissed = localStorage.getItem(PUSH_DISMISSED_KEY)
+    if (dismissed) return
+    setShowPushBanner(true)
+  }, [])
+
+  async function handleEnablePush() {
+    setPushLoading(true)
+    const granted = await requestNotificationPermission()
+    if (granted) {
+      await subscribeToPush()
+      setShowPushBanner(false)
+    } else {
+      localStorage.setItem(PUSH_DISMISSED_KEY, '1')
+      setShowPushBanner(false)
+    }
+    setPushLoading(false)
+  }
+
+  function handleDismissPush() {
+    localStorage.setItem(PUSH_DISMISSED_KEY, '1')
+    setShowPushBanner(false)
+  }
+
   return (
     <div className="sseuksak-shell">
       <PullToRefresh onRefresh={() => router.refresh()} />
       <Header showLogo showBell unreadCount={unreadCount} />
+
+      {/* Push notification permission banner */}
+      {showPushBanner && (
+        <div className="mx-4 mt-2 mb-0 rounded-2xl overflow-hidden border border-brand/30 bg-brand-softer px-4 py-3 flex items-start gap-3 shadow-sm">
+          <div className="w-9 h-9 rounded-xl bg-brand/15 flex items-center justify-center shrink-0 mt-0.5">
+            <Bell size={18} className="text-brand-dark" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-[13px] font-extrabold text-ink leading-snug">알림을 켜야 새 작업을 받아요</p>
+            <p className="text-[11.5px] text-text-soft font-bold mt-0.5 leading-snug">알림 허용 없이는 근처 청소 작업 알림을 못 받을 수 있어요.</p>
+            <button
+              onClick={handleEnablePush}
+              disabled={pushLoading}
+              className="mt-2 text-[12px] font-black text-white bg-brand px-4 py-1.5 rounded-full disabled:opacity-60"
+            >
+              {pushLoading ? '처리 중...' : '알림 허용하기'}
+            </button>
+          </div>
+          <button
+            onClick={handleDismissPush}
+            className="shrink-0 p-1 rounded-full text-text-faint hover:text-ink transition-colors"
+            aria-label="닫기"
+          >
+            <X size={15} />
+          </button>
+        </div>
+      )}
 
       <div className="page-container flex-1">
 
@@ -293,7 +356,7 @@ export default function CleanMainClient({ profile, activeJob, openJobs, weekEarn
                     </div>
                     <div className="text-right shrink-0 mt-0.5">
                       <div className="t-money text-[15px] text-brand-dark font-black">
-                        {formatKRW(Math.round(job.price * 0.88), { short: true })}
+                        {formatKRW(Math.round(job.price * 0.85), { short: true })}
                       </div>
                       <p className="text-[9.5px] font-bold text-text-faint mt-0.5">예상 정산</p>
                     </div>

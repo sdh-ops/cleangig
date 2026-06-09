@@ -28,7 +28,7 @@ export async function POST(req: Request) {
     // 1. 권한 및 상태 확인
     const { data: job } = await supabase
       .from('jobs')
-      .select('id, operator_id, worker_id, status, price, price_breakdown, spaces(name)')
+      .select('id, operator_id, worker_id, status, price, price_breakdown, is_recurring, recurring_config, space_id, estimated_duration, checklist, special_instructions, is_urgent, time_window_start, time_window_end, preferred_worker_id, spaces(name)')
       .eq('id', job_id)
       .single()
 
@@ -46,8 +46,8 @@ export async function POST(req: Request) {
     if (jobErr) throw jobErr
 
     // 3. payments 레코드 생성/업데이트 (admin client — RLS 우회)
+    const admin = createAdminClient()
     if (job.worker_id) {
-      const admin = createAdminClient()
 
       // 기존 레코드 조회 (confirm 시 worker_id=null로 선생성될 수 있음)
       const { data: existing, count } = await admin
@@ -56,11 +56,15 @@ export async function POST(req: Request) {
         .eq('job_id', job_id)
 
       const pb: any = job.price_breakdown ?? {}
-      const hostFee = pb.host_fee ?? Math.round(job.price * 0.05)
-      const workerFee = pb.worker_fee ?? Math.round(job.price * 0.05)
+      // 수수료: price_breakdown 우선, 없으면 현행 정책(host 5% + worker 15%) 적용
+      const HOST_FEE_RATE = 0.05
+      const WORKER_FEE_RATE = 0.15
+      const WITHHOLDING_RATE = 0.033
+      const hostFee = pb.host_fee ?? Math.round(job.price * HOST_FEE_RATE)
+      const workerFee = pb.worker_fee ?? Math.round(job.price * WORKER_FEE_RATE)
       const platformFee = pb.platform_revenue ?? hostFee + workerFee
       const workerSubtotal = job.price - workerFee
-      const withholdingTax = pb.estimated_withholding ?? Math.round(workerSubtotal * 0.033)
+      const withholdingTax = pb.estimated_withholding ?? Math.round(workerSubtotal * WITHHOLDING_RATE)
       const workerPayout = pb.estimated_worker_payout ?? workerSubtotal - withholdingTax
 
       if (!count || count === 0) {
@@ -72,24 +76,24 @@ export async function POST(req: Request) {
           gross_amount: job.price,
           platform_fee: platformFee,
           host_fee: hostFee,
-          host_fee_rate: 0.05,
+          host_fee_rate: HOST_FEE_RATE,
           worker_fee: workerFee,
-          worker_fee_rate: 0.05,
+          worker_fee_rate: WORKER_FEE_RATE,
           withholding_tax: withholdingTax,
-          withholding_tax_rate: 0.033,
+          withholding_tax_rate: WITHHOLDING_RATE,
           worker_payout: workerPayout,
           worker_tax_type: 'FREELANCER',
           status: 'HELD',
         })
       } else {
-        // 레코드 있음 → worker_id + 정산액 업데이트 (confirm 시 worker_id=null로 생성된 케이스)
+        // 레코드 있음 → worker_id + 정산액 업데이트
         await admin.from('payments')
           .update({
             worker_id: job.worker_id,
             worker_fee: workerFee,
-            worker_fee_rate: 0.05,
+            worker_fee_rate: WORKER_FEE_RATE,
             withholding_tax: withholdingTax,
-            withholding_tax_rate: 0.033,
+            withholding_tax_rate: WITHHOLDING_RATE,
             worker_payout: workerPayout,
             worker_tax_type: 'FREELANCER',
           })
@@ -122,6 +126,64 @@ export async function POST(req: Request) {
           type: 'job_approved',
           is_read: false,
         })
+      }
+    }
+
+    // 5. 정기 청소 → 다음 인스턴스 자동 생성 (중복 방지: 이미 다음 작업 존재하면 skip)
+    if ((job as any).is_recurring && (job as any).recurring_config) {
+      const rc = (job as any).recurring_config as { interval?: string; day_of_week?: number }
+      const intervalMs: Record<string, number> = {
+        daily: 86400_000,
+        weekly: 7 * 86400_000,
+        biweekly: 14 * 86400_000,
+        monthly: 30 * 86400_000,
+      }
+      const ms = rc.interval ? intervalMs[rc.interval] : null
+
+      if (ms) {
+        const currentScheduled = new Date((job as any).scheduled_at ?? Date.now())
+        const nextScheduled = new Date(currentScheduled.getTime() + ms)
+
+        // 중복 방지: 같은 space_id, is_recurring=true, OPEN/ASSIGNED 상태로 이미 예정된 작업 존재 여부
+        const { count: dupCount } = await admin
+          .from('jobs')
+          .select('id', { count: 'exact', head: true })
+          .eq('space_id', (job as any).space_id)
+          .eq('is_recurring', true)
+          .in('status', ['OPEN', 'ASSIGNED'])
+          .gte('scheduled_at', nextScheduled.toISOString())
+
+        if (!dupCount || dupCount === 0) {
+          await admin.from('jobs').insert({
+            space_id: (job as any).space_id,
+            operator_id: job.operator_id,
+            status: 'OPEN',
+            price: job.price,
+            estimated_duration: (job as any).estimated_duration,
+            scheduled_at: nextScheduled.toISOString(),
+            is_recurring: true,
+            recurring_config: rc,
+            checklist: (job as any).checklist ?? [],
+            special_instructions: (job as any).special_instructions ?? null,
+            is_urgent: false,
+            time_window_start: (job as any).time_window_start ?? null,
+            time_window_end: (job as any).time_window_end ?? null,
+            preferred_worker_id: (job as any).preferred_worker_id ?? null,
+            auto_approved: false,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          })
+
+          // 공간파트너에게 다음 정기 청소 생성 알림
+          await supabase.from('notifications').insert({
+            user_id: job.operator_id,
+            title: '다음 정기 청소가 자동 등록됐어요',
+            message: `${nextScheduled.toLocaleDateString('ko-KR')} 정기 청소가 자동으로 요청됐습니다.`,
+            url: `/requests?filter=recurring`,
+            type: 'recurring_created',
+            is_read: false,
+          })
+        }
       }
     }
 

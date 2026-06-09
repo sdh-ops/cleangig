@@ -117,6 +117,11 @@ export default function WorkerJobDetail() {
   const [workerReady, setWorkerReady] = useState<{ bank: boolean; tax: boolean } | null>(null)
   const [codeRevealed, setCodeRevealed] = useState(false)
 
+  // 완료 증거 사진 (SUBMITTED 전 최소 1장 필수)
+  const [completionPhotos, setCompletionPhotos] = useState<string[]>([])
+  const [uploadingCompletion, setUploadingCompletion] = useState(false)
+  const completionPhotoRef = useRef<HTMLInputElement>(null)
+
   // Extra charge state
   const [extraAmount, setExtraAmount] = useState('')
   const [extraReason, setExtraReason] = useState('')
@@ -260,8 +265,15 @@ export default function WorkerJobDetail() {
           setTransitioning(false)
           return
         }
+        // 완료 사진 최소 1장 필수
+        if (completionPhotos.length === 0) {
+          setErr('청소 완료 사진을 최소 1장 올려주세요.')
+          setTransitioning(false)
+          return
+        }
         payload.completed_at = new Date().toISOString()
         payload.checklist_completed = checklist
+        payload.completion_photos = completionPhotos
         // 비품 상태도 최종 저장
         if (supplyStatus.length > 0) {
           payload.supply_status = supplyStatus
@@ -422,6 +434,24 @@ export default function WorkerJobDetail() {
     } finally {
       setUploadingExtra(false)
       if (extraPhotoRef.current) extraPhotoRef.current.value = ''
+    }
+  }
+
+  const handleCompletionPhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !job) return
+    setUploadingCompletion(true)
+    try {
+      const path = `jobs/${job.id}/completion-${Date.now()}-${file.name}`
+      const { error: upErr } = await supabase.storage.from('photos').upload(path, file, { upsert: true })
+      if (upErr) throw upErr
+      const { data: urlData } = supabase.storage.from('photos').getPublicUrl(path)
+      setCompletionPhotos((prev) => [...prev, urlData.publicUrl])
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : '사진 업로드 실패')
+    } finally {
+      setUploadingCompletion(false)
+      if (completionPhotoRef.current) completionPhotoRef.current.value = ''
     }
   }
 
@@ -721,6 +751,52 @@ export default function WorkerJobDetail() {
           )}
 
           {/* 비품 상태 2레벨 체크 */}
+          {/* 완료 증거 사진 (IN_PROGRESS 상태에서 업로드, SUBMITTED 전 필수) */}
+          {isMine && job.status === 'IN_PROGRESS' && (
+            <div className="card p-4 mb-4">
+              <div className="flex items-center justify-between mb-1">
+                <h3 className="text-[13.5px] font-extrabold text-ink">완료 사진</h3>
+                <span className="text-[10.5px] font-black text-danger bg-danger-soft px-2 py-0.5 rounded-full">필수 1장 이상</span>
+              </div>
+              <p className="text-[11.5px] text-text-soft font-semibold mb-3 leading-snug">
+                청소 완료된 공간 전체 사진을 찍어주세요. 공간파트너가 확인 후 승인합니다.
+              </p>
+              <input
+                ref={completionPhotoRef}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                className="hidden"
+                onChange={handleCompletionPhotoUpload}
+              />
+              <div className="flex gap-2 flex-wrap mb-3">
+                {completionPhotos.map((url, i) => (
+                  <div key={i} className="relative">
+                    <img src={url} alt="" className="w-20 h-20 rounded-xl object-cover border border-line-soft" />
+                    <button
+                      onClick={() => setCompletionPhotos((p) => p.filter((_, j) => j !== i))}
+                      className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-danger text-white flex items-center justify-center"
+                    >
+                      <X size={11} />
+                    </button>
+                  </div>
+                ))}
+                <button
+                  onClick={() => completionPhotoRef.current?.click()}
+                  disabled={uploadingCompletion}
+                  className="w-20 h-20 rounded-xl border-2 border-dashed border-line flex flex-col items-center justify-center gap-1 text-text-faint hover:border-brand hover:text-brand-dark transition"
+                >
+                  {uploadingCompletion ? <Loader2 size={18} className="animate-spin" /> : <><Camera size={18} /><span className="text-[9.5px] font-bold">사진 추가</span></>}
+                </button>
+              </div>
+              {completionPhotos.length > 0 && (
+                <p className="text-[11px] font-bold text-emerald-600 flex items-center gap-1">
+                  <CheckCircle2 size={12} /> {completionPhotos.length}장 업로드 완료
+                </p>
+              )}
+            </div>
+          )}
+
           {isMine && ['ARRIVED', 'IN_PROGRESS'].includes(job.status) && (
             <div className="card p-4 mb-4">
               <h3 className="text-[13.5px] font-extrabold text-ink mb-1">비품 상태 체크</h3>

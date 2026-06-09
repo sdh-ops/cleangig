@@ -146,12 +146,15 @@ export function computeWorkerTier(stats: { total_jobs: number; avg_rating: numbe
  * 티어별 혜택
  *
  * fee_rate: 플랫폼 수수료율 (작업 수익에서 차감)
- * fee_discount: 스타터(15%) 대비 절감율
+ * fee_discount: 스타터 대비 절감율
  * priority: 매칭 우선순위 (높을수록 우선)
+ *
+ * 테스트 버전: 수수료 15% 고정. 티어별 차등은 추후 도입.
+ * 지금은 티어에 따라 매칭 우선순위·배지·기능 혜택만 차등 제공.
  */
 export const TIER_BENEFITS: Record<string, {
   fee_rate: number       // 실제 수수료율 (예: 0.15 = 15%)
-  fee_discount: number   // 스타터 대비 절감 (예: 0.04 = 4%p 절감)
+  fee_discount: number   // 스타터 대비 절감 (테스트: 모두 0)
   priority: number
   label: string
   color: string
@@ -164,18 +167,18 @@ export const TIER_BENEFITS: Record<string, {
     perks: ['수수료 15%', '기본 매칭'],
   },
   SILVER: {
-    fee_rate: 0.13, fee_discount: 0.02, priority: 1,
+    fee_rate: 0.15, fee_discount: 0, priority: 1,
     label: '실버', color: '#64748B', badge: 'SILVER',
-    perks: ['수수료 13% (-2%p)', '매칭 우선순위 ↑', '실버 배지'],
+    perks: ['수수료 15%', '매칭 우선순위 ↑', '실버 배지'],
   },
   GOLD: {
-    fee_rate: 0.11, fee_discount: 0.04, priority: 2,
+    fee_rate: 0.15, fee_discount: 0, priority: 2,
     label: '골드', color: '#F59E0B', badge: 'GOLD',
-    perks: ['수수료 11% (-4%p)', '매칭 최우선', '골드 배지', '주간 정산 가능'],
+    perks: ['수수료 15%', '매칭 최우선', '골드 배지', '주간 정산 가능'],
   },
   MASTER: {
-    fee_rate: 0.09, fee_discount: 0.06, priority: 3,
+    fee_rate: 0.15, fee_discount: 0, priority: 3,
     label: '마스터', color: '#0EA5E9', badge: 'MASTER',
-    perks: ['수수료 9% (-6%p)', '단독 공간 제안', '마스터 배지', '전담 매니저'],
+    perks: ['수수료 15%', '단독 공간 제안', '마스터 배지', '전담 매니저'],
   },
 }

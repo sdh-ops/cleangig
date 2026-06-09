@@ -14,23 +14,32 @@ const TABS = [
   { key: 'active', label: '진행 중', statuses: ['OPEN', 'ASSIGNED', 'EN_ROUTE', 'ARRIVED', 'IN_PROGRESS', 'SUBMITTED', 'DISPUTED'] as JobStatus[] },
   { key: 'completed', label: '완료', statuses: ['APPROVED', 'PAID_OUT'] as JobStatus[] },
   { key: 'canceled', label: '취소', statuses: ['CANCELED'] as JobStatus[] },
+  { key: 'recurring', label: '정기', statuses: [] as JobStatus[] },
 ]
 
-export default async function RequestsPage(props: { searchParams?: Promise<{ tab?: string }> }) {
+export default async function RequestsPage(props: { searchParams?: Promise<{ tab?: string; filter?: string }> }) {
   const sp = await props.searchParams
-  const currentTab = sp?.tab || 'active'
+  // ?filter=recurring 을 tab=recurring 으로 통합
+  const rawTab = sp?.filter === 'recurring' ? 'recurring' : (sp?.tab || 'active')
+  const currentTab = TABS.some(t => t.key === rawTab) ? rawTab : 'active'
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
   const tab = TABS.find((t) => t.key === currentTab) || TABS[0]
-  const { data } = await supabase
-    .from('jobs')
-    .select('id, status, price, scheduled_at, is_urgent, spaces(name, type, address, has_toilet, has_kitchen, has_bed), users:worker_id(name)')
-    .eq('operator_id', user.id)
-    .in('status', tab.statuses)
-    .order('scheduled_at', { ascending: false })
 
+  let query = supabase
+    .from('jobs')
+    .select('id, status, price, scheduled_at, is_urgent, is_recurring, recurring_config, spaces(name, type, address, has_toilet, has_kitchen, has_bed), users:worker_id(name)')
+    .eq('operator_id', user.id)
+
+  if (currentTab === 'recurring') {
+    query = query.eq('is_recurring', true).not('status', 'eq', 'CANCELLED')
+  } else {
+    query = query.in('status', tab.statuses)
+  }
+
+  const { data } = await query.order('scheduled_at', { ascending: false })
   const jobs = (data || []) as any[]
 
   return (
@@ -62,10 +71,19 @@ export default async function RequestsPage(props: { searchParams?: Promise<{ tab
           <div className="card p-2 mt-4">
             <EmptyState
               icon={<Sparkles size={24} />}
-              title={`${tab.label} 요청이 없어요`}
-              description={currentTab === 'active' ? '지금 새로운 청소를 요청해보세요.' : ''}
-              actionLabel={currentTab === 'active' ? '청소 요청하기' : undefined}
-              actionHref={currentTab === 'active' ? '/requests/create' : undefined}
+              title={currentTab === 'recurring' ? '정기 청소 계약이 없어요' : `${tab.label} 요청이 없어요`}
+              description={
+                currentTab === 'active' ? '지금 새로운 청소를 요청해보세요.' :
+                currentTab === 'recurring' ? '매주·격주·매월 반복 청소를 등록하면 자동 관리돼요.' : ''
+              }
+              actionLabel={
+                currentTab === 'active' ? '청소 요청하기' :
+                currentTab === 'recurring' ? '정기 청소 등록하기' : undefined
+              }
+              actionHref={
+                currentTab === 'active' ? '/requests/create' :
+                currentTab === 'recurring' ? '/requests/create?recurring=true' : undefined
+              }
             />
           </div>
         ) : (

@@ -1,10 +1,15 @@
 /**
  * 쓱싹 Pricing & Payment Engine (한국 법 기준)
  *
+ * 수수료 구조 (테스트 버전 — 단일 고정 수수료):
+ *   - 공간파트너(호스트): 5%
+ *   - 클린파트너(워커):   15%
+ *   - 플랫폼 총 수익:     20%
+ *
  * 구조:
  *   - Host Payment (공간 운영자 결제액, 부가세 포함 가능)
- *   - Host Fee (플랫폼 매출, 기본 5%)
- *   - Worker Fee (플랫폼 매출, 기본 5%)
+ *   - Host Fee (플랫폼 매출, 5%)
+ *   - Worker Fee (플랫폼 매출, 15%)
  *   - Withholding Tax (원천징수, 프리랜서 3.3%: 소득세 3% + 지방세 0.3%)
  *   - Worker Payout (작업자 실 수령액)
  *
@@ -72,7 +77,7 @@ export type FeeSettings = {
 
 export const DEFAULT_FEES: FeeSettings = {
   host_fee_rate: 0.05,
-  worker_fee_rate: 0.05,
+  worker_fee_rate: 0.15, // 테스트 버전: 고정 15% (총 수수료 20%)
   withholding_tax_rate: 0.033,
   vat_rate: 0.10,
 }

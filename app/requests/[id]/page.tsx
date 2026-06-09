@@ -14,7 +14,7 @@ export default async function RequestDetailPage({ params }: { params: Promise<{ 
         .select(`
             *,
             spaces(*),
-            users:jobs_worker_id_fkey(id, name, avg_rating, tier, profile_image, phone)
+            users:jobs_worker_id_fkey(id, name, avg_rating, total_jobs, sparkle_score, tier, profile_image, phone)
         `)
         .eq('id', id)
         .single()

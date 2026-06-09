@@ -87,6 +87,8 @@ type JobFull = {
     id: string
     name: string
     avg_rating?: number
+    total_jobs?: number
+    sparkle_score?: number
     tier?: string
     profile_image?: string
     phone?: string
@@ -97,6 +99,151 @@ type Props = {
   job: JobFull
   userId: string
   initialIsFavorite?: boolean
+}
+
+// ─── 티어 메타 ───────────────────────────────────────────────
+const TIER_META: Record<string, { color: string; bg: string; label: string }> = {
+  STARTER: { color: '#64748B', bg: 'rgba(100,116,139,0.10)', label: '스타터' },
+  SILVER:  { color: '#475569', bg: 'rgba(71,85,105,0.10)',   label: '실버' },
+  GOLD:    { color: '#D97706', bg: 'rgba(217,119,6,0.10)',   label: '골드' },
+  MASTER:  { color: '#0EA5E9', bg: 'rgba(14,165,233,0.10)',  label: '마스터' },
+}
+
+// ─── 워커 프로필 카드 컴포넌트 ──────────────────────────────
+type WorkerMeta = NonNullable<JobFull['users']>
+type WorkerCardProps = {
+  worker: WorkerMeta
+  jobId: string
+  jobStatus: string
+  isFavorite: boolean
+  onToggleFavorite: () => void
+}
+
+function WorkerProfileCard({ worker, jobId, jobStatus, isFavorite, onToggleFavorite }: WorkerCardProps) {
+  const tier = worker.tier ?? 'STARTER'
+  const tierMeta = TIER_META[tier] ?? TIER_META.STARTER
+  const rating = worker.avg_rating ?? 0
+  const totalJobs = worker.total_jobs ?? 0
+  const isTrusted = rating >= 4.5 && totalJobs >= 20
+  const isActive = ['ASSIGNED', 'EN_ROUTE', 'ARRIVED', 'IN_PROGRESS'].includes(jobStatus)
+
+  return (
+    <div className="card mb-4 overflow-hidden">
+      {/* 상단 배너 */}
+      <div
+        className="relative px-4 pt-4 pb-5"
+        style={{ background: `linear-gradient(135deg, ${tierMeta.bg.replace('0.10','0.18')} 0%, transparent 100%)` }}
+      >
+        <div className="flex items-start gap-3">
+          {/* 아바타 + 티어 뱃지 */}
+          <div className="relative shrink-0">
+            <div
+              className="w-16 h-16 rounded-2xl overflow-hidden flex items-center justify-center font-black text-xl text-white"
+              style={{ background: `linear-gradient(135deg, ${tierMeta.color}cc 0%, ${tierMeta.color}88 100%)` }}
+            >
+              {worker.profile_image ? (
+                <img src={worker.profile_image} alt={worker.name} className="w-full h-full object-cover" />
+              ) : (
+                worker.name.charAt(0)
+              )}
+            </div>
+            {/* 티어 뱃지 (오른쪽 하단) */}
+            <div
+              className="absolute -bottom-1.5 -right-1.5 px-1.5 py-0.5 rounded-full"
+              style={{
+                background: tierMeta.color,
+                fontSize: 9,
+                fontWeight: 900,
+                color: '#fff',
+                letterSpacing: '0.05em',
+                boxShadow: '0 1px 4px rgba(0,0,0,0.18)',
+              }}
+            >
+              {tierMeta.label.toUpperCase()}
+            </div>
+          </div>
+
+          {/* 이름 + 신뢰 태그 */}
+          <div className="flex-1 min-w-0 pt-0.5">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <h4 className="text-[15px] font-extrabold text-ink">{worker.name}</h4>
+              {isTrusted && (
+                <span
+                  className="px-2 py-0.5 rounded-full text-[10px] font-black"
+                  style={{ background: 'rgba(16,185,129,0.12)', color: '#059669' }}
+                >
+                  검증 파트너
+                </span>
+              )}
+            </div>
+
+            {/* 핵심 지표 3가지 */}
+            <div className="flex items-center gap-3 mt-2">
+              <div className="flex flex-col items-center">
+                <div className="flex items-center gap-0.5">
+                  <Star size={11} className="text-sun" fill="currentColor" />
+                  <span className="text-[13px] font-black text-ink">{rating.toFixed(1)}</span>
+                </div>
+                <span className="text-[9.5px] font-bold text-text-faint mt-0.5">평점</span>
+              </div>
+              <div className="w-px h-7 bg-line-soft" />
+              <div className="flex flex-col items-center">
+                <span className="text-[13px] font-black text-ink">
+                  {totalJobs >= 1000 ? `${Math.floor(totalJobs / 100) / 10}k` : totalJobs}
+                </span>
+                <span className="text-[9.5px] font-bold text-text-faint mt-0.5">완료 건수</span>
+              </div>
+              {worker.sparkle_score !== undefined && worker.sparkle_score !== null && (
+                <>
+                  <div className="w-px h-7 bg-line-soft" />
+                  <div className="flex flex-col items-center">
+                    <span className="text-[13px] font-black text-ink">{worker.sparkle_score}</span>
+                    <span className="text-[9.5px] font-bold text-text-faint mt-0.5">활동 점수</span>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* 단골 버튼 */}
+          <button
+            onClick={onToggleFavorite}
+            className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 transition-colors ${
+              isFavorite ? 'bg-danger-soft text-danger' : 'bg-surface-muted text-text-faint hover:text-danger hover:bg-danger-soft'
+            }`}
+            aria-label={isFavorite ? '단골 해제' : '단골 등록'}
+          >
+            <Heart size={17} fill={isFavorite ? 'currentColor' : 'none'} />
+          </button>
+        </div>
+
+        {/* 단골 안내 문구 */}
+        {isFavorite && (
+          <div
+            className="mt-3 px-3 py-2 rounded-xl text-[11px] font-bold flex items-center gap-1.5"
+            style={{ background: 'rgba(239,68,68,0.07)', color: '#B91C1C' }}
+          >
+            <Heart size={11} fill="currentColor" />
+            단골 파트너 등록됨 — 다음 요청 시 우선 배정 요청 가능
+          </div>
+        )}
+      </div>
+
+      {/* 연락 버튼 (활성 상태일 때만) */}
+      {isActive && (
+        <div className="px-4 pb-4 flex gap-2">
+          <Link href={`/chat/${jobId}`} className="flex-1 btn btn-ghost !min-h-[42px] !text-sm">
+            <MessageSquare size={15} /> 채팅
+          </Link>
+          {worker.phone && (
+            <a href={`tel:${worker.phone}`} className="flex-1 btn btn-secondary !min-h-[42px] !text-sm">
+              <Phone size={15} /> 통화
+            </a>
+          )}
+        </div>
+      )}
+    </div>
+  )
 }
 
 export default function RequestDetailClient({ job: initialJob, userId, initialIsFavorite = false }: Props) {
@@ -314,51 +461,13 @@ export default function RequestDetailClient({ job: initialJob, userId, initialIs
         <div className="px-5 -mt-4 relative z-10">
           {/* Worker card */}
           {job.users ? (
-            <div className="card p-4 mb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-brand to-brand-dark flex items-center justify-center text-white font-black shrink-0">
-                  {job.users.profile_image ? (
-                    <img src={job.users.profile_image} alt="" className="w-full h-full rounded-full object-cover" />
-                  ) : (
-                    job.users.name.charAt(0)
-                  )}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h4 className="text-[14.5px] font-extrabold text-ink truncate">{job.users.name}</h4>
-                  <div className="flex items-center gap-2 text-[11.5px] font-bold text-text-soft mt-0.5">
-                    <span className="flex items-center gap-0.5">
-                      <Star size={11} className="text-sun" fill="currentColor" />
-                      {(job.users.avg_rating ?? 0).toFixed(1)}
-                    </span>
-                    {job.users.tier && (
-                      <>
-                        <span>·</span>
-                        <span>{job.users.tier}</span>
-                      </>
-                    )}
-                  </div>
-                </div>
-                <button
-                  onClick={toggleFavorite}
-                  className={`w-10 h-10 rounded-full flex items-center justify-center ${isFavorite ? 'bg-danger-soft text-danger' : 'bg-surface-muted text-text-faint'}`}
-                  aria-label="단골 등록"
-                >
-                  <Heart size={17} fill={isFavorite ? 'currentColor' : 'none'} />
-                </button>
-              </div>
-              {['ASSIGNED', 'EN_ROUTE', 'ARRIVED', 'IN_PROGRESS'].includes(job.status) && (
-                <div className="mt-3 flex gap-2">
-                  <Link href={`/chat/${job.id}`} className="flex-1 btn btn-ghost !min-h-[42px] !text-sm">
-                    <MessageSquare size={16} /> 채팅
-                  </Link>
-                  {job.users.phone && (
-                    <a href={`tel:${job.users.phone}`} className="flex-1 btn btn-secondary !min-h-[42px] !text-sm">
-                      <Phone size={16} /> 통화
-                    </a>
-                  )}
-                </div>
-              )}
-            </div>
+            <WorkerProfileCard
+              worker={job.users}
+              jobId={job.id}
+              jobStatus={job.status}
+              isFavorite={isFavorite}
+              onToggleFavorite={toggleFavorite}
+            />
           ) : job.status === 'OPEN' ? (
             <div className="card p-4 mb-4 bg-brand-softer border border-brand/15">
               <div className="flex items-center gap-3">

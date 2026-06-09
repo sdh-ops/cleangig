@@ -79,9 +79,15 @@ export default function CreateRequestPage() {
       ])
       setSpaces((spaces || []) as Space[])
       if (spaces && spaces.length > 0) {
-        const paramSpaceId = new URLSearchParams(window.location.search).get('space')
+        const params = new URLSearchParams(window.location.search)
+        const paramSpaceId = params.get('space')
         const matched = spaces.find((s) => s.id === paramSpaceId)
         setSpaceId(matched ? matched.id : spaces[0].id)
+      }
+      // ?recurring=true → 정기 청소 모드로 pre-select
+      if (new URLSearchParams(window.location.search).get('recurring') === 'true') {
+        setIsRecurring(true)
+        setWhen('schedule') // 정기 청소는 일정 지정 필요
       }
       setFees(feeSettings)
       setLoadingSpaces(false)
