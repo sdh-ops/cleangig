@@ -103,8 +103,15 @@ export async function POST(req: Request) {
     const message = `${spaceName} — 지금 지원하면 우선 매칭`
     const url = `/clean/job/${job_id}`
 
-    // 알림 INSERT (NotificationOverlay가 realtime 수신)
+    // 알림 INSERT (중복 방지: 같은 job_url에 대한 기존 미읽음 알림 먼저 삭제)
     if (scored.length > 0) {
+      await supabase
+        .from('notifications')
+        .delete()
+        .in('user_id', scored.map((s) => s.worker_id))
+        .eq('url', url)
+        .eq('is_read', false)
+
       await supabase.from('notifications').insert(
         scored.map((s) => ({ user_id: s.worker_id, title, message, url, type: 'general' })),
       )

@@ -96,16 +96,33 @@ export async function POST(req: Request) {
           .eq('job_id', job_id)
       }
 
-      // 4. 클린파트너에게 승인 알림
+      // 4. 클린파트너에게 승인 알림 (중복 방지: 동일 job_id 알림이 이미 있으면 skip)
       const spaceName = (job as any).spaces?.name ?? '작업'
-      await supabase.from('notifications').insert({
-        user_id: job.worker_id,
-        title: '작업이 승인됐어요! 정산이 곧 처리됩니다.',
-        message: `${spaceName}이 승인됐습니다. 수고하셨어요!`,
-        url: `/clean/job/${job_id}`,
-        type: 'job_approved',
-        is_read: false,
-      })
+      // 한국어 조사 자동 선택 (이/가): 마지막 글자 받침 여부로 판단
+      const lastChar = spaceName.charCodeAt(spaceName.length - 1)
+      const hasReceivingConsonant = lastChar >= 0xAC00 && lastChar <= 0xD7A3
+        ? (lastChar - 0xAC00) % 28 !== 0
+        : false
+      const particle = hasReceivingConsonant ? '이' : '가'
+
+      const jobUrl = `/clean/job/${job_id}`
+      const { count: existingCount } = await supabase
+        .from('notifications')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', job.worker_id)
+        .eq('url', jobUrl)
+        .eq('type', 'job_approved')
+
+      if (!existingCount || existingCount === 0) {
+        await supabase.from('notifications').insert({
+          user_id: job.worker_id,
+          title: '작업이 승인됐어요! 정산이 곧 처리됩니다.',
+          message: `${spaceName}${particle} 승인됐습니다. 수고하셨어요!`,
+          url: jobUrl,
+          type: 'job_approved',
+          is_read: false,
+        })
+      }
     }
 
     return NextResponse.json({ ok: true })

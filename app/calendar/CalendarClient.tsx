@@ -139,6 +139,8 @@ export default function CalendarClient({ role, jobs, year, month }: Props) {
                 <button
                   key={c.key}
                   onClick={() => setSelectedDate(c.key)}
+                  aria-label={`${year}년 ${month + 1}월 ${c.date}일${dayJobs.length > 0 ? ` (작업 ${dayJobs.length}건)` : ''}${isToday ? ' (오늘)' : ''}`}
+                  aria-pressed={isSelected}
                   className={`aspect-square rounded-lg flex flex-col items-center justify-center relative transition ${
                     isSelected
                       ? 'bg-brand text-white'

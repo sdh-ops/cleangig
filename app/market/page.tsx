@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 import Header from '@/components/common/Header'
 import BottomNav from '@/components/common/BottomNav'
 import EmptyState from '@/components/common/EmptyState'
-import { Sparkles, Star, Heart, Search } from 'lucide-react'
+import { Sparkles, Star, Heart, Search, BadgeCheck } from 'lucide-react'
 import { TIER_BENEFITS } from '@/lib/matching'
 
 type Worker = {
@@ -17,6 +17,7 @@ type Worker = {
   avg_rating?: number
   total_jobs?: number
   bio?: string
+  is_verified?: boolean
 }
 
 export default function MarketPage() {
@@ -32,9 +33,10 @@ export default function MarketPage() {
         supabase.auth.getUser(),
         supabase
           .from('users')
-          .select('id, name, profile_image, tier, avg_rating, total_jobs, bio, is_active')
+          .select('id, name, profile_image, tier, avg_rating, total_jobs, bio, is_active, is_verified')
           .eq('role', 'worker')
           .eq('is_active', true)
+          .order('is_verified', { ascending: false })
           .order('avg_rating', { ascending: false })
           .limit(60),
       ])
@@ -93,8 +95,12 @@ export default function MarketPage() {
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1.5">
+                      <div className="flex items-center gap-1.5 flex-wrap">
                         <h4 className="text-[14.5px] font-extrabold text-ink truncate">{w.name}</h4>
+                        {w.is_verified
+                          ? <BadgeCheck size={15} className="text-sky-500 shrink-0" />
+                          : <span className="text-[10px] font-black px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-400 shrink-0">미인증</span>
+                        }
                         <span
                           className="text-[10px] font-black px-2 py-0.5 rounded-full"
                           style={{ backgroundColor: `${tier.color}22`, color: tier.color }}

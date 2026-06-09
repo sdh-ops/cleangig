@@ -3,11 +3,15 @@ import Link from 'next/link'
 /**
  * 한국 전자상거래법 제10조 — 통신판매중개자 정보 표시 의무
  *
- * TODO 런칭 전 업데이트 필요:
- *  - phone: 실제 고객센터 전화번호로 교체
- *  - mailOrderNo: 통신판매업 신고 완료 후 신고번호 기재
- *    예) "제2026-서울마포-XXXX호"
+ * ⚠️  런칭 전 필수 업데이트:
+ *  - MAIL_ORDER_NO: 통신판매업 신고 완료 후 실제 신고번호로 교체 (전자상거래법 제12조 의무)
+ *    예) "제2026-서울마포-1234호"
+ *    신고처: 공정거래위원회 사이버거래과 또는 지자체 담당 부서
+ *  - CUSTOMER_PHONE: 실제 고객센터 전화번호로 교체
  */
+const MAIL_ORDER_NO = process.env.NEXT_PUBLIC_MAIL_ORDER_NO || ''
+const CUSTOMER_PHONE = process.env.NEXT_PUBLIC_CUSTOMER_PHONE || ''
+
 const BUSINESS = {
   serviceName: '쓱싹',
   company: '디스퀘어',
@@ -15,8 +19,8 @@ const BUSINESS = {
   regNo: '102-07-08646',
   address: '서울특별시 마포구 양화로12길 16, 7층 (서교동, 더난빌딩)',
   email: 'sdh@thenanbiz.com',
-  phone: '(고객센터 번호 추가 예정)',
-  mailOrderNo: '(통신판매업 신고 후 기재)',
+  phone: CUSTOMER_PHONE || '(고객센터 등록 예정)',
+  mailOrderNo: MAIL_ORDER_NO || null,
 }
 
 export default function LegalFooter() {
@@ -26,7 +30,13 @@ export default function LegalFooter() {
       <div className="space-y-0.5">
         <p>운영사: {BUSINESS.company} · 대표: {BUSINESS.ceo}</p>
         <p>사업자등록번호: {BUSINESS.regNo}</p>
-        <p>통신판매업 신고번호: {BUSINESS.mailOrderNo}</p>
+        <p>
+          통신판매업 신고번호:{' '}
+          {BUSINESS.mailOrderNo
+            ? BUSINESS.mailOrderNo
+            : <span className="text-amber-600 font-bold">신고 후 등록 예정 (전자상거래법 제12조)</span>
+          }
+        </p>
         <p>주소: {BUSINESS.address}</p>
         <p>고객센터: {BUSINESS.phone} · 이메일: {BUSINESS.email}</p>
         <p className="pt-1 font-bold text-text-muted">

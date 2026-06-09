@@ -13,12 +13,17 @@ export default async function WorkerProfilePage({ params }: { params: Promise<{ 
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const { data: worker } = await supabase
+  const { data: worker, error: workerError } = await supabase
     .from('users')
     .select('id, name, profile_image, bio, tier, avg_rating, total_jobs, is_verified, manner_temperature, role')
     .eq('id', id)
     .single()
 
+  if (workerError) {
+    console.error('[worker-profile] DB query failed:', workerError.message, { id })
+    // Supabase 쿼리 실패 → 404보다 의미 있는 에러 페이지
+    throw new Error(`worker-profile fetch error: ${workerError.message}`)
+  }
   if (!worker || worker.role !== 'worker') notFound()
 
   const { data: reviews } = await supabase

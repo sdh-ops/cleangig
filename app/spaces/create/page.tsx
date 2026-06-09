@@ -87,6 +87,7 @@ export default function CreateSpacePage() {
   const [bizRegImage, setBizRegImage] = useState<string[]>([])
   const [vatType, setVatType] = useState<'GENERAL' | 'SIMPLE' | 'EXEMPT'>('SIMPLE')
   const [taxInvoiceRequired, setTaxInvoiceRequired] = useState(false)
+  const [mailOrderNo, setMailOrderNo] = useState('')
 
   // 타입 변경 시 체크리스트 초기화
   useEffect(() => {
@@ -200,7 +201,11 @@ export default function CreateSpacePage() {
 
       router.replace(result.data?.id ? `/spaces/${result.data.id}` : '/spaces')
     } catch (e) {
-      const msg = (e as any)?.message || (e as any)?.details || (e as any)?.hint || '공간 등록에 실패했습니다.'
+      const raw = (e as any)?.message || (e as any)?.details || (e as any)?.hint || ''
+      const isGeometryError = raw.includes('geometry') || raw.includes('parse error') || raw.includes('invalid')
+      const msg = isGeometryError
+        ? '위치 정보에 문제가 있어요. 지도 핀을 다시 이동하거나 주소를 다시 검색해주세요.'
+        : raw || '공간 등록에 실패했습니다.'
       setErr(msg)
       setLoading(false)
     }
@@ -243,6 +248,7 @@ export default function CreateSpacePage() {
                   <button
                     key={opt.value}
                     onClick={() => setType(opt.value)}
+                    aria-pressed={type === opt.value}
                     className={`aspect-square rounded-2xl border-2 flex flex-col items-center justify-center text-center p-2 transition ${
                       type === opt.value ? 'border-brand bg-brand-softer' : 'border-line-soft bg-surface hover:border-line-strong'
                     }`}
@@ -640,6 +646,24 @@ export default function CreateSpacePage() {
                 </>
               )}
 
+              {/* 통신판매업 신고번호 — 전자상거래법 제12조 */}
+              <div>
+                <label className="t-meta block mb-1 ml-1 flex items-center gap-1.5">
+                  통신판매업 신고번호
+                  <span className="text-[10px] font-bold text-sun bg-sun/10 px-1.5 py-0.5 rounded-full">전자상거래법 표시 의무</span>
+                </label>
+                <input
+                  value={mailOrderNo}
+                  onChange={(e) => setMailOrderNo(e.target.value)}
+                  placeholder="제2026-서울마포-XXXX호"
+                  className="input"
+                />
+                <p className="text-[11px] text-text-soft font-medium mt-1 ml-1 leading-snug">
+                  전자상거래법 제12조에 따라 온라인 중개 거래 시 신고번호를 표시해야 합니다.
+                  아직 신고 전이라면 신고 후 설정에서 추가할 수 있습니다.
+                </p>
+              </div>
+
               <div className="p-4 rounded-2xl bg-info-soft border border-info/15 flex items-start gap-2.5">
                 <Info size={16} className="text-info shrink-0 mt-0.5" />
                 <div className="text-[12.5px] text-ink-soft font-semibold leading-snug">
@@ -662,6 +686,19 @@ export default function CreateSpacePage() {
 
       <div className="fixed bottom-0 inset-x-0 border-t border-line-soft bg-surface/95 backdrop-blur safe-bottom">
         <div className="max-w-[480px] mx-auto px-5 py-3.5 flex flex-col gap-2">
+          {!canProceed && !loading && (() => {
+            const hint =
+              step === 1 ? '공간 유형을 선택해주세요.' :
+              step === 2 ? '주소를 입력하고 검색 버튼을 눌러 위치를 확인해주세요.' :
+              step === 3 ? '공간 이름을 입력해주세요.' :
+              step === 4 ? '출입 비밀번호를 하나 이상 입력해주세요.' :
+              step === 5 ? '체크리스트 항목을 하나 이상 추가해주세요.' :
+              step === 6 && bizTypeSel === 'BUSINESS' ? '사업자등록번호와 사업자등록증 사본을 입력해주세요.' :
+              null
+            return hint ? (
+              <p className="text-[12px] font-bold text-text-soft text-center">{hint}</p>
+            ) : null
+          })()}
           <button onClick={handleNext} disabled={!canProceed || loading} className="btn btn-primary w-full">
             {loading ? (
               <Loader2 size={20} className="animate-spin" />

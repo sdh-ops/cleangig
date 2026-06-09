@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { useState, useEffect } from 'react'
 import {
   Plus,
   Sparkles,
@@ -76,11 +77,19 @@ export default function DashboardClient({
   unreadCount,
 }: Props) {
   const router = useRouter()
-  const hour = new Date().getHours()
-  const greeting =
-    hour < 5 ? '늦은 밤이에요' :
-    hour < 12 ? '좋은 아침이에요' :
-    hour < 18 ? '안녕하세요' : '좋은 저녁이에요'
+  // KST 기준 인사말 — SSR(UTC)와 클라이언트(KST)가 다를 수 있어 useEffect로 클라이언트에서만 계산
+  const [greeting, setGreeting] = useState('안녕하세요')
+  useEffect(() => {
+    // toLocaleString으로 KST 변환 후 시간 추출
+    const kstHour = new Date(
+      new Date().toLocaleString('en-US', { timeZone: 'Asia/Seoul' })
+    ).getHours()
+    setGreeting(
+      kstHour < 5  ? '늦은 밤이에요' :
+      kstHour < 12 ? '좋은 아침이에요' :
+      kstHour < 18 ? '안녕하세요' : '좋은 저녁이에요'
+    )
+  }, [])
 
   const completionRate = monthCount > 0 ? Math.round((monthApproved / monthCount) * 100) : 0
 
