@@ -4,6 +4,7 @@ import { isPlatformAdmin } from '@/lib/admin'
 import { Star, BadgeCheck, Phone, Mail } from 'lucide-react'
 import { timeAgo } from '@/lib/utils'
 import Link from 'next/link'
+import VerifyUserButton from '@/components/admin/VerifyUserButton'
 
 export default async function AdminUsersPage({
   searchParams,
@@ -128,9 +129,10 @@ export default async function AdminUsersPage({
                 )}
               </div>
 
-              {/* 가입일 */}
-              <div className="text-right shrink-0">
+              {/* 가입일 + 인증 버튼 */}
+              <div className="text-right shrink-0 flex flex-col items-end gap-1.5">
                 <p className="text-[11px] text-slate-400 font-bold">{timeAgo(u.created_at)}</p>
+                <VerifyUserButton userId={u.id} isVerified={!!u.is_verified} />
               </div>
             </div>
           </div>
