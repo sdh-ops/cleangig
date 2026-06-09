@@ -572,7 +572,7 @@ export default function JobsListPage() {
                               )}
                             </p>
                             <div className="t-money text-[14.5px] text-brand-dark font-black">
-                              {formatKRW(Math.round(job.price * 0.88), { short: true })}
+                              {formatKRW(Math.round(job.price * 0.80), { short: true })}
                             </div>
                           </div>
                         </div>

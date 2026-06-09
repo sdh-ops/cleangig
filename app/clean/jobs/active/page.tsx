@@ -79,7 +79,7 @@ export default async function ActiveJobsPage() {
                         </p>
                       </div>
                       <div className="text-right shrink-0">
-                        <div className="t-money text-[14.5px] text-ink">{formatKRW(Math.round(j.price * 0.88), { short: true })}</div>
+                        <div className="t-money text-[14.5px] text-ink">{formatKRW(Math.round(j.price * 0.80), { short: true })}</div>
                         <ChevronRight size={16} className="text-text-faint ml-auto mt-0.5" />
                       </div>
                     </div>

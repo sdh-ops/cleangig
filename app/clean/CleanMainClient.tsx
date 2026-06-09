@@ -356,7 +356,7 @@ export default function CleanMainClient({ profile, activeJob, openJobs, weekEarn
                     </div>
                     <div className="text-right shrink-0 mt-0.5">
                       <div className="t-money text-[15px] text-brand-dark font-black">
-                        {formatKRW(Math.round(job.price * 0.85), { short: true })}
+                        {formatKRW(Math.round(job.price * 0.80), { short: true })}
                       </div>
                       <p className="text-[9.5px] font-bold text-text-faint mt-0.5">예상 정산</p>
                     </div>

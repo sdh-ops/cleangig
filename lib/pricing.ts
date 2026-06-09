@@ -70,7 +70,7 @@ export type TaxType = 'FREELANCER' | 'INDIVIDUAL_BUSINESS' | 'BUSINESS'
 
 export type FeeSettings = {
   host_fee_rate: number       // 0.05
-  worker_fee_rate: number     // 0.05
+  worker_fee_rate: number     // 0.15
   withholding_tax_rate: number // 0.033 (소득세 3% + 지방세 0.3%)
   vat_rate: number             // 0.10
 }

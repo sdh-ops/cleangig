@@ -576,7 +576,7 @@ export default function WorkerJobDetail() {
             </p>
             <div className="mt-5">
               <p className="text-[11px] text-white/60 font-bold">예상 정산</p>
-              <p className="t-money text-[26px] text-brand-light">{formatKRW(job.price_breakdown?.estimated_worker_payout ?? Math.round(job.price * 0.88))}</p>
+              <p className="t-money text-[26px] text-brand-light">{formatKRW(job.price_breakdown?.estimated_worker_payout ?? Math.round(job.price * 0.80))}</p>
             </div>
           </div>
         </div>

@@ -60,7 +60,7 @@ function pinStyle(price: number, urgent: boolean): { bg: string; gradient: strin
 }
 
 function buildPinHtml(job: JobMapItem, selected: boolean): string {
-  const payout = Math.round(job.price * 0.88)
+  const payout = Math.round(job.price * 0.80) // host 5% + worker 15% = 20% total fee
   const { gradient, bg, ring, icon } = pinStyle(job.price, !!job.is_urgent)
   const scale = selected ? 1.18 : 1
   const shadow = selected
@@ -403,7 +403,7 @@ export default function JobsMap({
                 </div>
                 <div className="text-right shrink-0">
                   <div className="t-money text-[17px] text-brand-dark font-black">
-                    {formatKRW(Math.round(selJob.price * 0.88), { short: true })}
+                    {formatKRW(Math.round(selJob.price * 0.80), { short: true })}
                   </div>
                   <p className="text-[9.5px] font-bold text-text-faint mt-0.5">예상 정산</p>
                 </div>

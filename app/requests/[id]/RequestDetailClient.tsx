@@ -628,7 +628,7 @@ export default function RequestDetailClient({ job: initialJob, userId, initialIs
                 <div className="divider" />
                 <div className="flex justify-between items-baseline">
                   <span className="text-[13px] font-bold text-text-soft">총 결제 (VAT 포함)</span>
-                  <span className="t-money text-[18px] text-ink">{formatKRW(job.price_breakdown.total)}</span>
+                  <span className="t-money text-[18px] text-ink">{formatKRW(job.price_breakdown.total ?? job.price)}</span>
                 </div>
                 {(job.price_breakdown.host_fee !== undefined || job.price_breakdown.worker_fee !== undefined) && (
                   <div className="mt-3 pt-3 border-t border-line-soft text-[11.5px] text-text-soft font-bold space-y-1">
