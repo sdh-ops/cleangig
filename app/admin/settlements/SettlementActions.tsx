@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Loader2, Zap, CheckCircle2 } from 'lucide-react'
 
 type Action = 'release' | 'mark_paid' | 'refund'
@@ -16,6 +17,7 @@ export default function SettlementActions({
   label: string
   tone: 'warning' | 'success' | 'danger'
 }) {
+  const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [done, setDone] = useState(false)
   const [err, setErr] = useState<string | null>(null)
@@ -33,6 +35,7 @@ export default function SettlementActions({
       const data = await res.json()
       if (data.ok) {
         setDone(true)
+        router.refresh() // re-fetch Server Component data (KPI counters)
       } else {
         setErr(data.error || '처리 실패')
       }
