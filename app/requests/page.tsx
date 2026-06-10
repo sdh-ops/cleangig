@@ -6,7 +6,7 @@ import BottomNav from '@/components/common/BottomNav'
 import EmptyState from '@/components/common/EmptyState'
 import StatusChip from '@/components/common/StatusChip'
 import RequestsRefreshBridge from './RequestsRefreshBridge'
-import { Sparkles, Clock, ChevronRight, Zap } from 'lucide-react'
+import { Sparkles, Clock, ChevronRight, Zap, RotateCcw } from 'lucide-react'
 import { formatKRW, formatScheduled } from '@/lib/utils'
 import type { JobStatus } from '@/lib/types'
 
@@ -128,10 +128,20 @@ export default async function RequestsPage(props: { searchParams?: Promise<{ tab
                     )}
                   </div>
                   <div className="text-right shrink-0">
+                    <div className="text-[11.5px] text-text-faint font-bold">결제 금액</div>
                     <div className="t-money text-[15px] text-ink">{formatKRW(j.price, { short: true })}</div>
                     <ChevronRight size={16} className="text-text-faint ml-auto mt-0.5" />
                   </div>
                 </Link>
+                {/* 원탭 재요청 — 완료/취소 건은 같은 내용으로 바로 다시 */}
+                {['APPROVED', 'PAID_OUT', 'CANCELED'].includes(j.status) && (
+                  <Link
+                    href={`/requests/create?from=${j.id}`}
+                    className="w-full mt-1.5 flex items-center justify-center gap-1.5 py-3 rounded-xl bg-brand-softer text-brand-dark text-[15px] font-extrabold active:scale-[0.98] transition"
+                  >
+                    <RotateCcw size={15} /> 이 청소 다시 요청
+                  </Link>
+                )}
               </li>
             ))}
           </ul>

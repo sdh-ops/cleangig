@@ -635,8 +635,8 @@ export default function WorkerJobDetail() {
               {job.spaces?.address_detail && isMine ? ` ${job.spaces.address_detail}` : ''}
             </p>
             <div className="mt-5">
-              <p className="text-[13.5px] text-white/60 font-bold">예상 정산</p>
-              <p className="t-money text-[26px] text-brand-light">{formatKRW(job.price_breakdown?.estimated_worker_payout ?? Math.round(job.price * 0.80))}</p>
+              <p className="text-[13.5px] text-white/60 font-bold">예상 수령 (세금 3.3% 차감)</p>
+              <p className="t-money text-[26px] text-brand-light">{formatKRW(job.price_breakdown?.estimated_worker_payout ?? Math.round(job.price * 0.80 * 0.967))}</p>
             </div>
           </div>
         </div>
@@ -649,8 +649,11 @@ export default function WorkerJobDetail() {
             </div>
           )}
 
-          {/* 지도 네비게이션 카드 — 40-60대 타겟: 큰 버튼, 명확한 레이블 */}
-          {isMine && job.status !== 'OPEN' && job.spaces?.address && (
+          {/* 도착 직후엔 출입 비밀번호가 첫 번째 — 문 앞에서 바로 보이게 */}
+          {job.status === 'ARRIVED' && renderAccessCodes()}
+
+          {/* 지도 네비게이션 카드 — 출발 전(배정·이동 중)에만 표시. 도착/청소 중엔 숨김 */}
+          {isMine && (job.status === 'ASSIGNED' || job.status === 'EN_ROUTE') && job.spaces?.address && (
             <div className="card p-4 mb-4">
               <h3 className="text-[15px] font-extrabold text-ink mb-3 flex items-center gap-2">
                 <MapPin size={17} className="text-brand-dark" />
@@ -688,9 +691,6 @@ export default function WorkerJobDetail() {
               )}
             </div>
           )}
-
-          {/* 도착 직후엔 출입 비밀번호가 첫 번째 — 문 앞에서 바로 보이게 */}
-          {job.status === 'ARRIVED' && renderAccessCodes()}
 
           {/* Instructions */}
           {job.special_instructions && (

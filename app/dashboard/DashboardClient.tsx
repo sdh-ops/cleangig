@@ -132,6 +132,15 @@ export default function DashboardClient({
     return pool[0] ?? null
   })()
 
+  const attentionLabel = (() => {
+    if (!attentionJob) return '오늘 할 일'
+    const today = new Date().toLocaleDateString('ko-KR', { timeZone: 'Asia/Seoul' })
+    const jobDay = new Date(attentionJob.scheduled_at).toLocaleDateString('ko-KR', { timeZone: 'Asia/Seoul' })
+    if (today === jobDay) return '오늘 할 일'
+    if (attentionJob.status === 'SUBMITTED') return '확인 필요'
+    return '진행 중인 작업'
+  })()
+
   return (
     <div className="sseuksak-shell">
       <PullToRefresh onRefresh={() => router.refresh()} />
@@ -167,7 +176,7 @@ export default function DashboardClient({
           <section className="mb-5">
             <div className={`card-rich p-5 ${attentionJob.status === 'SUBMITTED' ? 'border-2 border-brand/40' : ''}`}>
               <div className="flex items-center justify-between mb-3">
-                <h2 className="text-[18px] font-extrabold text-ink">오늘 할 일</h2>
+                <h2 className="text-[18px] font-extrabold text-ink">{attentionLabel}</h2>
                 {attentionJob.is_urgent && <span className="chip chip-danger">긴급</span>}
               </div>
               <p className="text-[16.5px] font-extrabold text-ink truncate">{attentionJob.spaces?.name || '공간'}</p>
