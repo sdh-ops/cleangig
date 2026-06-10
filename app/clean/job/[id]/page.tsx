@@ -755,8 +755,8 @@ export default function WorkerJobDetail() {
             </div>
           )}
 
-          {/* Checklist */}
-          {isMine && ['ARRIVED', 'IN_PROGRESS'].includes(job.status) && checklist.length > 0 && (
+          {/* Checklist — 청소 시작(IN_PROGRESS) 후부터. 도착 화면은 비밀번호·주의사항에 집중 */}
+          {isMine && job.status === 'IN_PROGRESS' && checklist.length > 0 && (
             <div className="card p-4 mb-4">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-[15px] font-extrabold text-ink">체크리스트</h3>
@@ -848,7 +848,7 @@ export default function WorkerJobDetail() {
             </div>
           )}
 
-          {isMine && ['ARRIVED', 'IN_PROGRESS'].includes(job.status) && (
+          {isMine && job.status === 'IN_PROGRESS' && (
             <div className="card p-4 mb-4">
               <h3 className="text-[15px] font-extrabold text-ink mb-1">비품 상태 체크</h3>
               <div className="flex items-center gap-3 mb-3 text-[15px] font-semibold">
