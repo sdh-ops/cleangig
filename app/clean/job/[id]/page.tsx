@@ -444,6 +444,9 @@ export default function WorkerJobDetail() {
     const updated = checklist.map((c, i) => (i === idx ? { ...c, completed: !c.completed } : c))
     setChecklist(updated)
     supabase.from('jobs').update({ checklist: updated }).eq('id', job.id)
+      .then(({ error }) => {
+        if (error) setErr('체크 저장에 실패했어요. 인터넷 연결을 확인해주세요.')
+      })
   }
 
   // supply_status 2레벨 사이클: none → low → out → none
@@ -460,6 +463,9 @@ export default function WorkerJobDetail() {
         next = prev.filter((s) => s.name !== name)
       }
       supabase.from('jobs').update({ supply_status: next, supply_shortages: next.map((s) => s.name) }).eq('id', job.id)
+        .then(({ error }) => {
+          if (error) setErr('비품 상태 저장에 실패했어요. 다시 시도해주세요.')
+        })
       return next
     })
   }
@@ -482,6 +488,9 @@ export default function WorkerJobDetail() {
       setChecklist((list) => {
         const next = list.map((c, i) => (i === idx ? { ...c, completed: true, photo_url: urlData.publicUrl } : c))
         supabase.from('jobs').update({ checklist: next }).eq('id', job.id)
+          .then(({ error }) => {
+            if (error) setErr('사진은 올라갔지만 저장에 실패했어요. 다시 시도해주세요.')
+          })
         return next
       })
     } catch (e) {
