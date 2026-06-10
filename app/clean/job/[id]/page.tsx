@@ -34,6 +34,7 @@ import DisputeModal from '@/components/common/DisputeModal'
 import ReviewModal from '@/components/common/ReviewModal'
 import { formatKRW, formatScheduled, spaceTypeLabel, maskAddress, haversineKm } from '@/lib/utils'
 import { notify } from '@/lib/notifications'
+import { toast } from '@/lib/toast'
 import { openNaverRoute, searchNaverAddress } from '@/lib/naver'
 import { getPosition, startTracking, getCachedFix, type GeoErrorReason } from '@/lib/geolocation'
 import LocationPermissionGate from '@/components/common/LocationPermissionGate'
@@ -445,7 +446,7 @@ export default function WorkerJobDetail() {
     setChecklist(updated)
     supabase.from('jobs').update({ checklist: updated }).eq('id', job.id)
       .then(({ error }) => {
-        if (error) setErr('체크 저장에 실패했어요. 인터넷 연결을 확인해주세요.')
+        if (error) toast('체크 저장에 실패했어요. 인터넷 연결을 확인해주세요.', 'error')
       })
   }
 
@@ -464,7 +465,7 @@ export default function WorkerJobDetail() {
       }
       supabase.from('jobs').update({ supply_status: next, supply_shortages: next.map((s) => s.name) }).eq('id', job.id)
         .then(({ error }) => {
-          if (error) setErr('비품 상태 저장에 실패했어요. 다시 시도해주세요.')
+          if (error) toast('비품 상태 저장에 실패했어요. 다시 시도해주세요.', 'error')
         })
       return next
     })
@@ -489,7 +490,7 @@ export default function WorkerJobDetail() {
         const next = list.map((c, i) => (i === idx ? { ...c, completed: true, photo_url: urlData.publicUrl } : c))
         supabase.from('jobs').update({ checklist: next }).eq('id', job.id)
           .then(({ error }) => {
-            if (error) setErr('사진은 올라갔지만 저장에 실패했어요. 다시 시도해주세요.')
+            if (error) toast('사진은 올라갔지만 저장에 실패했어요. 다시 시도해주세요.', 'error')
           })
         return next
       })

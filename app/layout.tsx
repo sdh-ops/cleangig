@@ -8,6 +8,7 @@ import InstallPrompt from '@/components/common/InstallPrompt'
 import BetaBadge from '@/components/common/BetaBadge'
 import PushSubscriptionInit from '@/components/common/PushSubscriptionInit'
 import ErrorBoundary from '@/components/common/ErrorBoundary'
+import Toaster from '@/components/common/Toaster'
 
 export const metadata: Metadata = {
   title: {
@@ -73,6 +74,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <PageTransition>{children}</PageTransition>
         </ErrorBoundary>
         <InstallPrompt />
+        <Toaster />
       </body>
     </html>
   )
