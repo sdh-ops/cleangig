@@ -18,6 +18,7 @@ import {
 import Header from '@/components/common/Header'
 import BottomNav from '@/components/common/BottomNav'
 import StatusChip from '@/components/common/StatusChip'
+import StatusStepper from '@/components/common/StatusStepper'
 import EmptyState from '@/components/common/EmptyState'
 import MetricCard from '@/components/common/MetricCard'
 import PullToRefresh from '@/components/common/PullToRefresh'
@@ -118,6 +119,19 @@ export default function DashboardClient({
 
   const completionRate = monthCount > 0 ? Math.round((monthApproved / monthCount) * 100) : 0
 
+  // "오늘 할 일" 최우선 1건 — 승인 대기 > 진행 중 > 이동/도착 > 배정 > 모집 중
+  const ATTENTION_ORDER: JobStatus[] = ['SUBMITTED', 'IN_PROGRESS', 'ARRIVED', 'EN_ROUTE', 'ASSIGNED', 'OPEN']
+  const attentionJob = (() => {
+    const seen = new Set<string>()
+    const pool = [...todayJobs, ...recentJobs].filter((j) => {
+      if (seen.has(j.id)) return false
+      seen.add(j.id)
+      return ATTENTION_ORDER.includes(j.status)
+    })
+    pool.sort((a, b) => ATTENTION_ORDER.indexOf(a.status) - ATTENTION_ORDER.indexOf(b.status))
+    return pool[0] ?? null
+  })()
+
   return (
     <div className="sseuksak-shell">
       <PullToRefresh onRefresh={() => router.refresh()} />
@@ -147,6 +161,30 @@ export default function DashboardClient({
             ]}
           />
         </div>
+
+        {/* 오늘 할 일 — 가장 급한 1건만 크게 (승인 대기 > 진행 중 > 예정) */}
+        {attentionJob && (
+          <section className="mb-5">
+            <div className={`card-rich p-5 ${attentionJob.status === 'SUBMITTED' ? 'border-2 border-brand/40' : ''}`}>
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-[18px] font-extrabold text-ink">오늘 할 일</h2>
+                {attentionJob.is_urgent && <span className="chip chip-danger">긴급</span>}
+              </div>
+              <p className="text-[16.5px] font-extrabold text-ink truncate">{attentionJob.spaces?.name || '공간'}</p>
+              <p className="text-[14.5px] text-text-soft font-bold flex items-center gap-1 mt-1 mb-4">
+                <Clock size={13} /> {formatScheduled(attentionJob.scheduled_at)}
+              </p>
+              <StatusStepper status={attentionJob.status} role="operator" />
+              <Link
+                href={`/requests/${attentionJob.id}`}
+                className="btn btn-primary w-full mt-4"
+              >
+                {attentionJob.status === 'SUBMITTED' ? '사진 확인하고 승인하기' : '진행 상황 보기'}
+                <ChevronRight size={20} />
+              </Link>
+            </div>
+          </section>
+        )}
 
         {/* Today hero card */}
         {spaces.length === 0 ? (

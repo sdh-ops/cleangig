@@ -229,16 +229,14 @@ export default function CleanMainClient({ profile, activeJob, openJobs, weekEarn
                     <MapPin size={12} /> {maskAddress(activeJob.spaces?.address || '')}
                   </div>
 
-                  <div className="mt-4 p-3.5 rounded-2xl bg-white/10 flex items-center justify-between">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[13px] text-white/60 font-bold mb-0.5">지금 해야 할 일</p>
-                      <p className="text-[14.5px] font-extrabold text-brand-light leading-snug">
-                        {statusSubline(activeJob.status, 'worker')}
-                      </p>
-                    </div>
-                    <div className="w-11 h-11 rounded-full bg-brand flex items-center justify-center shrink-0 ml-3">
-                      <Navigation size={18} className="text-ink" strokeWidth={2.5} />
-                    </div>
+                  <div className="mt-4 p-3.5 rounded-2xl bg-white/10">
+                    <p className="text-[13px] text-white/60 font-bold mb-0.5">지금 해야 할 일</p>
+                    <p className="text-[15px] font-extrabold text-brand-light leading-snug">
+                      {statusSubline(activeJob.status, 'worker')}
+                    </p>
+                  </div>
+                  <div className="mt-3 flex items-center justify-center gap-2 h-[56px] rounded-2xl bg-brand text-ink font-black text-[17px] active:scale-[0.98] transition shadow-sm">
+                    <Navigation size={18} strokeWidth={2.5} /> 이어서 진행하기
                   </div>
                 </div>
               </div>
@@ -311,6 +309,11 @@ export default function CleanMainClient({ profile, activeJob, openJobs, weekEarn
                 </div>
               </div>
             </div>
+
+            {/* 일감이 없을 때 가장 중요한 행동 — 큰 버튼 1개 */}
+            <Link href="/clean/jobs" className="btn btn-primary w-full mt-4">
+              <MapPin size={20} /> 내 주변 일감 찾기
+            </Link>
           </section>
         )}
 
