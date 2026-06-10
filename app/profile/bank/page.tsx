@@ -85,8 +85,8 @@ export default function BankAccountPage() {
         <div className="card p-4 bg-info-soft border border-info/15 flex items-start gap-3">
           <ShieldCheck size={18} className="text-info shrink-0 mt-0.5" />
           <div>
-            <p className="text-[13px] font-extrabold text-ink">안전한 정산을 위해 본인 명의 계좌만 등록해주세요.</p>
-            <p className="text-[11.5px] text-text-muted font-semibold mt-1">계좌 정보는 세무/정산 목적 외에는 사용되지 않습니다.</p>
+            <p className="text-[15px] font-extrabold text-ink">안전한 정산을 위해 본인 명의 계좌만 등록해주세요.</p>
+            <p className="text-[13.5px] text-text-muted font-semibold mt-1">계좌 정보는 세무/정산 목적 외에는 사용되지 않습니다.</p>
           </div>
         </div>
 
@@ -117,7 +117,7 @@ export default function BankAccountPage() {
           <input value={holder} onChange={(e) => setHolder(e.target.value)} className="input" placeholder="본인 명의" />
         </div>
 
-        {err && <div className="p-3 bg-danger-soft rounded-xl text-[13px] font-bold text-danger">{err}</div>}
+        {err && <div className="p-3 bg-danger-soft rounded-xl text-[15px] font-bold text-danger">{err}</div>}
       </div>
 
       <div className="fixed bottom-0 inset-x-0 border-t border-line-soft bg-surface/95 backdrop-blur safe-bottom">

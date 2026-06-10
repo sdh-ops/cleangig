@@ -136,7 +136,7 @@ export default function ProfileEditPage() {
             <label className="t-meta block mb-2 ml-1">한 줄 소개</label>
             <textarea value={bio} onChange={(e) => setBio(e.target.value)} className="input min-h-[80px]" rows={2} maxLength={120} placeholder="예) 홍대 일대 파티룸 · 에어비앤비 청소 전문" />
           </div>
-          {err && <div className="p-3 bg-danger-soft rounded-xl text-[13px] font-bold text-danger">{err}</div>}
+          {err && <div className="p-3 bg-danger-soft rounded-xl text-[15px] font-bold text-danger">{err}</div>}
         </div>
       </div>
 

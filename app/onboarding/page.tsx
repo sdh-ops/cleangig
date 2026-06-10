@@ -167,14 +167,14 @@ export default function OnboardingPage() {
               className="mx-0 mt-2 mb-1 rounded-2xl p-4"
               style={{ background: 'rgba(245,158,11,0.07)', border: '1px solid rgba(245,158,11,0.2)' }}
             >
-              <p className="text-[12px] font-black text-amber-800 mb-2">클린파트너 수수료 안내</p>
+              <p className="text-[14.5px] font-black text-amber-800 mb-2">클린파트너 수수료 안내</p>
               <ul className="flex flex-col gap-1.5">
                 {[
                   '작업 수입에서 플랫폼 수수료 15%가 차감됩니다.',
                   '에스크로 정산 — 미지급 리스크 없음.',
                   '첫 작업 시 보증금 5,000원 차감 (활동 종료 시 전액 환불).',
                 ].map((t) => (
-                  <li key={t} className="text-[11.5px] font-semibold text-amber-900 flex items-start gap-1.5">
+                  <li key={t} className="text-[13.5px] font-semibold text-amber-900 flex items-start gap-1.5">
                     <span className="shrink-0 mt-0.5 text-amber-600">•</span>{t}
                   </li>
                 ))}
@@ -186,14 +186,14 @@ export default function OnboardingPage() {
               className="mx-0 mt-2 mb-1 rounded-2xl p-4"
               style={{ background: 'rgba(14,165,233,0.06)', border: '1px solid rgba(14,165,233,0.18)' }}
             >
-              <p className="text-[12px] font-black text-sky-800 mb-2">공간파트너 수수료 안내</p>
+              <p className="text-[14.5px] font-black text-sky-800 mb-2">공간파트너 수수료 안내</p>
               <ul className="flex flex-col gap-1.5">
                 {[
                   '결제 금액의 5%만 플랫폼 수수료로 청구됩니다.',
                   '에스크로 보호 — 완료 확인 전까지 결제 보관.',
                   '미출근·품질 미달 시 환불 보장.',
                 ].map((t) => (
-                  <li key={t} className="text-[11.5px] font-semibold text-sky-900 flex items-start gap-1.5">
+                  <li key={t} className="text-[13.5px] font-semibold text-sky-900 flex items-start gap-1.5">
                     <span className="shrink-0 mt-0.5 text-sky-500">•</span>{t}
                   </li>
                 ))}
@@ -316,7 +316,7 @@ export default function OnboardingPage() {
             />
           </div>
 
-          {err && <p className="mt-4 text-[13px] font-bold text-danger">{err}</p>}
+          {err && <p className="mt-4 text-[15px] font-bold text-danger">{err}</p>}
 
           <div className="mt-auto py-5 safe-bottom">
             <button onClick={handleSubmit} disabled={loading || !name.trim() || !phone.trim()} className="btn btn-primary w-full">
@@ -381,14 +381,14 @@ function RoleCard({
         <div className="flex-1 min-w-0 pt-0.5">
           <div className="flex items-center gap-2 flex-wrap">
             <h3 className="h-section text-ink">{title}</h3>
-            <span className="text-[11px] font-bold text-text-faint">{subtitle}</span>
+            <span className="text-[13.5px] font-bold text-text-faint">{subtitle}</span>
           </div>
           <p className="t-caption mt-1.5 leading-relaxed">{description}</p>
           <div className="mt-3 flex items-center gap-1.5 flex-wrap">
             {tags.map((tag) => (
               <span
                 key={tag}
-                className={`text-[10.5px] font-bold px-2 py-0.5 rounded-full ${
+                className={`text-[13px] font-bold px-2 py-0.5 rounded-full ${
                   selected ? 'bg-white text-brand-dark' : 'bg-surface-muted text-text-muted'
                 }`}
               >
@@ -431,13 +431,13 @@ function ConsentRow({
         onChange={(e) => onChange(e.target.checked)}
         className="w-4 h-4 rounded accent-brand cursor-pointer shrink-0"
       />
-      <label htmlFor={id} className="flex-1 text-[13px] font-semibold text-ink-soft cursor-pointer leading-snug">
+      <label htmlFor={id} className="flex-1 text-[15px] font-semibold text-ink-soft cursor-pointer leading-snug">
         {required && <span className="text-danger font-black mr-1">[필수]</span>}
         {!required && <span className="text-text-faint font-bold mr-1">[선택]</span>}
         {label}
       </label>
       {href && (
-        <Link href={href} className="text-[11px] font-bold text-brand-dark underline shrink-0" target="_blank">
+        <Link href={href} className="text-[13.5px] font-bold text-brand-dark underline shrink-0" target="_blank">
           보기
         </Link>
       )}

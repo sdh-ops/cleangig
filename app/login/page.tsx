@@ -109,7 +109,7 @@ function LoginContent() {
                 <Logo size="lg" />
                 <div className="flex items-center gap-1.5 mt-3">
                   <Sparkles size={12} className="text-brand" />
-                  <span className="text-[12px] font-bold text-text-soft">청소 매칭 플랫폼</span>
+                  <span className="text-[14.5px] font-bold text-text-soft">청소 매칭 플랫폼</span>
                 </div>
               </div>
 
@@ -125,7 +125,7 @@ function LoginContent() {
               {showError && (
                 <div className="flex items-start gap-2 mb-5 p-3.5 bg-danger-soft rounded-xl border border-danger/10">
                   <AlertCircle size={17} className="text-danger shrink-0 mt-0.5" />
-                  <p className="text-[13px] font-bold text-danger leading-snug">
+                  <p className="text-[15px] font-bold text-danger leading-snug">
                     {errorMsg ? decodeURIComponent(errorMsg) : message}
                   </p>
                 </div>
@@ -178,7 +178,7 @@ function LoginContent() {
                   ].map((b, i) => (
                     <div key={i} className="bg-surface-muted rounded-xl p-2.5 text-center border border-line-soft">
                       <div className="text-lg mb-0.5">{b.emoji}</div>
-                      <p className="text-[10px] font-bold text-text-soft">{b.text}</p>
+                      <p className="text-[13px] font-bold text-text-soft">{b.text}</p>
                     </div>
                   ))}
                 </div>
@@ -241,7 +241,7 @@ function LoginContent() {
                     }`}
                   >
                     <AlertCircle size={17} className={`${messageType === 'success' ? 'text-success' : 'text-danger'} shrink-0 mt-0.5`} />
-                    <p className={`text-[13px] font-bold ${messageType === 'success' ? 'text-success' : 'text-danger'} leading-snug`}>{message}</p>
+                    <p className={`text-[15px] font-bold ${messageType === 'success' ? 'text-success' : 'text-danger'} leading-snug`}>{message}</p>
                   </div>
                 )}
 
@@ -263,7 +263,7 @@ function LoginContent() {
       </div>
 
       <div className="relative z-10 px-6 pb-6 safe-bottom">
-        <p className="text-center text-[11px] text-text-faint font-medium leading-relaxed">
+        <p className="text-center text-[13.5px] text-text-faint font-medium leading-relaxed">
           계속하면{' '}
           <Link href="/terms" className="underline font-bold">이용약관</Link>
           ,{' '}

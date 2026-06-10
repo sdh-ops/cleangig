@@ -45,7 +45,7 @@ export default function BottomNav({ role }: { role: Role }) {
               <li key={t.href} className="flex-1">
                 <Link
                   href={t.href}
-                  className={`flex flex-col items-center justify-center gap-0.5 pt-2.5 pb-2 flex-1 w-full transition-colors relative ${
+                  className={`flex flex-col items-center justify-center gap-1 pt-3 pb-2.5 flex-1 w-full min-h-[62px] transition-colors relative ${
                     active ? 'text-brand-dark' : 'text-text-faint'
                   }`}
                   aria-current={active ? 'page' : undefined}
@@ -53,17 +53,17 @@ export default function BottomNav({ role }: { role: Role }) {
                   {/* Active pill indicator */}
                   {active && (
                     <span
-                      className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full bg-brand"
+                      className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-[3px] rounded-full bg-brand"
                     />
                   )}
                   <Icon
-                    size={22}
-                    strokeWidth={active ? 2.5 : 1.8}
+                    size={26}
+                    strokeWidth={active ? 2.4 : 1.8}
                     className={active ? 'text-brand-dark' : 'text-text-faint'}
                   />
                   <span
-                    className={`text-[10.5px] tracking-tight font-bold transition-all ${
-                      active ? 'text-brand-dark' : 'text-text-faint'
+                    className={`text-[15px] tracking-tight transition-all ${
+                      active ? 'text-brand-dark font-extrabold' : 'text-text-faint font-bold'
                     }`}
                   >
                     {t.label}

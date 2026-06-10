@@ -75,7 +75,7 @@ export default function StatusStepper({ status, role, hideSubline = false }: Pro
                 {isDone ? (
                   <Check size={14} strokeWidth={3.5} />
                 ) : (
-                  <span className="text-[13px] font-black">{s.step}</span>
+                  <span className="text-[15px] font-black">{s.step}</span>
                 )}
               </div>
               {/* 라벨 */}
@@ -83,7 +83,7 @@ export default function StatusStepper({ status, role, hideSubline = false }: Pro
                 className={`mt-1.5 text-center leading-tight ${
                   isCurrent
                     ? 'text-[15px] font-black text-ink'
-                    : 'text-[12.5px] font-bold text-text-faint'
+                    : 'text-[14.5px] font-bold text-text-faint'
                 }`}
               >
                 {s.label}

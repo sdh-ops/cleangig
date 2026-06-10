@@ -61,7 +61,7 @@ function SuccessInner() {
           <Loader2 size={40} className="animate-spin text-brand" />
           <div className="text-center">
             <p className="text-[16px] font-extrabold text-ink">결제 확인 중</p>
-            <p className="text-[13px] text-text-soft font-semibold mt-1">잠시만 기다려주세요...</p>
+            <p className="text-[15px] text-text-soft font-semibold mt-1">잠시만 기다려주세요...</p>
           </div>
         </div>
       </div>
@@ -79,7 +79,7 @@ function SuccessInner() {
           <p className="text-[14px] text-text-muted font-semibold mt-3 leading-relaxed max-w-[280px]">
             {errMsg ?? '결제 확인 중 오류가 발생했습니다.'}
           </p>
-          <p className="text-[12px] text-text-faint font-bold mt-3">
+          <p className="text-[14.5px] text-text-faint font-bold mt-3">
             결제가 됐다면 고객센터로 문의해주세요.<br />주문번호: {orderId}
           </p>
           <div className="mt-8 w-full max-w-[280px] flex flex-col gap-2">
@@ -109,13 +109,13 @@ function SuccessInner() {
         </p>
 
         <div className="mt-6 card p-5 w-full max-w-[280px]">
-          <p className="text-[11px] text-text-soft font-bold">결제 금액</p>
+          <p className="text-[13.5px] text-text-soft font-bold">결제 금액</p>
           <p className="t-money text-[26px] text-ink mt-1">{formatKRW(amount)}</p>
-          <p className="text-[11px] text-text-faint mt-2 font-semibold">주문번호: {orderId}</p>
+          <p className="text-[13.5px] text-text-faint mt-2 font-semibold">주문번호: {orderId}</p>
         </div>
 
         <div className="mt-3 p-3 rounded-xl bg-brand-softer border border-brand/15 w-full max-w-[280px]">
-          <p className="text-[12.5px] font-bold text-brand-dark">
+          <p className="text-[14.5px] font-bold text-brand-dark">
             🔍 주변 클린파트너를 찾고 있어요. 매칭되면 알림을 보내드릴게요!
           </p>
         </div>

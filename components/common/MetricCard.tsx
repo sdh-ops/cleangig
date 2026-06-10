@@ -35,7 +35,7 @@ export default function MetricCard({ label, value, unit, delta, icon, tone = 'de
 
       <div className="relative z-10">
         <div className="flex items-center justify-between mb-2">
-          <span className={`text-[11px] font-bold ${labelCls}`}>{label}</span>
+          <span className={`text-[13.5px] font-bold ${labelCls}`}>{label}</span>
           {icon && (
             <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${iconCls}`}>
               {icon}
@@ -45,11 +45,11 @@ export default function MetricCard({ label, value, unit, delta, icon, tone = 'de
 
         <div className="flex items-baseline gap-1 mt-1">
           <span className={`num-display text-[28px] leading-none ${valueCls}`}>{value}</span>
-          {unit && <span className={`text-[13px] font-bold ${labelCls}`}>{unit}</span>}
+          {unit && <span className={`text-[15px] font-bold ${labelCls}`}>{unit}</span>}
         </div>
 
         {delta && (
-          <div className="mt-1.5 text-[11px] font-bold">
+          <div className="mt-1.5 text-[13.5px] font-bold">
             <span className={delta.positive ? (isDark ? 'text-brand-light' : 'text-success') : (isDark ? 'text-white/60' : 'text-danger')}>
               {delta.positive ? '▲' : '▼'} {Math.abs(delta.value)}%
             </span>

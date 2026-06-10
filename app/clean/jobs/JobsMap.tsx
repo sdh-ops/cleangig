@@ -337,8 +337,8 @@ export default function JobsMap({
       {/* 핀 수 배지 */}
       {!loading && pinCount > 0 && !selJob && (
         <div className="absolute top-3 left-3 z-20 bg-surface/90 backdrop-blur rounded-full px-3 py-1.5 shadow border border-line-soft flex items-center gap-1.5">
-          <span className="text-[13px]">🧹</span>
-          <span className="text-[11.5px] font-extrabold text-ink">{pinCount}개 작업</span>
+          <span className="text-[15px]">🧹</span>
+          <span className="text-[13.5px] font-extrabold text-ink">{pinCount}개 작업</span>
         </div>
       )}
 
@@ -347,7 +347,7 @@ export default function JobsMap({
         <div className="absolute top-3 left-1/2 -translate-x-1/2 z-20">
           <button
             onClick={handleRegionSearch}
-            className="flex items-center gap-1.5 h-9 px-4 bg-surface shadow-lg rounded-full border border-line-soft text-[12.5px] font-extrabold text-ink active:scale-95 transition"
+            className="flex items-center gap-1.5 h-9 px-4 bg-surface shadow-lg rounded-full border border-line-soft text-[14.5px] font-extrabold text-ink active:scale-95 transition"
           >
             <Search size={13} /> 이 지역 검색
           </button>
@@ -368,8 +368,8 @@ export default function JobsMap({
         <div className="absolute inset-0 pointer-events-none flex items-center justify-center px-8">
           <div className="bg-surface/90 backdrop-blur rounded-2xl px-5 py-4 text-center shadow-md border border-line-soft">
             <div className="text-3xl mb-2">🧹</div>
-            <p className="text-[13px] font-extrabold text-ink">지도에 표시할 작업이 없어요</p>
-            <p className="text-[11.5px] font-medium text-text-soft mt-1">
+            <p className="text-[15px] font-extrabold text-ink">지도에 표시할 작업이 없어요</p>
+            <p className="text-[13.5px] font-medium text-text-soft mt-1">
               필터를 조정하거나 다른 지역을 탐색해보세요
             </p>
           </div>
@@ -384,20 +384,20 @@ export default function JobsMap({
               <div className="flex items-start gap-3">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1 flex-wrap">
-                    <span className="chip chip-brand !text-[10px] !px-2 !py-0.5">
+                    <span className="chip chip-brand !text-[13px] !px-2 !py-0.5">
                       {spaceTypeLabel(selJob.spaces?.type ?? 'other')}
                     </span>
                     {selJob.is_urgent && (
-                      <span className="chip chip-danger !text-[10px] !px-2 !py-0.5">⚡ 긴급</span>
+                      <span className="chip chip-danger !text-[13px] !px-2 !py-0.5">⚡ 긴급</span>
                     )}
                     {selDist != null && (
-                      <span className="text-[10.5px] font-bold text-text-soft">
+                      <span className="text-[13px] font-bold text-text-soft">
                         📍 {selDist < 1 ? `${Math.round(selDist * 1000)}m` : `${selDist.toFixed(1)}km`}
                       </span>
                     )}
                   </div>
                   <h4 className="text-[15px] font-extrabold text-ink truncate">{selJob.spaces?.name}</h4>
-                  <p className="text-[11.5px] text-text-soft font-bold mt-0.5 truncate">
+                  <p className="text-[13.5px] text-text-soft font-bold mt-0.5 truncate">
                     {maskAddress(selJob.spaces?.address ?? '')}
                   </p>
                 </div>
@@ -405,21 +405,21 @@ export default function JobsMap({
                   <div className="t-money text-[17px] text-brand-dark font-black">
                     {formatKRW(Math.round(selJob.price * 0.80), { short: true })}
                   </div>
-                  <p className="text-[9.5px] font-bold text-text-faint mt-0.5">예상 정산</p>
+                  <p className="text-[12px] font-bold text-text-faint mt-0.5">예상 정산</p>
                 </div>
               </div>
               <div className="flex gap-2 mt-3">
                 {selCoords && (
                   <button
                     onClick={() => openNaverRoute({ lat: selCoords[1], lng: selCoords[0], name: selJob.spaces?.name })}
-                    className="flex-1 h-9 rounded-xl bg-brand-softer text-brand-dark text-[12.5px] font-extrabold flex items-center justify-center gap-1.5 border border-brand/20 active:scale-95 transition"
+                    className="flex-1 h-9 rounded-xl bg-brand-softer text-brand-dark text-[14.5px] font-extrabold flex items-center justify-center gap-1.5 border border-brand/20 active:scale-95 transition"
                   >
                     🗺 네이버 길찾기
                   </button>
                 )}
                 <a
                   href={`/clean/job/${selJob.id}`}
-                  className="flex-1 h-9 rounded-xl bg-brand text-white text-[12.5px] font-extrabold flex items-center justify-center gap-1.5 active:scale-95 transition"
+                  className="flex-1 h-9 rounded-xl bg-brand text-white text-[14.5px] font-extrabold flex items-center justify-center gap-1.5 active:scale-95 transition"
                 >
                   작업 보기 →
                 </a>

@@ -175,7 +175,7 @@ export default function EditSpacePage() {
               interactive
               onMapClick={(lat, lng) => setCoords({ lat, lng })}
             />
-            <p className="text-[11.5px] font-bold text-text-soft mt-1.5 ml-1">📍 핀이 틀리면 지도를 눌러 옮겨주세요.</p>
+            <p className="text-[13.5px] font-bold text-text-soft mt-1.5 ml-1">📍 핀이 틀리면 지도를 눌러 옮겨주세요.</p>
           </div>
         )}
 
@@ -218,7 +218,7 @@ export default function EditSpacePage() {
           <textarea value={trashGuide} onChange={(e) => setTrashGuide(e.target.value)} className="input min-h-[80px]" rows={2} />
         </div>
 
-        {err && <div className="p-3 bg-danger-soft rounded-xl text-[13px] font-bold text-danger">{err}</div>}
+        {err && <div className="p-3 bg-danger-soft rounded-xl text-[15px] font-bold text-danger">{err}</div>}
       </div>
 
       <div className="fixed bottom-0 inset-x-0 border-t border-line-soft bg-surface/95 backdrop-blur safe-bottom">

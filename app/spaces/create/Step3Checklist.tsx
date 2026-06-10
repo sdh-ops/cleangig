@@ -20,7 +20,7 @@ export default function Step3Checklist({ checklist, setChecklist, photoPreviewUr
                     <label className="aspect-square rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-600 flex flex-col items-center justify-center text-gray-500 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
                         <input type="file" multiple accept="image/*" onChange={handlePhotoChange} className="hidden" />
                         <span className="material-symbols-outlined text-2xl mb-1">add_photo_alternate</span>
-                        <span className="text-[10px] font-bold">사진 추가</span>
+                        <span className="text-[13px] font-bold">사진 추가</span>
                     </label>
                 </div>
             </div>
@@ -44,7 +44,7 @@ export default function Step3Checklist({ checklist, setChecklist, photoPreviewUr
                                 }}
                             />
                             <button
-                                className={`text-[10px] font-bold px-2 py-1.5 rounded-md shrink-0 transition-colors ${item.required ? 'bg-red-100 text-red-600 dark:bg-red-900/30' : 'bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-400'}`}
+                                className={`text-[13px] font-bold px-2 py-1.5 rounded-md shrink-0 transition-colors ${item.required ? 'bg-red-100 text-red-600 dark:bg-red-900/30' : 'bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-400'}`}
                                 onClick={() => {
                                     const next = [...checklist];
                                     next[idx] = { ...next[idx], required: !item.required };

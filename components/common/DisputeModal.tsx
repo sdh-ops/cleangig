@@ -82,7 +82,7 @@ export default function DisputeModal({ open, onClose, jobId, onSubmitted }: Prop
                   <button
                     key={c.key}
                     onClick={() => setCategory(c.key)}
-                    className={`rounded-xl border-2 p-3 text-[12.5px] font-extrabold text-left transition ${
+                    className={`rounded-xl border-2 p-3 text-[14.5px] font-extrabold text-left transition ${
                       category === c.key ? 'border-danger bg-danger-soft text-danger' : 'border-line-soft bg-surface text-ink'
                     }`}
                   >
@@ -102,7 +102,7 @@ export default function DisputeModal({ open, onClose, jobId, onSubmitted }: Prop
                 rows={4}
                 maxLength={1000}
               />
-              <p className="text-[11px] text-text-faint font-medium mt-1 ml-1">{description.length}/1000</p>
+              <p className="text-[13.5px] text-text-faint font-medium mt-1 ml-1">{description.length}/1000</p>
             </div>
 
             <div className="mb-5">
@@ -112,7 +112,7 @@ export default function DisputeModal({ open, onClose, jobId, onSubmitted }: Prop
               <ImageUploader bucket="photos" folder="disputes" value={evidence} onChange={setEvidence} max={4} aspect="square" />
             </div>
 
-            {err && <div className="mb-3 p-3 rounded-xl bg-danger-soft text-[13px] font-bold text-danger">{err}</div>}
+            {err && <div className="mb-3 p-3 rounded-xl bg-danger-soft text-[15px] font-bold text-danger">{err}</div>}
 
             <div className="flex gap-2">
               <button onClick={onClose} disabled={submitting} className="flex-1 btn btn-ghost">취소</button>

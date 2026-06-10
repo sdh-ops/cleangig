@@ -156,7 +156,7 @@ export default function DashboardClient({
             </div>
             <div>
               <p className="text-[14px] font-extrabold text-ink">공간을 먼저 등록해보세요</p>
-              <p className="text-[12px] text-text-soft font-bold mt-0.5">등록 후 원클릭으로 청소 요청을 보낼 수 있어요.</p>
+              <p className="text-[14.5px] text-text-soft font-bold mt-0.5">등록 후 원클릭으로 청소 요청을 보낼 수 있어요.</p>
             </div>
           </div>
         ) : (
@@ -168,8 +168,8 @@ export default function DashboardClient({
 
             <div className="relative z-10">
               <div className="flex items-center justify-between mb-1">
-                <p className="text-white/60 text-[11px] font-bold uppercase tracking-widest">오늘의 작업</p>
-                <span className="text-[11px] font-black text-brand-light bg-brand/20 px-2.5 py-1 rounded-full">
+                <p className="text-white/60 text-[13.5px] font-bold uppercase tracking-widest">오늘의 작업</p>
+                <span className="text-[13.5px] font-black text-brand-light bg-brand/20 px-2.5 py-1 rounded-full">
                   {new Date().toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' })}
                 </span>
               </div>
@@ -181,16 +181,16 @@ export default function DashboardClient({
 
               {todayJobs.length > 0 ? (
                 <div className="mt-3 p-3 rounded-2xl bg-white/10">
-                  <p className="text-[11px] text-white/60 font-bold mb-0.5">가장 빠른 작업</p>
+                  <p className="text-[13.5px] text-white/60 font-bold mb-0.5">가장 빠른 작업</p>
                   <p className="text-[14px] font-extrabold text-brand-light">
                     {formatScheduled(todayJobs[0].scheduled_at)}
                   </p>
-                  <p className="text-[12px] text-white/70 font-semibold mt-0.5">
+                  <p className="text-[14.5px] text-white/70 font-semibold mt-0.5">
                     {todayJobs[0].spaces?.name}
                   </p>
                 </div>
               ) : (
-                <p className="mt-3 text-[13px] font-semibold text-white/60 leading-relaxed">
+                <p className="mt-3 text-[15px] font-semibold text-white/60 leading-relaxed">
                   오늘 예정된 작업이 없어요.<br />새로운 청소 요청을 만들어보세요.
                 </p>
               )}
@@ -198,13 +198,13 @@ export default function DashboardClient({
               <div className="mt-4 flex gap-2">
                 <Link
                   href="/requests/create"
-                  className="flex-1 flex items-center justify-center gap-1.5 h-11 rounded-xl bg-brand text-ink font-black text-[13.5px] active:scale-[0.98] transition shadow-sm"
+                  className="flex-1 flex items-center justify-center gap-1.5 h-11 rounded-xl bg-brand text-ink font-black text-[15px] active:scale-[0.98] transition shadow-sm"
                 >
                   <Zap size={15} strokeWidth={2.6} /> 즉시 요청
                 </Link>
                 <Link
                   href="/requests"
-                  className="flex items-center justify-center gap-1.5 h-11 px-4 rounded-xl bg-white/10 text-white font-bold text-[13.5px] active:scale-[0.98] transition"
+                  className="flex items-center justify-center gap-1.5 h-11 px-4 rounded-xl bg-white/10 text-white font-bold text-[15px] active:scale-[0.98] transition"
                 >
                   전체보기 <ArrowRight size={14} />
                 </Link>
@@ -262,13 +262,13 @@ export default function DashboardClient({
                       </div>
                     )}
                     {s.is_active && (
-                      <span className="absolute top-2 right-2 chip chip-success text-[10px] px-2 py-0.5 shadow-sm">운영중</span>
+                      <span className="absolute top-2 right-2 chip chip-success text-[13px] px-2 py-0.5 shadow-sm">운영중</span>
                     )}
                   </div>
                   {/* Info */}
                   <div className="p-3.5">
-                    <h3 className="text-[13.5px] font-extrabold text-ink truncate">{s.name}</h3>
-                    <p className="text-[11px] text-text-soft font-bold mt-0.5">
+                    <h3 className="text-[15px] font-extrabold text-ink truncate">{s.name}</h3>
+                    <p className="text-[13.5px] text-text-soft font-bold mt-0.5">
                       {spaceTypeLabel(s.type)} · {formatKRW(s.base_price, { short: true })}
                     </p>
                   </div>
@@ -282,7 +282,7 @@ export default function DashboardClient({
                 <div className="w-10 h-10 rounded-full bg-brand-softer text-brand-dark flex items-center justify-center mb-2">
                   <Plus size={20} />
                 </div>
-                <span className="text-[12px] font-extrabold text-ink">공간 추가</span>
+                <span className="text-[14.5px] font-extrabold text-ink">공간 추가</span>
               </Link>
             </div>
           )}
@@ -311,14 +311,14 @@ export default function DashboardClient({
                   <RefreshCcw size={18} className="text-brand-dark" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-[13px] font-extrabold text-ink">정기 청소 계약이 없어요</p>
-                  <p className="text-[11.5px] text-text-soft font-semibold mt-0.5">
+                  <p className="text-[15px] font-extrabold text-ink">정기 청소 계약이 없어요</p>
+                  <p className="text-[13.5px] text-text-soft font-semibold mt-0.5">
                     매주·격주·매월 반복되는 청소를 등록하면 자동으로 관리돼요.
                   </p>
                 </div>
                 <Link
                   href="/requests/create?recurring=true"
-                  className="shrink-0 text-[11.5px] font-black text-brand-dark underline"
+                  className="shrink-0 text-[13.5px] font-black text-brand-dark underline"
                 >
                   등록
                 </Link>
@@ -340,17 +340,17 @@ export default function DashboardClient({
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1.5 mb-0.5">
                             <span
-                              className="px-2 py-0.5 rounded-full text-[10px] font-black"
+                              className="px-2 py-0.5 rounded-full text-[13px] font-black"
                               style={{ background: 'rgba(14,165,233,0.12)', color: '#0369A1' }}
                             >
                               {intervalLabel}
                             </span>
                             <StatusChip kind="job" status={job.status} size="sm" />
                           </div>
-                          <h4 className="text-[13.5px] font-extrabold text-ink truncate">
+                          <h4 className="text-[15px] font-extrabold text-ink truncate">
                             {job.spaces?.name || '공간'}
                           </h4>
-                          <p className="text-[11.5px] text-text-soft font-bold flex items-center gap-1 mt-0.5">
+                          <p className="text-[13.5px] text-text-soft font-bold flex items-center gap-1 mt-0.5">
                             <Clock size={10} /> {formatScheduled(job.scheduled_at)}
                           </p>
                         </div>
@@ -367,7 +367,7 @@ export default function DashboardClient({
                 <li>
                   <Link
                     href="/requests/create?recurring=true"
-                    className="flex items-center gap-2 px-4 py-3 rounded-2xl border border-dashed border-line text-[12.5px] font-bold text-text-soft hover:border-brand hover:text-brand-dark transition-colors"
+                    className="flex items-center gap-2 px-4 py-3 rounded-2xl border border-dashed border-line text-[14.5px] font-bold text-text-soft hover:border-brand hover:text-brand-dark transition-colors"
                   >
                     <Plus size={14} /> 새 정기 청소 계약 추가
                   </Link>
@@ -406,13 +406,13 @@ export default function DashboardClient({
                       <div className="flex items-center gap-1.5 mb-1">
                         <StatusChip kind="job" status={job.status} size="sm" />
                         {job.is_urgent && (
-                          <span className="chip chip-danger text-[10px] px-1.5 py-0">긴급</span>
+                          <span className="chip chip-danger text-[13px] px-1.5 py-0">긴급</span>
                         )}
                       </div>
                       <h4 className="text-[14px] font-extrabold text-ink truncate">
                         {job.spaces?.name || '공간'}
                       </h4>
-                      <p className="text-[11.5px] text-text-soft font-bold flex items-center gap-1 mt-0.5 truncate">
+                      <p className="text-[13.5px] text-text-soft font-bold flex items-center gap-1 mt-0.5 truncate">
                         <Clock size={10} />
                         {formatScheduled(job.scheduled_at)}
                         {job.users?.name && <span className="ml-1 truncate">· {job.users.name}</span>}

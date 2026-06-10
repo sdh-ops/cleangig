@@ -25,7 +25,7 @@ const BUSINESS = {
 
 export default function LegalFooter() {
   return (
-    <footer className="px-5 py-6 border-t border-line-soft bg-surface-muted text-[11px] text-text-soft font-medium leading-relaxed">
+    <footer className="px-5 py-6 border-t border-line-soft bg-surface-muted text-[13.5px] text-text-soft font-medium leading-relaxed">
       <p className="mb-2 font-extrabold text-ink">{BUSINESS.serviceName}</p>
       <div className="space-y-0.5">
         <p>운영사: {BUSINESS.company} · 대표: {BUSINESS.ceo}</p>
@@ -54,7 +54,7 @@ export default function LegalFooter() {
         <span className="text-text-faint">·</span>
         <Link href="/notices" className="font-bold hover:text-ink">공지사항</Link>
       </div>
-      <p className="mt-4 text-[10px] text-text-faint">
+      <p className="mt-4 text-[13px] text-text-faint">
         © {new Date().getFullYear()} {BUSINESS.company}. All rights reserved.
       </p>
     </footer>

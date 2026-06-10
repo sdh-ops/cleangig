@@ -32,7 +32,7 @@ export default async function JoinWorkerPage() {
         <Logo size="sm" />
         <Link
           href="/login"
-          className="text-[13px] font-bold text-ink-soft px-4 py-2 rounded-full bg-surface border border-line"
+          className="text-[15px] font-bold text-ink-soft px-4 py-2 rounded-full bg-surface border border-line"
         >
           로그인
         </Link>
@@ -139,7 +139,7 @@ export default async function JoinWorkerPage() {
       {/* 혜택 리스트 */}
       <div className="px-5 mb-4">
         <div className="card p-4 flex flex-col gap-3">
-          <p className="text-[11px] font-black text-text-muted uppercase tracking-wider mb-1">쓱싹 클린파트너 혜택</p>
+          <p className="text-[13.5px] font-black text-text-muted uppercase tracking-wider mb-1">쓱싹 클린파트너 혜택</p>
           {[
             {
               icon: <ShieldCheck size={15} />,
@@ -174,8 +174,8 @@ export default async function JoinWorkerPage() {
                 {item.icon}
               </div>
               <div>
-                <p className="text-[13px] font-extrabold text-ink">{item.title}</p>
-                <p className="text-[11.5px] text-text-muted font-semibold mt-0.5 leading-relaxed">{item.desc}</p>
+                <p className="text-[15px] font-extrabold text-ink">{item.title}</p>
+                <p className="text-[13.5px] text-text-muted font-semibold mt-0.5 leading-relaxed">{item.desc}</p>
               </div>
             </div>
           ))}
@@ -185,7 +185,7 @@ export default async function JoinWorkerPage() {
       {/* 가입 절차 */}
       <div className="px-5 mb-4">
         <div className="card p-4">
-          <p className="text-[11px] font-black text-text-muted uppercase tracking-wider mb-3">가입 절차</p>
+          <p className="text-[13.5px] font-black text-text-muted uppercase tracking-wider mb-3">가입 절차</p>
           <div className="flex flex-col gap-2.5">
             {[
               { step: '01', text: '카카오 또는 이메일로 가입' },
@@ -195,12 +195,12 @@ export default async function JoinWorkerPage() {
             ].map((s) => (
               <div key={s.step} className="flex items-center gap-3">
                 <span
-                  className="w-6 h-6 rounded-full flex items-center justify-center shrink-0 text-[10px] font-black"
+                  className="w-6 h-6 rounded-full flex items-center justify-center shrink-0 text-[13px] font-black"
                   style={{ background: 'rgba(245,158,11,0.15)', color: '#92580C' }}
                 >
                   {s.step}
                 </span>
-                <p className="text-[13px] font-bold text-ink">{s.text}</p>
+                <p className="text-[15px] font-bold text-ink">{s.text}</p>
               </div>
             ))}
           </div>
@@ -213,18 +213,18 @@ export default async function JoinWorkerPage() {
           className="rounded-2xl p-4"
           style={{ background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.15)' }}
         >
-          <p className="text-[11px] font-black text-amber-700 uppercase tracking-wider mb-2">수수료 안내</p>
+          <p className="text-[13.5px] font-black text-amber-700 uppercase tracking-wider mb-2">수수료 안내</p>
           <div className="flex justify-between items-center mb-1.5">
-            <p className="text-[13px] font-bold text-ink">플랫폼 이용 수수료</p>
+            <p className="text-[15px] font-bold text-ink">플랫폼 이용 수수료</p>
             <p className="text-[15px] font-black text-amber-700">15%</p>
           </div>
-          <p className="text-[11.5px] text-text-muted font-semibold leading-relaxed">
+          <p className="text-[13.5px] text-text-muted font-semibold leading-relaxed">
             건당 수입에서 15%가 차감됩니다. 에스크로 정산 보장·분쟁 해결·매칭 서비스가 포함된 수수료입니다.
             미소 등 타 플랫폼(10~20%) 대비 경쟁력 있는 수준입니다.
           </p>
           <div className="flex items-center gap-1.5 mt-2">
             <CheckCircle2 size={12} className="text-emerald-500 shrink-0" />
-            <p className="text-[11px] font-bold text-emerald-700">에스크로 정산 → 미지급 리스크 없음</p>
+            <p className="text-[13.5px] font-bold text-emerald-700">에스크로 정산 → 미지급 리스크 없음</p>
           </div>
         </div>
       </div>
@@ -249,14 +249,14 @@ export default async function JoinWorkerPage() {
           <ArrowRight size={20} strokeWidth={2.5} />
         </Link>
 
-        <p className="text-center text-[11px] text-text-faint font-semibold mt-3">
+        <p className="text-center text-[13.5px] text-text-faint font-semibold mt-3">
           공간파트너(청소 맡기기)로 가입하려면?{' '}
           <Link href="/join/host" className="underline font-bold text-brand">
             여기
           </Link>
         </p>
 
-        <p className="text-center text-[10.5px] text-text-faint font-medium mt-2 leading-relaxed">
+        <p className="text-center text-[13px] text-text-faint font-medium mt-2 leading-relaxed">
           가입하면{' '}
           <Link href="/terms" className="underline font-bold">이용약관</Link>
           ,{' '}

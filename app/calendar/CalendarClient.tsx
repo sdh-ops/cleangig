@@ -107,11 +107,11 @@ export default function CalendarClient({ role, jobs, year, month }: Props) {
         {/* Summary */}
         <div className="grid grid-cols-2 gap-2 mb-4">
           <div className="card p-3">
-            <p className="text-[11px] font-bold text-text-soft">이 달 작업</p>
+            <p className="text-[13.5px] font-bold text-text-soft">이 달 작업</p>
             <p className="t-money text-[18px] text-ink mt-0.5">{jobs.length}건</p>
           </div>
           <div className="card p-3">
-            <p className="text-[11px] font-bold text-text-soft">{role === 'operator' ? '지출 합계' : '매출 합계'}</p>
+            <p className="text-[13.5px] font-bold text-text-soft">{role === 'operator' ? '지출 합계' : '매출 합계'}</p>
             <p className="t-money text-[18px] text-ink mt-0.5">{formatKRW(monthTotal, { short: true })}</p>
           </div>
         </div>
@@ -122,7 +122,7 @@ export default function CalendarClient({ role, jobs, year, month }: Props) {
             {DAY_NAMES.map((n, i) => (
               <div
                 key={n}
-                className={`text-center text-[10.5px] font-black py-1.5 ${i === 0 ? 'text-danger' : i === 6 ? 'text-info' : 'text-text-soft'}`}
+                className={`text-center text-[13px] font-black py-1.5 ${i === 0 ? 'text-danger' : i === 6 ? 'text-info' : 'text-text-soft'}`}
               >
                 {n}
               </div>
@@ -149,7 +149,7 @@ export default function CalendarClient({ role, jobs, year, month }: Props) {
                       : 'hover:bg-surface-muted text-ink'
                   }`}
                 >
-                  <span className={`text-[13px] font-extrabold ${i % 7 === 0 && !isSelected ? 'text-danger' : ''}`}>{c.date}</span>
+                  <span className={`text-[15px] font-extrabold ${i % 7 === 0 && !isSelected ? 'text-danger' : ''}`}>{c.date}</span>
                   {dayJobs.length > 0 && (
                     <div className="absolute bottom-1 flex gap-0.5">
                       {dayJobs.slice(0, 3).map((_, idx) => (
@@ -171,7 +171,7 @@ export default function CalendarClient({ role, jobs, year, month }: Props) {
           <div className="mt-5">
             <div className="flex items-center justify-between mb-2">
               <h3 className="h-section text-ink">{formatDateLabel(selectedDate)}</h3>
-              <span className="text-[11px] font-bold text-text-faint">{selectedJobs.length}건</span>
+              <span className="text-[13.5px] font-bold text-text-faint">{selectedJobs.length}건</span>
             </div>
             {selectedJobs.length === 0 ? (
               <p className="t-caption py-8 text-center">예정된 작업이 없어요</p>
@@ -185,7 +185,7 @@ export default function CalendarClient({ role, jobs, year, month }: Props) {
                   return (
                     <li key={j.id}>
                       <Link href={href} className="card-interactive p-3.5 flex items-center gap-3">
-                        <div className="text-[11px] font-black text-brand-dark bg-brand-softer rounded-lg px-2 py-1 shrink-0">
+                        <div className="text-[13.5px] font-black text-brand-dark bg-brand-softer rounded-lg px-2 py-1 shrink-0">
                           {time}
                         </div>
                         <div className="flex-1 min-w-0">
@@ -194,9 +194,9 @@ export default function CalendarClient({ role, jobs, year, month }: Props) {
                             {j.is_urgent && <Zap size={12} className="text-danger" />}
                             {j.is_recurring && <Repeat size={12} className="text-brand-dark" />}
                           </div>
-                          <p className="text-[13px] font-extrabold text-ink truncate">{j.spaces?.name}</p>
+                          <p className="text-[15px] font-extrabold text-ink truncate">{j.spaces?.name}</p>
                         </div>
-                        <div className="t-money text-[13px] text-ink shrink-0">{formatKRW(j.price, { short: true })}</div>
+                        <div className="t-money text-[15px] text-ink shrink-0">{formatKRW(j.price, { short: true })}</div>
                       </Link>
                     </li>
                   )

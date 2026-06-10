@@ -20,7 +20,7 @@ export default async function PaymentFailPage({
           다시 시도해주세요.
         </p>
         {sp.message && (
-          <p className="mt-5 text-[13px] font-bold text-danger max-w-[280px]">{decodeURIComponent(sp.message)}</p>
+          <p className="mt-5 text-[15px] font-bold text-danger max-w-[280px]">{decodeURIComponent(sp.message)}</p>
         )}
         <div className="mt-8 w-full max-w-[280px] flex flex-col gap-2">
           <Link href="/requests/create" className="btn btn-primary w-full">

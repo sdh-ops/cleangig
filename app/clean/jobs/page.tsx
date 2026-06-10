@@ -241,7 +241,7 @@ export default function JobsListPage() {
           <div className="flex items-center gap-0.5 bg-surface-muted rounded-xl p-0.5 mr-1">
             <button
               onClick={() => setView('list')}
-              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-[10px] text-[11.5px] font-extrabold transition ${view === 'list' ? 'bg-surface shadow-sm text-ink' : 'text-text-muted'}`}
+              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-[10px] text-[13.5px] font-extrabold transition ${view === 'list' ? 'bg-surface shadow-sm text-ink' : 'text-text-muted'}`}
             >
               <List size={14} /> 목록
             </button>
@@ -251,7 +251,7 @@ export default function JobsListPage() {
                 // 지도 탭 전환 시 GPS 없으면 즉시 요청 → 내 위치 중심화
                 if (!userLat) requestGps()
               }}
-              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-[10px] text-[11.5px] font-extrabold transition ${view === 'map' ? 'bg-surface shadow-sm text-ink' : 'text-text-muted'}`}
+              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-[10px] text-[13.5px] font-extrabold transition ${view === 'map' ? 'bg-surface shadow-sm text-ink' : 'text-text-muted'}`}
             >
               <MapIcon size={14} /> 지도
             </button>
@@ -269,7 +269,7 @@ export default function JobsListPage() {
               value={q}
               onChange={e => setQ(e.target.value)}
               placeholder="공간 이름 · 지역 검색"
-              className="input pl-10 pr-9 h-10 text-[13.5px]"
+              className="input pl-10 pr-9 h-10 text-[15px]"
             />
             {q && (
               <button
@@ -321,7 +321,7 @@ export default function JobsListPage() {
             <Filter size={12} />
             필터
             {activeFilterCount > 0 && (
-              <span className="w-4 h-4 rounded-full bg-brand text-white text-[9px] font-black flex items-center justify-center ml-0.5">
+              <span className="w-4 h-4 rounded-full bg-brand text-white text-[11px] font-black flex items-center justify-center ml-0.5">
                 {activeFilterCount}
               </span>
             )}
@@ -342,7 +342,7 @@ export default function JobsListPage() {
               <div className="px-4 pt-3 pb-3 space-y-3">
                 {/* 반경 필터 */}
                 <div>
-                  <p className="text-[11px] font-extrabold text-text-muted mb-2 flex items-center gap-1.5">
+                  <p className="text-[13.5px] font-extrabold text-text-muted mb-2 flex items-center gap-1.5">
                     <LocateFixed size={11} />
                     내 위치 기준 반경
                     {!userLat && (
@@ -354,7 +354,7 @@ export default function JobsListPage() {
                       <button
                         key={o.value}
                         onClick={() => toggleRadius(o.value)}
-                        className={`chip !text-[11.5px] !px-3 !py-1 ${radius === o.value ? 'chip-brand' : 'chip-muted'}`}
+                        className={`chip !text-[13.5px] !px-3 !py-1 ${radius === o.value ? 'chip-brand' : 'chip-muted'}`}
                       >
                         {o.label}
                       </button>
@@ -362,7 +362,7 @@ export default function JobsListPage() {
                     {radius && (
                       <button
                         onClick={() => setRadius(null)}
-                        className="chip chip-muted !text-[11px] !px-2.5 !py-1 flex items-center gap-1"
+                        className="chip chip-muted !text-[13.5px] !px-2.5 !py-1 flex items-center gap-1"
                       >
                         <X size={10} /> 반경 해제
                       </button>
@@ -372,7 +372,7 @@ export default function JobsListPage() {
 
                 {/* 난이도 */}
                 <div>
-                  <p className="text-[11px] font-extrabold text-text-muted mb-2">청소 난이도</p>
+                  <p className="text-[13.5px] font-extrabold text-text-muted mb-2">청소 난이도</p>
                   <div className="flex items-center gap-1.5 flex-wrap">
                     {([
                       { value: 'all',  label: '전체' },
@@ -383,7 +383,7 @@ export default function JobsListPage() {
                       <button
                         key={o.value}
                         onClick={() => setDifficultyFilter(o.value)}
-                        className={`chip !text-[11.5px] !px-3 !py-1 ${difficultyFilter === o.value ? 'chip-brand' : 'chip-muted'}`}
+                        className={`chip !text-[13.5px] !px-3 !py-1 ${difficultyFilter === o.value ? 'chip-brand' : 'chip-muted'}`}
                       >
                         {o.label}
                       </button>
@@ -393,13 +393,13 @@ export default function JobsListPage() {
 
                 {/* 공간 유형 */}
                 <div>
-                  <p className="text-[11px] font-extrabold text-text-muted mb-2">공간 유형</p>
+                  <p className="text-[13.5px] font-extrabold text-text-muted mb-2">공간 유형</p>
                   <div className="flex items-center gap-1.5 flex-wrap">
                     {typeOpts.map(o => (
                       <button
                         key={o.value}
                         onClick={() => setTypeFilter(o.value)}
-                        className={`chip !text-[11.5px] !px-3 !py-1 ${typeFilter === o.value ? 'chip-brand' : 'chip-muted'}`}
+                        className={`chip !text-[13.5px] !px-3 !py-1 ${typeFilter === o.value ? 'chip-brand' : 'chip-muted'}`}
                       >
                         {o.label}
                       </button>
@@ -411,7 +411,7 @@ export default function JobsListPage() {
                 {activeFilterCount > 0 && (
                   <button
                     onClick={() => { setTypeFilter('all'); setDifficultyFilter('all'); setRadius(null) }}
-                    className="text-[12px] font-extrabold text-danger"
+                    className="text-[14.5px] font-extrabold text-danger"
                   >
                     필터 초기화
                   </button>
@@ -426,7 +426,7 @@ export default function JobsListPage() {
           <div className="px-4 pb-2">
             <div className="flex items-center gap-2 bg-sun-soft rounded-xl px-3 py-2">
               <LocateFixed size={13} className="text-sun-dark shrink-0" />
-              <p className="text-[11.5px] font-bold text-sun-dark flex-1">
+              <p className="text-[13.5px] font-bold text-sun-dark flex-1">
                 위치 권한이 없어요. 브라우저 설정에서 허용하면 거리순·반경 기능을 쓸 수 있어요.
               </p>
               <button onClick={() => setGpsError(false)} className="text-sun-dark shrink-0">
@@ -440,12 +440,12 @@ export default function JobsListPage() {
         {(radius || (sort === 'near' && searchCenter && searchCenter.lat !== userLat)) && !loading && (
           <div className="px-4 pb-2 flex items-center gap-1.5">
             {radius && (
-              <span className="text-[11px] font-extrabold text-brand bg-brand-softer px-2.5 py-1 rounded-full">
+              <span className="text-[13.5px] font-extrabold text-brand bg-brand-softer px-2.5 py-1 rounded-full">
                 반경 {radius}km 내 {jobs.length}개
               </span>
             )}
             {sort === 'near' && searchCenter && searchCenter.lat !== userLat && (
-              <span className="text-[11px] font-bold text-text-soft">
+              <span className="text-[13.5px] font-bold text-text-soft">
                 · 지역 기준 정렬 중
               </span>
             )}
@@ -509,7 +509,7 @@ export default function JobsListPage() {
                   <div className="mt-3 flex justify-center">
                     <button
                       onClick={() => setRadius(null)}
-                      className="btn btn-secondary h-9 text-[13px]"
+                      className="btn btn-secondary h-9 text-[15px]"
                     >
                       반경 필터 해제
                     </button>
@@ -540,36 +540,36 @@ export default function JobsListPage() {
                             </div>
                           )}
                           {job.is_urgent && (
-                            <span className="absolute top-1 right-1 chip chip-danger !text-[8.5px] !px-1 !py-0">긴급</span>
+                            <span className="absolute top-1 right-1 chip chip-danger !text-[10.5px] !px-1 !py-0">긴급</span>
                           )}
                         </div>
 
                         {/* 정보 */}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1.5 mb-1 flex-wrap">
-                            <span className="chip chip-brand !text-[10px] !px-2 !py-0.5">
+                            <span className="chip chip-brand !text-[13px] !px-2 !py-0.5">
                               {spaceTypeLabel(job.spaces?.type ?? 'other')}
                             </span>
                             {(() => {
                               const d = difficultyLabel(job.spaces?.cleaning_difficulty)
                               return (
-                                <span className={`text-[10px] font-extrabold bg-surface-muted px-2 py-0.5 rounded-full ${d.color}`}>
+                                <span className={`text-[13px] font-extrabold bg-surface-muted px-2 py-0.5 rounded-full ${d.color}`}>
                                   {d.emoji} {d.label}
                                 </span>
                               )
                             })()}
                             {dist != null && (
-                              <span className="text-[10px] font-extrabold text-brand-dark bg-brand-softer px-2 py-0.5 rounded-full">
+                              <span className="text-[13px] font-extrabold text-brand-dark bg-brand-softer px-2 py-0.5 rounded-full">
                                 {dist < 1 ? `${Math.round(dist * 1000)}m` : `${dist.toFixed(1)}km`}
                               </span>
                             )}
                           </div>
                           <h4 className="text-[14px] font-extrabold text-ink truncate">{job.spaces?.name}</h4>
-                          <p className="text-[11.5px] text-text-soft font-bold flex items-center gap-1 mt-0.5 truncate">
+                          <p className="text-[13.5px] text-text-soft font-bold flex items-center gap-1 mt-0.5 truncate">
                             <MapPin size={10} /> {shortAddress(job.spaces?.address ?? '')}
                           </p>
                           <div className="flex items-center justify-between mt-1.5">
-                            <p className="text-[11px] text-text-soft font-bold flex items-center gap-1">
+                            <p className="text-[13.5px] text-text-soft font-bold flex items-center gap-1">
                               <Clock size={10} /> {formatScheduled(job.scheduled_at)}
                               {job.estimated_duration && (
                                 <span className="text-text-faint"> · {job.estimated_duration}분</span>

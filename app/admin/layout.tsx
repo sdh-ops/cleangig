@@ -36,11 +36,11 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       <aside className="w-[220px] bg-[#0F172A] text-white flex-col hidden md:flex fixed inset-y-0 left-0 z-30">
         <div className="px-5 py-5 border-b border-white/8">
           <Logo size="sm" tone="white" />
-          <div className="mt-1.5 text-[10px] font-black text-sky-400 tracking-[0.15em] uppercase">운영 콘솔</div>
+          <div className="mt-1.5 text-[13px] font-black text-sky-400 tracking-[0.15em] uppercase">운영 콘솔</div>
         </div>
 
         <nav className="flex-1 px-3 py-4 flex flex-col gap-0.5 overflow-y-auto">
-          <p className="px-3 pt-1 pb-2 text-[10px] font-black text-white/30 uppercase tracking-widest">현황</p>
+          <p className="px-3 pt-1 pb-2 text-[13px] font-black text-white/30 uppercase tracking-widest">현황</p>
           <SideLink href="/admin" icon={<LayoutDashboard size={15} />} label="대시보드" />
           <SideLink
             href="/admin/jobs"
@@ -57,7 +57,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             badgeTone="danger"
           />
 
-          <p className="px-3 pt-4 pb-2 text-[10px] font-black text-white/30 uppercase tracking-widest">관리</p>
+          <p className="px-3 pt-4 pb-2 text-[13px] font-black text-white/30 uppercase tracking-widest">관리</p>
           <SideLink href="/admin/users" icon={<Users size={15} />} label="회원 관리" />
           <SideLink
             href="/admin/settlements"
@@ -72,12 +72,12 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         <div className="p-3 border-t border-white/8 space-y-1">
           {urgentCount > 0 && (
             <div className="mx-2 mb-2 px-3 py-2 rounded-xl bg-red-500/15 border border-red-500/20">
-              <p className="text-[11px] font-black text-red-300">⚠ 즉시 처리 {urgentCount}건</p>
+              <p className="text-[13.5px] font-black text-red-300">⚠ 즉시 처리 {urgentCount}건</p>
             </div>
           )}
           <Link
             href="/"
-            className="flex items-center gap-2 px-3 py-2 text-[12px] font-bold text-white/50 hover:text-white rounded-lg hover:bg-white/5 transition"
+            className="flex items-center gap-2 px-3 py-2 text-[14.5px] font-bold text-white/50 hover:text-white rounded-lg hover:bg-white/5 transition"
           >
             <Home size={13} /> 앱으로 나가기
           </Link>
@@ -88,18 +88,18 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       <div className="md:hidden fixed top-0 inset-x-0 h-13 bg-[#0F172A] text-white flex items-center justify-between px-4 z-20 safe-top">
         <div className="flex items-center gap-2">
           <Shield size={16} className="text-sky-400" />
-          <span className="font-black text-[13.5px]">쓱싹 운영</span>
+          <span className="font-black text-[15px]">쓱싹 운영</span>
         </div>
         <div className="flex items-center gap-3">
           {urgentCount > 0 && (
             <Link href="/admin/disputes" className="relative">
               <AlertTriangle size={18} className="text-red-400" />
-              <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[9px] font-black rounded-full flex items-center justify-center">
+              <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[11px] font-black rounded-full flex items-center justify-center">
                 {urgentCount}
               </span>
             </Link>
           )}
-          <Link href="/" className="text-[12px] font-bold text-white/60">앱 →</Link>
+          <Link href="/" className="text-[14.5px] font-bold text-white/60">앱 →</Link>
         </div>
       </div>
 
@@ -129,12 +129,12 @@ function SideLink({
   return (
     <Link
       href={href}
-      className="flex items-center gap-3 px-3 py-2.5 rounded-xl font-bold text-[13px] text-white/75 hover:bg-white/8 hover:text-white transition group"
+      className="flex items-center gap-3 px-3 py-2.5 rounded-xl font-bold text-[15px] text-white/75 hover:bg-white/8 hover:text-white transition group"
     >
       <span className="text-white/50 group-hover:text-white/80 transition">{icon}</span>
       <span className="flex-1">{label}</span>
       {!!badge && badge > 0 && (
-        <span className={`min-w-[20px] h-5 px-1.5 rounded-full text-[10px] font-black flex items-center justify-center
+        <span className={`min-w-[20px] h-5 px-1.5 rounded-full text-[13px] font-black flex items-center justify-center
           ${badgeTone === 'danger' ? 'bg-red-500 text-white' : 'bg-amber-400 text-amber-900'}`}>
           {badge}
         </span>
@@ -154,9 +154,9 @@ function MobileTab({
       className="flex-1 flex flex-col items-center justify-center gap-0.5 text-white/50 hover:text-white transition relative"
     >
       <span className={danger && (badge ?? 0) > 0 ? 'text-red-400' : ''}>{icon}</span>
-      <span className="text-[10px] font-bold">{label}</span>
+      <span className="text-[13px] font-bold">{label}</span>
       {!!badge && badge > 0 && (
-        <span className={`absolute top-2 right-[calc(50%-18px)] min-w-[16px] h-4 px-1 rounded-full text-[9px] font-black flex items-center justify-center
+        <span className={`absolute top-2 right-[calc(50%-18px)] min-w-[16px] h-4 px-1 rounded-full text-[11px] font-black flex items-center justify-center
           ${danger ? 'bg-red-500 text-white' : 'bg-amber-400 text-amber-900'}`}>
           {badge}
         </span>

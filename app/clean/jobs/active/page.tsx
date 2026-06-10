@@ -68,13 +68,13 @@ export default async function ActiveJobsPage() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1.5 mb-1">
                           <StatusChip kind="job" status={j.status as JobStatus} size="sm" />
-                          {j.is_urgent && <span className="chip chip-danger !text-[10px]">긴급</span>}
+                          {j.is_urgent && <span className="chip chip-danger !text-[13px]">긴급</span>}
                         </div>
                         <h4 className="text-[14.5px] font-extrabold text-ink truncate">{j.spaces?.name}</h4>
-                        <p className="text-[11.5px] text-text-soft font-bold flex items-center gap-1 mt-0.5 truncate">
+                        <p className="text-[13.5px] text-text-soft font-bold flex items-center gap-1 mt-0.5 truncate">
                           <Clock size={11} /> {formatScheduled(j.scheduled_at)}
                         </p>
-                        <p className="text-[11.5px] text-text-soft font-bold flex items-center gap-1 mt-0.5 truncate">
+                        <p className="text-[13.5px] text-text-soft font-bold flex items-center gap-1 mt-0.5 truncate">
                           <MapPin size={11} /> {maskAddress(j.spaces?.address || '')}
                         </p>
                       </div>

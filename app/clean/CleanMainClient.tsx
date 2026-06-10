@@ -123,12 +123,12 @@ export default function CleanMainClient({ profile, activeJob, openJobs, weekEarn
             <Bell size={18} className="text-brand-dark" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-[13px] font-extrabold text-ink leading-snug">알림을 켜야 새 작업을 받아요</p>
-            <p className="text-[11.5px] text-text-soft font-bold mt-0.5 leading-snug">알림 허용 없이는 근처 청소 작업 알림을 못 받을 수 있어요.</p>
+            <p className="text-[15px] font-extrabold text-ink leading-snug">알림을 켜야 새 작업을 받아요</p>
+            <p className="text-[13.5px] text-text-soft font-bold mt-0.5 leading-snug">알림 허용 없이는 근처 청소 작업 알림을 못 받을 수 있어요.</p>
             <button
               onClick={handleEnablePush}
               disabled={pushLoading}
-              className="mt-2 text-[12px] font-black text-white bg-brand px-4 py-1.5 rounded-full disabled:opacity-60"
+              className="mt-2 text-[14.5px] font-black text-white bg-brand px-4 py-1.5 rounded-full disabled:opacity-60"
             >
               {pushLoading ? '처리 중...' : '알림 허용하기'}
             </button>
@@ -159,7 +159,7 @@ export default function CleanMainClient({ profile, activeJob, openJobs, weekEarn
               </div>
               {/* Tier ring indicator */}
               <div
-                className="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full border-2 border-white flex items-center justify-center text-[9px] font-black"
+                className="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full border-2 border-white flex items-center justify-center text-[11px] font-black"
                 style={{ backgroundColor: tierInfo.color, color: '#fff' }}
               >
                 {tier.charAt(0)}
@@ -176,7 +176,7 @@ export default function CleanMainClient({ profile, activeJob, openJobs, weekEarn
                   {tierInfo.label}
                 </span>
               </div>
-              <div className="flex items-center gap-3 mt-1 text-[12px] font-bold text-text-soft">
+              <div className="flex items-center gap-3 mt-1 text-[14.5px] font-bold text-text-soft">
                 <span className="flex items-center gap-0.5">
                   <Star size={11} fill="#FFB800" className="text-sun" />
                   {rating > 0 ? rating.toFixed(1) : '—'}
@@ -190,7 +190,7 @@ export default function CleanMainClient({ profile, activeJob, openJobs, weekEarn
               </div>
             </div>
 
-            <Link href="/profile" className="text-[12px] font-bold text-text-muted flex items-center gap-0.5 shrink-0">
+            <Link href="/profile" className="text-[14.5px] font-bold text-text-muted flex items-center gap-0.5 shrink-0">
               프로필 <ChevronRight size={13} />
             </Link>
           </div>
@@ -219,19 +219,19 @@ export default function CleanMainClient({ profile, activeJob, openJobs, weekEarn
                 <div className="relative z-10">
                   <div className="flex items-center gap-2 mb-3">
                     <StatusChip kind="job" status={activeJob.status} />
-                    {activeJob.is_urgent && <span className="chip chip-danger text-[10px]">긴급</span>}
+                    {activeJob.is_urgent && <span className="chip chip-danger text-[13px]">긴급</span>}
                   </div>
                   <h3 className="text-[18px] font-extrabold text-white mb-1">{activeJob.spaces?.name}</h3>
-                  <div className="flex items-center gap-2 text-[12.5px] text-white/70 font-semibold">
+                  <div className="flex items-center gap-2 text-[14.5px] text-white/70 font-semibold">
                     <Clock size={12} /> {formatScheduled(activeJob.scheduled_at)}
                   </div>
-                  <div className="flex items-center gap-1.5 mt-1 text-[12.5px] text-white/70 font-semibold">
+                  <div className="flex items-center gap-1.5 mt-1 text-[14.5px] text-white/70 font-semibold">
                     <MapPin size={12} /> {maskAddress(activeJob.spaces?.address || '')}
                   </div>
 
                   <div className="mt-4 p-3.5 rounded-2xl bg-white/10 flex items-center justify-between">
                     <div className="flex-1 min-w-0">
-                      <p className="text-[10.5px] text-white/60 font-bold mb-0.5">지금 해야 할 일</p>
+                      <p className="text-[13px] text-white/60 font-bold mb-0.5">지금 해야 할 일</p>
                       <p className="text-[14.5px] font-extrabold text-brand-light leading-snug">
                         {statusSubline(activeJob.status, 'worker')}
                       </p>
@@ -299,12 +299,12 @@ export default function CleanMainClient({ profile, activeJob, openJobs, weekEarn
                   className="mt-4 rounded-2xl p-3 flex items-center justify-between"
                   style={{ background: 'rgba(255,255,255,0.25)' }}
                 >
-                  <span className="text-[12px] font-bold text-ink/70 flex items-center gap-1.5">
+                  <span className="text-[14.5px] font-bold text-ink/70 flex items-center gap-1.5">
                     <Clock size={12} /> 정산 대기 {pendingCount}건
                   </span>
                   <Link
                     href="/earnings"
-                    className="flex items-center gap-1 text-[12.5px] font-black text-ink bg-white/40 px-3 py-1.5 rounded-full"
+                    className="flex items-center gap-1 text-[14.5px] font-black text-ink bg-white/40 px-3 py-1.5 rounded-full"
                   >
                     자세히 <ArrowRight size={13} />
                   </Link>
@@ -319,7 +319,7 @@ export default function CleanMainClient({ profile, activeJob, openJobs, weekEarn
           <div className="section-header">
             <div>
               <h2>내 주변 작업</h2>
-              <p className="text-[11px] text-text-soft font-bold mt-0.5">지금 신청하면 우선 매칭돼요</p>
+              <p className="text-[13.5px] text-text-soft font-bold mt-0.5">지금 신청하면 우선 매칭돼요</p>
             </div>
             <Link href="/clean/jobs" className="text-xs font-bold text-text-muted flex items-center gap-0.5 self-start mt-1">
               전체 <ChevronRight size={14} />
@@ -344,16 +344,16 @@ export default function CleanMainClient({ profile, activeJob, openJobs, weekEarn
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1.5 mb-1">
-                        <span className="chip chip-brand text-[10px] px-2 py-0.5">
+                        <span className="chip chip-brand text-[13px] px-2 py-0.5">
                           {spaceTypeLabel(job.spaces?.type || 'other')}
                         </span>
-                        {job.is_urgent && <span className="chip chip-danger text-[10px] flex items-center gap-0.5 px-1.5 py-0"><Zap size={9} />긴급</span>}
+                        {job.is_urgent && <span className="chip chip-danger text-[13px] flex items-center gap-0.5 px-1.5 py-0"><Zap size={9} />긴급</span>}
                       </div>
                       <h4 className="text-[14px] font-extrabold text-ink truncate">{job.spaces?.name}</h4>
-                      <p className="text-[11.5px] text-text-soft font-bold flex items-center gap-1 mt-0.5 truncate">
+                      <p className="text-[13.5px] text-text-soft font-bold flex items-center gap-1 mt-0.5 truncate">
                         <Clock size={10} /> {formatScheduled(job.scheduled_at)}
                       </p>
-                      <p className="text-[11.5px] text-text-soft font-bold flex items-center gap-1 mt-0.5 truncate">
+                      <p className="text-[13.5px] text-text-soft font-bold flex items-center gap-1 mt-0.5 truncate">
                         <MapPin size={10} /> {maskAddress(job.spaces?.address || '')}
                       </p>
                     </div>
@@ -361,7 +361,7 @@ export default function CleanMainClient({ profile, activeJob, openJobs, weekEarn
                       <div className="t-money text-[15px] text-brand-dark font-black">
                         {formatKRW(Math.round(job.price * 0.80), { short: true })}
                       </div>
-                      <p className="text-[9.5px] font-bold text-text-faint mt-0.5">예상 정산</p>
+                      <p className="text-[12px] font-bold text-text-faint mt-0.5">예상 정산</p>
                     </div>
                   </Link>
                 </li>
@@ -385,8 +385,8 @@ export default function CleanMainClient({ profile, activeJob, openJobs, weekEarn
                   <div className={`w-9 h-9 rounded-xl ${t.bg} flex items-center justify-center mb-2.5`} style={{ color: t.color }}>
                     <Icon size={17} strokeWidth={2.5} />
                   </div>
-                  <h4 className="text-[13px] font-extrabold text-ink">{t.label}</h4>
-                  <p className="text-[11.5px] text-text-soft font-bold mt-1 leading-snug">{t.desc}</p>
+                  <h4 className="text-[15px] font-extrabold text-ink">{t.label}</h4>
+                  <p className="text-[13.5px] text-text-soft font-bold mt-1 leading-snug">{t.desc}</p>
                 </div>
               )
             })}

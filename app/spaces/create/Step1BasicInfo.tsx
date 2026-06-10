@@ -123,7 +123,7 @@ export default function Step1BasicInfo({ form, setForm, handleAddressSearch, map
                         }}
                     />
                 )}
-                <p className="text-[11px] text-gray-500 px-1">
+                <p className="text-[13.5px] text-gray-500 px-1">
                     {areaUnit === 'sqm' && form.size_sqm ? `약 ${form.size_pyeong}평` : areaUnit === 'pyeong' && form.size_pyeong ? `약 ${form.size_sqm}㎡` : ''}
                 </p>
             </div>
@@ -144,7 +144,7 @@ export default function Step1BasicInfo({ form, setForm, handleAddressSearch, map
                             onClick={() => setForm((f: any) => ({ ...f, [item.id]: !f[item.id] }))}
                         >
                             <span className="text-sm font-bold mb-1">{item.label}</span>
-                            <span className="text-[10px] text-gray-500">{item.desc}</span>
+                            <span className="text-[13px] text-gray-500">{item.desc}</span>
                         </button>
                     ))}
                 </div>

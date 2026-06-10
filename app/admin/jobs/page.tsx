@@ -59,7 +59,7 @@ export default async function AdminJobsPage({
   return (
     <div className="space-y-4">
       <div>
-        <p className="text-[11px] font-black text-sky-600 uppercase tracking-widest mb-0.5">작업 관리</p>
+        <p className="text-[13.5px] font-black text-sky-600 uppercase tracking-widest mb-0.5">작업 관리</p>
         <h1 className="text-[20px] font-black text-slate-900">청소 작업 전체</h1>
       </div>
 
@@ -73,7 +73,7 @@ export default async function AdminJobsPage({
           <Link
             key={p.key}
             href={`/admin/jobs?status=${statusFilter}&period=${p.key}`}
-            className={`px-3 py-1 rounded-full text-[12px] font-bold transition
+            className={`px-3 py-1 rounded-full text-[14.5px] font-bold transition
               ${periodFilter === p.key
                 ? 'bg-slate-900 text-white'
                 : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'}`}
@@ -92,7 +92,7 @@ export default async function AdminJobsPage({
             <Link
               key={f.key}
               href={`/admin/jobs?status=${f.key}&period=${periodFilter}`}
-              className={`shrink-0 flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[12px] font-bold transition
+              className={`shrink-0 flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[14.5px] font-bold transition
                 ${isActive
                   ? f.tone === 'warning' ? 'bg-amber-400 text-amber-900'
                     : f.tone === 'danger'  ? 'bg-red-500 text-white'
@@ -101,7 +101,7 @@ export default async function AdminJobsPage({
             >
               {f.label}
               {hasBadge && (
-                <span className={`min-w-[18px] h-4.5 px-1 rounded-full text-[10px] font-black flex items-center justify-center
+                <span className={`min-w-[18px] h-4.5 px-1 rounded-full text-[13px] font-black flex items-center justify-center
                   ${isActive
                     ? 'bg-white/30 text-inherit'
                     : f.tone === 'warning' ? 'bg-amber-100 text-amber-700'
@@ -132,15 +132,15 @@ export default async function AdminJobsPage({
                 <StatusChip kind="job" status={j.status as JobStatus} size="sm" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[13.5px] font-extrabold text-slate-900 truncate flex items-center gap-1.5">
+                <p className="text-[15px] font-extrabold text-slate-900 truncate flex items-center gap-1.5">
                   {j.spaces?.name || '(공간 없음)'}
                   {j.is_urgent && (
-                    <span className="inline-flex items-center gap-0.5 text-[9px] font-black text-red-600 bg-red-50 border border-red-200 px-1.5 py-0.5 rounded-full">
+                    <span className="inline-flex items-center gap-0.5 text-[11px] font-black text-red-600 bg-red-50 border border-red-200 px-1.5 py-0.5 rounded-full">
                       <Zap size={9} fill="currentColor" /> 긴급
                     </span>
                   )}
                 </p>
-                <p className="text-[11.5px] text-slate-500 font-bold mt-0.5">
+                <p className="text-[13.5px] text-slate-500 font-bold mt-0.5">
                   <span className="text-slate-700">{j.operator?.name || '-'}</span>
                   {' → '}
                   <span className={j.worker?.name ? 'text-slate-700' : 'text-red-400'}>
@@ -151,15 +151,15 @@ export default async function AdminJobsPage({
                 </p>
               </div>
               <div className="text-right shrink-0">
-                <p className="text-[13.5px] font-extrabold text-slate-900 t-money">{formatKRW(j.price, { short: true })}</p>
-                <p className="text-[10.5px] text-slate-400 font-bold">{timeAgo(j.created_at)}</p>
+                <p className="text-[15px] font-extrabold text-slate-900 t-money">{formatKRW(j.price, { short: true })}</p>
+                <p className="text-[13px] text-slate-400 font-bold">{timeAgo(j.created_at)}</p>
               </div>
             </Link>
           ))}
         </div>
       )}
 
-      <p className="text-center text-[11px] text-slate-400 font-bold">{list.length}건 표시 중</p>
+      <p className="text-center text-[13.5px] text-slate-400 font-bold">{list.length}건 표시 중</p>
     </div>
   )
 }

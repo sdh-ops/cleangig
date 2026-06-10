@@ -227,7 +227,7 @@ export default function CreateSpacePage() {
         </button>
         <div className="flex-1 text-center">
           <h1 className="text-[15px] font-extrabold text-ink">공간 등록</h1>
-          <p className="text-[11px] text-text-soft font-bold">
+          <p className="text-[13.5px] text-text-soft font-bold">
             {step}/{STEPS.length} · {STEPS[step - 1].title}
           </p>
         </div>
@@ -258,7 +258,7 @@ export default function CreateSpacePage() {
                     }`}
                   >
                     <span className="text-[28px] mb-1" style={{ lineHeight: 1 }}>{opt.icon}</span>
-                    <span className={`text-[11.5px] font-extrabold leading-tight ${type === opt.value ? 'text-brand-dark' : 'text-ink'}`}>
+                    <span className={`text-[13.5px] font-extrabold leading-tight ${type === opt.value ? 'text-brand-dark' : 'text-ink'}`}>
                       {spaceTypeLabel(opt.value)}
                     </span>
                   </button>
@@ -309,7 +309,7 @@ export default function CreateSpacePage() {
               {address.trim() && !coords && !geoLoading && (
                 <div className="flex items-center gap-2 p-3 bg-sun-soft rounded-xl border border-sun/30">
                   <span className="text-sm">📍</span>
-                  <p className="text-[12.5px] font-bold text-ink-soft">검색 버튼을 눌러 위치를 확인하세요. 핀이 틀리면 지도를 눌러 직접 옮길 수 있어요.</p>
+                  <p className="text-[14.5px] font-bold text-ink-soft">검색 버튼을 눌러 위치를 확인하세요. 핀이 틀리면 지도를 눌러 직접 옮길 수 있어요.</p>
                 </div>
               )}
 
@@ -322,14 +322,14 @@ export default function CreateSpacePage() {
                     interactive
                     onMapClick={(lat, lng) => setCoords({ lat, lng })}
                   />
-                  <p className="text-[11.5px] font-bold text-text-soft mt-2 ml-1 flex items-center gap-1">
+                  <p className="text-[13.5px] font-bold text-text-soft mt-2 ml-1 flex items-center gap-1">
                     <MapPin size={12} className="text-brand" /> 핀 위치가 정확하지 않으면 지도를 눌러 옮겨주세요.
                   </p>
                 </div>
               ) : (
                 <div className="rounded-2xl border-2 border-dashed border-line p-6 text-center">
                   <MapPin size={22} className="mx-auto text-text-faint mb-2" />
-                  <p className="text-[12.5px] font-bold text-text-soft">
+                  <p className="text-[14.5px] font-bold text-text-soft">
                     주소를 입력하고 검색하면 지도에 위치가 표시됩니다.
                   </p>
                 </div>
@@ -370,8 +370,8 @@ export default function CreateSpacePage() {
                   />
                   <span className="absolute right-4 top-1/2 -translate-y-1/2 text-text-faint text-sm font-bold">평</span>
                 </div>
-                {sizeSqm && <p className="text-[11px] text-text-soft font-bold mt-1 ml-1">≈ {sizeSqm}㎡</p>}
-                <p className="text-[11px] text-text-soft font-medium mt-1.5 ml-1 leading-snug">
+                {sizeSqm && <p className="text-[13.5px] text-text-soft font-bold mt-1 ml-1">≈ {sizeSqm}㎡</p>}
+                <p className="text-[13.5px] text-text-soft font-medium mt-1.5 ml-1 leading-snug">
                   청소 난이도·가격은 <b className="text-brand-dark">청소를 요청할 때마다</b> 면적 기준으로 정하게 돼요.
                 </p>
               </div>
@@ -411,7 +411,7 @@ export default function CreateSpacePage() {
                   🔑 출입 비밀번호 <span className="text-danger">*</span>
                 </label>
                 <AccessCodesEditor codes={accessCodes} onChange={setAccessCodes} />
-                <p className="text-[11px] text-text-soft font-medium mt-2 ml-1 leading-snug">
+                <p className="text-[13.5px] text-text-soft font-medium mt-2 ml-1 leading-snug">
                   공동현관·출입문·청소도구함 등 필요한 만큼 추가하세요. 배정된 클린파트너에게만 공개되며 안전하게 보관됩니다.
                 </p>
               </div>
@@ -502,7 +502,7 @@ export default function CreateSpacePage() {
                           list.map((c) => (c.id === item.id ? { ...c, required: !c.required } : c)),
                         )
                       }
-                      className={`chip ${item.required ? 'chip-brand' : 'chip-muted'} !text-[10px] px-2 py-0.5`}
+                      className={`chip ${item.required ? 'chip-brand' : 'chip-muted'} !text-[13px] px-2 py-0.5`}
                     >
                       {item.required ? '필수' : '선택'}
                     </button>
@@ -550,7 +550,7 @@ export default function CreateSpacePage() {
               <div className="mt-2 p-4 rounded-2xl bg-info-soft border border-info/15">
                 <div className="flex items-start gap-2.5">
                   <Info size={16} className="text-info shrink-0 mt-0.5" />
-                  <div className="text-[12.5px] text-ink-soft font-semibold leading-snug">
+                  <div className="text-[14.5px] text-ink-soft font-semibold leading-snug">
                     필수 항목은 사진 인증이 필요합니다. AI가 체크리스트 이행 여부를 자동 검증해요.
                   </div>
                 </div>
@@ -573,14 +573,14 @@ export default function CreateSpacePage() {
                     className={`rounded-2xl border-2 p-4 text-left transition ${bizTypeSel === 'INDIVIDUAL' ? 'border-brand bg-brand-softer' : 'border-line-soft'}`}
                   >
                     <p className="text-[14px] font-extrabold text-ink">개인 운영</p>
-                    <p className="text-[11px] text-text-soft font-bold mt-0.5">비사업자 · 현금영수증만</p>
+                    <p className="text-[13.5px] text-text-soft font-bold mt-0.5">비사업자 · 현금영수증만</p>
                   </button>
                   <button
                     onClick={() => setBizTypeSel('BUSINESS')}
                     className={`rounded-2xl border-2 p-4 text-left transition ${bizTypeSel === 'BUSINESS' ? 'border-brand bg-brand-softer' : 'border-line-soft'}`}
                   >
                     <p className="text-[14px] font-extrabold text-ink">사업자 운영</p>
-                    <p className="text-[11px] text-text-soft font-bold mt-0.5">세금계산서 발행 가능</p>
+                    <p className="text-[13.5px] text-text-soft font-bold mt-0.5">세금계산서 발행 가능</p>
                   </button>
                 </div>
               </div>
@@ -605,7 +605,7 @@ export default function CreateSpacePage() {
                         <button
                           key={t}
                           onClick={() => setVatType(t)}
-                          className={`chip !text-[11.5px] !px-2 !py-2 ${vatType === t ? 'chip-brand' : 'chip-muted'}`}
+                          className={`chip !text-[13.5px] !px-2 !py-2 ${vatType === t ? 'chip-brand' : 'chip-muted'}`}
                         >
                           {t === 'GENERAL' ? '일반과세' : t === 'SIMPLE' ? '간이과세' : '면세'}
                         </button>
@@ -629,7 +629,7 @@ export default function CreateSpacePage() {
                       onChange={(e) => setTaxInvoiceRequired(e.target.checked)}
                       className="mt-1 w-4 h-4 accent-[#0EA5E9]"
                     />
-                    <span className="text-[12.5px] font-semibold text-ink-soft leading-snug">
+                    <span className="text-[14.5px] font-semibold text-ink-soft leading-snug">
                       거래 시 <b>세금계산서 자동 발행</b> 요청
                     </span>
                   </label>
@@ -643,7 +643,7 @@ export default function CreateSpacePage() {
                     hint="세금계산서 발행·정산을 위해 필수입니다. 사진 또는 PDF 캡처를 올려주세요."
                   />
                   {!bizRegImage[0] && (
-                    <p className="text-[12px] font-bold text-danger ml-1 -mt-2">
+                    <p className="text-[14.5px] font-bold text-danger ml-1 -mt-2">
                       사업자 운영은 사업자등록증 사본 등록이 필요합니다.
                     </p>
                   )}
@@ -654,7 +654,7 @@ export default function CreateSpacePage() {
               <div>
                 <label className="t-meta block mb-1 ml-1 flex items-center gap-1.5">
                   통신판매업 신고번호
-                  <span className="text-[10px] font-bold text-sun bg-sun/10 px-1.5 py-0.5 rounded-full">전자상거래법 표시 의무</span>
+                  <span className="text-[13px] font-bold text-sun bg-sun/10 px-1.5 py-0.5 rounded-full">전자상거래법 표시 의무</span>
                 </label>
                 <input
                   value={mailOrderNo}
@@ -662,7 +662,7 @@ export default function CreateSpacePage() {
                   placeholder="제2026-서울마포-XXXX호"
                   className="input"
                 />
-                <p className="text-[11px] text-text-soft font-medium mt-1 ml-1 leading-snug">
+                <p className="text-[13.5px] text-text-soft font-medium mt-1 ml-1 leading-snug">
                   전자상거래법 제12조에 따라 온라인 중개 거래 시 신고번호를 표시해야 합니다.
                   아직 신고 전이라면 신고 후 설정에서 추가할 수 있습니다.
                 </p>
@@ -670,7 +670,7 @@ export default function CreateSpacePage() {
 
               <div className="p-4 rounded-2xl bg-info-soft border border-info/15 flex items-start gap-2.5">
                 <Info size={16} className="text-info shrink-0 mt-0.5" />
-                <div className="text-[12.5px] text-ink-soft font-semibold leading-snug">
+                <div className="text-[14.5px] text-ink-soft font-semibold leading-snug">
                   입력한 정보는 결제·정산 시 자동 적용되며, 세무 처리 외에는 사용되지 않습니다.
                 </div>
               </div>
@@ -683,7 +683,7 @@ export default function CreateSpacePage() {
             className="mt-4 p-3.5 bg-danger-soft rounded-xl border border-danger/20 flex items-start gap-2.5"
           >
             <span className="text-danger text-base shrink-0">⚠️</span>
-            <p className="text-[13px] font-bold text-danger leading-snug">{err}</p>
+            <p className="text-[15px] font-bold text-danger leading-snug">{err}</p>
           </div>
         )}
       </div>
@@ -700,7 +700,7 @@ export default function CreateSpacePage() {
               step === 6 && bizTypeSel === 'BUSINESS' ? '사업자등록번호와 사업자등록증 사본을 입력해주세요.' :
               null
             return hint ? (
-              <p className="text-[12px] font-bold text-text-soft text-center">{hint}</p>
+              <p className="text-[14.5px] font-bold text-text-soft text-center">{hint}</p>
             ) : null
           })()}
           <button onClick={handleNext} disabled={!canProceed || loading} className="btn btn-primary w-full">
@@ -722,7 +722,7 @@ function FacilityCounter({ label, count, onChange }: { label: string; count: num
   const active = count > 0
   return (
     <div className={`flex items-center justify-between p-3 rounded-2xl border-2 transition ${active ? 'border-brand bg-brand-softer' : 'border-line-soft bg-surface'}`}>
-      <span className={`text-[13px] font-extrabold ${active ? 'text-brand-dark' : 'text-text-soft'}`}>{label}</span>
+      <span className={`text-[15px] font-extrabold ${active ? 'text-brand-dark' : 'text-text-soft'}`}>{label}</span>
       <div className="flex items-center gap-2">
         <button
           type="button"

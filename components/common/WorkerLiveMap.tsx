@@ -81,10 +81,10 @@ export default function WorkerLiveMap({ jobId, spaceLat, spaceLng, spaceName, he
       <div className="flex items-center gap-2 mb-2">
         <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-sun-soft text-[#92580C]">
           <RadioTower size={11} className="animate-pulse" />
-          <span className="text-[10.5px] font-black uppercase tracking-wider">실시간</span>
+          <span className="text-[13px] font-black uppercase tracking-wider">실시간</span>
         </div>
         {loc ? (
-          <span className="text-[11.5px] font-bold text-text-soft flex items-center gap-1">
+          <span className="text-[13.5px] font-bold text-text-soft flex items-center gap-1">
             <Navigation size={11} />
             {distanceKm != null && distanceKm < 0.1
               ? '현장 도착'
@@ -94,7 +94,7 @@ export default function WorkerLiveMap({ jobId, spaceLat, spaceLng, spaceName, he
             {updatedAgo && <span className="text-text-faint">· {updatedAgo}</span>}
           </span>
         ) : (
-          <span className="text-[11.5px] font-bold text-text-faint">클린파트너 위치 수신 대기</span>
+          <span className="text-[13.5px] font-bold text-text-faint">클린파트너 위치 수신 대기</span>
         )}
       </div>
       <NaverMap

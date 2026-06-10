@@ -22,7 +22,7 @@ export default class ErrorBoundary extends Component<{ children: ReactNode }, St
         <div className="min-h-screen flex flex-col items-center justify-center bg-canvas px-6 text-center safe-top">
           <div className="text-5xl mb-5">😵</div>
           <h1 className="text-[20px] font-black text-ink mb-2">앗, 오류가 발생했어요</h1>
-          <p className="text-[13.5px] text-text-muted font-semibold mb-8 leading-relaxed">
+          <p className="text-[15px] text-text-muted font-semibold mb-8 leading-relaxed">
             일시적인 문제가 생겼어요.<br />새로고침하면 대부분 해결됩니다.
           </p>
           <button

@@ -94,7 +94,7 @@ export default function AdminFeeSettingsPage() {
           {err && (
             <div className="mt-3 p-3 rounded-xl bg-danger-soft border border-danger/15 flex items-start gap-2">
               <AlertCircle size={14} className="text-danger shrink-0 mt-0.5" />
-              <p className="text-[12.5px] font-bold text-danger">{err}</p>
+              <p className="text-[14.5px] font-bold text-danger">{err}</p>
             </div>
           )}
         </div>
@@ -114,7 +114,7 @@ export default function AdminFeeSettingsPage() {
           />
 
           <div className="card p-4 bg-surface-soft mb-3">
-            <p className="text-[11.5px] font-black text-text-faint uppercase tracking-wide mb-2">프리랜서 클린파트너</p>
+            <p className="text-[13.5px] font-black text-text-faint uppercase tracking-wide mb-2">프리랜서 클린파트너</p>
             <Row label="거래액" value={formatKRW(settlementFreelancer.gross_amount)} />
             <Row label={`공간파트너 수수료 (${host}%)`} value={`−${formatKRW(settlementFreelancer.host_fee)}`} dim />
             <Row label={`클린파트너 수수료 (${worker}%)`} value={`−${formatKRW(settlementFreelancer.worker_fee)}`} dim />
@@ -125,7 +125,7 @@ export default function AdminFeeSettingsPage() {
           </div>
 
           <div className="card p-4 bg-surface-soft">
-            <p className="text-[11.5px] font-black text-text-faint uppercase tracking-wide mb-2">개인/법인 사업자</p>
+            <p className="text-[13.5px] font-black text-text-faint uppercase tracking-wide mb-2">개인/법인 사업자</p>
             <Row label="거래액" value={formatKRW(settlementBusiness.gross_amount)} />
             <Row label={`공간파트너 수수료 (${host}%)`} value={`−${formatKRW(settlementBusiness.host_fee)}`} dim />
             <Row label={`클린파트너 수수료 (${worker}%)`} value={`−${formatKRW(settlementBusiness.worker_fee)}`} dim />
@@ -154,14 +154,14 @@ function RateInput({ label, value, onChange, suffix, hint }: { label: string; va
         />
         <span className="absolute right-4 top-1/2 -translate-y-1/2 text-text-faint text-sm font-bold">{suffix}</span>
       </div>
-      {hint && <p className="text-[11px] text-text-soft font-medium mt-1 ml-1">{hint}</p>}
+      {hint && <p className="text-[13.5px] text-text-soft font-medium mt-1 ml-1">{hint}</p>}
     </div>
   )
 }
 
 function Row({ label, value, dim, bold, tone }: { label: string; value: string; dim?: boolean; bold?: boolean; tone?: 'brand' }) {
   return (
-    <div className="flex justify-between text-[13px] py-0.5">
+    <div className="flex justify-between text-[15px] py-0.5">
       <span className={`${bold ? 'font-black text-ink' : 'font-semibold'} ${dim ? 'text-text-soft' : 'text-text-muted'}`}>{label}</span>
       <span className={`${bold ? 'font-black' : 'font-semibold'} t-money ${tone === 'brand' ? 'text-brand-dark' : 'text-ink'}`}>{value}</span>
     </div>

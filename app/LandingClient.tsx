@@ -26,7 +26,7 @@ export default function LandingClient() {
         <Logo size="sm" />
         <Link
           href="/login"
-          className="text-[13px] font-bold text-ink-soft px-4 py-2 rounded-full bg-surface border border-line"
+          className="text-[15px] font-bold text-ink-soft px-4 py-2 rounded-full bg-surface border border-line"
         >
           로그인
         </Link>
@@ -79,11 +79,11 @@ export default function LandingClient() {
 
         {/* Trust row */}
         <div className="flex items-center gap-3 mt-4 relative">
-          <span className="chip chip-success text-[11px] animate-pulse-ring" style={{ animationDuration: '2.5s' }}>
+          <span className="chip chip-success text-[13.5px] animate-pulse-ring" style={{ animationDuration: '2.5s' }}>
             <span className="w-1.5 h-1.5 rounded-full bg-success inline-block" />
             지금 활성
           </span>
-          <span className="text-[11px] text-text-faint font-bold">에스크로 결제 · AI 사진 검수</span>
+          <span className="text-[13.5px] text-text-faint font-bold">에스크로 결제 · AI 사진 검수</span>
         </div>
       </div>
 
@@ -110,7 +110,7 @@ export default function LandingClient() {
           <button
             type="button"
             onClick={() => setAudience('host')}
-            className="relative flex-1 z-10 h-10 rounded-xl text-[13px] font-black transition-colors"
+            className="relative flex-1 z-10 h-10 rounded-xl text-[15px] font-black transition-colors"
             style={{ color: audience === 'host' ? '#FFFFFF' : 'var(--color-text-muted)' }}
           >
             🏢&nbsp; 공간파트너
@@ -118,7 +118,7 @@ export default function LandingClient() {
           <button
             type="button"
             onClick={() => setAudience('worker')}
-            className="relative flex-1 z-10 h-10 rounded-xl text-[13px] font-black transition-colors"
+            className="relative flex-1 z-10 h-10 rounded-xl text-[15px] font-black transition-colors"
             style={{ color: audience === 'worker' ? '#FFFFFF' : 'var(--color-text-muted)' }}
           >
             ✨&nbsp; 클린파트너
@@ -146,18 +146,18 @@ export default function LandingClient() {
         </Link>
 
         <div className="flex items-center gap-4 mt-3.5 justify-center">
-          <Link href="/login" className="flex items-center gap-1.5 text-[12px] font-bold text-text-muted">
+          <Link href="/login" className="flex items-center gap-1.5 text-[14.5px] font-bold text-text-muted">
             <Building2 size={13} strokeWidth={2.5} />
             청소 맡기기
           </Link>
           <span className="w-[1px] h-3 bg-line-soft" />
-          <Link href="/login" className="flex items-center gap-1.5 text-[12px] font-bold text-text-muted">
+          <Link href="/login" className="flex items-center gap-1.5 text-[14.5px] font-bold text-text-muted">
             <Wallet size={13} strokeWidth={2.5} />
             청소 부수입
           </Link>
         </div>
 
-        <p className="text-center text-[10.5px] text-text-faint font-medium mt-3.5 leading-relaxed">
+        <p className="text-center text-[13px] text-text-faint font-medium mt-3.5 leading-relaxed">
           시작하면{' '}
           <Link href="/terms" className="underline font-bold">이용약관</Link>
           ,{' '}

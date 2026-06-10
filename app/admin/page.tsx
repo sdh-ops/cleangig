@@ -70,7 +70,7 @@ export default async function AdminDashboardPage() {
     <div className="space-y-5">
       {/* 헤더 */}
       <div>
-        <p className="text-[11px] font-black text-sky-600 uppercase tracking-widest mb-1">쓱싹 운영 대시보드</p>
+        <p className="text-[13.5px] font-black text-sky-600 uppercase tracking-widest mb-1">쓱싹 운영 대시보드</p>
         <h1 className="text-[22px] font-black text-slate-900">
           {now.toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' })}
         </h1>
@@ -81,7 +81,7 @@ export default async function AdminDashboardPage() {
         <section>
           <div className="flex items-center gap-2 mb-2.5">
             <Zap size={14} className="text-red-500" fill="currentColor" />
-            <h2 className="text-[12px] font-black text-red-600 uppercase tracking-wider">즉시 처리 필요 · {urgentTotal}건</h2>
+            <h2 className="text-[14.5px] font-black text-red-600 uppercase tracking-wider">즉시 처리 필요 · {urgentTotal}건</h2>
           </div>
 
           <div className="space-y-2">
@@ -96,12 +96,12 @@ export default async function AdminDashboardPage() {
                   <CheckCircle2 size={16} className="text-white" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[13.5px] font-extrabold text-slate-900 truncate">{j.spaces?.name}</p>
-                  <p className="text-[11px] font-bold text-amber-700">{j.worker?.name} 완료 보고 · 검수 대기 중</p>
+                  <p className="text-[15px] font-extrabold text-slate-900 truncate">{j.spaces?.name}</p>
+                  <p className="text-[13.5px] font-bold text-amber-700">{j.worker?.name} 완료 보고 · 검수 대기 중</p>
                 </div>
                 <div className="text-right shrink-0">
-                  <p className="text-[13px] font-extrabold text-slate-900">{formatKRW(j.price, { short: true })}</p>
-                  <p className="text-[10px] text-amber-600 font-bold">승인하기 →</p>
+                  <p className="text-[15px] font-extrabold text-slate-900">{formatKRW(j.price, { short: true })}</p>
+                  <p className="text-[13px] text-amber-600 font-bold">승인하기 →</p>
                 </div>
               </Link>
             ))}
@@ -117,14 +117,14 @@ export default async function AdminDashboardPage() {
                   <AlertTriangle size={16} className="text-white" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[13.5px] font-extrabold text-slate-900 truncate">{d.jobs?.spaces?.name}</p>
-                  <p className="text-[11px] font-bold text-red-700">
+                  <p className="text-[15px] font-extrabold text-slate-900 truncate">{d.jobs?.spaces?.name}</p>
+                  <p className="text-[13.5px] font-bold text-red-700">
                     {d.category || '일반'} · {d.reporter?.name} 신고 · {timeAgo(d.created_at)}
                   </p>
                 </div>
                 <div className="text-right shrink-0">
-                  <p className="text-[13px] font-extrabold text-red-600">{formatKRW(d.jobs?.price, { short: true })}</p>
-                  <p className="text-[10px] text-red-500 font-bold">조치하기 →</p>
+                  <p className="text-[15px] font-extrabold text-red-600">{formatKRW(d.jobs?.price, { short: true })}</p>
+                  <p className="text-[13px] text-red-500 font-bold">조치하기 →</p>
                 </div>
               </Link>
             ))}
@@ -165,7 +165,7 @@ export default async function AdminDashboardPage() {
         <section>
           <div className="flex items-center gap-2 mb-2.5">
             <Calendar size={14} className="text-slate-500" />
-            <h2 className="text-[12px] font-black text-slate-500 uppercase tracking-wider">오늘 예정 · {todayList.length}건</h2>
+            <h2 className="text-[14.5px] font-black text-slate-500 uppercase tracking-wider">오늘 예정 · {todayList.length}건</h2>
           </div>
           <div className="card overflow-hidden divide-y divide-slate-100">
             {todayList.map((j: any) => (
@@ -176,15 +176,15 @@ export default async function AdminDashboardPage() {
               >
                 <StatusChip kind="job" status={j.status as JobStatus} size="sm" />
                 <div className="flex-1 min-w-0">
-                  <p className="text-[13px] font-extrabold text-slate-900 truncate flex items-center gap-1.5">
+                  <p className="text-[15px] font-extrabold text-slate-900 truncate flex items-center gap-1.5">
                     {j.spaces?.name}
-                    {j.is_urgent && <span className="chip chip-danger !text-[9px] !py-0 !px-1.5">긴급</span>}
+                    {j.is_urgent && <span className="chip chip-danger !text-[11px] !py-0 !px-1.5">긴급</span>}
                   </p>
-                  <p className="text-[11px] text-slate-500 font-bold">
+                  <p className="text-[13.5px] text-slate-500 font-bold">
                     {j.worker?.name || '미배정'} · {formatScheduled(j.scheduled_at)}
                   </p>
                 </div>
-                <span className="text-[13px] font-extrabold text-slate-800 shrink-0 t-money">
+                <span className="text-[15px] font-extrabold text-slate-800 shrink-0 t-money">
                   {formatKRW(j.price, { short: true })}
                 </span>
               </Link>
@@ -198,15 +198,15 @@ export default async function AdminDashboardPage() {
         <div className="flex items-center justify-between mb-2.5">
           <div className="flex items-center gap-2">
             <Clock size={14} className="text-slate-500" />
-            <h2 className="text-[12px] font-black text-slate-500 uppercase tracking-wider">최근 등록</h2>
+            <h2 className="text-[14.5px] font-black text-slate-500 uppercase tracking-wider">최근 등록</h2>
           </div>
-          <Link href="/admin/jobs" className="text-[12px] font-bold text-sky-600 flex items-center gap-0.5">
+          <Link href="/admin/jobs" className="text-[14.5px] font-bold text-sky-600 flex items-center gap-0.5">
             전체보기 <ChevronRight size={13} />
           </Link>
         </div>
         <div className="card overflow-hidden divide-y divide-slate-100">
           {recentList.length === 0 ? (
-            <p className="text-center text-slate-400 text-[13px] font-bold py-8">작업이 없습니다</p>
+            <p className="text-center text-slate-400 text-[15px] font-bold py-8">작업이 없습니다</p>
           ) : (
             recentList.map((j) => (
               <Link
@@ -216,12 +216,12 @@ export default async function AdminDashboardPage() {
               >
                 <StatusChip kind="job" status={j.status as JobStatus} size="sm" />
                 <div className="flex-1 min-w-0">
-                  <p className="text-[13px] font-extrabold text-slate-900 truncate">{j.spaces?.name || '(공간 없음)'}</p>
-                  <p className="text-[11px] text-slate-500 font-bold">
+                  <p className="text-[15px] font-extrabold text-slate-900 truncate">{j.spaces?.name || '(공간 없음)'}</p>
+                  <p className="text-[13.5px] text-slate-500 font-bold">
                     {j.operator?.name} → {j.worker?.name || '미배정'} · {timeAgo(j.created_at)}
                   </p>
                 </div>
-                <span className="text-[13px] font-extrabold text-slate-800 shrink-0 t-money">
+                <span className="text-[15px] font-extrabold text-slate-800 shrink-0 t-money">
                   {formatKRW(j.price, { short: true })}
                 </span>
               </Link>
@@ -255,11 +255,11 @@ function KpiCard({
   return (
     <div className={`rounded-2xl p-4 ${bg}`}>
       <div className={`flex items-center justify-between mb-2 ${iconColor}`}>
-        <span className="text-[11px] font-black tracking-wide">{label}</span>
+        <span className="text-[13.5px] font-black tracking-wide">{label}</span>
         {icon}
       </div>
       <div className="text-[22px] font-black tracking-tight">{value}</div>
-      {sub && <div className={`text-[11px] font-bold mt-0.5 ${subColor}`}>{sub}</div>}
+      {sub && <div className={`text-[13.5px] font-bold mt-0.5 ${subColor}`}>{sub}</div>}
     </div>
   )
 }

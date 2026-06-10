@@ -160,7 +160,7 @@ export default function NaverMap({
       {err && (
         <div className="absolute inset-0 flex flex-col items-center justify-center bg-surface-muted text-text-muted">
           <MapPin size={24} className="mb-2" />
-          <p className="text-[12px] font-bold">{err}</p>
+          <p className="text-[14.5px] font-bold">{err}</p>
         </div>
       )}
     </div>

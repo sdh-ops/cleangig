@@ -43,7 +43,7 @@ export default function VerifyUserButton({ userId, isVerified }: Props) {
       onClick={toggle}
       disabled={loading}
       title={current ? '인증 취소' : '인증 승인'}
-      className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-black transition active:scale-95
+      className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[13.5px] font-black transition active:scale-95
         ${current
           ? 'bg-sky-100 text-sky-700 hover:bg-sky-200'
           : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}

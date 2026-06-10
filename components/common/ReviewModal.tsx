@@ -123,8 +123,8 @@ export default function ReviewModal({
             {cats.map((cat) => (
               <div key={cat.key} className="mb-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-[13.5px] font-extrabold text-ink">{cat.label}</span>
-                  <span className="text-[12px] font-bold text-brand-dark">
+                  <span className="text-[15px] font-extrabold text-ink">{cat.label}</span>
+                  <span className="text-[14.5px] font-bold text-brand-dark">
                     {(breakdown[cat.key] ?? 5).toFixed(1)}
                   </span>
                 </div>
@@ -160,7 +160,7 @@ export default function ReviewModal({
             </div>
 
             {err && (
-              <div className="mb-3 p-2.5 bg-danger-soft rounded-xl text-[12.5px] font-bold text-danger">
+              <div className="mb-3 p-2.5 bg-danger-soft rounded-xl text-[14.5px] font-bold text-danger">
                 {err}
               </div>
             )}

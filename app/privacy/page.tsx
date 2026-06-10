@@ -43,7 +43,7 @@ export default function PrivacyPage() {
           </Section>
 
           <Section title="5. 개인정보 처리 위탁">
-            <div className="rounded-xl bg-surface-muted p-3 text-[12.5px]">
+            <div className="rounded-xl bg-surface-muted p-3 text-[14.5px]">
               <b>Supabase Inc.</b> · 데이터베이스·스토리지 호스팅<br />
               <b>Naver Cloud Platform</b> · 지도 API, SMS 발송<br />
               <b>토스페이먼츠</b> · 결제 대행 (추후 연동)<br />
@@ -84,7 +84,7 @@ export default function PrivacyPage() {
           </Section>
 
           <Section title="10. 개인정보 보호 책임자">
-            <div className="rounded-xl bg-surface-muted p-3 text-[13px]">
+            <div className="rounded-xl bg-surface-muted p-3 text-[15px]">
               <b>개인정보 보호 책임자</b>: 신동현 (디스퀘어 대표)<br />
               <b>이메일</b>: sdh@thenanbiz.com<br />
               <b>전화</b>: (고객센터 번호 추가 예정, 평일 10:00–18:00)
@@ -105,7 +105,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   return (
     <section className="mb-6">
       <h3 className="text-[14px] font-black text-ink mb-2">{title}</h3>
-      <div className="text-[13.5px] leading-relaxed text-text-muted">{children}</div>
+      <div className="text-[15px] leading-relaxed text-text-muted">{children}</div>
     </section>
   )
 }

@@ -43,8 +43,8 @@ export default function NotificationsClient({ notifications }: { notifications: 
                       <h4 className="text-[14px] font-extrabold text-ink truncate">{n.title}</h4>
                       {!n.is_read && <span className="w-2 h-2 rounded-full bg-brand shrink-0" />}
                     </div>
-                    <p className="text-[12.5px] font-medium text-text-muted mt-0.5 leading-snug">{n.message}</p>
-                    <p className="text-[11px] font-bold text-text-faint mt-1.5">{timeAgo(n.created_at)}</p>
+                    <p className="text-[14.5px] font-medium text-text-muted mt-0.5 leading-snug">{n.message}</p>
+                    <p className="text-[13.5px] font-bold text-text-faint mt-1.5">{timeAgo(n.created_at)}</p>
                   </div>
                 </div>
               )

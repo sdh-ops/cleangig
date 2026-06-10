@@ -47,13 +47,13 @@ export default async function FavoritesPage() {
                       <div className="flex items-center gap-1.5">
                         <h4 className="text-[14.5px] font-extrabold text-ink truncate">{u.name}</h4>
                         <span
-                          className="text-[10px] font-black px-2 py-0.5 rounded-full"
+                          className="text-[13px] font-black px-2 py-0.5 rounded-full"
                           style={{ backgroundColor: `${tier.color}22`, color: tier.color }}
                         >
                           {tier.label}
                         </span>
                       </div>
-                      <div className="flex items-center gap-2 mt-1 text-[11.5px] font-bold text-text-soft">
+                      <div className="flex items-center gap-2 mt-1 text-[13.5px] font-bold text-text-soft">
                         <span className="flex items-center gap-0.5">
                           <Star size={11} className="text-sun" fill="currentColor" />
                           {(u.avg_rating ?? 0).toFixed(1)}

@@ -67,7 +67,7 @@ export default function RoleSwitcher({ userId, currentRole, canOperate = false, 
     <>
       <section className="card p-4">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-[12px] font-black text-text-faint uppercase tracking-wide">역할 전환</h3>
+          <h3 className="text-[14.5px] font-black text-text-faint uppercase tracking-wide">역할 전환</h3>
           <div className="flex items-center gap-1">
             <RoleBadge active={!isWorker} label="공간" />
             <RoleBadge active={isWorker} label="클린" />
@@ -85,7 +85,7 @@ export default function RoleSwitcher({ userId, currentRole, canOperate = false, 
             <p className="text-[14px] font-extrabold text-ink">
               {isWorker ? '공간파트너로 전환' : '클린파트너로 전환'}
             </p>
-            <p className="text-[11.5px] text-text-soft font-bold mt-0.5 leading-snug">
+            <p className="text-[13.5px] text-text-soft font-bold mt-0.5 leading-snug">
               {isWorker
                 ? '내 공간을 등록하고 원클릭으로 청소 맡기기'
                 : '원하는 시간·지역에서 청소하고 부업 수익 만들기'}
@@ -124,7 +124,7 @@ export default function RoleSwitcher({ userId, currentRole, canOperate = false, 
               {firstTime && (
                 <div className="mb-4 p-3 rounded-xl bg-sun-soft border border-sun/20 flex items-start gap-2">
                   <Sparkles size={15} className="text-[#92580C] shrink-0 mt-0.5" />
-                  <p className="text-[12.5px] font-bold text-ink-soft leading-snug">
+                  <p className="text-[14.5px] font-bold text-ink-soft leading-snug">
                     처음이시네요! 전환 후 잠깐의 설정만 해주시면 바로 사용할 수 있어요.
                   </p>
                 </div>
@@ -146,7 +146,7 @@ export default function RoleSwitcher({ userId, currentRole, canOperate = false, 
                 )}
               </ul>
 
-              {err && <div className="mb-3 p-3 rounded-xl bg-danger-soft text-[13px] font-bold text-danger">{err}</div>}
+              {err && <div className="mb-3 p-3 rounded-xl bg-danger-soft text-[15px] font-bold text-danger">{err}</div>}
 
               <div className="flex gap-2">
                 <button
@@ -174,7 +174,7 @@ export default function RoleSwitcher({ userId, currentRole, canOperate = false, 
 function RoleBadge({ active, label }: { active: boolean; label: string }) {
   return (
     <span
-      className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
+      className={`text-[13px] font-black px-2 py-0.5 rounded-full ${
         active ? 'bg-brand text-white' : 'bg-surface-muted text-text-faint'
       }`}
     >
@@ -189,7 +189,7 @@ function Bullet({ icon, children }: { icon: React.ReactNode; children: React.Rea
       <span className="w-7 h-7 rounded-full bg-brand-softer text-brand-dark flex items-center justify-center shrink-0">
         {icon}
       </span>
-      <span className="text-[13.5px] font-semibold text-ink-soft">{children}</span>
+      <span className="text-[15px] font-semibold text-ink-soft">{children}</span>
     </li>
   )
 }

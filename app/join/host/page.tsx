@@ -31,7 +31,7 @@ export default async function JoinHostPage() {
         <Logo size="sm" />
         <Link
           href="/login"
-          className="text-[13px] font-bold text-ink-soft px-4 py-2 rounded-full bg-surface border border-line"
+          className="text-[15px] font-bold text-ink-soft px-4 py-2 rounded-full bg-surface border border-line"
         >
           로그인
         </Link>
@@ -156,7 +156,7 @@ export default async function JoinHostPage() {
       {/* 혜택 리스트 */}
       <div className="px-5 mb-4">
         <div className="card p-4 flex flex-col gap-3">
-          <p className="text-[11px] font-black text-text-muted uppercase tracking-wider mb-1">공간파트너 혜택</p>
+          <p className="text-[13.5px] font-black text-text-muted uppercase tracking-wider mb-1">공간파트너 혜택</p>
           {[
             {
               icon: <ShieldCheck size={15} />,
@@ -197,8 +197,8 @@ export default async function JoinHostPage() {
                 {item.icon}
               </div>
               <div>
-                <p className="text-[13px] font-extrabold text-ink">{item.title}</p>
-                <p className="text-[11.5px] text-text-muted font-semibold mt-0.5 leading-relaxed">{item.desc}</p>
+                <p className="text-[15px] font-extrabold text-ink">{item.title}</p>
+                <p className="text-[13.5px] text-text-muted font-semibold mt-0.5 leading-relaxed">{item.desc}</p>
               </div>
             </div>
           ))}
@@ -208,7 +208,7 @@ export default async function JoinHostPage() {
       {/* 공간 타입 */}
       <div className="px-5 mb-4">
         <div className="card p-4">
-          <p className="text-[11px] font-black text-text-muted uppercase tracking-wider mb-3">이런 공간에 딱 맞아요</p>
+          <p className="text-[13.5px] font-black text-text-muted uppercase tracking-wider mb-3">이런 공간에 딱 맞아요</p>
           <div className="flex flex-wrap gap-2">
             {[
               '🏠 에어비앤비',
@@ -222,7 +222,7 @@ export default async function JoinHostPage() {
             ].map((t) => (
               <span
                 key={t}
-                className="px-3 py-1.5 rounded-full text-[12px] font-bold"
+                className="px-3 py-1.5 rounded-full text-[14.5px] font-bold"
                 style={{ background: 'rgba(14,165,233,0.08)', color: '#0369A1', border: '1px solid rgba(14,165,233,0.15)' }}
               >
                 {t}
@@ -238,12 +238,12 @@ export default async function JoinHostPage() {
           className="rounded-2xl p-4"
           style={{ background: 'rgba(14,165,233,0.05)', border: '1px solid rgba(14,165,233,0.12)' }}
         >
-          <p className="text-[11px] font-black text-sky-700 uppercase tracking-wider mb-2">요금 안내</p>
+          <p className="text-[13.5px] font-black text-sky-700 uppercase tracking-wider mb-2">요금 안내</p>
           <div className="flex justify-between items-center mb-1.5">
-            <p className="text-[13px] font-bold text-ink">플랫폼 이용 수수료</p>
+            <p className="text-[15px] font-bold text-ink">플랫폼 이용 수수료</p>
             <p className="text-[15px] font-black text-sky-700">5%</p>
           </div>
-          <p className="text-[11.5px] text-text-muted font-semibold leading-relaxed">
+          <p className="text-[13.5px] text-text-muted font-semibold leading-relaxed">
             결제 금액의 5%만 수수료로 청구됩니다. 에스크로 보호·분쟁 해결·매칭 서비스가 모두 포함된 금액입니다.
           </p>
         </div>
@@ -269,14 +269,14 @@ export default async function JoinHostPage() {
           <ArrowRight size={20} strokeWidth={2.5} />
         </Link>
 
-        <p className="text-center text-[11px] text-text-faint font-semibold mt-3">
+        <p className="text-center text-[13.5px] text-text-faint font-semibold mt-3">
           청소 일감 찾는 클린파트너로 가입하려면?{' '}
           <Link href="/join/worker" className="underline font-bold text-amber-600">
             여기
           </Link>
         </p>
 
-        <p className="text-center text-[10.5px] text-text-faint font-medium mt-2 leading-relaxed">
+        <p className="text-center text-[13px] text-text-faint font-medium mt-2 leading-relaxed">
           가입하면{' '}
           <Link href="/terms" className="underline font-bold">이용약관</Link>
           ,{' '}

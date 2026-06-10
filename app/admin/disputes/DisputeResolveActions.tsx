@@ -58,12 +58,12 @@ export default function DisputeResolveActions({ disputeId, jobPrice }: { dispute
     <div className="mt-3 pt-3 border-t border-line-soft">
       {!open ? (
         <div className="flex items-center gap-2">
-          <span className="text-[11px] font-bold text-text-faint mr-1">조치:</span>
+          <span className="text-[13.5px] font-bold text-text-faint mr-1">조치:</span>
           {VERDICTS.map((v) => (
             <button
               key={v.key}
               onClick={() => { setOpen(v.key); setErr(null) }}
-              className={`chip ${v.tone} !text-[11px] !px-3 !py-1.5 hover:opacity-80`}
+              className={`chip ${v.tone} !text-[13.5px] !px-3 !py-1.5 hover:opacity-80`}
             >
               {v.label}
             </button>
@@ -72,7 +72,7 @@ export default function DisputeResolveActions({ disputeId, jobPrice }: { dispute
       ) : (
         <div className="flex flex-col gap-2.5">
           <div className="flex items-center justify-between">
-            <p className="text-[12.5px] font-extrabold text-ink">
+            <p className="text-[14.5px] font-extrabold text-ink">
               {open === 'APPROVE_WORK' ? '클린파트너 작업을 인정하고 승인 처리할까요?'
                 : open === 'REFUND' ? '요청자에게 환불 처리할까요?'
                   : '신고를 기각할까요?'}
@@ -84,14 +84,14 @@ export default function DisputeResolveActions({ disputeId, jobPrice }: { dispute
 
           {open === 'REFUND' && (
             <div>
-              <label className="text-[11px] font-bold text-text-soft block mb-1">환불액 (최대 {formatKRW(jobPrice || 0)})</label>
+              <label className="text-[13.5px] font-bold text-text-soft block mb-1">환불액 (최대 {formatKRW(jobPrice || 0)})</label>
               <input
                 type="number"
                 min={0}
                 max={jobPrice || undefined}
                 value={refund}
                 onChange={(e) => setRefund(Math.max(0, Math.min(jobPrice || 0, parseInt(e.target.value) || 0)))}
-                className="input !min-h-[38px] !py-1.5 text-[13px]"
+                className="input !min-h-[38px] !py-1.5 text-[15px]"
               />
             </div>
           )}
@@ -100,18 +100,18 @@ export default function DisputeResolveActions({ disputeId, jobPrice }: { dispute
             value={note}
             onChange={(e) => setNote(e.target.value)}
             placeholder="처리 사유 (선택, 기록용)"
-            className="input !min-h-[60px] text-[13px]"
+            className="input !min-h-[60px] text-[15px]"
             rows={2}
             maxLength={500}
           />
 
-          {err && <p className="text-[12px] font-bold text-danger">{err}</p>}
+          {err && <p className="text-[14.5px] font-bold text-danger">{err}</p>}
 
           <div className="flex gap-2">
-            <button onClick={() => setOpen(null)} disabled={submitting} className="flex-1 btn btn-ghost !min-h-[40px] !text-[13px]">
+            <button onClick={() => setOpen(null)} disabled={submitting} className="flex-1 btn btn-ghost !min-h-[40px] !text-[15px]">
               <RotateCcw size={14} /> 취소
             </button>
-            <button onClick={() => submit(open)} disabled={submitting} className="flex-1 btn btn-primary !min-h-[40px] !text-[13px]">
+            <button onClick={() => submit(open)} disabled={submitting} className="flex-1 btn btn-primary !min-h-[40px] !text-[15px]">
               {submitting ? <Loader2 size={15} className="animate-spin" /> : <><Check size={14} /> 확정</>}
             </button>
           </div>

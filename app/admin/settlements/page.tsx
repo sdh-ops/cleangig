@@ -42,9 +42,9 @@ export default async function SettlementsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <p className="text-[11px] font-black text-sky-600 uppercase tracking-widest mb-1">정산 관리</p>
+        <p className="text-[13.5px] font-black text-sky-600 uppercase tracking-widest mb-1">정산 관리</p>
         <h1 className="text-[22px] font-black text-slate-900">정산 현황</h1>
-        <p className="text-[12px] text-slate-500 font-semibold mt-0.5">
+        <p className="text-[14.5px] text-slate-500 font-semibold mt-0.5">
           테스트 환경 — 실제 이체 없이 상태만 변경됩니다.
         </p>
       </div>
@@ -142,9 +142,9 @@ function Kpi({ label, value, count, tone }: {
                          'text-emerald-700'
   return (
     <div className={`rounded-2xl border p-4 ${bg}`}>
-      <p className={`text-[10.5px] font-black uppercase tracking-wide ${text}`}>{label}</p>
+      <p className={`text-[13px] font-black uppercase tracking-wide ${text}`}>{label}</p>
       <p className={`text-[20px] font-black mt-1 ${text}`}>{value}</p>
-      <p className={`text-[11px] font-semibold mt-0.5 ${text} opacity-70`}>{count}건</p>
+      <p className={`text-[13.5px] font-semibold mt-0.5 ${text} opacity-70`}>{count}건</p>
     </div>
   )
 }
@@ -157,15 +157,15 @@ function Section({ title, icon, count, empty, highlight, children }: {
     <section>
       <div className="flex items-center gap-2 mb-2.5">
         {icon}
-        <h2 className="text-[12px] font-black text-slate-600 uppercase tracking-wider">{title} · {count}건</h2>
+        <h2 className="text-[14.5px] font-black text-slate-600 uppercase tracking-wider">{title} · {count}건</h2>
         {highlight && count > 0 && (
-          <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-sky-500 text-white">이체 필요</span>
+          <span className="text-[13px] font-black px-2 py-0.5 rounded-full bg-sky-500 text-white">이체 필요</span>
         )}
       </div>
 
       {count === 0 ? (
         <div className="card p-6 text-center">
-          <p className="text-[13px] text-slate-400 font-semibold">{empty}</p>
+          <p className="text-[15px] text-slate-400 font-semibold">{empty}</p>
         </div>
       ) : (
         <div className="card overflow-hidden divide-y divide-slate-100">
@@ -188,14 +188,14 @@ function PaymentRow({ payment: p, action }: { payment: any; action?: React.React
           <p className="text-[14px] font-extrabold text-slate-900 truncate">
             {p.worker?.name ?? '(워커 없음)'}
           </p>
-          <span className="text-[10px] font-black px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-500">
+          <span className="text-[13px] font-black px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-500">
             {p.worker_tax_type === 'FREELANCER' ? '프리랜서' : '사업자'}
           </span>
         </div>
 
         {/* 계좌 */}
         {hasBankInfo ? (
-          <div className="flex items-center gap-1.5 text-[12px] font-bold text-slate-600">
+          <div className="flex items-center gap-1.5 text-[14.5px] font-bold text-slate-600">
             <Banknote size={12} className="text-slate-400 shrink-0" />
             <span>{bank.bank_name} {bank.account_number}</span>
             {bank.account_holder && (
@@ -203,14 +203,14 @@ function PaymentRow({ payment: p, action }: { payment: any; action?: React.React
             )}
           </div>
         ) : (
-          <div className="flex items-center gap-1 text-[12px] font-bold text-red-500">
+          <div className="flex items-center gap-1 text-[14.5px] font-bold text-red-500">
             <AlertCircle size={12} />
             계좌 미등록
           </div>
         )}
 
         {/* 작업 정보 */}
-        <p className="text-[11px] text-slate-400 font-semibold mt-1">
+        <p className="text-[13.5px] text-slate-400 font-semibold mt-1">
           {p.jobs?.spaces?.name ?? '공간 없음'} · {timeAgo(p.created_at)}
         </p>
       </div>
@@ -220,7 +220,7 @@ function PaymentRow({ payment: p, action }: { payment: any; action?: React.React
         <p className="text-[15px] font-black text-slate-900">
           +{formatKRW(p.worker_payout)}
         </p>
-        <p className="text-[10.5px] font-semibold text-slate-400 mt-0.5">
+        <p className="text-[13px] font-semibold text-slate-400 mt-0.5">
           거래 {formatKRW(p.gross_amount, { short: true })} · 수수료 −{formatKRW((p.worker_fee ?? 0) + (p.host_fee ?? 0))}
           {p.withholding_tax > 0 && ` · 원천징수 −${formatKRW(p.withholding_tax)}`}
         </p>

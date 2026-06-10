@@ -48,7 +48,7 @@ export default function SettlementActions({
 
   if (done) {
     return (
-      <span className="flex items-center gap-1 text-[12px] font-black text-emerald-600">
+      <span className="flex items-center gap-1 text-[14.5px] font-black text-emerald-600">
         <CheckCircle2 size={14} /> 완료
       </span>
     )
@@ -64,7 +64,7 @@ export default function SettlementActions({
       <button
         onClick={handle}
         disabled={loading}
-        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-black transition active:scale-95 ${cls} disabled:opacity-60`}
+        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[14.5px] font-black transition active:scale-95 ${cls} disabled:opacity-60`}
       >
         {loading ? (
           <Loader2 size={13} className="animate-spin" />
@@ -73,7 +73,7 @@ export default function SettlementActions({
         )}
         {label}
       </button>
-      {err && <p className="text-[11px] text-red-500 font-bold mt-1">{err}</p>}
+      {err && <p className="text-[13.5px] text-red-500 font-bold mt-1">{err}</p>}
     </div>
   )
 }

@@ -308,7 +308,7 @@ export default function CreateRequestPage() {
         </button>
         <div className="flex-1 text-center">
           <h1 className="text-[15px] font-extrabold text-ink">청소 요청</h1>
-          <p className="text-[11px] text-text-soft font-bold">{step}/3</p>
+          <p className="text-[13.5px] text-text-soft font-bold">{step}/3</p>
         </div>
         <div className="w-10" />
       </header>
@@ -340,7 +340,7 @@ export default function CreateRequestPage() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <h4 className="text-[14.5px] font-extrabold text-ink truncate">{s.name}</h4>
-                      <p className="text-[11.5px] text-text-soft font-bold truncate mt-0.5">
+                      <p className="text-[13.5px] text-text-soft font-bold truncate mt-0.5">
                         {spaceTypeLabel(s.type)} · {s.address.split(' ').slice(0, 3).join(' ')}
                       </p>
                     </div>
@@ -367,7 +367,7 @@ export default function CreateRequestPage() {
                     <Zap size={18} strokeWidth={2.6} />
                   </div>
                   <h4 className="text-[14px] font-extrabold text-ink">지금 요청</h4>
-                  <p className="text-[12px] font-black text-danger mt-0.5">긴급 수수료 +10,000원</p>
+                  <p className="text-[14.5px] font-black text-danger mt-0.5">긴급 수수료 +10,000원</p>
                 </button>
                 <button
                   onClick={() => setWhen('schedule')}
@@ -377,7 +377,7 @@ export default function CreateRequestPage() {
                     <Calendar size={18} strokeWidth={2.6} />
                   </div>
                   <h4 className="text-[14px] font-extrabold text-ink">날짜/시간 예약</h4>
-                  <p className="text-[11.5px] text-text-soft font-bold mt-0.5">원하는 시간 지정</p>
+                  <p className="text-[13.5px] text-text-soft font-bold mt-0.5">원하는 시간 지정</p>
                 </button>
               </div>
 
@@ -400,8 +400,8 @@ export default function CreateRequestPage() {
                     <Zap size={15} strokeWidth={2.6} />
                   </div>
                   <div className="flex-1 text-left">
-                    <p className="text-[13px] font-extrabold text-ink">긴급 요청으로 변경</p>
-                    <p className="text-[11px] text-text-soft font-bold">+10,000원 · 마스터 클린파트너 우선 배정</p>
+                    <p className="text-[15px] font-extrabold text-ink">긴급 요청으로 변경</p>
+                    <p className="text-[13.5px] text-text-soft font-bold">+10,000원 · 마스터 클린파트너 우선 배정</p>
                   </div>
                   <ChevronRight size={16} className="text-text-faint" />
                 </button>
@@ -413,10 +413,10 @@ export default function CreateRequestPage() {
                     <Zap size={15} strokeWidth={2.6} />
                   </div>
                   <div className="flex-1">
-                    <p className="text-[13px] font-extrabold text-ink">긴급 요청 활성화</p>
-                    <p className="text-[11px] text-ink-soft font-bold">+10,000원 · 우선 매칭</p>
+                    <p className="text-[15px] font-extrabold text-ink">긴급 요청 활성화</p>
+                    <p className="text-[13.5px] text-ink-soft font-bold">+10,000원 · 우선 매칭</p>
                   </div>
-                  <button onClick={() => setIsUrgent(false)} className="text-[12px] font-bold text-text-muted">해제</button>
+                  <button onClick={() => setIsUrgent(false)} className="text-[14.5px] font-bold text-text-muted">해제</button>
                 </div>
               )}
 
@@ -428,8 +428,8 @@ export default function CreateRequestPage() {
                       <Calendar size={15} strokeWidth={2.6} />
                     </div>
                     <div className="flex-1">
-                      <p className="text-[13px] font-extrabold text-ink">고정 청소로 예약</p>
-                      <p className="text-[11px] text-text-soft font-bold">주기적으로 동일 시간에 자동 예약 · 최대 5% 할인</p>
+                      <p className="text-[15px] font-extrabold text-ink">고정 청소로 예약</p>
+                      <p className="text-[13.5px] text-text-soft font-bold">주기적으로 동일 시간에 자동 예약 · 최대 5% 할인</p>
                     </div>
                     <button
                       onClick={() => setIsRecurring((v) => !v)}
@@ -447,7 +447,7 @@ export default function CreateRequestPage() {
                             <button
                               key={f}
                               onClick={() => setFrequency(f)}
-                              className={`flex-1 h-9 rounded-lg text-[11.5px] font-extrabold ${frequency === f ? 'bg-ink text-white' : 'bg-surface text-text-muted'}`}
+                              className={`flex-1 h-9 rounded-lg text-[13.5px] font-extrabold ${frequency === f ? 'bg-ink text-white' : 'bg-surface text-text-muted'}`}
                             >
                               {f === 'WEEKLY' ? '매주' : f === 'BIWEEKLY' ? '2주' : '매월'}
                             </button>
@@ -488,7 +488,7 @@ export default function CreateRequestPage() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <h4 className="text-[14.5px] font-extrabold text-ink truncate">{selectedSpace.name}</h4>
-                  <p className="text-[11.5px] text-text-soft font-bold truncate mt-0.5 flex items-center gap-1">
+                  <p className="text-[13.5px] text-text-soft font-bold truncate mt-0.5 flex items-center gap-1">
                     <Clock size={11} /> {formatScheduled(scheduledAt)}
                   </p>
                 </div>
@@ -505,23 +505,23 @@ export default function CreateRequestPage() {
                     <button
                       type="button"
                       onClick={() => router.push(`/spaces/${selectedSpace.id}/edit`)}
-                      className="text-[12.5px] font-bold text-brand-dark underline"
+                      className="text-[14.5px] font-bold text-brand-dark underline"
                     >
                       수정
                     </button>
                   </div>
                   <div className="flex flex-col gap-1 pl-10">
                     {(selectedSpace.access_codes ?? []).filter((c) => c.value?.trim()).map((c, i) => (
-                      <p key={i} className="text-[13px] font-bold text-ink-soft">
+                      <p key={i} className="text-[15px] font-bold text-ink-soft">
                         {c.label} · ••••
                       </p>
                     ))}
                     {(selectedSpace.access_codes ?? []).filter((c) => c.value?.trim()).length === 0 &&
                       selectedSpace.entry_code?.trim() && (
-                        <p className="text-[13px] font-bold text-ink-soft">출입문 · ••••</p>
+                        <p className="text-[15px] font-bold text-ink-soft">출입문 · ••••</p>
                       )}
                   </div>
-                  <p className="text-[12px] text-text-soft font-semibold mt-2 pl-10">
+                  <p className="text-[14.5px] text-text-soft font-semibold mt-2 pl-10">
                     배정된 클린파트너에게만 보여요.
                   </p>
                 </div>
@@ -535,7 +535,7 @@ export default function CreateRequestPage() {
                       <p className="text-[14.5px] font-extrabold text-ink leading-snug">
                         출입 방법이 등록되지 않았어요
                       </p>
-                      <p className="text-[12.5px] text-ink-soft font-semibold mt-1 leading-relaxed">
+                      <p className="text-[14.5px] text-ink-soft font-semibold mt-1 leading-relaxed">
                         비밀번호가 없으면 클린파트너가 못 들어가요. 지금 등록해 두면 다음 요청에도 자동으로 쓰여요.
                       </p>
                     </div>
@@ -552,7 +552,7 @@ export default function CreateRequestPage() {
                   <button
                     type="button"
                     onClick={() => setProceedWithoutCodes((v) => !v)}
-                    className={`w-full mt-2 flex items-center justify-center gap-2 py-2.5 rounded-xl text-[13px] font-bold transition ${
+                    className={`w-full mt-2 flex items-center justify-center gap-2 py-2.5 rounded-xl text-[15px] font-bold transition ${
                       proceedWithoutCodes
                         ? 'bg-ink text-white'
                         : 'text-text-muted underline'
@@ -573,7 +573,7 @@ export default function CreateRequestPage() {
                       key={d}
                       type="button"
                       onClick={() => { setDifficulty(d); setCustomPrice(null) }}
-                      className={`rounded-xl border-2 p-3 text-[13px] font-extrabold transition ${difficulty === d ? 'border-brand bg-brand-softer text-brand-dark' : 'border-line-soft bg-surface text-text-muted'}`}
+                      className={`rounded-xl border-2 p-3 text-[15px] font-extrabold transition ${difficulty === d ? 'border-brand bg-brand-softer text-brand-dark' : 'border-line-soft bg-surface text-text-muted'}`}
                     >
                       {d === '쉬움' ? '🟢 쉬움' : d === '보통' ? '🟡 보통' : '🔴 어려움'}
                     </button>
@@ -586,8 +586,8 @@ export default function CreateRequestPage() {
                 <div className="flex items-center justify-between mb-2">
                   <label className="t-meta ml-1">청소 가격</label>
                   {customPrice === null
-                    ? <span className="text-[10.5px] font-bold text-brand-dark bg-brand-softer px-2 py-0.5 rounded-full">자동 추천</span>
-                    : <button onClick={() => setCustomPrice(null)} className="text-[10.5px] font-bold text-text-muted underline">추천가로 되돌리기</button>}
+                    ? <span className="text-[13px] font-bold text-brand-dark bg-brand-softer px-2 py-0.5 rounded-full">자동 추천</span>
+                    : <button onClick={() => setCustomPrice(null)} className="text-[13px] font-bold text-text-muted underline">추천가로 되돌리기</button>}
                 </div>
                 <div className="card p-4 bg-surface-soft">
                   <div className="flex items-center justify-between mb-4">
@@ -599,7 +599,7 @@ export default function CreateRequestPage() {
                   </div>
                   <input type="range" min={15000} max={150000} step={1000} value={finalPrice}
                     onChange={(e) => setCustomPrice(parseInt(e.target.value))} className="w-full accent-brand" />
-                  <div className="flex justify-between text-[10px] text-text-faint font-bold mt-1">
+                  <div className="flex justify-between text-[13px] text-text-faint font-bold mt-1">
                     <span>최소 1.5만</span><span>최대 15만</span>
                   </div>
                 </div>
@@ -611,7 +611,7 @@ export default function CreateRequestPage() {
                   <label className="t-meta ml-1 flex items-center gap-1.5">
                     <ListChecks size={13} /> 이번 청소 체크리스트
                   </label>
-                  <span className="text-[10.5px] font-bold text-text-faint">{checklist.length}개 · 이번 요청만 적용</span>
+                  <span className="text-[13px] font-bold text-text-faint">{checklist.length}개 · 이번 요청만 적용</span>
                 </div>
                 <div className="flex flex-col gap-2">
                   {checklist.map((item) => (
@@ -621,14 +621,14 @@ export default function CreateRequestPage() {
                         onChange={(e) =>
                           setChecklist((list) => list.map((c) => (c.id === item.id ? { ...c, label: e.target.value } : c)))
                         }
-                        className="flex-1 bg-transparent outline-none text-[13.5px] font-semibold text-ink min-w-0"
+                        className="flex-1 bg-transparent outline-none text-[15px] font-semibold text-ink min-w-0"
                       />
                       <button
                         type="button"
                         onClick={() =>
                           setChecklist((list) => list.map((c) => (c.id === item.id ? { ...c, required: !c.required } : c)))
                         }
-                        className={`chip ${item.required ? 'chip-brand' : 'chip-muted'} !text-[10px] px-2 py-0.5 shrink-0`}
+                        className={`chip ${item.required ? 'chip-brand' : 'chip-muted'} !text-[13px] px-2 py-0.5 shrink-0`}
                       >
                         {item.required ? '필수' : '선택'}
                       </button>
@@ -684,10 +684,10 @@ export default function CreateRequestPage() {
               </div>
 
               <div className="card p-4">
-                <h4 className="text-[13px] font-extrabold text-ink mb-3">가격 상세</h4>
+                <h4 className="text-[15px] font-extrabold text-ink mb-3">가격 상세</h4>
                 <div className="flex flex-col gap-2">
                   {priceBreakdown.items.map((it, i) => (
-                    <div key={i} className="flex justify-between text-[13px]">
+                    <div key={i} className="flex justify-between text-[15px]">
                       <span className={`font-semibold ${it.kind === 'sub' ? 'text-brand-dark' : 'text-text-muted'}`}>{it.label}</span>
                       <span className={`t-money ${it.kind === 'sub' ? 'text-brand-dark' : 'text-ink'}`}>
                         {it.kind === 'sub' ? '-' : ''}{formatKRW(Math.abs(it.amount))}
@@ -697,10 +697,10 @@ export default function CreateRequestPage() {
                 </div>
                 <div className="divider" />
                 <div className="flex justify-between items-baseline">
-                  <span className="text-[13px] font-bold text-text-soft">결제 금액 (VAT 포함)</span>
+                  <span className="text-[15px] font-bold text-text-soft">결제 금액 (VAT 포함)</span>
                   <span className="t-money text-[22px] text-ink">{formatKRW(priceBreakdown.total)}</span>
                 </div>
-                <div className="mt-3 pt-3 border-t border-line-soft text-[11.5px] text-text-soft font-bold space-y-1">
+                <div className="mt-3 pt-3 border-t border-line-soft text-[13.5px] text-text-soft font-bold space-y-1">
                   <div className="flex justify-between">
                     <span>공간파트너 수수료 ({Math.round(fees.host_fee_rate * 100 * 10) / 10}%)</span>
                     <span>{formatKRW(priceBreakdown.host_fee)}</span>
@@ -718,21 +718,21 @@ export default function CreateRequestPage() {
 
               <div className="p-4 rounded-2xl bg-brand-softer border border-brand/15 flex items-start gap-2.5">
                 <AlertCircle size={16} className="text-brand-dark shrink-0 mt-0.5" />
-                <div className="text-[12.5px] text-brand-dark font-semibold leading-snug">
+                <div className="text-[14.5px] text-brand-dark font-semibold leading-snug">
                   <b>에스크로 안전 결제</b>: 청소 완료 후 공간파트너가 승인하면 클린파트너에게 자동 정산됩니다.
                 </div>
               </div>
             </div>
           )}
 
-        {err && <div className="mt-4 p-3 bg-danger-soft rounded-xl text-[13px] font-bold text-danger">{err}</div>}
+        {err && <div className="mt-4 p-3 bg-danger-soft rounded-xl text-[15px] font-bold text-danger">{err}</div>}
       </div>
 
       <div className="fixed bottom-0 inset-x-0 border-t border-line-soft bg-surface/95 backdrop-blur safe-bottom">
         <div className="max-w-[480px] mx-auto px-5 py-3.5">
           {step === 3 && priceBreakdown && (
             <div className="flex items-baseline justify-between mb-2.5 px-1">
-              <span className="text-[12px] font-bold text-text-soft">결제 금액</span>
+              <span className="text-[14.5px] font-bold text-text-soft">결제 금액</span>
               <span className="t-money text-[18px] text-ink">{formatKRW(priceBreakdown.total)}</span>
             </div>
           )}

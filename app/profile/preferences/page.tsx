@@ -64,7 +64,7 @@ export default function PreferencesPage() {
 
       <div className="flex-1 px-5 pt-5 pb-28 flex flex-col gap-4">
         <section className="card overflow-hidden">
-          <h3 className="px-4 pt-4 pb-2 text-[12px] font-black text-text-faint uppercase tracking-wide">알림</h3>
+          <h3 className="px-4 pt-4 pb-2 text-[14.5px] font-black text-text-faint uppercase tracking-wide">알림</h3>
           <Toggle
             icon={<Bell size={17} />}
             label="신규 작업 알림"
@@ -91,12 +91,12 @@ export default function PreferencesPage() {
         </section>
 
         <section className="card p-4">
-          <h3 className="text-[12px] font-black text-text-faint uppercase tracking-wide mb-3">매칭 조건</h3>
+          <h3 className="text-[14.5px] font-black text-text-faint uppercase tracking-wide mb-3">매칭 조건</h3>
           <div className="mb-5">
             <div className="flex items-center gap-2 mb-2">
               <MapPin size={15} className="text-text-muted" />
-              <span className="text-[13.5px] font-extrabold text-ink">알림 반경</span>
-              <span className="ml-auto text-[13px] font-bold text-brand-dark">{prefs.radius_km}km</span>
+              <span className="text-[15px] font-extrabold text-ink">알림 반경</span>
+              <span className="ml-auto text-[15px] font-bold text-brand-dark">{prefs.radius_km}km</span>
             </div>
             <input
               type="range"
@@ -110,8 +110,8 @@ export default function PreferencesPage() {
           </div>
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <span className="text-[13.5px] font-extrabold text-ink">최소 작업 금액</span>
-              <span className="ml-auto text-[13px] font-bold text-brand-dark">{prefs.min_price.toLocaleString()}원</span>
+              <span className="text-[15px] font-extrabold text-ink">최소 작업 금액</span>
+              <span className="ml-auto text-[15px] font-bold text-brand-dark">{prefs.min_price.toLocaleString()}원</span>
             </div>
             <input
               type="range"
@@ -145,7 +145,7 @@ function Toggle({ icon, label, sub, checked, onChange }: { icon: React.ReactNode
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-[14px] font-extrabold text-ink">{label}</p>
-        <p className="text-[11.5px] text-text-soft font-bold">{sub}</p>
+        <p className="text-[13.5px] text-text-soft font-bold">{sub}</p>
       </div>
       <div className={`w-11 h-6 rounded-full transition flex items-center px-0.5 ${checked ? 'bg-brand justify-end' : 'bg-line-strong justify-start'}`}>
         <div className="w-5 h-5 rounded-full bg-white shadow-sm" />

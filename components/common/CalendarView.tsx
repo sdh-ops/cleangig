@@ -67,7 +67,7 @@ const CalendarView = ({ events, onEventClick }: Props) => {
             {/* Week Header */}
             <div className="grid grid-cols-7 border-b border-slate-50 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30">
                 {dayNames.map((d, i) => (
-                    <div key={d} className={`py-2 text-center text-[10px] font-bold ${i === 0 ? 'text-rose-500' : i === 6 ? 'text-blue-500' : 'text-slate-400'}`}>
+                    <div key={d} className={`py-2 text-center text-[13px] font-bold ${i === 0 ? 'text-rose-500' : i === 6 ? 'text-blue-500' : 'text-slate-400'}`}>
                         {d}
                     </div>
                 ))}
@@ -90,7 +90,7 @@ const CalendarView = ({ events, onEventClick }: Props) => {
                             {day && (
                                 <>
                                     <div className="flex justify-between items-center mb-0.5">
-                                        <span className={`text-[11px] font-bold flex items-center justify-center size-5 rounded-full ${isToday ? 'bg-primary text-white' : (idx % 7 === 0 ? 'text-rose-500' : idx % 7 === 6 ? 'text-blue-500' : 'text-slate-600 dark:text-slate-400')}`}>
+                                        <span className={`text-[13.5px] font-bold flex items-center justify-center size-5 rounded-full ${isToday ? 'bg-primary text-white' : (idx % 7 === 0 ? 'text-rose-500' : idx % 7 === 6 ? 'text-blue-500' : 'text-slate-600 dark:text-slate-400')}`}>
                                             {day}
                                         </span>
                                     </div>
@@ -99,13 +99,13 @@ const CalendarView = ({ events, onEventClick }: Props) => {
                                             <div
                                                 key={e.id}
                                                 onClick={() => onEventClick?.(e.id)}
-                                                className={`text-[9px] px-1 py-0.5 rounded-sm truncate cursor-pointer font-bold border-l-2 leading-tight ${e.color || 'bg-primary/10 text-primary border-primary'}`}
+                                                className={`text-[11px] px-1 py-0.5 rounded-sm truncate cursor-pointer font-bold border-l-2 leading-tight ${e.color || 'bg-primary/10 text-primary border-primary'}`}
                                             >
                                                 {e.title}
                                             </div>
                                         ))}
                                         {dayEvents.length > 3 && (
-                                            <div className="text-[8px] text-slate-400 font-bold pl-1">+{dayEvents.length - 3}건 더보기</div>
+                                            <div className="text-[10.5px] text-slate-400 font-bold pl-1">+{dayEvents.length - 3}건 더보기</div>
                                         )}
                                     </div>
                                 </>

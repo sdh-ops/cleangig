@@ -65,15 +65,15 @@ export default async function WorkerProfilePage({ params }: { params: Promise<{ 
                 )}
               </div>
               <div className="flex items-center gap-2 mt-1">
-                <span className="text-[11px] font-black px-2 py-0.5 rounded-full bg-white/20">
+                <span className="text-[13.5px] font-black px-2 py-0.5 rounded-full bg-white/20">
                   {tier.label}
                 </span>
-                <span className="flex items-center gap-0.5 text-white/90 text-[13px] font-bold">
+                <span className="flex items-center gap-0.5 text-white/90 text-[15px] font-bold">
                   <Star size={13} className="text-sun" fill="currentColor" />
                   {(worker.avg_rating ?? 0).toFixed(1)}
                 </span>
               </div>
-              {worker.bio && <p className="text-[12.5px] font-bold text-white/85 mt-2 leading-snug">{worker.bio}</p>}
+              {worker.bio && <p className="text-[14.5px] font-bold text-white/85 mt-2 leading-snug">{worker.bio}</p>}
             </div>
           </div>
           <div className="mt-5 grid grid-cols-3 gap-2">
@@ -105,11 +105,11 @@ export default async function WorkerProfilePage({ params }: { params: Promise<{ 
                         />
                       ))}
                     </div>
-                    <span className="text-[12px] font-bold text-text-soft">
+                    <span className="text-[14.5px] font-bold text-text-soft">
                       {r.reviewer?.name ?? '익명'} · {timeAgo(r.created_at)}
                     </span>
                   </div>
-                  {r.comment && <p className="text-[13.5px] font-medium text-ink leading-snug">{r.comment}</p>}
+                  {r.comment && <p className="text-[15px] font-medium text-ink leading-snug">{r.comment}</p>}
                 </li>
               ))}
             </ul>
@@ -140,7 +140,7 @@ export default async function WorkerProfilePage({ params }: { params: Promise<{ 
 function Stat({ label, value, icon }: { label: string; value: string; icon: React.ReactNode }) {
   return (
     <div className="rounded-xl bg-white/15 px-3 py-2 text-center">
-      <div className="flex items-center justify-center gap-1 text-[10.5px] font-bold text-white/70">{icon}{label}</div>
+      <div className="flex items-center justify-center gap-1 text-[13px] font-bold text-white/70">{icon}{label}</div>
       <div className="text-[14px] font-black text-white mt-0.5">{value}</div>
     </div>
   )

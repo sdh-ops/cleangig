@@ -98,7 +98,7 @@ export default function ImageUploader({
                   ) : (
                     <>
                       <Camera size={16} />
-                      <span className="text-[10px] font-bold mt-1">촬영</span>
+                      <span className="text-[13px] font-bold mt-1">촬영</span>
                     </>
                   )}
                 </button>
@@ -114,7 +114,7 @@ export default function ImageUploader({
                   ) : (
                     <>
                       <ImageIcon size={16} />
-                      <span className="text-[10px] font-bold mt-1">앨범</span>
+                      <span className="text-[13px] font-bold mt-1">앨범</span>
                     </>
                   )}
                 </button>
@@ -131,7 +131,7 @@ export default function ImageUploader({
                 ) : (
                   <>
                     <Camera size={18} />
-                    <span className="text-[10.5px] font-bold mt-1">{value.length}/{max}</span>
+                    <span className="text-[13px] font-bold mt-1">{value.length}/{max}</span>
                   </>
                 )}
               </button>
@@ -139,8 +139,8 @@ export default function ImageUploader({
           </div>
         )}
       </div>
-      {hint && <p className="text-[11px] text-text-faint font-medium mt-2 ml-1">{hint}</p>}
-      {err && <p className="text-[12px] font-bold text-danger mt-2">{err}</p>}
+      {hint && <p className="text-[13.5px] text-text-faint font-medium mt-2 ml-1">{hint}</p>}
+      {err && <p className="text-[14.5px] font-bold text-danger mt-2">{err}</p>}
 
       {/* Gallery picker */}
       <input

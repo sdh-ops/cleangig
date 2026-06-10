@@ -38,6 +38,6 @@ export default function StatusChip(props: Props) {
   else if (props.kind === 'payment') ({ label, tone } = PAYMENT_MAP[props.status])
   else ({ label, tone } = props)
 
-  const sizeCls = size === 'sm' ? 'px-2 py-0.5 text-[11px]' : 'px-3 py-1 text-xs'
+  const sizeCls = size === 'sm' ? 'px-2 py-0.5 text-[13.5px]' : 'px-3 py-1 text-xs'
   return <span className={`chip chip-${tone} ${sizeCls}`}>{label}</span>
 }

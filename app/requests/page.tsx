@@ -55,7 +55,7 @@ export default async function RequestsPage(props: { searchParams?: Promise<{ tab
               <Link
                 key={t.key}
                 href={`/requests?tab=${t.key}`}
-                className={`flex-1 py-3 text-center font-extrabold text-[13.5px] border-b-[3px] transition ${
+                className={`flex-1 py-3 text-center font-extrabold text-[15px] border-b-[3px] transition ${
                   active ? 'text-ink border-brand' : 'text-text-faint border-transparent'
                 }`}
               >
@@ -97,12 +97,12 @@ export default async function RequestsPage(props: { searchParams?: Promise<{ tab
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5">
                       <StatusChip kind="job" status={j.status} size="sm" />
-                      {j.is_urgent && <span className="chip chip-danger !text-[10px] !px-1.5 !py-0">
+                      {j.is_urgent && <span className="chip chip-danger !text-[13px] !px-1.5 !py-0">
                         <Zap size={10} />긴급
                       </span>}
                     </div>
                     <h4 className="text-[14.5px] font-extrabold text-ink truncate mt-1">{j.spaces?.name}</h4>
-                    <p className="text-[11.5px] text-text-soft font-bold flex items-center gap-1 mt-0.5 truncate">
+                    <p className="text-[13.5px] text-text-soft font-bold flex items-center gap-1 mt-0.5 truncate">
                       <Clock size={11} />
                       {formatScheduled(j.scheduled_at)}
                       {j.users?.name && <span className="ml-1">· {j.users.name}</span>}
@@ -110,17 +110,17 @@ export default async function RequestsPage(props: { searchParams?: Promise<{ tab
                     {(j.spaces?.has_toilet || j.spaces?.has_kitchen || j.spaces?.has_bed) && (
                       <div className="flex items-center gap-1 mt-1.5 flex-wrap">
                         {j.spaces?.has_toilet && (
-                          <span className="text-[10.5px] font-bold bg-sky-50 text-sky-700 px-1.5 py-0.5 rounded-md border border-sky-100">
+                          <span className="text-[13px] font-bold bg-sky-50 text-sky-700 px-1.5 py-0.5 rounded-md border border-sky-100">
                             🚽 화장실
                           </span>
                         )}
                         {j.spaces?.has_kitchen && (
-                          <span className="text-[10.5px] font-bold bg-orange-50 text-orange-700 px-1.5 py-0.5 rounded-md border border-orange-100">
+                          <span className="text-[13px] font-bold bg-orange-50 text-orange-700 px-1.5 py-0.5 rounded-md border border-orange-100">
                             🍳 주방
                           </span>
                         )}
                         {j.spaces?.has_bed && (
-                          <span className="text-[10.5px] font-bold bg-purple-50 text-purple-700 px-1.5 py-0.5 rounded-md border border-purple-100">
+                          <span className="text-[13px] font-bold bg-purple-50 text-purple-700 px-1.5 py-0.5 rounded-md border border-purple-100">
                             🛏️ 침구
                           </span>
                         )}

@@ -164,7 +164,7 @@ export default function TaxProfilePage() {
       <div className="flex-1 px-5 pt-5 pb-28 flex flex-col gap-5">
         <div className="card p-4 bg-info-soft border border-info/15 flex items-start gap-3">
           <ShieldCheck size={18} className="text-info shrink-0 mt-0.5" />
-          <div className="text-[12.5px] text-ink-soft font-semibold leading-snug">
+          <div className="text-[14.5px] text-ink-soft font-semibold leading-snug">
             세금 유형에 따라 정산 방식이 달라집니다. <b>프리랜서</b>는 3.3% 원천징수 후 지급, <b>사업자</b>는 본인이 부가세 신고합니다.
           </div>
         </div>
@@ -212,7 +212,7 @@ export default function TaxProfilePage() {
                 className="input"
                 autoComplete="off"
               />
-              <p className="text-[11px] text-text-faint font-medium mt-1.5 ml-1 leading-snug">
+              <p className="text-[13.5px] text-text-faint font-medium mt-1.5 ml-1 leading-snug">
                 원천세 신고에만 사용되며 AES-256으로 암호화 저장됩니다. 세무 목적으로 5년간 보관됩니다.
               </p>
             </div>
@@ -223,7 +223,7 @@ export default function TaxProfilePage() {
                 onChange={(e) => setAgreeSensitive(e.target.checked)}
                 className="mt-1 w-4 h-4 accent-[#0EA5E9]"
               />
-              <span className="text-[12.5px] font-semibold text-ink-soft leading-snug">
+              <span className="text-[14.5px] font-semibold text-ink-soft leading-snug">
                 [필수] 원천세 신고 및 세무 처리 목적의 <b>주민번호 수집·이용</b>에 동의합니다. (5년 보관)
               </span>
             </label>
@@ -258,7 +258,7 @@ export default function TaxProfilePage() {
                   <button
                     key={t}
                     onClick={() => setBizVatType(t)}
-                    className={`chip !text-[11.5px] !px-2 !py-2 ${bizVatType === t ? 'chip-brand' : 'chip-muted'}`}
+                    className={`chip !text-[13.5px] !px-2 !py-2 ${bizVatType === t ? 'chip-brand' : 'chip-muted'}`}
                   >
                     {t === 'GENERAL' ? '일반과세' : t === 'SIMPLE' ? '간이과세' : '면세'}
                   </button>
@@ -275,8 +275,8 @@ export default function TaxProfilePage() {
                     <div className="w-12 h-12 rounded-full bg-brand-softer text-brand-dark flex items-center justify-center mb-2">
                       {uploading ? <Loader2 size={20} className="animate-spin" /> : <Upload size={20} />}
                     </div>
-                    <p className="text-[13px] font-extrabold text-ink">{uploading ? '업로드 중' : '사진 업로드'}</p>
-                    <p className="text-[11px] text-text-soft font-bold mt-1">JPG/PNG · 최대 10MB</p>
+                    <p className="text-[15px] font-extrabold text-ink">{uploading ? '업로드 중' : '사진 업로드'}</p>
+                    <p className="text-[13.5px] text-text-soft font-bold mt-1">JPG/PNG · 최대 10MB</p>
                   </>
                 )}
                 <input type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && handleBizImage(e.target.files[0])} />
@@ -299,7 +299,7 @@ export default function TaxProfilePage() {
         {err && (
           <div className="p-3.5 rounded-xl bg-danger-soft border border-danger/15 flex items-start gap-2">
             <AlertCircle size={16} className="text-danger shrink-0 mt-0.5" />
-            <p className="text-[13px] font-bold text-danger">{err}</p>
+            <p className="text-[15px] font-bold text-danger">{err}</p>
           </div>
         )}
       </div>
@@ -328,7 +328,7 @@ function TaxOption({ selected, onClick, icon, title, desc }: { selected: boolean
       </div>
       <div className="flex-1">
         <p className="text-[14px] font-extrabold text-ink">{title}</p>
-        <p className="text-[11.5px] text-text-soft font-bold mt-0.5 leading-snug">{desc}</p>
+        <p className="text-[13.5px] text-text-soft font-bold mt-0.5 leading-snug">{desc}</p>
       </div>
       {selected && <Check size={18} className="text-brand shrink-0" strokeWidth={3} />}
     </button>

@@ -171,7 +171,7 @@ function WorkerProfileCard({ worker, jobId, jobStatus, isFavorite, onToggleFavor
               <h4 className="text-[15px] font-extrabold text-ink">{worker.name}</h4>
               {isTrusted && (
                 <span
-                  className="px-2 py-0.5 rounded-full text-[10px] font-black"
+                  className="px-2 py-0.5 rounded-full text-[13px] font-black"
                   style={{ background: 'rgba(16,185,129,0.12)', color: '#059669' }}
                 >
                   검증 파트너
@@ -184,23 +184,23 @@ function WorkerProfileCard({ worker, jobId, jobStatus, isFavorite, onToggleFavor
               <div className="flex flex-col items-center">
                 <div className="flex items-center gap-0.5">
                   <Star size={11} className="text-sun" fill="currentColor" />
-                  <span className="text-[13px] font-black text-ink">{rating.toFixed(1)}</span>
+                  <span className="text-[15px] font-black text-ink">{rating.toFixed(1)}</span>
                 </div>
-                <span className="text-[9.5px] font-bold text-text-faint mt-0.5">평점</span>
+                <span className="text-[12px] font-bold text-text-faint mt-0.5">평점</span>
               </div>
               <div className="w-px h-7 bg-line-soft" />
               <div className="flex flex-col items-center">
-                <span className="text-[13px] font-black text-ink">
+                <span className="text-[15px] font-black text-ink">
                   {totalJobs >= 1000 ? `${Math.floor(totalJobs / 100) / 10}k` : totalJobs}
                 </span>
-                <span className="text-[9.5px] font-bold text-text-faint mt-0.5">완료 건수</span>
+                <span className="text-[12px] font-bold text-text-faint mt-0.5">완료 건수</span>
               </div>
               {worker.sparkle_score !== undefined && worker.sparkle_score !== null && (
                 <>
                   <div className="w-px h-7 bg-line-soft" />
                   <div className="flex flex-col items-center">
-                    <span className="text-[13px] font-black text-ink">{worker.sparkle_score}</span>
-                    <span className="text-[9.5px] font-bold text-text-faint mt-0.5">활동 점수</span>
+                    <span className="text-[15px] font-black text-ink">{worker.sparkle_score}</span>
+                    <span className="text-[12px] font-bold text-text-faint mt-0.5">활동 점수</span>
                   </div>
                 </>
               )}
@@ -222,7 +222,7 @@ function WorkerProfileCard({ worker, jobId, jobStatus, isFavorite, onToggleFavor
         {/* 단골 안내 문구 */}
         {isFavorite && (
           <div
-            className="mt-3 px-3 py-2 rounded-xl text-[11px] font-bold flex items-center gap-1.5"
+            className="mt-3 px-3 py-2 rounded-xl text-[13.5px] font-bold flex items-center gap-1.5"
             style={{ background: 'rgba(239,68,68,0.07)', color: '#B91C1C' }}
           >
             <Heart size={11} fill="currentColor" />
@@ -390,23 +390,23 @@ export default function RequestDetailClient({ job: initialJob, userId, initialIs
           <div className="relative z-10">
             <div className="flex items-center gap-2 mb-3">
               <StatusChip kind="job" status={job.status} />
-              {job.is_urgent && <span className="chip chip-danger !text-[10px]">긴급</span>}
+              {job.is_urgent && <span className="chip chip-danger !text-[13px]">긴급</span>}
             </div>
-            <div className="chip chip-brand !text-[10.5px] mb-2">
+            <div className="chip chip-brand !text-[13px] mb-2">
               {spaceTypeLabel(job.spaces?.type || 'other')}
             </div>
             <h2 className="text-[22px] font-black leading-tight">{job.spaces?.name}</h2>
-            <p className="text-[13px] text-white/80 font-semibold mt-2 flex items-center gap-1.5">
+            <p className="text-[15px] text-white/80 font-semibold mt-2 flex items-center gap-1.5">
               <Clock size={13} /> {formatScheduled(job.scheduled_at)} · {job.estimated_duration ?? 90}분
             </p>
-            <p className="text-[13px] text-white/80 font-semibold mt-1 flex items-center gap-1.5">
+            <p className="text-[15px] text-white/80 font-semibold mt-1 flex items-center gap-1.5">
               <MapPin size={13} /> {job.spaces?.address}
             </p>
             <div className="mt-5">
-              <p className="text-[11px] text-white/60 font-bold">총 결제 금액</p>
+              <p className="text-[13.5px] text-white/60 font-bold">총 결제 금액</p>
               <p className="t-money text-[26px] text-white">{formatKRW(job.price)}</p>
               {extraStatus === 'APPROVED' && job.extra_charge_amount && (
-                <p className="text-[12px] text-brand-light font-bold mt-0.5">
+                <p className="text-[14.5px] text-brand-light font-bold mt-0.5">
                   + 추가 청구 {formatKRW(job.extra_charge_amount)} 승인됨
                 </p>
               )}
@@ -438,8 +438,8 @@ export default function RequestDetailClient({ job: initialJob, userId, initialIs
                   <Loader2 size={18} className="text-brand-dark animate-spin" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-[13.5px] font-extrabold text-ink">매칭 중입니다</p>
-                  <p className="text-[11.5px] font-bold text-text-muted mt-0.5">
+                  <p className="text-[15px] font-extrabold text-ink">매칭 중입니다</p>
+                  <p className="text-[13.5px] font-bold text-text-muted mt-0.5">
                     근처 클린파트너에게 알림을 보냈어요. 곧 매칭돼요
                   </p>
                 </div>
@@ -450,7 +450,7 @@ export default function RequestDetailClient({ job: initialJob, userId, initialIs
           {/* Live worker location */}
           {['EN_ROUTE', 'ARRIVED', 'IN_PROGRESS'].includes(job.status) && job.spaces?.location?.coordinates && (
             <div className="card p-4 mb-4">
-              <h3 className="text-[13.5px] font-extrabold text-ink mb-3">실시간 위치</h3>
+              <h3 className="text-[15px] font-extrabold text-ink mb-3">실시간 위치</h3>
               <WorkerLiveMap
                 jobId={job.id}
                 spaceLat={job.spaces.location.coordinates[1]}
@@ -466,17 +466,17 @@ export default function RequestDetailClient({ job: initialJob, userId, initialIs
             <div className="card p-4 mb-4 bg-sun-soft border border-sun/20">
               <div className="flex items-center gap-2 mb-1.5">
                 <AlertTriangle size={14} className="text-[#92580C]" />
-                <span className="text-[12px] font-black text-[#92580C] uppercase tracking-wide">특별 요청사항</span>
+                <span className="text-[14.5px] font-black text-[#92580C] uppercase tracking-wide">특별 요청사항</span>
               </div>
-              <p className="text-[13.5px] font-semibold text-ink leading-snug">{job.special_instructions}</p>
+              <p className="text-[15px] font-semibold text-ink leading-snug">{job.special_instructions}</p>
             </div>
           )}
 
           {/* 비품 부족 알림 (supply_status: 2레벨) */}
           {((job.supply_status && job.supply_status.length > 0) || (job.supply_shortages && job.supply_shortages.length > 0)) && (
             <div className="card p-4 mb-4">
-              <h3 className="text-[13.5px] font-extrabold text-ink mb-1">채워야 할 비품</h3>
-              <p className="text-[11.5px] text-text-soft font-medium mb-3 leading-snug">
+              <h3 className="text-[15px] font-extrabold text-ink mb-1">채워야 할 비품</h3>
+              <p className="text-[13.5px] text-text-soft font-medium mb-3 leading-snug">
                 클린파트너가 이번 청소 중 부족을 확인한 소모품이에요.
               </p>
               <div className="flex flex-wrap gap-2">
@@ -484,14 +484,14 @@ export default function RequestDetailClient({ job: initialJob, userId, initialIs
                   ? job.supply_status.map((s) => (
                       <span
                         key={s.name}
-                        className={`px-3 py-1.5 rounded-full text-[12.5px] font-bold border ${SUPPLY_LEVEL_COLORS[s.level]}`}
+                        className={`px-3 py-1.5 rounded-full text-[14.5px] font-bold border ${SUPPLY_LEVEL_COLORS[s.level]}`}
                       >
                         {s.name}
-                        <span className="ml-1 text-[10.5px]">({SUPPLY_LEVEL_LABELS[s.level]})</span>
+                        <span className="ml-1 text-[13px]">({SUPPLY_LEVEL_LABELS[s.level]})</span>
                       </span>
                     ))
                   : job.supply_shortages?.map((s) => (
-                      <span key={s} className="px-3 py-1.5 rounded-full text-[12.5px] font-bold bg-sun-soft text-[#92580C] border border-sun/30">
+                      <span key={s} className="px-3 py-1.5 rounded-full text-[14.5px] font-bold bg-sun-soft text-[#92580C] border border-sun/30">
                         {s}
                       </span>
                     ))}
@@ -504,10 +504,10 @@ export default function RequestDetailClient({ job: initialJob, userId, initialIs
             <div className="card p-4 mb-4 border-2 border-sun/30">
               <div className="flex items-center gap-2 mb-2">
                 <span className="w-2 h-2 rounded-full bg-sun animate-pulse" />
-                <h3 className="text-[13.5px] font-extrabold text-ink">추가 청구 요청</h3>
+                <h3 className="text-[15px] font-extrabold text-ink">추가 청구 요청</h3>
               </div>
-              <p className="text-[13px] font-bold text-ink mb-0.5">{formatKRW(job.extra_charge_amount)}</p>
-              <p className="text-[12px] text-text-soft font-medium mb-3 leading-snug">{job.extra_charge_reason}</p>
+              <p className="text-[15px] font-bold text-ink mb-0.5">{formatKRW(job.extra_charge_amount)}</p>
+              <p className="text-[14.5px] text-text-soft font-medium mb-3 leading-snug">{job.extra_charge_reason}</p>
               {job.extra_charge_photos && job.extra_charge_photos.length > 0 && (
                 <div className="flex gap-2 mb-3 flex-wrap">
                   {job.extra_charge_photos.map((url, i) => (
@@ -515,7 +515,7 @@ export default function RequestDetailClient({ job: initialJob, userId, initialIs
                   ))}
                 </div>
               )}
-              {err && <p className="text-[12px] text-danger font-bold mb-2">{err}</p>}
+              {err && <p className="text-[14.5px] text-danger font-bold mb-2">{err}</p>}
               <div className="flex gap-2">
                 <button
                   onClick={() => handleExtraCharge(false)}
@@ -537,7 +537,7 @@ export default function RequestDetailClient({ job: initialJob, userId, initialIs
 
           {extraStatus === 'APPROVED' && job.extra_charge_amount && (
             <div className="card p-3 mb-4 bg-brand-softer border border-brand/20">
-              <p className="text-[12.5px] font-bold text-brand-dark flex items-center gap-1.5">
+              <p className="text-[14.5px] font-bold text-brand-dark flex items-center gap-1.5">
                 <Check size={14} /> 추가 청구 {formatKRW(job.extra_charge_amount)} 승인 완료
               </p>
             </div>
@@ -545,14 +545,14 @@ export default function RequestDetailClient({ job: initialJob, userId, initialIs
 
           {extraStatus === 'REJECTED' && (
             <div className="card p-3 mb-4 bg-surface-muted border border-line-soft">
-              <p className="text-[12.5px] font-bold text-text-soft">추가 청구 거절됨</p>
+              <p className="text-[14.5px] font-bold text-text-soft">추가 청구 거절됨</p>
             </div>
           )}
 
           {/* Checklist + photos */}
           {checklist.length > 0 && (
             <div className="card p-4 mb-4">
-              <h3 className="text-[13.5px] font-extrabold text-ink mb-3">체크리스트</h3>
+              <h3 className="text-[15px] font-extrabold text-ink mb-3">체크리스트</h3>
               <ul className="flex flex-col gap-2.5">
                 {checklist.map((c) => (
                   <li key={c.id} className="flex items-start gap-3">
@@ -560,9 +560,9 @@ export default function RequestDetailClient({ job: initialJob, userId, initialIs
                       {c.completed && <CheckCircle2 size={14} />}
                     </div>
                     <div className="flex-1">
-                      <p className="text-[13.5px] font-semibold text-ink">
+                      <p className="text-[15px] font-semibold text-ink">
                         {c.label}
-                        {c.required && <span className="ml-1.5 text-[10.5px] font-black text-danger">필수</span>}
+                        {c.required && <span className="ml-1.5 text-[13px] font-black text-danger">필수</span>}
                       </p>
                       {c.photo_url && (
                         <img src={c.photo_url} alt="" className="mt-2 w-24 h-24 rounded-lg object-cover border border-line-soft" />
@@ -577,10 +577,10 @@ export default function RequestDetailClient({ job: initialJob, userId, initialIs
           {/* Price breakdown */}
           {job.price_breakdown && (
             <div className="card p-4 mb-4">
-              <h3 className="text-[13.5px] font-extrabold text-ink mb-3">가격 상세</h3>
+              <h3 className="text-[15px] font-extrabold text-ink mb-3">가격 상세</h3>
               <div className="flex flex-col gap-2">
                 {job.price_breakdown.items?.map((it, i) => (
-                  <div key={i} className="flex justify-between text-[13px]">
+                  <div key={i} className="flex justify-between text-[15px]">
                     <span className="font-semibold text-text-muted">{it.label}</span>
                     <span className="t-money text-ink">
                       {it.kind === 'sub' ? '-' : ''}
@@ -590,11 +590,11 @@ export default function RequestDetailClient({ job: initialJob, userId, initialIs
                 ))}
                 <div className="divider" />
                 <div className="flex justify-between items-baseline">
-                  <span className="text-[13px] font-bold text-text-soft">총 결제 (VAT 포함)</span>
+                  <span className="text-[15px] font-bold text-text-soft">총 결제 (VAT 포함)</span>
                   <span className="t-money text-[18px] text-ink">{formatKRW(job.price_breakdown.total ?? job.price)}</span>
                 </div>
                 {(job.price_breakdown.host_fee !== undefined || job.price_breakdown.worker_fee !== undefined) && (
-                  <div className="mt-3 pt-3 border-t border-line-soft text-[11.5px] text-text-soft font-bold space-y-1">
+                  <div className="mt-3 pt-3 border-t border-line-soft text-[13.5px] text-text-soft font-bold space-y-1">
                     <div className="flex justify-between">
                       <span>플랫폼 공간파트너 수수료</span>
                       <span>{formatKRW(job.price_breakdown.host_fee || 0)}</span>
@@ -618,7 +618,7 @@ export default function RequestDetailClient({ job: initialJob, userId, initialIs
           {err && extraStatus !== 'REQUESTED' && (
             <div className="p-3.5 rounded-xl bg-danger-soft border border-danger/15 mb-4 flex items-start gap-2">
               <AlertTriangle size={16} className="text-danger shrink-0 mt-0.5" />
-              <p className="text-[13px] font-bold text-danger leading-snug">{err}</p>
+              <p className="text-[15px] font-bold text-danger leading-snug">{err}</p>
             </div>
           )}
 
@@ -709,11 +709,11 @@ export default function RequestDetailClient({ job: initialJob, userId, initialIs
                 <>
                   <p className="t-caption mb-4">{policy.label}</p>
                   <div className="card p-4 bg-surface-soft mb-4">
-                    <div className="flex justify-between text-[13px] font-semibold text-text-muted py-1">
+                    <div className="flex justify-between text-[15px] font-semibold text-text-muted py-1">
                       <span>요청 금액</span>
                       <span>{formatKRW(job.price || 0)}</span>
                     </div>
-                    <div className="flex justify-between text-[13px] font-semibold text-danger py-1">
+                    <div className="flex justify-between text-[15px] font-semibold text-danger py-1">
                       <span>취소 수수료 (정책 기준)</span>
                       <span>−{formatKRW(fee)}</span>
                     </div>
@@ -723,12 +723,12 @@ export default function RequestDetailClient({ job: initialJob, userId, initialIs
                       <span>{formatKRW(refund)}</span>
                     </div>
                   </div>
-                  <p className="text-[11px] text-text-faint font-semibold mb-3">
+                  <p className="text-[13.5px] text-text-faint font-semibold mb-3">
                     ※ 취소 정책에 따라 환불이 처리됩니다. 환불은 결제 수단으로 3~5 영업일 내 입금됩니다.
                   </p>
                   {willChargeDeposit && (
                     <div className="p-3 rounded-xl bg-danger-soft border border-danger/20 mb-4">
-                      <p className="text-[12px] font-bold text-danger leading-snug">
+                      <p className="text-[14.5px] font-bold text-danger leading-snug">
                         ⚠️ 24시간 이내 취소 + 클린파트너 배정 상태입니다. 보증금 5,000원이 추가로 차감됩니다.
                       </p>
                     </div>
@@ -736,7 +736,7 @@ export default function RequestDetailClient({ job: initialJob, userId, initialIs
                 </>
               )
             })()}
-            {err && <p className="text-[12.5px] text-danger font-bold mb-3">{err}</p>}
+            {err && <p className="text-[14.5px] text-danger font-bold mb-3">{err}</p>}
             <div className="flex gap-2">
               <button onClick={() => setShowCancel(false)} className="flex-1 btn btn-ghost">유지하기</button>
               <button onClick={handleCancel} disabled={canceling} className="flex-1 btn btn-primary !bg-danger">

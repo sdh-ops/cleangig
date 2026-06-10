@@ -145,11 +145,11 @@ export default function ChatListPage() {
                       <h4 className={`text-[14.5px] truncate ${c.unread ? 'font-black text-ink' : 'font-extrabold text-ink'}`}>
                         {c.space_name}
                       </h4>
-                      <span className={`text-[11px] shrink-0 ${c.unread ? 'text-brand-dark font-bold' : 'text-text-faint font-semibold'}`}>
+                      <span className={`text-[13.5px] shrink-0 ${c.unread ? 'text-brand-dark font-bold' : 'text-text-faint font-semibold'}`}>
                         {timeAgo(c.last_message_time)}
                       </span>
                     </div>
-                    <p className={`text-[13px] truncate mt-0.5 ${c.unread ? 'font-bold text-ink-soft' : 'font-medium text-text-soft'}`}>
+                    <p className={`text-[15px] truncate mt-0.5 ${c.unread ? 'font-bold text-ink-soft' : 'font-medium text-text-soft'}`}>
                       {c.last_message}
                     </p>
                   </div>

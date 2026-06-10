@@ -60,7 +60,7 @@ export default function NotificationOverlay() {
         </div>
         <div className="flex-1 min-w-0">
           <h4 className="text-[14px] font-extrabold text-ink truncate">{toast.title}</h4>
-          <p className="text-[12.5px] font-medium text-text-muted line-clamp-2 mt-0.5 leading-snug">
+          <p className="text-[14.5px] font-medium text-text-muted line-clamp-2 mt-0.5 leading-snug">
             {toast.message}
           </p>
         </div>

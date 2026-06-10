@@ -43,7 +43,7 @@ export default function EarningsClient({ profile, payments, totalEarned, pending
             <div className="absolute -top-10 -right-10 w-44 h-44 rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(14,165,233,0.25) 0%, transparent 70%)' }} />
             <div className="absolute bottom-0 left-0 w-32 h-32 rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(255,184,0,0.10) 0%, transparent 70%)' }} />
             <div className="relative z-10">
-              <p className="text-[10.5px] text-white/60 font-bold uppercase tracking-widest mb-1">총 수익 (정산 완료)</p>
+              <p className="text-[13px] text-white/60 font-bold uppercase tracking-widest mb-1">총 수익 (정산 완료)</p>
               <p className="num-display text-white" style={{ fontSize: 44, lineHeight: 1.1 }}>{formatKRW(totalEarned)}</p>
               <div className="mt-4 grid grid-cols-2 gap-2">
                 <Stat label="이번 달" value={formatKRW(monthEarned, { short: true })} icon={<TrendingUp size={14} />} />
@@ -58,10 +58,10 @@ export default function EarningsClient({ profile, payments, totalEarned, pending
               <Receipt size={16} />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-[12px] font-bold text-text-soft">올해 원천징수 누계</p>
+              <p className="text-[14.5px] font-bold text-text-soft">올해 원천징수 누계</p>
               <p className="t-money text-[16px] text-ink mt-0.5">{formatKRW(ytdWht)}</p>
             </div>
-            <Link href="/profile/tax" className="text-[12px] font-black text-brand-dark flex items-center gap-0.5">
+            <Link href="/profile/tax" className="text-[14.5px] font-black text-brand-dark flex items-center gap-0.5">
               세금 유형 <Info size={12} />
             </Link>
           </div>
@@ -70,7 +70,7 @@ export default function EarningsClient({ profile, payments, totalEarned, pending
         <div className="px-5 pt-5">
           <div className="flex items-center justify-between mb-3 px-1">
             <h2 className="h-section text-ink">정산 내역</h2>
-            <span className="text-[11px] font-bold text-text-faint">최근 50건</span>
+            <span className="text-[13.5px] font-bold text-text-faint">최근 50건</span>
           </div>
 
           {payments.length === 0 ? (
@@ -103,18 +103,18 @@ export default function EarningsClient({ profile, payments, totalEarned, pending
                       <h4 className="text-[14px] font-extrabold text-ink truncate">
                         {p.jobs?.spaces?.name || '작업'}
                       </h4>
-                      <p className="text-[11.5px] text-text-soft font-bold mt-0.5">
+                      <p className="text-[13.5px] text-text-soft font-bold mt-0.5">
                         {statusLabel(p.status)} · {timeAgo(p.created_at)}
                       </p>
                     </div>
                     <div className="text-right shrink-0">
                       <div className="t-money text-[15px] text-ink">+{formatKRW(p.worker_payout)}</div>
                       {(p.withholding_tax ?? 0) > 0 ? (
-                        <p className="text-[10.5px] font-bold text-text-faint mt-0.5">
+                        <p className="text-[13px] font-bold text-text-faint mt-0.5">
                           수수료 −{formatKRW((p.worker_fee || 0) + (p.host_fee || 0) || (p.platform_fee || 0))} · 원천징수 −{formatKRW(p.withholding_tax || 0)}
                         </p>
                       ) : (
-                        <p className="text-[10.5px] font-bold text-text-faint mt-0.5">
+                        <p className="text-[13px] font-bold text-text-faint mt-0.5">
                           수수료 −{formatKRW((p.worker_fee || 0) + (p.host_fee || 0) || (p.platform_fee || 0))}
                         </p>
                       )}
@@ -134,7 +134,7 @@ export default function EarningsClient({ profile, payments, totalEarned, pending
 function Stat({ label, value, icon }: { label: string; value: string; icon: React.ReactNode }) {
   return (
     <div className="rounded-xl bg-white/12 p-3">
-      <div className="flex items-center gap-1.5 text-[11px] font-bold text-white/75">
+      <div className="flex items-center gap-1.5 text-[13.5px] font-bold text-white/75">
         {icon}
         {label}
       </div>

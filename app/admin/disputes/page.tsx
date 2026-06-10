@@ -30,7 +30,7 @@ export default async function AdminDisputesPage() {
   return (
     <div className="space-y-5">
       <div>
-        <p className="text-[11px] font-black text-red-500 uppercase tracking-widest mb-0.5">분쟁 처리</p>
+        <p className="text-[13.5px] font-black text-red-500 uppercase tracking-widest mb-0.5">분쟁 처리</p>
         <h1 className="text-[20px] font-black text-slate-900">분쟁 관리</h1>
       </div>
 
@@ -38,11 +38,11 @@ export default async function AdminDisputesPage() {
         <div className="card p-10 text-center">
           <CheckCircle2 size={32} className="text-green-400 mx-auto mb-3" />
           <p className="text-[15px] font-extrabold text-slate-700">처리 대기 분쟁 없음</p>
-          <p className="text-[12px] text-slate-400 font-bold mt-1">모든 분쟁이 해결되었습니다 ✨</p>
+          <p className="text-[14.5px] text-slate-400 font-bold mt-1">모든 분쟁이 해결되었습니다 ✨</p>
         </div>
       ) : (
         <section>
-          <p className="text-[11px] font-black text-red-500 uppercase tracking-wider mb-2">
+          <p className="text-[13.5px] font-black text-red-500 uppercase tracking-wider mb-2">
             ⚠ 처리 대기 · {open.length}건
           </p>
           <div className="space-y-3">
@@ -55,7 +55,7 @@ export default async function AdminDisputesPage() {
 
       {closed.length > 0 && (
         <section>
-          <p className="text-[11px] font-black text-slate-400 uppercase tracking-wider mb-2">처리 완료 · {closed.length}건</p>
+          <p className="text-[13.5px] font-black text-slate-400 uppercase tracking-wider mb-2">처리 완료 · {closed.length}건</p>
           <div className="space-y-2">
             {closed.map((d) => (
               <DisputeCard key={d.id} d={d} />
@@ -72,16 +72,16 @@ function DisputeCard({ d, urgent }: { d: any; urgent?: boolean }) {
     <div className={`card p-4 ${urgent ? 'border-red-200 bg-red-50/50' : ''}`}>
       {/* 헤더 */}
       <div className="flex items-center gap-2 mb-3">
-        <span className={`text-[10.5px] font-black px-2.5 py-1 rounded-full
+        <span className={`text-[13px] font-black px-2.5 py-1 rounded-full
           ${d.status === 'OPEN'     ? 'bg-red-100 text-red-600' :
             d.status === 'RESOLVED' ? 'bg-green-100 text-green-600' :
             'bg-slate-100 text-slate-500'}`}>
           {d.status === 'OPEN' ? '처리 대기' : d.status === 'RESOLVED' ? '해결됨' : '종료'}
         </span>
-        <span className="text-[10.5px] font-bold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-full">
+        <span className="text-[13px] font-bold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-full">
           {d.category || '일반'}
         </span>
-        <span className="text-[11px] text-slate-400 font-bold ml-auto">{timeAgo(d.created_at)}</span>
+        <span className="text-[13.5px] text-slate-400 font-bold ml-auto">{timeAgo(d.created_at)}</span>
       </div>
 
       {/* 공간 + 금액 */}
@@ -93,7 +93,7 @@ function DisputeCard({ d, urgent }: { d: any; urgent?: boolean }) {
           >
             {d.jobs?.spaces?.name || '(공간 없음)'}
           </Link>
-          <p className="text-[11.5px] text-slate-500 font-bold mt-0.5">
+          <p className="text-[13.5px] text-slate-500 font-bold mt-0.5">
             거래액 {formatKRW(d.jobs?.price)}
             {d.refund_amount > 0 && (
               <span className="ml-2 text-red-500">환불 요청 {formatKRW(d.refund_amount)}</span>
@@ -104,7 +104,7 @@ function DisputeCard({ d, urgent }: { d: any; urgent?: boolean }) {
 
       {/* 내용 */}
       {d.description && (
-        <p className="text-[13px] font-medium text-slate-700 leading-relaxed bg-slate-50 rounded-xl px-3 py-2.5 mb-3 border border-slate-200">
+        <p className="text-[15px] font-medium text-slate-700 leading-relaxed bg-slate-50 rounded-xl px-3 py-2.5 mb-3 border border-slate-200">
           "{d.description}"
         </p>
       )}
@@ -141,8 +141,8 @@ function ContactChip({ label, name, phone }: { label: string; name?: string; pho
   return (
     <div className="flex items-center gap-2 bg-white rounded-xl px-3 py-2 border border-slate-200">
       <div className="flex-1 min-w-0">
-        <p className="text-[10px] font-black text-slate-400 uppercase tracking-wide">{label}</p>
-        <p className="text-[12.5px] font-extrabold text-slate-800 truncate">{name}</p>
+        <p className="text-[13px] font-black text-slate-400 uppercase tracking-wide">{label}</p>
+        <p className="text-[14.5px] font-extrabold text-slate-800 truncate">{name}</p>
       </div>
       {phone && (
         <a href={`tel:${phone}`} className="shrink-0 w-8 h-8 rounded-lg bg-sky-50 flex items-center justify-center text-sky-600 hover:bg-sky-100 transition">

@@ -156,8 +156,8 @@ export default function SupportPage() {
               <div className="w-10 h-10 rounded-full bg-brand-softer text-brand-dark flex items-center justify-center">
                 <PenLine size={18} />
               </div>
-              <span className="text-[12.5px] font-extrabold text-ink">1:1 문의하기</span>
-              <span className="text-[11px] font-medium text-text-soft leading-snug">평일 10시–18시 답변</span>
+              <span className="text-[14.5px] font-extrabold text-ink">1:1 문의하기</span>
+              <span className="text-[13.5px] font-medium text-text-soft leading-snug">평일 10시–18시 답변</span>
             </button>
             <a
               href="mailto:help@sseuksak.com"
@@ -166,8 +166,8 @@ export default function SupportPage() {
               <div className="w-10 h-10 rounded-full bg-brand-softer text-brand-dark flex items-center justify-center">
                 <Mail size={18} />
               </div>
-              <span className="text-[12.5px] font-extrabold text-ink">이메일 문의</span>
-              <span className="text-[11px] font-medium text-text-soft leading-snug">help@sseuksak.com</span>
+              <span className="text-[14.5px] font-extrabold text-ink">이메일 문의</span>
+              <span className="text-[13.5px] font-medium text-text-soft leading-snug">help@sseuksak.com</span>
             </a>
           </div>
         </div>
@@ -177,8 +177,8 @@ export default function SupportPage() {
           <div className="mx-5 mb-4 p-3.5 rounded-2xl bg-brand-softer border border-brand/20 flex items-start gap-3">
             <CheckCircle2 size={18} className="text-brand-dark shrink-0 mt-0.5" />
             <div>
-              <p className="text-[13px] font-extrabold text-ink">문의가 접수됐습니다!</p>
-              <p className="text-[11.5px] font-medium text-text-soft mt-0.5">영업일 기준 1–2일 내 이메일 또는 앱 알림으로 답변드립니다.</p>
+              <p className="text-[15px] font-extrabold text-ink">문의가 접수됐습니다!</p>
+              <p className="text-[13.5px] font-medium text-text-soft mt-0.5">영업일 기준 1–2일 내 이메일 또는 앱 알림으로 답변드립니다.</p>
             </div>
             <button onClick={() => setSubmitted(false)} className="ml-auto shrink-0">
               <X size={16} className="text-text-faint" />
@@ -210,11 +210,11 @@ export default function SupportPage() {
                         <div className="flex items-start gap-3">
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-1">
-                              <span className={`text-[10.5px] font-black px-2 py-0.5 rounded-full ${st.color}`}>{st.label}</span>
-                              {t.reply && <span className="text-[10.5px] font-bold text-brand-dark">✓ 답변 도착</span>}
+                              <span className={`text-[13px] font-black px-2 py-0.5 rounded-full ${st.color}`}>{st.label}</span>
+                              {t.reply && <span className="text-[13px] font-bold text-brand-dark">✓ 답변 도착</span>}
                             </div>
-                            <p className="text-[13.5px] font-extrabold text-ink truncate">{t.title}</p>
-                            <p className="text-[11px] font-medium text-text-faint mt-0.5">
+                            <p className="text-[15px] font-extrabold text-ink truncate">{t.title}</p>
+                            <p className="text-[13.5px] font-medium text-text-faint mt-0.5">
                               {new Date(t.created_at).toLocaleDateString('ko-KR')}
                             </p>
                           </div>
@@ -242,11 +242,11 @@ export default function SupportPage() {
                   onClick={() => setFaqOpen(faqOpen === i ? null : i)}
                   className="w-full flex items-center gap-3 px-4 py-3.5 text-left hover:bg-surface-muted"
                 >
-                  <span className="text-[13.5px] font-extrabold text-ink flex-1">Q. {faq.q}</span>
+                  <span className="text-[15px] font-extrabold text-ink flex-1">Q. {faq.q}</span>
                   <ChevronDown size={16} className={`shrink-0 text-text-faint transition ${faqOpen === i ? 'rotate-180' : ''}`} />
                 </button>
                   {faqOpen === i && (
-                    <p className="px-4 pb-4 pt-0 text-[13px] font-medium text-text-muted leading-relaxed border-t border-line-soft">
+                    <p className="px-4 pb-4 pt-0 text-[15px] font-medium text-text-muted leading-relaxed border-t border-line-soft">
                       {faq.a}
                     </p>
                   )}
@@ -266,7 +266,7 @@ export default function SupportPage() {
           </ul>
         </div>
 
-        <p className="text-center mt-6 text-[11px] font-medium text-text-faint">
+        <p className="text-center mt-6 text-[13.5px] font-medium text-text-faint">
           쓱싹 v1.0 · 운영시간 평일 10:00–18:00
         </p>
       </div>
@@ -301,7 +301,7 @@ export default function SupportPage() {
                     <button
                       key={c.key}
                       onClick={() => setCategory(c.key)}
-                      className={`rounded-xl border-2 p-3 text-[12.5px] font-extrabold text-left transition ${
+                      className={`rounded-xl border-2 p-3 text-[14.5px] font-extrabold text-left transition ${
                         category === c.key
                           ? 'border-brand bg-brand-softer text-brand-dark'
                           : 'border-line-soft bg-surface text-ink hover:border-line-strong'
@@ -334,15 +334,15 @@ export default function SupportPage() {
                   rows={5}
                   maxLength={2000}
                 />
-                <p className="text-[11px] text-text-faint font-medium mt-1 ml-1">{body.length}/2000</p>
+                <p className="text-[13.5px] text-text-faint font-medium mt-1 ml-1">{body.length}/2000</p>
               </div>
 
               <div className="mb-5 p-3.5 rounded-xl bg-surface-muted border border-line-soft">
                 <div className="flex items-center gap-2 mb-1">
                   <Clock size={13} className="text-text-soft" />
-                  <p className="text-[12px] font-extrabold text-ink">답변 안내</p>
+                  <p className="text-[14.5px] font-extrabold text-ink">답변 안내</p>
                 </div>
-                <ul className="text-[11.5px] font-medium text-text-soft leading-relaxed space-y-0.5">
+                <ul className="text-[13.5px] font-medium text-text-soft leading-relaxed space-y-0.5">
                   <li>• 평일 10:00–18:00 접수 건: 당일 또는 익일 답변</li>
                   <li>• 공휴일·주말 접수 건: 다음 영업일 답변</li>
                   <li>• 결제/분쟁 관련: 최우선 처리</li>
@@ -352,7 +352,7 @@ export default function SupportPage() {
               {submitErr && (
                 <div className="mb-3 p-2.5 rounded-xl bg-danger-soft border border-danger/15 flex items-center gap-2">
                   <AlertTriangle size={14} className="text-danger shrink-0" />
-                  <p className="text-[12.5px] font-bold text-danger">{submitErr}</p>
+                  <p className="text-[14.5px] font-bold text-danger">{submitErr}</p>
                 </div>
               )}
 
@@ -384,29 +384,29 @@ export default function SupportPage() {
               </div>
               <div className="card p-4 mb-4 bg-surface-muted">
                 <div className="flex items-center gap-2 mb-2">
-                  <span className={`text-[10.5px] font-black px-2 py-0.5 rounded-full ${(STATUS_LABELS[selectedTicket.status] ?? STATUS_LABELS.OPEN).color}`}>
+                  <span className={`text-[13px] font-black px-2 py-0.5 rounded-full ${(STATUS_LABELS[selectedTicket.status] ?? STATUS_LABELS.OPEN).color}`}>
                     {(STATUS_LABELS[selectedTicket.status] ?? STATUS_LABELS.OPEN).label}
                   </span>
-                  <span className="text-[11px] text-text-faint font-medium">
+                  <span className="text-[13.5px] text-text-faint font-medium">
                     {new Date(selectedTicket.created_at).toLocaleDateString('ko-KR')}
                   </span>
                 </div>
                 <h4 className="text-[14px] font-extrabold text-ink mb-1">{selectedTicket.title}</h4>
-                <p className="text-[11px] font-bold text-text-faint capitalize">{CATEGORIES.find(c => c.key === selectedTicket.category)?.label ?? selectedTicket.category}</p>
+                <p className="text-[13.5px] font-bold text-text-faint capitalize">{CATEGORIES.find(c => c.key === selectedTicket.category)?.label ?? selectedTicket.category}</p>
               </div>
 
               {selectedTicket.reply ? (
                 <div className="card p-4 bg-brand-softer border border-brand/20">
                   <div className="flex items-center gap-2 mb-2">
                     <CheckCircle2 size={14} className="text-brand-dark" />
-                    <p className="text-[12px] font-extrabold text-brand-dark">쓱싹 답변</p>
+                    <p className="text-[14.5px] font-extrabold text-brand-dark">쓱싹 답변</p>
                     {selectedTicket.replied_at && (
-                      <span className="text-[11px] text-text-faint ml-auto">
+                      <span className="text-[13.5px] text-text-faint ml-auto">
                         {new Date(selectedTicket.replied_at).toLocaleDateString('ko-KR')}
                       </span>
                     )}
                   </div>
-                  <p className="text-[13.5px] font-medium text-ink leading-relaxed whitespace-pre-wrap">
+                  <p className="text-[15px] font-medium text-ink leading-relaxed whitespace-pre-wrap">
                     {selectedTicket.reply}
                   </p>
                 </div>
@@ -414,7 +414,7 @@ export default function SupportPage() {
                 <div className="card p-4 bg-surface-muted border border-line-soft">
                   <div className="flex items-center gap-2">
                     <Clock size={14} className="text-text-soft" />
-                    <p className="text-[13px] font-semibold text-text-muted">답변 대기 중입니다. 영업일 기준 1–2일 내 답변드립니다.</p>
+                    <p className="text-[15px] font-semibold text-text-muted">답변 대기 중입니다. 영업일 기준 1–2일 내 답변드립니다.</p>
                   </div>
                 </div>
               )}
@@ -428,7 +428,7 @@ export default function SupportPage() {
 function RowLink({ href, label }: { href: string; label: string }) {
   return (
     <Link href={href} className="flex items-center gap-3 px-4 py-3.5 hover:bg-surface-muted">
-      <span className="flex-1 text-[13.5px] font-extrabold text-ink">{label}</span>
+      <span className="flex-1 text-[15px] font-extrabold text-ink">{label}</span>
       <ChevronRight size={16} className="text-text-faint" />
     </Link>
   )

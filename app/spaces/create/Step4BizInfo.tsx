@@ -77,7 +77,7 @@ export default function Step4BizInfo({ form, setForm, bizRegPhotoUrl, bizRegPhot
                             <label className="h-24 rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-600 flex flex-col items-center justify-center text-gray-500 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
                                 <input type="file" accept="image/*" onChange={handleBizRegPhotoChange} className="hidden" />
                                 <span className="material-symbols-outlined text-2xl mb-1">upload_file</span>
-                                <span className="text-[11px] font-bold">이미지 업로드</span>
+                                <span className="text-[13.5px] font-bold">이미지 업로드</span>
                             </label>
                         )}
                     </div>

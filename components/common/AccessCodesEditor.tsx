@@ -104,7 +104,7 @@ export default function AccessCodesEditor({ codes, onChange }: Props) {
       <button
         type="button"
         onClick={add}
-        className="flex items-center justify-center gap-1.5 h-11 rounded-2xl border-2 border-dashed border-line text-text-soft font-extrabold text-[13.5px] hover:border-brand hover:text-brand-dark transition"
+        className="flex items-center justify-center gap-1.5 h-11 rounded-2xl border-2 border-dashed border-line text-text-soft font-extrabold text-[15px] hover:border-brand hover:text-brand-dark transition"
       >
         <Plus size={17} /> 비밀번호 추가
       </button>

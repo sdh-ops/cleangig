@@ -97,20 +97,20 @@ export default function ProfileClient({ profile, totalCompletedJobs, isAdmin = f
               </div>
               {isWorker && (
                 <div className="flex items-center gap-2 mt-1.5">
-                  <span className="text-[11px] font-black px-2 py-0.5 rounded-full bg-white/20 text-white">
+                  <span className="text-[13.5px] font-black px-2 py-0.5 rounded-full bg-white/20 text-white">
                     {tierInfo.label}
                   </span>
-                  <span className="flex items-center gap-0.5 text-white/90 text-[12.5px] font-bold">
+                  <span className="flex items-center gap-0.5 text-white/90 text-[14.5px] font-bold">
                     <Star size={12} className="text-sun" fill="currentColor" />
                     {(profile.avg_rating ?? 0).toFixed(1)}
                   </span>
-                  <span className="text-[12px] font-bold text-white/75">
+                  <span className="text-[14.5px] font-bold text-white/75">
                     · {profile.total_jobs ?? 0}건 완료
                   </span>
                 </div>
               )}
               {!isWorker && profile.business_name && (
-                <p className="text-[13px] font-bold text-white/85 mt-1">{profile.business_name}</p>
+                <p className="text-[15px] font-bold text-white/85 mt-1">{profile.business_name}</p>
               )}
             </div>
           </div>
@@ -136,9 +136,9 @@ export default function ProfileClient({ profile, totalCompletedJobs, isAdmin = f
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1.5">
                   <p className="text-[14px] font-black">관리자 콘솔</p>
-                  <span className="text-[9.5px] font-black px-1.5 py-0.5 rounded bg-sun text-ink uppercase tracking-wider">ADMIN</span>
+                  <span className="text-[12px] font-black px-1.5 py-0.5 rounded bg-sun text-ink uppercase tracking-wider">ADMIN</span>
                 </div>
-                <p className="text-[11.5px] font-bold text-white/70 mt-0.5">대시보드 · 가입자 · 분쟁 · 수수료 설정</p>
+                <p className="text-[13.5px] font-bold text-white/70 mt-0.5">대시보드 · 가입자 · 분쟁 · 수수료 설정</p>
               </div>
               <ChevronRight size={16} className="text-white/60" />
             </Link>
@@ -152,7 +152,7 @@ export default function ProfileClient({ profile, totalCompletedJobs, isAdmin = f
           />
 
           <section className="card overflow-hidden">
-            <h3 className="px-4 pt-4 pb-2 text-[12px] font-black text-text-faint uppercase tracking-wide">기본 정보</h3>
+            <h3 className="px-4 pt-4 pb-2 text-[14.5px] font-black text-text-faint uppercase tracking-wide">기본 정보</h3>
             <RowLink
               href="/profile/edit"
               icon={<UserIcon size={17} />}
@@ -201,7 +201,7 @@ export default function ProfileClient({ profile, totalCompletedJobs, isAdmin = f
           </section>
 
           <section className="card overflow-hidden">
-            <h3 className="px-4 pt-4 pb-2 text-[12px] font-black text-text-faint uppercase tracking-wide">
+            <h3 className="px-4 pt-4 pb-2 text-[14.5px] font-black text-text-faint uppercase tracking-wide">
               {isWorker ? '작업 설정' : '운영 도구'}
             </h3>
             {isWorker ? (
@@ -220,7 +220,7 @@ export default function ProfileClient({ profile, totalCompletedJobs, isAdmin = f
           </section>
 
           <section className="card overflow-hidden">
-            <h3 className="px-4 pt-4 pb-2 text-[12px] font-black text-text-faint uppercase tracking-wide">고객지원</h3>
+            <h3 className="px-4 pt-4 pb-2 text-[14.5px] font-black text-text-faint uppercase tracking-wide">고객지원</h3>
             <RowLink href="/support" icon={<HelpCircle size={17} />} label="1:1 문의" />
             <div className="mx-4 border-t border-line-soft" />
             <RowLink href="/notices" icon={<FileText size={17} />} label="공지사항" />
@@ -232,22 +232,22 @@ export default function ProfileClient({ profile, totalCompletedJobs, isAdmin = f
 
           <button
             onClick={signOut}
-            className="mt-2 text-[13px] font-bold text-text-muted hover:text-danger transition flex items-center justify-center gap-1.5 py-3"
+            className="mt-2 text-[15px] font-bold text-text-muted hover:text-danger transition flex items-center justify-center gap-1.5 py-3"
           >
             <LogOut size={15} /> 로그아웃
           </button>
 
           {/* 사업자 정보 — 전자상거래법 의무 표시 */}
-          <div className="mt-2 px-4 py-4 rounded-2xl bg-surface-muted text-[10.5px] text-text-faint font-medium leading-relaxed space-y-0.5">
+          <div className="mt-2 px-4 py-4 rounded-2xl bg-surface-muted text-[13px] text-text-faint font-medium leading-relaxed space-y-0.5">
             <p className="font-extrabold text-text-soft mb-1">쓱싹 서비스 정보</p>
             <p>운영사: 디스퀘어 · 대표: 신동현</p>
             <p>사업자등록번호: 102-07-08646</p>
             <p>주소: 서울 마포구 양화로12길 16, 7층</p>
             <p>문의: sdh@thenanbiz.com</p>
-            <p className="pt-0.5 text-[10px]">쓱싹은 통신판매중개자로서 거래 당사자가 아닙니다.</p>
+            <p className="pt-0.5 text-[13px]">쓱싹은 통신판매중개자로서 거래 당사자가 아닙니다.</p>
           </div>
 
-          <p className="text-center text-[10.5px] text-text-faint font-medium mt-3">쓱싹 v1.0 · Made in Seoul</p>
+          <p className="text-center text-[13px] text-text-faint font-medium mt-3">쓱싹 v1.0 · Made in Seoul</p>
         </div>
       </div>
 
@@ -259,7 +259,7 @@ export default function ProfileClient({ profile, totalCompletedJobs, isAdmin = f
 function TinyStat({ label, value }: { label: string; value: string | number }) {
   return (
     <div className="rounded-xl bg-white/15 px-3 py-2.5 text-center">
-      <div className="text-[10px] font-bold text-white/60 uppercase tracking-wide">{label}</div>
+      <div className="text-[13px] font-bold text-white/60 uppercase tracking-wide">{label}</div>
       <div className="num-display text-[20px] text-white mt-0.5">{value}</div>
     </div>
   )
@@ -284,8 +284,8 @@ function RowLink({
         {icon}
       </div>
       <div className="flex-1 text-[14px] font-extrabold text-ink">{label}</div>
-      {badge && <span className="chip chip-danger text-[10px] px-2 py-0">필요</span>}
-      {value && <span className="text-[12.5px] font-bold text-text-soft">{value}</span>}
+      {badge && <span className="chip chip-danger text-[13px] px-2 py-0">필요</span>}
+      {value && <span className="text-[14.5px] font-bold text-text-soft">{value}</span>}
       <ChevronRight size={15} className="text-text-faint" />
     </Link>
   )

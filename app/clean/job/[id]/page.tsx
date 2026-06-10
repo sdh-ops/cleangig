@@ -252,7 +252,7 @@ export default function WorkerJobDetail() {
           </div>
           <button
             onClick={() => setCodeRevealed((v) => !v)}
-            className="shrink-0 flex items-center gap-1.5 px-3.5 h-9 rounded-xl bg-brand text-white text-[13px] font-extrabold active:scale-95 transition"
+            className="shrink-0 flex items-center gap-1.5 px-3.5 h-9 rounded-xl bg-brand text-white text-[15px] font-extrabold active:scale-95 transition"
           >
             {codeRevealed ? <EyeOff size={15} /> : <Eye size={15} />}
             {codeRevealed ? '숨기기' : '모두 보기'}
@@ -261,7 +261,7 @@ export default function WorkerJobDetail() {
         <div className="flex flex-col gap-2">
           {codes.map((c, i) => (
             <div key={i} className="bg-white/70 rounded-xl px-4 py-3 border border-brand/15 flex items-center justify-between gap-3">
-              <span className="text-[13px] font-extrabold text-brand-dark shrink-0">{c.label}</span>
+              <span className="text-[15px] font-extrabold text-brand-dark shrink-0">{c.label}</span>
               <p
                 className={`${isArrived ? 'text-[28px]' : 'text-[17px]'} font-extrabold leading-relaxed text-right flex-1 ${
                   codeRevealed ? 'tracking-wide text-ink' : 'tracking-[0.25em] text-text-soft select-none'
@@ -272,7 +272,7 @@ export default function WorkerJobDetail() {
             </div>
           ))}
         </div>
-        <p className="text-[12px] font-semibold text-brand-dark mt-2.5">
+        <p className="text-[14.5px] font-semibold text-brand-dark mt-2.5">
           ⚠ 이 정보는 배정된 클린파트너 본인에게만 공개됩니다. 외부 유출 금지
         </p>
       </div>
@@ -644,21 +644,21 @@ export default function WorkerJobDetail() {
           <div className="relative z-10">
             <div className="flex items-center gap-2 mb-3">
               <StatusChip kind="job" status={job.status} />
-              {job.is_urgent && <span className="chip chip-danger !text-[10px]">긴급</span>}
+              {job.is_urgent && <span className="chip chip-danger !text-[13px]">긴급</span>}
             </div>
-            <div className="chip chip-brand !text-[10.5px] mb-2">
+            <div className="chip chip-brand !text-[13px] mb-2">
               {spaceTypeLabel(job.spaces?.type || 'other')}
             </div>
             <h2 className="text-[22px] font-black leading-tight">{job.spaces?.name}</h2>
-            <p className="text-[13px] text-white/80 font-semibold mt-2 flex items-center gap-1.5">
+            <p className="text-[15px] text-white/80 font-semibold mt-2 flex items-center gap-1.5">
               <Clock size={13} /> {formatScheduled(job.scheduled_at)} · {durationMin}분 소요
             </p>
-            <p className="text-[13px] text-white/80 font-semibold mt-1 flex items-center gap-1.5">
+            <p className="text-[15px] text-white/80 font-semibold mt-1 flex items-center gap-1.5">
               <MapPin size={13} /> {isMine ? job.spaces?.address : maskAddress(job.spaces?.address || '')}
               {job.spaces?.address_detail && isMine ? ` ${job.spaces.address_detail}` : ''}
             </p>
             <div className="mt-5">
-              <p className="text-[11px] text-white/60 font-bold">예상 정산</p>
+              <p className="text-[13.5px] text-white/60 font-bold">예상 정산</p>
               <p className="t-money text-[26px] text-brand-light">{formatKRW(job.price_breakdown?.estimated_worker_payout ?? Math.round(job.price * 0.80))}</p>
             </div>
           </div>
@@ -679,7 +679,7 @@ export default function WorkerJobDetail() {
                 <MapPin size={17} className="text-brand-dark" />
                 현장으로 출발하기
               </h3>
-              <p className="text-[13px] text-text-soft font-semibold mb-3 leading-snug">{job.spaces.address}{job.spaces.address_detail ? ` ${job.spaces.address_detail}` : ''}</p>
+              <p className="text-[15px] text-text-soft font-semibold mb-3 leading-snug">{job.spaces.address}{job.spaces.address_detail ? ` ${job.spaces.address_detail}` : ''}</p>
               <button
                 onClick={openNaverDirections}
                 className="w-full flex items-center justify-center gap-2 h-13 py-3.5 rounded-xl font-extrabold text-[15px] text-white active:scale-95 transition"
@@ -698,8 +698,8 @@ export default function WorkerJobDetail() {
                 {job.users?.name?.charAt(0) ?? 'H'}
               </div>
               <div className="flex-1">
-                <p className="text-[11px] font-bold text-text-soft">공간파트너 연락</p>
-                <p className="text-[13px] font-extrabold text-ink">채팅 및 통화 가능</p>
+                <p className="text-[13.5px] font-bold text-text-soft">공간파트너 연락</p>
+                <p className="text-[15px] font-extrabold text-ink">채팅 및 통화 가능</p>
               </div>
               <Link href={`/chat/${job.id}`} className="w-10 h-10 rounded-full bg-surface-muted flex items-center justify-center">
                 <MessageSquare size={17} className="text-ink-soft" />
@@ -720,9 +720,9 @@ export default function WorkerJobDetail() {
             <div className="card p-4 mb-4 bg-sun-soft border border-sun/20">
               <div className="flex items-center gap-2 mb-1.5">
                 <AlertTriangle size={14} className="text-[#92580C]" />
-                <span className="text-[12px] font-black text-[#92580C] uppercase tracking-wide">특별 요청사항</span>
+                <span className="text-[14.5px] font-black text-[#92580C] uppercase tracking-wide">특별 요청사항</span>
               </div>
-              <p className="text-[13.5px] font-semibold text-ink leading-snug">{job.special_instructions}</p>
+              <p className="text-[15px] font-semibold text-ink leading-snug">{job.special_instructions}</p>
             </div>
           )}
 
@@ -758,8 +758,8 @@ export default function WorkerJobDetail() {
           {isMine && ['ARRIVED', 'IN_PROGRESS'].includes(job.status) && checklist.length > 0 && (
             <div className="card p-4 mb-4">
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-[13.5px] font-extrabold text-ink">체크리스트</h3>
-                <span className="text-[12px] font-black text-brand-dark">
+                <h3 className="text-[15px] font-extrabold text-ink">체크리스트</h3>
+                <span className="text-[14.5px] font-black text-brand-dark">
                   {completedRequired}/{requiredCount} 완료
                 </span>
               </div>
@@ -776,7 +776,7 @@ export default function WorkerJobDetail() {
                       <div className="flex-1">
                         <p className="text-[15px] font-semibold text-ink leading-snug">
                           {c.label}
-                          {c.required && <span className="ml-2 text-[12px] font-black text-danger">필수</span>}
+                          {c.required && <span className="ml-2 text-[14.5px] font-black text-danger">필수</span>}
                         </p>
                         {c.photo_url && (
                           <div className="mt-2">
@@ -805,10 +805,10 @@ export default function WorkerJobDetail() {
           {isMine && job.status === 'IN_PROGRESS' && (
             <div className="card p-4 mb-4">
               <div className="flex items-center justify-between mb-1">
-                <h3 className="text-[13.5px] font-extrabold text-ink">완료 사진</h3>
-                <span className="text-[10.5px] font-black text-danger bg-danger-soft px-2 py-0.5 rounded-full">필수 1장 이상</span>
+                <h3 className="text-[15px] font-extrabold text-ink">완료 사진</h3>
+                <span className="text-[13px] font-black text-danger bg-danger-soft px-2 py-0.5 rounded-full">필수 1장 이상</span>
               </div>
-              <p className="text-[11.5px] text-text-soft font-semibold mb-3 leading-snug">
+              <p className="text-[13.5px] text-text-soft font-semibold mb-3 leading-snug">
                 청소 완료된 공간 전체 사진을 찍어주세요. 공간파트너가 확인 후 승인합니다.
               </p>
               <input
@@ -836,11 +836,11 @@ export default function WorkerJobDetail() {
                   disabled={uploadingCompletion}
                   className="w-20 h-20 rounded-xl border-2 border-dashed border-line flex flex-col items-center justify-center gap-1 text-text-faint hover:border-brand hover:text-brand-dark transition"
                 >
-                  {uploadingCompletion ? <Loader2 size={18} className="animate-spin" /> : <><Camera size={18} /><span className="text-[9.5px] font-bold">사진 추가</span></>}
+                  {uploadingCompletion ? <Loader2 size={18} className="animate-spin" /> : <><Camera size={18} /><span className="text-[12px] font-bold">사진 추가</span></>}
                 </button>
               </div>
               {completionPhotos.length > 0 && (
-                <p className="text-[11px] font-bold text-emerald-600 flex items-center gap-1">
+                <p className="text-[13.5px] font-bold text-emerald-600 flex items-center gap-1">
                   <CheckCircle2 size={12} /> {completionPhotos.length}장 업로드 완료
                 </p>
               )}
@@ -849,8 +849,8 @@ export default function WorkerJobDetail() {
 
           {isMine && ['ARRIVED', 'IN_PROGRESS'].includes(job.status) && (
             <div className="card p-4 mb-4">
-              <h3 className="text-[13.5px] font-extrabold text-ink mb-1">비품 상태 체크</h3>
-              <div className="flex items-center gap-3 mb-3 text-[13px] font-semibold">
+              <h3 className="text-[15px] font-extrabold text-ink mb-1">비품 상태 체크</h3>
+              <div className="flex items-center gap-3 mb-3 text-[15px] font-semibold">
                 <span className="px-2.5 py-1 rounded-full bg-sun-soft text-[#92580C] border border-sun/30 font-bold">1번 탭: 거의 다 씀</span>
                 <span className="px-2.5 py-1 rounded-full bg-danger-soft text-danger border border-danger/20 font-bold">2번 탭: 없음</span>
                 <span className="px-2.5 py-1 rounded-full bg-surface text-text-muted border border-line-soft font-bold">3번 탭: 정상</span>
@@ -863,11 +863,11 @@ export default function WorkerJobDetail() {
                     <button
                       key={name}
                       onClick={() => cycleSupply(name)}
-                      className={`px-3 py-1.5 rounded-full text-[12.5px] font-bold border transition ${colorClass}`}
+                      className={`px-3 py-1.5 rounded-full text-[14.5px] font-bold border transition ${colorClass}`}
                     >
-                      {item && <span className="mr-1 text-[10.5px]">{'●'}</span>}
+                      {item && <span className="mr-1 text-[13px]">{'●'}</span>}
                       {name}
-                      {item && <span className="ml-1 text-[10.5px]">{LEVEL_LABELS[item.level]}</span>}
+                      {item && <span className="ml-1 text-[13px]">{LEVEL_LABELS[item.level]}</span>}
                     </button>
                   )
                 })}
@@ -879,11 +879,11 @@ export default function WorkerJobDetail() {
           {isMine && ['IN_PROGRESS', 'SUBMITTED'].includes(job.status) && (
             <div className="card p-4 mb-4">
               <div className="flex items-center justify-between mb-2">
-                <h3 className="text-[13.5px] font-extrabold text-ink">추가 청구</h3>
+                <h3 className="text-[15px] font-extrabold text-ink">추가 청구</h3>
                 {extraStatus === 'NONE' && (
                   <button
                     onClick={() => setShowExtraCharge((v) => !v)}
-                    className="flex items-center gap-1 px-3 h-7 rounded-full bg-brand-softer text-brand-dark text-[11.5px] font-bold border border-brand/20"
+                    className="flex items-center gap-1 px-3 h-7 rounded-full bg-brand-softer text-brand-dark text-[13.5px] font-bold border border-brand/20"
                   >
                     <Plus size={12} /> 요청
                   </button>
@@ -891,7 +891,7 @@ export default function WorkerJobDetail() {
               </div>
 
               {extraStatus === 'NONE' && !showExtraCharge && (
-                <p className="text-[12px] text-text-soft font-medium leading-snug">
+                <p className="text-[14.5px] text-text-soft font-medium leading-snug">
                   예상보다 심한 오염·처리 추가 비용이 발생하면 공간파트너에게 승인 요청할 수 있어요.
                 </p>
               )}
@@ -942,7 +942,7 @@ export default function WorkerJobDetail() {
                           className="w-16 h-16 rounded-lg border-2 border-dashed border-line-strong flex flex-col items-center justify-center gap-1 text-text-faint"
                         >
                           {uploadingExtra ? <Loader2 size={14} className="animate-spin" /> : <ImageIcon size={16} />}
-                          <span className="text-[9px] font-bold">추가</span>
+                          <span className="text-[11px] font-bold">추가</span>
                         </button>
                       )}
                     </div>
@@ -959,23 +959,23 @@ export default function WorkerJobDetail() {
 
               {extraStatus === 'REQUESTED' && (
                 <div className="mt-1 p-3 rounded-xl bg-sun-soft border border-sun/20">
-                  <p className="text-[12.5px] font-bold text-[#92580C]">
+                  <p className="text-[14.5px] font-bold text-[#92580C]">
                     승인 대기 중 · {formatKRW(job.extra_charge_amount ?? 0)}
                   </p>
-                  <p className="text-[11.5px] text-text-soft mt-0.5">{job.extra_charge_reason}</p>
+                  <p className="text-[13.5px] text-text-soft mt-0.5">{job.extra_charge_reason}</p>
                 </div>
               )}
               {extraStatus === 'APPROVED' && (
                 <div className="mt-1 p-3 rounded-xl bg-brand-softer border border-brand/20">
-                  <p className="text-[12.5px] font-bold text-brand-dark">
+                  <p className="text-[14.5px] font-bold text-brand-dark">
                     ✅ 승인됨 · {formatKRW(job.extra_charge_amount ?? 0)} 추가 정산 예정
                   </p>
                 </div>
               )}
               {extraStatus === 'REJECTED' && (
                 <div className="mt-1 p-3 rounded-xl bg-danger-soft border border-danger/20">
-                  <p className="text-[12.5px] font-bold text-danger">거절됨</p>
-                  <p className="text-[11.5px] text-text-soft mt-0.5">{job.extra_charge_reason}</p>
+                  <p className="text-[14.5px] font-bold text-danger">거절됨</p>
+                  <p className="text-[13.5px] text-text-soft mt-0.5">{job.extra_charge_reason}</p>
                 </div>
               )}
             </div>
@@ -984,18 +984,18 @@ export default function WorkerJobDetail() {
           {err && (
             <div className="p-3.5 rounded-xl bg-danger-soft border border-danger/15 mb-4 flex items-start gap-2">
               <AlertTriangle size={16} className="text-danger shrink-0 mt-0.5" />
-              <p className="text-[13px] font-bold text-danger leading-snug">{err}</p>
+              <p className="text-[15px] font-bold text-danger leading-snug">{err}</p>
             </div>
           )}
 
           {/* Apply */}
           {isOpen && (
             <div className="card p-4 mb-4">
-              <h3 className="text-[13.5px] font-extrabold text-ink mb-2">이 작업에 지원하시겠어요?</h3>
+              <h3 className="text-[15px] font-extrabold text-ink mb-2">이 작업에 지원하시겠어요?</h3>
               <p className="t-caption mb-4">지원하면 바로 배정돼요. 예약 시간에 맞춰 현장으로 방문해주세요.</p>
               {workerReady && (!workerReady.bank || !workerReady.tax) ? (
                 <div className="p-3 rounded-xl bg-info-soft border border-info/15 mb-3">
-                  <p className="text-[11.5px] font-semibold text-ink-soft leading-snug">
+                  <p className="text-[13.5px] font-semibold text-ink-soft leading-snug">
                     💡 지금 바로 지원할 수 있어요. <b>정산 받기 전</b>까지만{' '}
                     {!workerReady.bank && <Link href="/profile/bank" className="text-brand-dark underline font-bold">계좌</Link>}
                     {(!workerReady.bank && !workerReady.tax) && ' · '}
@@ -1015,9 +1015,9 @@ export default function WorkerJobDetail() {
             <div className="card p-4 mb-4 bg-brand-softer border border-brand/15">
               <div className="flex items-center gap-3 mb-3">
                 <Star size={18} className="text-brand-dark" fill="currentColor" />
-                <p className="text-[13.5px] font-extrabold text-ink">공간파트너를 평가해주세요</p>
+                <p className="text-[15px] font-extrabold text-ink">공간파트너를 평가해주세요</p>
               </div>
-              <p className="text-[12px] font-semibold text-text-soft mb-3 leading-snug">
+              <p className="text-[14.5px] font-semibold text-text-soft mb-3 leading-snug">
                 안내 정확도, 소통, 작업 환경에 대한 솔직한 리뷰가 다른 클린파트너에게 큰 도움이 됩니다.
               </p>
               <button onClick={() => setShowReview(true)} className="btn btn-secondary w-full !text-sm">
@@ -1030,7 +1030,7 @@ export default function WorkerJobDetail() {
           {isMine && ['ASSIGNED', 'EN_ROUTE', 'ARRIVED', 'IN_PROGRESS', 'SUBMITTED', 'APPROVED'].includes(job.status) && (
             <button
               onClick={() => setShowDispute(true)}
-              className="mt-2 w-full flex items-center justify-center gap-1.5 py-3 text-[12.5px] font-bold text-text-muted hover:text-danger"
+              className="mt-2 w-full flex items-center justify-center gap-1.5 py-3 text-[14.5px] font-bold text-text-muted hover:text-danger"
             >
               <AlertTriangle size={14} /> 문제 신고하기
             </button>
@@ -1089,7 +1089,7 @@ export default function WorkerJobDetail() {
             {err && (
               <div className="mb-2.5 p-2.5 rounded-xl bg-danger-soft border border-danger/20 flex items-start gap-2">
                 <AlertTriangle size={14} className="text-danger shrink-0 mt-0.5" />
-                <p className="text-[12px] font-bold text-danger leading-snug">{err}</p>
+                <p className="text-[14.5px] font-bold text-danger leading-snug">{err}</p>
               </div>
             )}
             <button onClick={() => advanceStatus()} disabled={transitioning} className="btn btn-primary w-full">
@@ -1132,17 +1132,17 @@ export default function WorkerJobDetail() {
                 ].map((t, i) => (
                   <li key={i} className="flex items-start gap-2">
                     <CheckCircle2 size={16} className="text-brand shrink-0 mt-0.5" />
-                    <span className="text-[13.5px] font-semibold text-ink-soft leading-snug">{t}</span>
+                    <span className="text-[15px] font-semibold text-ink-soft leading-snug">{t}</span>
                   </li>
                 ))}
               </ul>
               <div className="px-3 py-2.5 rounded-xl bg-info-soft border border-info/20 mb-4">
-                <p className="text-[11.5px] font-semibold text-ink-soft leading-snug">
+                <p className="text-[13.5px] font-semibold text-ink-soft leading-snug">
                   💳 신규 클린파트너 보증금 <b>5,000원</b>이 첫 작업 수락 시 자동 차감되며, 활동 종료 시 전액 환불됩니다.
                 </p>
               </div>
               <div className="px-3 py-2.5 rounded-xl bg-danger-soft border border-danger/15 mb-5">
-                <p className="text-[11.5px] font-semibold text-danger leading-snug">
+                <p className="text-[13.5px] font-semibold text-danger leading-snug">
                   ⚠️ 예약 24시간 이내 취소 또는 노쇼 시 보증금 5,000원이 차감됩니다.
                 </p>
               </div>
@@ -1180,7 +1180,7 @@ function GuideRow({ icon, label, value }: { icon?: string; label: string; value:
     <div className="flex items-start gap-3 py-1">
       {icon && <span className="text-[20px] mt-0.5 shrink-0">{icon}</span>}
       <div className="flex-1">
-        <p className="text-[12.5px] font-black text-text-soft mb-0.5">{label}</p>
+        <p className="text-[14.5px] font-black text-text-soft mb-0.5">{label}</p>
         <p className="text-[15px] font-semibold text-ink leading-relaxed whitespace-pre-wrap">{value}</p>
       </div>
     </div>

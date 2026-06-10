@@ -118,11 +118,11 @@ export default function RequestsClient({ jobs }: Props) {
                       <h4 className="text-[14px] font-extrabold text-ink truncate leading-tight">
                         {job.spaces?.name || '공간 이름 미확인'}
                       </h4>
-                      <p className="text-[11.5px] text-text-soft font-bold flex items-center gap-1 mt-0.5 truncate">
+                      <p className="text-[13.5px] text-text-soft font-bold flex items-center gap-1 mt-0.5 truncate">
                         <MapPin size={10} />
                         <span className="truncate">{job.spaces?.address || '주소 정보 없음'}</span>
                       </p>
-                      <p className="text-[11.5px] text-text-soft font-bold flex items-center gap-1 mt-0.5">
+                      <p className="text-[13.5px] text-text-soft font-bold flex items-center gap-1 mt-0.5">
                         <Clock size={10} />
                         {formatScheduled(job.scheduled_at)}
                       </p>
@@ -170,7 +170,7 @@ function ViewBtn({
     <button
       type="button"
       onClick={onClick}
-      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-bold transition-all"
+      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[14.5px] font-bold transition-all"
       style={{
         background: active ? 'var(--color-surface)' : 'transparent',
         color: active ? 'var(--color-brand-dark)' : 'var(--color-text-faint)',

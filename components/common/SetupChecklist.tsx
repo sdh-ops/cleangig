@@ -70,13 +70,13 @@ export default function SetupChecklist({ items, title = '계정 설정을 완료
                 strokeLinecap="round"
               />
             </svg>
-            <div className="absolute inset-0 flex items-center justify-center text-[11px] font-black text-brand-dark">
+            <div className="absolute inset-0 flex items-center justify-center text-[13.5px] font-black text-brand-dark">
               {done}/{total}
             </div>
           </div>
           <div className="flex-1 pr-6">
-            <p className="text-[13.5px] font-extrabold text-ink leading-tight">{title}</p>
-            <p className="text-[11px] text-text-soft font-bold mt-0.5">모두 완료하면 매칭 성공률 2배</p>
+            <p className="text-[15px] font-extrabold text-ink leading-tight">{title}</p>
+            <p className="text-[13.5px] text-text-soft font-bold mt-0.5">모두 완료하면 매칭 성공률 2배</p>
           </div>
         </div>
         <ul className="flex flex-col gap-1.5">
@@ -91,11 +91,11 @@ export default function SetupChecklist({ items, title = '계정 설정을 완료
                 ) : (
                   <Circle size={18} className="text-text-faint shrink-0" />
                 )}
-                <span className={`flex-1 text-[13px] ${item.done ? 'line-through font-semibold text-text-soft' : 'font-extrabold text-ink'}`}>
+                <span className={`flex-1 text-[15px] ${item.done ? 'line-through font-semibold text-text-soft' : 'font-extrabold text-ink'}`}>
                   {item.label}
                 </span>
                 {item.badge && !item.done && (
-                  <span className="chip chip-warning !text-[10px] !px-2 !py-0">{item.badge}</span>
+                  <span className="chip chip-warning !text-[13px] !px-2 !py-0">{item.badge}</span>
                 )}
                 {!item.done && <ChevronRight size={14} className="text-text-faint" />}
               </Link>

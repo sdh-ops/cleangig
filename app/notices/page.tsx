@@ -77,13 +77,13 @@ export default async function NoticesPage() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5 mb-1">
-                      <span className={`chip chip-${n.tone === 'sun' ? 'sun' : n.tone} !text-[10px]`}>{n.badge}</span>
-                      <span className="text-[11px] font-bold text-text-faint">
+                      <span className={`chip chip-${n.tone === 'sun' ? 'sun' : n.tone} !text-[13px]`}>{n.badge}</span>
+                      <span className="text-[13.5px] font-bold text-text-faint">
                         {typeof n.date === 'string' ? n.date.slice(0, 10) : n.date}
                       </span>
                     </div>
                     <h3 className="text-[14.5px] font-extrabold text-ink">{n.title}</h3>
-                    <p className="text-[12.5px] font-medium text-text-muted mt-1 leading-relaxed">{n.body}</p>
+                    <p className="text-[14.5px] font-medium text-text-muted mt-1 leading-relaxed">{n.body}</p>
                   </div>
                 </div>
               </li>
@@ -93,7 +93,7 @@ export default async function NoticesPage() {
 
         <div className="text-center mt-8 px-5">
           <FileText size={18} className="mx-auto text-text-faint mb-2" />
-          <p className="text-[11.5px] font-bold text-text-faint">쓱싹은 지속적으로 업데이트되고 있습니다.</p>
+          <p className="text-[13.5px] font-bold text-text-faint">쓱싹은 지속적으로 업데이트되고 있습니다.</p>
         </div>
       </div>
     </div>

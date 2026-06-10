@@ -77,7 +77,7 @@ export default function VerificationPage() {
             </div>
             <div>
               <h3 className="text-[15px] font-black text-ink">인증 완료</h3>
-              <p className="text-[12px] text-text-muted font-semibold mt-0.5">인증된 파트너로 활동 중입니다.</p>
+              <p className="text-[14.5px] text-text-muted font-semibold mt-0.5">인증된 파트너로 활동 중입니다.</p>
             </div>
           </div>
         ) : submitted ? (
@@ -87,7 +87,7 @@ export default function VerificationPage() {
             </div>
             <div>
               <h3 className="text-[15px] font-black text-ink">제출 완료</h3>
-              <p className="text-[12px] text-text-muted font-semibold mt-0.5">관리자 검토 후 1영업일 이내 인증됩니다.</p>
+              <p className="text-[14.5px] text-text-muted font-semibold mt-0.5">관리자 검토 후 1영업일 이내 인증됩니다.</p>
             </div>
           </div>
         ) : (
@@ -99,10 +99,10 @@ export default function VerificationPage() {
                 </div>
                 <div>
                   <h3 className="text-[15px] font-extrabold text-ink">신원 인증하고 쓱싹 배지 받기</h3>
-                  <p className="text-[11.5px] text-text-muted font-semibold mt-0.5">인증 파트너는 매칭률이 2배 높아져요.</p>
+                  <p className="text-[13.5px] text-text-muted font-semibold mt-0.5">인증 파트너는 매칭률이 2배 높아져요.</p>
                 </div>
               </div>
-              <ul className="mt-4 flex flex-col gap-2 text-[13px] font-semibold text-ink-soft">
+              <ul className="mt-4 flex flex-col gap-2 text-[15px] font-semibold text-ink-soft">
                 <li className="flex items-start gap-2">
                   <Check size={15} className="text-brand shrink-0 mt-0.5" />
                   {role === 'operator' ? '사업자등록증 또는 신분증 사진' : '신분증 사진 (주민번호 뒷자리 가려주세요)'}
@@ -125,7 +125,7 @@ export default function VerificationPage() {
               <p className="text-[14px] font-extrabold text-ink">
                 {uploading ? '업로드 중...' : '사진 업로드'}
               </p>
-              <p className="text-[11.5px] text-text-soft font-bold mt-1">JPG/PNG · 최대 10MB</p>
+              <p className="text-[13.5px] text-text-soft font-bold mt-1">JPG/PNG · 최대 10MB</p>
               <input
                 type="file"
                 accept="image/*"
@@ -136,12 +136,12 @@ export default function VerificationPage() {
 
             <div className="p-4 rounded-2xl bg-info-soft border border-info/15 flex items-start gap-2">
               <AlertCircle size={16} className="text-info shrink-0 mt-0.5" />
-              <div className="text-[12px] text-ink-soft font-semibold leading-snug">
+              <div className="text-[14.5px] text-ink-soft font-semibold leading-snug">
                 업로드된 인증 서류는 암호화되어 저장되며, 검토 후 즉시 폐기됩니다.
               </div>
             </div>
 
-            {err && <div className="p-3 bg-danger-soft rounded-xl text-[13px] font-bold text-danger">{err}</div>}
+            {err && <div className="p-3 bg-danger-soft rounded-xl text-[15px] font-bold text-danger">{err}</div>}
           </>
         )}
       </div>

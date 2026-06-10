@@ -1,71 +1,84 @@
 @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.css');
+@import url('https://cdn.jsdelivr.net/gh/wanteddev/wanted-sans@v1.0.3/packages/wanted-sans/fonts/webfonts/variable/split/WantedSansVariable.min.css');
 @import "tailwindcss";
 
 /* =============================================
-   쓱싹 (Sseuksak) Design System v2
-   Korean Premium Minimal
+   쓱싹 (Sseuksak) Design System v3
+   "큰 글씨, 따뜻한 종이, 또렷한 파랑"
+   — 40-60대 기준. 토스/당근식 명료함.
+   - 루트 17px: 모든 rem 기반 크기 일괄 상승
+   - 본문 최소 15px, 메타 최소 13px
+   - 텍스트 대비 전부 AA(4.5:1) 이상
+   - 버튼 60px+, 터치 타깃 44px+
+   - 장식 blur 필터 금지(GPU 페인트 버그) — radial-gradient만
    ============================================= */
 
 @theme {
   /* ------ Brand Colors ------ */
   --color-brand: #0EA5E9;
-  --color-brand-dark: #0284C7;
+  --color-brand-dark: #0369A1;   /* sky-700 — 흰 배경 텍스트 대비 5.4:1 */
   --color-brand-light: #BAE6FD;
   --color-brand-softer: #E0F2FE;
   --color-brand-surface: #F0F9FF;
 
   --color-ink: #0A1F3D;
   --color-ink-soft: #1E3353;
-  --color-ink-muted: #475569;
+  --color-ink-muted: #3F4F66;
 
-  /* Sun / Earnings — warm amber (more vivid than v1) */
+  /* Sun / Earnings — warm amber */
   --color-sun: #F59E0B;
   --color-sun-soft: #FEF3C7;
   --color-sun-surface: #FFFBEB;
 
-  /* Amber — richer earnings accent */
-  --color-amber: #E8860A;
+  --color-amber: #D97706;
   --color-amber-soft: #FDE68A;
 
   /* Coral — urgency / hot jobs */
-  --color-coral: #F43F5E;
+  --color-coral: #E11D48;
   --color-coral-soft: #FFE4E6;
 
   /* ------ Semantic Colors ------ */
-  --color-success: #22C55E;
+  --color-success: #16A34A;
   --color-success-soft: #DCFCE7;
-  --color-warning: #F59E0B;
+  --color-warning: #D97706;
   --color-warning-soft: #FEF3C7;
-  --color-danger: #EF4444;
+  --color-danger: #DC2626;
   --color-danger-soft: #FEE2E2;
-  --color-info: #3B82F6;
+  --color-info: #2563EB;
   --color-info-soft: #DBEAFE;
 
-  /* ------ Surface & Layout ------ */
-  --color-canvas: #F7F9FC;
-  --color-canvas-warm: #FAF9F7;
+  /* ------ Surface & Layout — 따뜻한 종이 캔버스 ------ */
+  --color-canvas: #F8F7F4;
+  --color-canvas-warm: #FAF8F4;
   --color-surface: #FFFFFF;
-  --color-surface-muted: #F1F5F9;
+  --color-surface-muted: #F1F3F6;
   --color-surface-soft: #F8FAFC;
 
-  --color-line: #E2E8F0;
-  --color-line-soft: #EEF2F7;
-  --color-line-strong: #CBD5E1;
+  --color-line: #E0E4EA;
+  --color-line-soft: #ECEFF3;
+  --color-line-strong: #C6CEDA;
 
-  --color-text: #0F172A;
-  --color-text-muted: #475569;
-  --color-text-soft: #64748B;
-  --color-text-faint: #94A3B8;
+  /* 텍스트 램프 — 시니어 대비 기준 한 단계씩 진하게 */
+  --color-text: #101828;
+  --color-text-muted: #344054;   /* 7.6:1 */
+  --color-text-soft: #475467;    /* 5.9:1 */
+  --color-text-faint: #5D6B82;   /* 4.9:1 — 최소선 */
 
   /* ------ Kakao ------ */
   --color-kakao: #FEE500;
   --color-kakao-ink: #191919;
 
   /* ------ Typography ------ */
-  --font-display: "Pretendard", -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif;
+  --font-display: "Wanted Sans Variable", "Wanted Sans", "Pretendard", -apple-system, BlinkMacSystemFont, sans-serif;
   --font-sans: "Pretendard", -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans KR", sans-serif;
-  --font-num: "SF Pro Display", "Pretendard", system-ui, sans-serif;
+  --font-num: "Wanted Sans Variable", "Pretendard", system-ui, sans-serif;
   --font-mono: "SF Mono", "Fira Code", "JetBrains Mono", monospace;
+
+  /* Tailwind 기본 크기 오버라이드 — text-xs/text-sm 쓴 곳 전부 일괄 상승 */
+  --text-xs: 13.5px;
+  --text-xs--line-height: 1.45;
+  --text-sm: 15px;
+  --text-sm--line-height: 1.5;
 
   /* ------ Radii ------ */
   --radius-sm: 10px;
@@ -75,7 +88,7 @@
   --radius-2xl: 28px;
   --radius-3xl: 36px;
 
-  /* ------ Elevation — warmer tint ------ */
+  /* ------ Elevation ------ */
   --shadow-xs:  0 1px 3px rgba(10, 31, 61, 0.05), 0 1px 2px rgba(10, 31, 61, 0.03);
   --shadow-sm:  0 2px 8px rgba(10, 31, 61, 0.06), 0 1px 2px rgba(10, 31, 61, 0.04);
   --shadow-md:  0 8px 24px rgba(10, 31, 61, 0.09), 0 2px 6px rgba(10, 31, 61, 0.05);
@@ -106,6 +119,8 @@
   }
 
   html {
+    /* 시니어 기준 전역 스케일업: 1rem = 17px */
+    font-size: 17px;
     -webkit-text-size-adjust: 100%;
     scroll-behavior: smooth;
     text-rendering: optimizeLegibility;
@@ -119,10 +134,10 @@
     font-family: var(--font-sans);
     background-color: var(--color-canvas);
     color: var(--color-text);
-    line-height: 1.55;
+    line-height: 1.6;
     min-height: 100vh;
     min-height: 100dvh;
-    letter-spacing: -0.01em;
+    letter-spacing: -0.012em;
     font-feature-settings: "ss01", "cv01", "cv02";
     -webkit-tap-highlight-color: transparent;
     overscroll-behavior-y: contain;
@@ -147,7 +162,7 @@
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-display);
     letter-spacing: -0.025em;
-    line-height: 1.2;
+    line-height: 1.22;
     font-weight: 800;
   }
 
@@ -155,13 +170,13 @@
 
   input, textarea, select {
     font-family: inherit;
-    font-size: 16px;
+    font-size: 17px; /* 16px 미만이면 iOS가 자동 줌 — 17px로 여유 */
   }
 
   input::placeholder, textarea::placeholder { color: var(--color-text-faint); }
 
   :focus-visible {
-    outline: 2.5px solid rgba(14, 165, 233, 0.4);
+    outline: 3px solid rgba(14, 165, 233, 0.45);
     outline-offset: 2px;
     border-radius: 8px;
   }
@@ -213,7 +228,7 @@
     box-shadow: var(--shadow-xs);
   }
 
-  /* ---- Buttons ---- */
+  /* ---- Buttons — 시니어 기준 60px+ ---- */
   .btn {
     @apply inline-flex items-center justify-center gap-2 font-bold transition-all whitespace-nowrap select-none;
     letter-spacing: -0.01em;
@@ -224,10 +239,10 @@
   .btn-primary {
     background: linear-gradient(155deg, #1AB0F5 0%, #0EA5E9 40%, #0284C7 100%);
     color: #FFFFFF;
-    min-height: 56px;
-    padding: 0 24px;
+    min-height: 60px;
+    padding: 0 26px;
     border-radius: var(--radius-lg);
-    font-size: 16px;
+    font-size: 17.5px;
     font-weight: 800;
     box-shadow: var(--shadow-brand-sm);
     position: relative;
@@ -246,17 +261,17 @@
     transform: translateY(-1px);
   }
   .btn-primary:active { transform: scale(0.975) translateY(0); box-shadow: var(--shadow-brand-sm); }
-  .btn-primary:disabled { background: var(--color-line); color: var(--color-text-faint); box-shadow: none; cursor: not-allowed; transform: none; }
+  .btn-primary:disabled { background: var(--color-line); color: #8593A8; box-shadow: none; cursor: not-allowed; transform: none; }
 
   .btn-secondary {
     background: var(--color-brand-softer);
     color: var(--color-brand-dark);
-    min-height: 56px;
-    padding: 0 24px;
+    min-height: 60px;
+    padding: 0 26px;
     border-radius: var(--radius-lg);
-    font-size: 16px;
+    font-size: 17.5px;
     font-weight: 800;
-    border: 1.5px solid rgba(14, 165, 233, 0.2);
+    border: 1.5px solid rgba(14, 165, 233, 0.22);
   }
   .btn-secondary:hover { background: var(--color-brand-light); border-color: rgba(14, 165, 233, 0.35); transform: translateY(-1px); }
   .btn-secondary:active { transform: scale(0.975); }
@@ -264,10 +279,10 @@
   .btn-ghost {
     background: var(--color-surface);
     color: var(--color-text);
-    min-height: 56px;
-    padding: 0 24px;
+    min-height: 60px;
+    padding: 0 26px;
     border-radius: var(--radius-lg);
-    font-size: 16px;
+    font-size: 17.5px;
     font-weight: 700;
     border: 1.5px solid var(--color-line);
   }
@@ -281,10 +296,10 @@
   .btn-kakao {
     background: var(--color-kakao);
     color: var(--color-kakao-ink);
-    min-height: 56px;
-    padding: 0 24px;
+    min-height: 60px;
+    padding: 0 26px;
     border-radius: var(--radius-lg);
-    font-size: 16px;
+    font-size: 17.5px;
     font-weight: 800;
     box-shadow: 0 4px 14px rgba(254, 229, 0, 0.3);
   }
@@ -295,10 +310,10 @@
   .btn-sun {
     background: linear-gradient(155deg, #FCD34D 0%, #F59E0B 50%, #D97706 100%);
     color: #1C1000;
-    min-height: 56px;
-    padding: 0 24px;
+    min-height: 60px;
+    padding: 0 26px;
     border-radius: var(--radius-lg);
-    font-size: 16px;
+    font-size: 17.5px;
     font-weight: 800;
     box-shadow: var(--shadow-sun);
     position: relative;
@@ -320,9 +335,9 @@
     background: var(--color-surface-muted);
     border: 2px solid transparent;
     border-radius: var(--radius-md);
-    padding: 16px 18px;
-    font-size: 16px;
-    font-weight: 500;
+    padding: 17px 18px;
+    font-size: 17px;
+    font-weight: 600;
     color: var(--color-text);
     transition-duration: var(--duration-normal);
     transition-timing-function: var(--ease-smooth);
@@ -335,30 +350,32 @@
   }
   .input-error { border-color: var(--color-danger); }
 
-  /* ---- Status chips ---- */
+  /* ---- Status chips — 글자 13.5px+, 진한 텍스트 ---- */
   .chip {
-    @apply inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold;
+    @apply inline-flex items-center gap-1.5 rounded-full font-bold;
+    font-size: 13.5px;
+    padding: 6px 13px;
     letter-spacing: 0;
   }
   .chip-brand   { background: var(--color-brand-softer); color: var(--color-brand-dark); }
-  .chip-info    { background: var(--color-info-soft); color: var(--color-info); }
-  .chip-success { background: var(--color-success-soft); color: var(--color-success); }
-  .chip-warning { background: var(--color-warning-soft); color: #B45309; }
-  .chip-danger  { background: var(--color-danger-soft); color: var(--color-danger); }
+  .chip-info    { background: var(--color-info-soft); color: #1D4ED8; }
+  .chip-success { background: var(--color-success-soft); color: #15803D; }
+  .chip-warning { background: var(--color-warning-soft); color: #92400E; }
+  .chip-danger  { background: var(--color-danger-soft); color: #B91C1C; }
   .chip-muted   { background: var(--color-surface-muted); color: var(--color-text-muted); }
-  .chip-sun     { background: var(--color-sun-soft); color: #92580C; }
-  .chip-coral   { background: var(--color-coral-soft); color: var(--color-coral); }
+  .chip-sun     { background: var(--color-sun-soft); color: #854D0E; }
+  .chip-coral   { background: var(--color-coral-soft); color: #BE123C; }
   .chip-ink     { background: var(--color-ink); color: #FFFFFF; }
 
-  /* ---- Typography helpers ---- */
+  /* ---- Typography helpers — 시니어 스케일 ---- */
   .h-display { font-size: 56px; font-weight: 900; line-height: 1.0; letter-spacing: -0.04em; font-family: var(--font-display); }
-  .h-hero    { font-size: 32px; font-weight: 900; line-height: 1.15; letter-spacing: -0.032em; }
-  .h-title   { font-size: 24px; font-weight: 800; line-height: 1.25; letter-spacing: -0.025em; }
-  .h-section { font-size: 18px; font-weight: 800; line-height: 1.3;  letter-spacing: -0.02em; }
-  .t-body    { font-size: 15px; font-weight: 500; line-height: 1.6;  color: var(--color-text); }
-  .t-caption { font-size: 13px; font-weight: 500; line-height: 1.45; color: var(--color-text-soft); }
-  .t-meta    { font-size: 11.5px; font-weight: 700; line-height: 1.3; color: var(--color-text-faint); letter-spacing: 0.025em; text-transform: uppercase; }
-  .t-overline { font-size: 10px; font-weight: 900; line-height: 1.2; letter-spacing: 0.1em; text-transform: uppercase; }
+  .h-hero    { font-size: 33px; font-weight: 900; line-height: 1.18; letter-spacing: -0.03em; font-family: var(--font-display); }
+  .h-title   { font-size: 25px; font-weight: 800; line-height: 1.28; letter-spacing: -0.024em; font-family: var(--font-display); }
+  .h-section { font-size: 19.5px; font-weight: 800; line-height: 1.3;  letter-spacing: -0.02em; }
+  .t-body    { font-size: 16.5px; font-weight: 500; line-height: 1.62; color: var(--color-text); }
+  .t-caption { font-size: 14.5px; font-weight: 500; line-height: 1.5; color: var(--color-text-soft); }
+  .t-meta    { font-size: 13px; font-weight: 700; line-height: 1.35; color: var(--color-text-faint); letter-spacing: 0.02em; }
+  .t-overline { font-size: 11.5px; font-weight: 900; line-height: 1.2; letter-spacing: 0.09em; text-transform: uppercase; }
   .t-money   { font-family: var(--font-num); font-feature-settings: "tnum"; font-weight: 800; }
   .t-amount  { font-family: var(--font-num); font-weight: 900; letter-spacing: -0.03em; font-feature-settings: "tnum"; }
 
@@ -382,16 +399,19 @@
   }
 
   /* ---- Layout helpers ---- */
-  .page-container { @apply px-5 pb-28 pt-4; }
+  .page-container { @apply px-5 pb-32 pt-4; }
   .section        { @apply py-4; }
   .divider {
     @apply my-4;
     border-top: 1px solid var(--color-line-soft);
   }
 
-  /* ---- Bottom nav tab ---- */
+  /* ---- Bottom nav tab — 큰 아이콘·큰 라벨 ---- */
   .tab-item {
-    @apply flex flex-col items-center justify-center gap-0.5 flex-1 pt-2 pb-1 transition-colors relative;
+    @apply flex flex-col items-center justify-center gap-1 flex-1 transition-colors relative;
+    padding-top: 11px;
+    padding-bottom: 9px;
+    min-height: 60px;
     color: var(--color-text-faint);
     transition-duration: var(--duration-fast);
   }
@@ -404,8 +424,8 @@
     top: 0;
     left: 50%;
     transform: translateX(-50%);
-    width: 28px;
-    height: 2.5px;
+    width: 32px;
+    height: 3px;
     background: var(--color-brand);
     border-radius: 0 0 4px 4px;
   }
@@ -426,7 +446,7 @@
 
   /* ---- Glass ---- */
   .glass {
-    background: rgba(255, 255, 255, 0.78);
+    background: rgba(255, 255, 255, 0.86);
     backdrop-filter: blur(16px) saturate(1.2);
     -webkit-backdrop-filter: blur(16px) saturate(1.2);
     border: 1px solid rgba(226, 232, 240, 0.5);
@@ -441,10 +461,10 @@
   /* ---- Floating action ---- */
   .fab {
     @apply fixed z-40 flex items-center justify-center;
-    bottom: calc(96px + env(safe-area-inset-bottom, 0));
+    bottom: calc(104px + env(safe-area-inset-bottom, 0));
     right: 20px;
-    width: 60px;
-    height: 60px;
+    width: 64px;
+    height: 64px;
     border-radius: 50%;
     background: linear-gradient(155deg, #1AB0F5 0%, #0EA5E9 50%, #0284C7 100%);
     color: white;
@@ -461,7 +481,7 @@
   .no-scrollbar::-webkit-scrollbar { display: none; }
   .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-  /* ---- Backgrounds ---- */
+  /* ---- Backgrounds — blur 필터 금지, gradient만 ---- */
   .bg-dot-grid {
     background-image: radial-gradient(rgba(10, 31, 61, 0.07) 1.5px, transparent 1.5px);
     background-size: 18px 18px;
@@ -547,7 +567,7 @@
     pointer-events: none;
   }
   .card-glass {
-    background: rgba(255, 255, 255, 0.72);
+    background: rgba(255, 255, 255, 0.82);
     backdrop-filter: blur(20px) saturate(1.4);
     -webkit-backdrop-filter: blur(20px) saturate(1.4);
     border-radius: var(--radius-2xl);
@@ -558,29 +578,30 @@
   /* ---- Section header ---- */
   .section-header { @apply flex items-center justify-between mb-3 px-0.5; }
   .section-header h2 {
-    font-size: 17px;
+    font-size: 18.5px;
     font-weight: 800;
     line-height: 1.3;
     letter-spacing: -0.022em;
     color: var(--color-ink);
   }
   .section-header a {
-    @apply text-xs font-bold flex items-center gap-0.5;
+    @apply font-bold flex items-center gap-0.5;
+    font-size: 14px;
     color: var(--color-text-muted);
   }
 
   /* ---- Icon box ---- */
   .icon-box    { @apply flex items-center justify-center shrink-0 rounded-2xl; }
-  .icon-box-sm { @apply w-9 h-9 rounded-xl; }
-  .icon-box-md { @apply w-11 h-11; }
+  .icon-box-sm { @apply w-10 h-10 rounded-xl; }
+  .icon-box-md { @apply w-12 h-12; }
   .icon-box-lg { @apply w-14 h-14 rounded-3xl; }
   .icon-box-brand { background: var(--color-brand-softer); color: var(--color-brand-dark); }
-  .icon-box-sun   { background: var(--color-sun-soft); color: #92580C; }
+  .icon-box-sun   { background: var(--color-sun-soft); color: #854D0E; }
   .icon-box-ink   { background: rgba(10,31,61,0.08); color: var(--color-ink); }
-  .icon-box-coral { background: var(--color-coral-soft); color: var(--color-coral); }
+  .icon-box-coral { background: var(--color-coral-soft); color: #BE123C; }
 
   /* ---- Progress bar ---- */
-  .progress-bar { @apply w-full h-1.5 rounded-full overflow-hidden; background: var(--color-line-soft); }
+  .progress-bar { @apply w-full h-2 rounded-full overflow-hidden; background: var(--color-line-soft); }
   .progress-bar-fill {
     @apply h-full rounded-full;
     transition: width 0.6s var(--ease-out-expo);
@@ -590,22 +611,22 @@
   /* ---- Tier badge ---- */
   .tier-badge {
     @apply font-black rounded-full tracking-wide;
-    font-size: 10px;
-    padding: 2px 10px;
+    font-size: 11.5px;
+    padding: 3px 11px;
   }
 
   /* ---- Live indicator ---- */
   .badge-live {
     @apply inline-flex items-center gap-1.5 font-bold rounded-full;
-    font-size: 11px;
-    padding: 4px 10px;
+    font-size: 13px;
+    padding: 5px 12px;
     background: var(--color-coral-soft);
-    color: var(--color-coral);
+    color: #BE123C;
   }
   .badge-live::before {
     content: '';
-    width: 6px;
-    height: 6px;
+    width: 7px;
+    height: 7px;
     border-radius: 50%;
     background: var(--color-coral);
     animation: live-pulse 1.5s ease-in-out infinite;
@@ -631,7 +652,7 @@
   .divider-label {
     @apply relative flex items-center gap-3 my-5;
     color: var(--color-text-faint);
-    font-size: 12px;
+    font-size: 13.5px;
     font-weight: 700;
   }
   .divider-label::before,

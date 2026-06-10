@@ -135,11 +135,11 @@ export default function SpaceDetailClient({ space, isOwner, totalJobs, monthCoun
         {/* Title */}
         <div className="px-5">
           <div className="flex items-center gap-1.5 mb-2">
-            <span className="chip chip-brand !text-[10.5px]">{spaceTypeLabel(space.type)}</span>
+            <span className="chip chip-brand !text-[13px]">{spaceTypeLabel(space.type)}</span>
             {isActive ? (
-              <span className="chip chip-success !text-[10.5px]">운영중</span>
+              <span className="chip chip-success !text-[13px]">운영중</span>
             ) : (
-              <span className="chip chip-muted !text-[10.5px]">비활성</span>
+              <span className="chip chip-muted !text-[13px]">비활성</span>
             )}
           </div>
           <h1 className="h-title text-ink">{space.name}</h1>
@@ -160,8 +160,8 @@ export default function SpaceDetailClient({ space, isOwner, totalJobs, monthCoun
         {/* Info sections */}
         <div className="mx-5 mt-5 flex flex-col gap-4">
           <div className="card p-4">
-            <h3 className="text-[13px] font-black text-text-faint uppercase tracking-wide mb-2">공간 정보</h3>
-            <div className="flex flex-col gap-2 text-[13.5px] font-semibold text-ink">
+            <h3 className="text-[15px] font-black text-text-faint uppercase tracking-wide mb-2">공간 정보</h3>
+            <div className="flex flex-col gap-2 text-[15px] font-semibold text-ink">
               <Row label="기본 가격" value={formatKRW(space.base_price)} />
               <Row label="예상 소요시간" value={`${space.estimated_duration ?? 90}분`} />
               {space.size_pyeong && <Row label="크기" value={`${space.size_pyeong}평 (${space.size_sqm}㎡)`} />}
@@ -171,29 +171,29 @@ export default function SpaceDetailClient({ space, isOwner, totalJobs, monthCoun
 
           {Array.isArray(space.access_codes) && space.access_codes.filter((c) => c?.value).length > 0 && (
             <div className="card p-4 border-2 border-brand/20 bg-brand-softer">
-              <h3 className="text-[13px] font-black text-brand-dark uppercase tracking-wide mb-2 flex items-center gap-1.5">🔑 출입 비밀번호</h3>
+              <h3 className="text-[15px] font-black text-brand-dark uppercase tracking-wide mb-2 flex items-center gap-1.5">🔑 출입 비밀번호</h3>
               <div className="flex flex-col gap-2">
                 {space.access_codes.filter((c) => c?.value).map((c, i) => (
                   <div key={i} className="flex items-center justify-between bg-white/70 rounded-xl px-3.5 py-2.5 border border-brand/15">
-                    <span className="text-[13px] font-extrabold text-brand-dark">{c.label}</span>
+                    <span className="text-[15px] font-extrabold text-brand-dark">{c.label}</span>
                     <span className="text-[15px] font-extrabold text-ink tracking-wide">{c.value}</span>
                   </div>
                 ))}
               </div>
-              <p className="text-[11px] font-semibold text-brand-dark mt-2">배정된 클린파트너에게만 공개됩니다.</p>
+              <p className="text-[13.5px] font-semibold text-brand-dark mt-2">배정된 클린파트너에게만 공개됩니다.</p>
             </div>
           )}
 
           {space.caution_notes && (
             <div className="card p-4 bg-sun-soft border border-sun/20">
-              <h3 className="text-[13px] font-black text-[#92580C] uppercase tracking-wide mb-1.5">⚠️ 주의사항</h3>
-              <p className="text-[13.5px] font-semibold text-ink leading-relaxed whitespace-pre-wrap">{space.caution_notes}</p>
+              <h3 className="text-[15px] font-black text-[#92580C] uppercase tracking-wide mb-1.5">⚠️ 주의사항</h3>
+              <p className="text-[15px] font-semibold text-ink leading-relaxed whitespace-pre-wrap">{space.caution_notes}</p>
             </div>
           )}
 
           {(space.cleaning_tool_location || space.parking_guide || space.trash_guide) && (
             <div className="card p-4">
-              <h3 className="text-[13px] font-black text-text-faint uppercase tracking-wide mb-2">현장 안내</h3>
+              <h3 className="text-[15px] font-black text-text-faint uppercase tracking-wide mb-2">현장 안내</h3>
               <div className="flex flex-col gap-3">
                 {space.parking_guide && <GuideRow label="주차" value={space.parking_guide} />}
                 {space.cleaning_tool_location && <GuideRow label="청소도구" value={space.cleaning_tool_location} />}
@@ -204,15 +204,15 @@ export default function SpaceDetailClient({ space, isOwner, totalJobs, monthCoun
 
           {space.checklist_template && space.checklist_template.length > 0 && (
             <div className="card p-4">
-              <h3 className="text-[13px] font-black text-text-faint uppercase tracking-wide mb-2">
+              <h3 className="text-[15px] font-black text-text-faint uppercase tracking-wide mb-2">
                 체크리스트 ({space.checklist_template.length}개)
               </h3>
               <ul className="flex flex-col gap-1.5">
                 {space.checklist_template.map((c) => (
-                  <li key={c.id} className="text-[13.5px] font-semibold text-ink flex items-center gap-2">
+                  <li key={c.id} className="text-[15px] font-semibold text-ink flex items-center gap-2">
                     <span className="w-1.5 h-1.5 rounded-full bg-brand" />
                     {c.label}
-                    {c.required && <span className="chip chip-muted !text-[10px] !px-1.5 !py-0">필수</span>}
+                    {c.required && <span className="chip chip-muted !text-[13px] !px-1.5 !py-0">필수</span>}
                   </li>
                 ))}
               </ul>
@@ -221,7 +221,7 @@ export default function SpaceDetailClient({ space, isOwner, totalJobs, monthCoun
 
           {coords && (
             <div>
-              <h3 className="text-[13px] font-black text-text-faint uppercase tracking-wide mb-2 mx-1">위치</h3>
+              <h3 className="text-[15px] font-black text-text-faint uppercase tracking-wide mb-2 mx-1">위치</h3>
               <NaverMap
                 height={200}
                 center={coords}
@@ -234,8 +234,8 @@ export default function SpaceDetailClient({ space, isOwner, totalJobs, monthCoun
           {isOwner && (
             <div className="card p-4 flex items-center justify-between">
               <div>
-                <h3 className="text-[13.5px] font-extrabold text-ink">{isActive ? '공간 운영 중' : '공간 비활성'}</h3>
-                <p className="text-[11.5px] text-text-soft font-bold mt-0.5">비활성 시 신규 요청을 만들 수 없어요.</p>
+                <h3 className="text-[15px] font-extrabold text-ink">{isActive ? '공간 운영 중' : '공간 비활성'}</h3>
+                <p className="text-[13.5px] text-text-soft font-bold mt-0.5">비활성 시 신규 요청을 만들 수 없어요.</p>
               </div>
               <button
                 onClick={() => {
@@ -256,7 +256,7 @@ export default function SpaceDetailClient({ space, isOwner, totalJobs, monthCoun
           {isOwner && (
             <button
               onClick={() => setShowDelete(true)}
-              className="mt-2 text-[13px] font-bold text-text-muted hover:text-danger transition flex items-center justify-center gap-1.5 py-3"
+              className="mt-2 text-[15px] font-bold text-text-muted hover:text-danger transition flex items-center justify-center gap-1.5 py-3"
             >
               <Trash2 size={14} /> 공간 삭제
             </button>
@@ -304,7 +304,7 @@ export default function SpaceDetailClient({ space, isOwner, totalJobs, monthCoun
 function Stat({ label, value, icon }: { label: string; value: string; icon: React.ReactNode }) {
   return (
     <div className="rounded-2xl bg-surface border border-line-soft p-3 text-center">
-      <div className="flex items-center justify-center gap-1 text-[11px] font-bold text-text-soft">
+      <div className="flex items-center justify-center gap-1 text-[13.5px] font-bold text-text-soft">
         {icon}
         {label}
       </div>
@@ -325,8 +325,8 @@ function Row({ label, value }: { label: string; value: string }) {
 function GuideRow({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <p className="text-[11px] font-black text-text-faint uppercase tracking-wide">{label}</p>
-      <p className="text-[13.5px] font-semibold text-ink leading-snug mt-0.5">{value}</p>
+      <p className="text-[13.5px] font-black text-text-faint uppercase tracking-wide">{label}</p>
+      <p className="text-[15px] font-semibold text-ink leading-snug mt-0.5">{value}</p>
     </div>
   )
 }

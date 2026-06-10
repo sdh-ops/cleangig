@@ -58,11 +58,11 @@ export default async function HostPaymentsPage() {
                       <StatusChip kind="payment" status={p.status as PaymentStatus} size="sm" />
                     </div>
                     <h4 className="text-[14px] font-extrabold text-ink truncate">{p.jobs?.spaces?.name || '결제'}</h4>
-                    <p className="text-[11.5px] text-text-soft font-bold mt-0.5">{formatScheduled(p.jobs?.scheduled_at || p.created_at)}</p>
+                    <p className="text-[13.5px] text-text-soft font-bold mt-0.5">{formatScheduled(p.jobs?.scheduled_at || p.created_at)}</p>
                   </div>
                   <div className="text-right shrink-0">
                     <div className="t-money text-[14.5px] text-ink">-{formatKRW(p.gross_amount)}</div>
-                    <p className="text-[10.5px] font-bold text-text-faint mt-0.5">수수료 {formatKRW(p.platform_fee)}</p>
+                    <p className="text-[13px] font-bold text-text-faint mt-0.5">수수료 {formatKRW(p.platform_fee)}</p>
                   </div>
                 </Link>
               </li>
@@ -78,7 +78,7 @@ export default async function HostPaymentsPage() {
 function SummaryCard({ label, value }: { label: string; value: string }) {
   return (
     <div className="card p-4">
-      <p className="text-[11px] font-bold text-text-soft">{label}</p>
+      <p className="text-[13.5px] font-bold text-text-soft">{label}</p>
       <p className="t-money text-[22px] text-ink mt-1">{value}</p>
     </div>
   )

@@ -60,13 +60,13 @@ export default async function SpacesListPage() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5 mb-1">
-                      <span className="chip chip-brand !text-[10px] !px-2 !py-0.5">
+                      <span className="chip chip-brand !text-[13px] !px-2 !py-0.5">
                         {spaceTypeLabel(s.type)}
                       </span>
-                      {!s.is_active && <span className="chip chip-muted !text-[10px]">비활성</span>}
+                      {!s.is_active && <span className="chip chip-muted !text-[13px]">비활성</span>}
                     </div>
                     <h4 className="text-[14.5px] font-extrabold text-ink truncate">{s.name}</h4>
-                    <p className="text-[11.5px] text-text-soft font-bold truncate mt-0.5">
+                    <p className="text-[13.5px] text-text-soft font-bold truncate mt-0.5">
                       {s.address?.split(' ').slice(0, 3).join(' ')} · 기본 {formatKRW(s.base_price, { short: true })}
                     </p>
                   </div>

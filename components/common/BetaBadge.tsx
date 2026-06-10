@@ -49,7 +49,7 @@ export default function BetaBadge() {
               <div className="w-6 h-6 rounded-full bg-sun text-ink flex items-center justify-center shrink-0">
                 <Beaker size={12} strokeWidth={2.5} />
               </div>
-              <p className="text-[11.5px] font-bold flex-1 leading-tight min-w-0">
+              <p className="text-[13.5px] font-bold flex-1 leading-tight min-w-0">
                 <span className="font-black text-sun">베타 테스트</span>
                 <span className="text-white/70"> · 실결제는 곧 오픈됩니다</span>
               </p>

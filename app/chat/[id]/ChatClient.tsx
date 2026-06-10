@@ -126,7 +126,7 @@ export default function ChatClient({ jobId, userId, partnerId, partnerName, part
             </div>
             <div className="min-w-0">
               <h1 className="text-[14px] font-extrabold text-ink truncate">{partnerName}</h1>
-              <p className="text-[10.5px] text-text-soft font-bold truncate">{spaceName}</p>
+              <p className="text-[13px] text-text-soft font-bold truncate">{spaceName}</p>
             </div>
           </div>
           <div className="w-10" />
@@ -140,8 +140,8 @@ export default function ChatClient({ jobId, userId, partnerId, partnerName, part
           </div>
         ) : messages.length === 0 ? (
           <div className="text-center py-20">
-            <p className="text-[13px] font-bold text-text-soft">대화를 시작해보세요 👋</p>
-            <p className="text-[11.5px] text-text-faint font-medium mt-1">예의 바른 메시지로 매너 온도를 높여보세요.</p>
+            <p className="text-[15px] font-bold text-text-soft">대화를 시작해보세요 👋</p>
+            <p className="text-[13.5px] text-text-faint font-medium mt-1">예의 바른 메시지로 매너 온도를 높여보세요.</p>
           </div>
         ) : (
           <div className="flex flex-col gap-2">
@@ -155,7 +155,7 @@ export default function ChatClient({ jobId, userId, partnerId, partnerName, part
               return (
                 <div key={m.id} className={`flex items-end gap-1 ${mine ? 'justify-end' : ''}`}>
                   {mine && showTime && (
-                    <div className="flex flex-col items-end text-[10px] font-bold text-text-faint leading-tight">
+                    <div className="flex flex-col items-end text-[13px] font-bold text-text-faint leading-tight">
                       {m.is_read && <CheckCheck size={12} className="text-brand-dark mb-0.5" />}
                       <span>{time}</span>
                     </div>
@@ -168,7 +168,7 @@ export default function ChatClient({ jobId, userId, partnerId, partnerName, part
                     {m.content}
                   </div>
                   {!mine && showTime && (
-                    <span className="text-[10px] font-bold text-text-faint">{time}</span>
+                    <span className="text-[13px] font-bold text-text-faint">{time}</span>
                   )}
                 </div>
               )

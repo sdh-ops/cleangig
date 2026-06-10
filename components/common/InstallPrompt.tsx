@@ -105,8 +105,8 @@ export default function InstallPrompt() {
                 <Smartphone size={20} strokeWidth={2.5} />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[13px] font-black leading-tight">쓱싹을 앱으로 설치</p>
-                <p className="text-[11px] text-white/70 font-semibold mt-0.5 leading-snug">
+                <p className="text-[15px] font-black leading-tight">쓱싹을 앱으로 설치</p>
+                <p className="text-[13.5px] text-white/70 font-semibold mt-0.5 leading-snug">
                   홈화면에서 원탭으로 열고 알림 받기
                 </p>
               </div>
@@ -149,19 +149,19 @@ export default function InstallPrompt() {
               <ol className="flex flex-col gap-3 mb-5">
                 <li className="flex items-center gap-3">
                   <span className="w-8 h-8 rounded-full bg-brand-softer text-brand-dark font-black text-sm flex items-center justify-center shrink-0">1</span>
-                  <span className="text-[13.5px] font-semibold text-ink flex items-center gap-1.5">
+                  <span className="text-[15px] font-semibold text-ink flex items-center gap-1.5">
                     Safari 하단의 <ShareIcon size={16} className="text-info" /> 공유 버튼 탭
                   </span>
                 </li>
                 <li className="flex items-center gap-3">
                   <span className="w-8 h-8 rounded-full bg-brand-softer text-brand-dark font-black text-sm flex items-center justify-center shrink-0">2</span>
-                  <span className="text-[13.5px] font-semibold text-ink flex items-center gap-1.5">
+                  <span className="text-[15px] font-semibold text-ink flex items-center gap-1.5">
                     <Plus size={16} className="text-ink" /> 홈 화면에 추가 선택
                   </span>
                 </li>
                 <li className="flex items-center gap-3">
                   <span className="w-8 h-8 rounded-full bg-brand-softer text-brand-dark font-black text-sm flex items-center justify-center shrink-0">3</span>
-                  <span className="text-[13.5px] font-semibold text-ink">우측 상단 &ldquo;추가&rdquo; 탭</span>
+                  <span className="text-[15px] font-semibold text-ink">우측 상단 &ldquo;추가&rdquo; 탭</span>
                 </li>
               </ol>
 

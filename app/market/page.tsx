@@ -99,16 +99,16 @@ export default function MarketPage() {
                         <h4 className="text-[14.5px] font-extrabold text-ink truncate">{w.name}</h4>
                         {w.is_verified
                           ? <BadgeCheck size={15} className="text-sky-500 shrink-0" />
-                          : <span className="text-[10px] font-black px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-400 shrink-0">미인증</span>
+                          : <span className="text-[13px] font-black px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-400 shrink-0">미인증</span>
                         }
                         <span
-                          className="text-[10px] font-black px-2 py-0.5 rounded-full"
+                          className="text-[13px] font-black px-2 py-0.5 rounded-full"
                           style={{ backgroundColor: `${tier.color}22`, color: tier.color }}
                         >
                           {tier.label}
                         </span>
                       </div>
-                      <div className="flex items-center gap-2 mt-0.5 text-[11.5px] font-bold text-text-soft">
+                      <div className="flex items-center gap-2 mt-0.5 text-[13.5px] font-bold text-text-soft">
                         <span className="flex items-center gap-0.5">
                           <Star size={11} className="text-sun" fill="currentColor" />
                           {(w.avg_rating ?? 0).toFixed(1)}
@@ -116,7 +116,7 @@ export default function MarketPage() {
                         <span>·</span>
                         <span>{w.total_jobs ?? 0}건</span>
                       </div>
-                      {w.bio && <p className="text-[11.5px] font-medium text-text-muted truncate mt-1">{w.bio}</p>}
+                      {w.bio && <p className="text-[13.5px] font-medium text-text-muted truncate mt-1">{w.bio}</p>}
                     </div>
                   </Link>
                 </li>
