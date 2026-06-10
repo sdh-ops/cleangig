@@ -25,6 +25,7 @@ import {
   Navigation,
   Sparkles,
   DollarSign,
+  RotateCcw,
 } from 'lucide-react'
 import StatusChip from '@/components/common/StatusChip'
 import StatusStepper from '@/components/common/StatusStepper'
@@ -627,6 +628,14 @@ export default function RequestDetailClient({ job: initialJob, userId, initialIs
             {canApprove && (
               <button onClick={handleApprove} disabled={approving} className="btn btn-primary w-full">
                 {approving ? <Loader2 size={18} className="animate-spin" /> : <>승인하고 정산 진행 <CheckCircle2 size={18} /></>}
+              </button>
+            )}
+            {isOwner && ['APPROVED', 'PAID_OUT', 'CANCELED'].includes(job.status) && (
+              <button
+                onClick={() => router.push(`/requests/create?from=${job.id}`)}
+                className="btn btn-primary w-full"
+              >
+                <RotateCcw size={18} /> 이 청소 다시 요청
               </button>
             )}
             {canReview && (

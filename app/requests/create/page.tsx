@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import {
@@ -40,7 +40,9 @@ type Space = {
   entry_code?: string | null
 }
 
-type StepId = 1 | 2 | 3
+// 2화면 플로우: ① 어디를·언제 ② 확인(가격 크게 + 출입 비밀번호 + 결제)
+// 난이도·가격조정·체크리스트·요청사항은 ②의 "자세히 설정" 접기 안으로.
+type StepId = 1 | 2
 
 export default function CreateRequestPage() {
   const router = useRouter()
@@ -67,6 +69,9 @@ export default function CreateRequestPage() {
   const [isRecurring, setIsRecurring] = useState(false)
   const [frequency, setFrequency] = useState<'WEEKLY' | 'BIWEEKLY' | 'MONTHLY'>('WEEKLY')
   const [occurrences, setOccurrences] = useState(4)
+  const [showAdvanced, setShowAdvanced] = useState(false)
+  // "이 청소 다시 요청" 프리필 — 이전 작업의 공간·체크리스트·요청사항 복사
+  const [prefilledFrom, setPrefilledFrom] = useState<string | null>(null)
 
   useEffect(() => {
     (async () => {
@@ -82,16 +87,37 @@ export default function CreateRequestPage() {
         getFeeSettings(),
       ])
       setSpaces((spaces || []) as Space[])
+      const params = new URLSearchParams(window.location.search)
       if (spaces && spaces.length > 0) {
-        const params = new URLSearchParams(window.location.search)
         const paramSpaceId = params.get('space')
         const matched = spaces.find((s) => s.id === paramSpaceId)
         setSpaceId(matched ? matched.id : spaces[0].id)
       }
       // ?recurring=true → 정기 청소 모드로 pre-select
-      if (new URLSearchParams(window.location.search).get('recurring') === 'true') {
+      if (params.get('recurring') === 'true') {
         setIsRecurring(true)
         setWhen('schedule') // 정기 청소는 일정 지정 필요
+      }
+      // ?from={jobId} → "이 청소 다시 요청": 이전 작업 내용 복사, 날짜만 고르면 됨
+      const fromJobId = params.get('from')
+      if (fromJobId) {
+        const { data: prevJob } = await supabase
+          .from('jobs')
+          .select('id, space_id, special_instructions, checklist')
+          .eq('id', fromJobId)
+          .eq('operator_id', user.id)
+          .maybeSingle()
+        if (prevJob) {
+          if (spaces?.some((s) => s.id === prevJob.space_id)) setSpaceId(prevJob.space_id)
+          if (prevJob.special_instructions) setInstructions(prevJob.special_instructions)
+          if (Array.isArray(prevJob.checklist) && prevJob.checklist.length > 0) {
+            prefillChecklistRef.current = prevJob.checklist
+              .map((c: any) => ({ id: rid('ck'), label: String(c.label ?? ''), required: !!c.required }))
+              .filter((c: EditableCheck) => c.label)
+          }
+          setPrefilledFrom(prevJob.id)
+          setWhen('schedule')
+        }
       }
       setFees(feeSettings)
       setLoadingSpaces(false)
@@ -120,7 +146,14 @@ export default function CreateRequestPage() {
   const [proceedWithoutCodes, setProceedWithoutCodes] = useState(false)
 
   // 공간 선택 시 해당 공간 체크리스트 템플릿을 이번 청소용으로 복제 (여기서 자유 수정 가능)
+  const prefillChecklistRef = useRef<EditableCheck[] | null>(null)
   useEffect(() => {
+    // 재요청 프리필이 대기 중이면 템플릿 대신 이전 작업 체크리스트 사용 (1회)
+    if (prefillChecklistRef.current) {
+      setChecklist(prefillChecklistRef.current)
+      prefillChecklistRef.current = null
+      return
+    }
     const tpl = selectedSpace?.checklist_template ?? []
     setChecklist(
       tpl.map((c: any) => ({ id: rid('ck'), label: c.label, required: !!c.required })),
@@ -194,10 +227,9 @@ export default function CreateRequestPage() {
   }, [selectedSpace, finalPrice, scheduledAt, fees])
 
   const canProceed = (() => {
-    if (step === 1) return !!spaceId
-    if (step === 2) return !!scheduledAt
+    if (step === 1) return !!spaceId && !!scheduledAt
     // 출입 방법이 있거나, "비밀번호 없이 진행"을 명시적으로 선택해야 결제 가능
-    if (step === 3) return !!priceBreakdown && (hasAccessInfo || proceedWithoutCodes)
+    if (step === 2) return !!priceBreakdown && (hasAccessInfo || proceedWithoutCodes)
     return false
   })()
 
@@ -307,16 +339,16 @@ export default function CreateRequestPage() {
           <ChevronLeft size={22} />
         </button>
         <div className="flex-1 text-center">
-          <h1 className="text-[15px] font-extrabold text-ink">청소 요청</h1>
-          <p className="text-[13.5px] text-text-soft font-bold">{step}/3</p>
+          <h1 className="text-[16px] font-extrabold text-ink">청소 요청</h1>
+          <p className="text-[13.5px] text-text-soft font-bold">{step === 1 ? '어디를, 언제' : '확인하고 결제'} · {step}/2</p>
         </div>
         <div className="w-10" />
       </header>
 
       <div className="px-5 pt-4 pb-1 bg-surface">
         <div className="flex gap-1.5">
-          {[1, 2, 3].map((n) => (
-            <div key={n} className={`flex-1 h-1.5 rounded-full ${n <= step ? 'bg-brand' : 'bg-line'}`} />
+          {[1, 2].map((n) => (
+            <div key={n} className={`flex-1 h-2 rounded-full ${n <= step ? 'bg-brand' : 'bg-line'}`} />
           ))}
         </div>
       </div>
@@ -324,6 +356,12 @@ export default function CreateRequestPage() {
       <div className="flex-1 flex flex-col px-5 pt-6 pb-32">
           {step === 1 && (
             <div className="flex flex-col gap-4">
+              {prefilledFrom && (
+                <div className="p-3.5 rounded-2xl bg-brand-softer border border-brand/20 flex items-center gap-2.5">
+                  <Check size={18} className="text-brand-dark shrink-0" strokeWidth={3} />
+                  <p className="text-[15px] font-bold text-brand-dark">지난 청소 내용을 그대로 가져왔어요. 날짜만 고르면 돼요!</p>
+                </div>
+              )}
               <div>
                 <h2 className="h-title text-ink">어느 공간을 청소할까요?</h2>
                 <p className="t-caption mt-1.5">공간을 선택하면 자동으로 체크리스트가 적용돼요.</p>
@@ -348,14 +386,9 @@ export default function CreateRequestPage() {
                   </button>
                 ))}
               </div>
-            </div>
-          )}
 
-          {step === 2 && (
-            <div className="flex flex-col gap-5">
-              <div>
+              <div className="mt-2">
                 <h2 className="h-title text-ink">언제 청소할까요?</h2>
-                <p className="t-caption mt-1.5">지금 요청 또는 예약을 선택하세요.</p>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
@@ -475,11 +508,11 @@ export default function CreateRequestPage() {
             </div>
           )}
 
-          {step === 3 && selectedSpace && priceBreakdown && (
+          {step === 2 && selectedSpace && priceBreakdown && (
             <div className="flex flex-col gap-5">
               <div>
-                <h2 className="h-title text-ink">난이도 · 가격</h2>
-                <p className="t-caption mt-1.5">이번 청소가 얼마나 더러운지에 따라 가격을 정하세요.</p>
+                <h2 className="h-title text-ink">이대로 진행할까요?</h2>
+                <p className="t-caption mt-1.5">내용을 확인하고 결제하면 끝이에요.</p>
               </div>
 
               <div className="card p-4 flex items-center gap-3">
@@ -487,11 +520,29 @@ export default function CreateRequestPage() {
                   <Sparkles size={18} className="text-brand-dark" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h4 className="text-[14.5px] font-extrabold text-ink truncate">{selectedSpace.name}</h4>
-                  <p className="text-[13.5px] text-text-soft font-bold truncate mt-0.5 flex items-center gap-1">
-                    <Clock size={11} /> {formatScheduled(scheduledAt)}
+                  <h4 className="text-[16px] font-extrabold text-ink truncate">{selectedSpace.name}</h4>
+                  <p className="text-[14.5px] text-text-soft font-bold truncate mt-0.5 flex items-center gap-1">
+                    <Clock size={13} /> {formatScheduled(scheduledAt)}
                   </p>
                 </div>
+                <button
+                  type="button"
+                  onClick={() => setStep(1)}
+                  className="text-[14.5px] font-bold text-brand-dark underline shrink-0"
+                >
+                  변경
+                </button>
+              </div>
+
+              {/* 결제 금액 — 가장 크게, 한눈에 */}
+              <div className="card-rich p-5 text-center">
+                <p className="text-[14.5px] font-bold text-text-soft">결제 금액 (VAT 포함)</p>
+                <p className="t-amount text-[40px] text-ink mt-1.5 leading-none">
+                  {formatKRW(priceBreakdown.total)}
+                </p>
+                <p className="text-[14px] font-bold text-text-faint mt-2.5">
+                  {difficulty} 난이도 기준 자동 계산 · 아래 &lsquo;자세히 설정&rsquo;에서 조정할 수 있어요
+                </p>
               </div>
 
               {/* 출입 비밀번호 — 클린파트너가 들어갈 수 있는지 확인 */}
@@ -564,6 +615,24 @@ export default function CreateRequestPage() {
                 </div>
               )}
 
+              {/* 자세히 설정 — 난이도·가격조정·체크리스트·요청사항 (기본 접힘) */}
+              <button
+                type="button"
+                onClick={() => setShowAdvanced((v) => !v)}
+                className="card-interactive p-4 flex items-center gap-3"
+              >
+                <div className="w-10 h-10 rounded-xl bg-surface-muted text-text-muted flex items-center justify-center shrink-0">
+                  <ListChecks size={18} />
+                </div>
+                <div className="flex-1 text-left">
+                  <p className="text-[16px] font-extrabold text-ink">자세히 설정</p>
+                  <p className="text-[14px] text-text-soft font-bold mt-0.5">난이도 · 가격 조정 · 체크리스트 · 요청사항</p>
+                </div>
+                <ChevronRight size={18} className={`text-text-faint transition-transform ${showAdvanced ? 'rotate-90' : ''}`} />
+              </button>
+
+              {showAdvanced && (
+              <>
               {/* 난이도 */}
               <div>
                 <label className="t-meta block mb-2 ml-1">청소 난이도</label>
@@ -715,6 +784,8 @@ export default function CreateRequestPage() {
                   </div>
                 </div>
               </div>
+              </>
+              )}
 
               <div className="p-4 rounded-2xl bg-brand-softer border border-brand/15 flex items-start gap-2.5">
                 <AlertCircle size={16} className="text-brand-dark shrink-0 mt-0.5" />
@@ -730,20 +801,20 @@ export default function CreateRequestPage() {
 
       <div className="fixed bottom-0 inset-x-0 border-t border-line-soft bg-surface/95 backdrop-blur safe-bottom">
         <div className="max-w-[480px] mx-auto px-5 py-3.5">
-          {step === 3 && priceBreakdown && (
+          {step === 2 && priceBreakdown && (
             <div className="flex items-baseline justify-between mb-2.5 px-1">
               <span className="text-[14.5px] font-bold text-text-soft">결제 금액</span>
               <span className="t-money text-[18px] text-ink">{formatKRW(priceBreakdown.total)}</span>
             </div>
           )}
           <button
-            onClick={step === 3 ? handleSubmit : () => setStep((s) => (Math.min(s + 1, 3)) as StepId)}
+            onClick={step === 2 ? handleSubmit : () => setStep(2)}
             disabled={!canProceed || loading}
             className="btn btn-primary w-full"
           >
             {loading ? (
               <Loader2 size={20} className="animate-spin" />
-            ) : step === 3 ? (
+            ) : step === 2 ? (
               isRecurring
                 ? <>고정 청소 신청하기 <ChevronRight size={20} /></>
                 : <>결제하고 요청하기 <ChevronRight size={20} /></>

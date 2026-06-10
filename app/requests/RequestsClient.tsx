@@ -10,6 +10,7 @@ import {
   List,
   CalendarDays,
   MapPin,
+  RotateCcw,
 } from 'lucide-react'
 import CalendarView from '@/components/common/CalendarView'
 import EmptyState from '@/components/common/EmptyState'
@@ -145,6 +146,15 @@ export default function RequestsClient({ jobs }: Props) {
                       )}
                     </div>
                   </Link>
+                  {/* 원탭 재요청 — 완료/취소된 건은 같은 내용으로 바로 다시 */}
+                  {['APPROVED', 'PAID_OUT', 'CANCELED'].includes(job.status) && (
+                    <button
+                      onClick={() => router.push(`/requests/create?from=${job.id}`)}
+                      className="w-full mt-1.5 flex items-center justify-center gap-1.5 py-3 rounded-xl bg-brand-softer text-brand-dark text-[15px] font-extrabold active:scale-[0.98] transition"
+                    >
+                      <RotateCcw size={15} /> 이 청소 다시 요청
+                    </button>
+                  )}
                 </li>
               ))}
             </ul>
