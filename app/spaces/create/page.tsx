@@ -194,6 +194,7 @@ export default function CreateSpacePage() {
         biz_reg_image: bizRegImage[0] || null,
         vat_type: bizTypeSel === 'BUSINESS' ? vatType : 'EXEMPT',
         tax_invoice_required: bizTypeSel === 'BUSINESS' ? taxInvoiceRequired : false,
+        mail_order_no: mailOrderNo.trim() || null,
       }
 
       // Try extended first, fall back to core if columns missing

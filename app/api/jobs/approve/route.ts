@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { calculateSettlement, type TaxType } from '@/lib/pricing'
 
 export const runtime = 'nodejs'
 
@@ -28,7 +29,7 @@ export async function POST(req: Request) {
     // 1. 권한 및 상태 확인
     const { data: job } = await supabase
       .from('jobs')
-      .select('id, operator_id, worker_id, status, price, price_breakdown, is_recurring, recurring_config, space_id, estimated_duration, checklist, special_instructions, is_urgent, time_window_start, time_window_end, preferred_worker_id, spaces(name)')
+      .select('id, operator_id, worker_id, status, price, price_breakdown, extra_charge_status, extra_charge_amount, is_recurring, recurring_config, space_id, estimated_duration, checklist, special_instructions, is_urgent, time_window_start, time_window_end, preferred_worker_id, spaces(name)')
       .eq('id', job_id)
       .single()
 
@@ -50,54 +51,51 @@ export async function POST(req: Request) {
     if (job.worker_id) {
 
       // 기존 레코드 조회 (confirm 시 worker_id=null로 선생성될 수 있음)
-      const { data: existing, count } = await admin
+      const { count } = await admin
         .from('payments')
-        .select('id', { count: 'exact' })
+        .select('id', { count: 'exact', head: true })
         .eq('job_id', job_id)
 
-      const pb: any = job.price_breakdown ?? {}
-      // 수수료: price_breakdown 우선, 없으면 현행 정책(host 5% + worker 15%) 적용
-      const HOST_FEE_RATE = 0.05
-      const WORKER_FEE_RATE = 0.15
-      const WITHHOLDING_RATE = 0.033
-      const hostFee = pb.host_fee ?? Math.round(job.price * HOST_FEE_RATE)
-      const workerFee = pb.worker_fee ?? Math.round(job.price * WORKER_FEE_RATE)
-      const platformFee = pb.platform_revenue ?? hostFee + workerFee
-      // 정산 공식: gross − host_fee − worker_fee (lib/pricing.ts calculateSettlement과 동일)
-      const workerSubtotal = job.price - hostFee - workerFee
-      const withholdingTax = pb.estimated_withholding ?? Math.round(workerSubtotal * WITHHOLDING_RATE)
-      const workerPayout = pb.estimated_worker_payout ?? workerSubtotal - withholdingTax
+      // 워커 세금 유형 조회 (사업자면 원천징수 없음). 미설정 시 프리랜서 기본
+      const { data: worker } = await admin
+        .from('users')
+        .select('tax_type')
+        .eq('id', job.worker_id)
+        .single()
+      const taxType: TaxType = (worker?.tax_type as TaxType) ?? 'FREELANCER'
+
+      // 승인된 추가 청구액을 정산 총액에 합산 (승인 시점이 정산 확정 지점)
+      const approvedExtra =
+        (job as any).extra_charge_status === 'APPROVED' ? Number((job as any).extra_charge_amount) || 0 : 0
+      const grossAmount = (job.price || 0) + approvedExtra
+
+      // 정산 = 단일 소스(calculateSettlement)로 계산 — 세금유형·반올림 일관성 보장
+      const s = calculateSettlement(grossAmount, { taxType })
+
+      const paymentRow = {
+        gross_amount: s.gross_amount,
+        platform_fee: s.platform_revenue,
+        host_fee: s.host_fee,
+        host_fee_rate: s.host_fee_rate,
+        worker_fee: s.worker_fee,
+        worker_fee_rate: s.worker_fee_rate,
+        withholding_tax: s.withholding_tax,
+        withholding_tax_rate: s.withholding_tax_rate,
+        worker_payout: s.worker_payout,
+        worker_tax_type: taxType,
+      }
 
       if (!count || count === 0) {
-        // 레코드 없음 → 새로 생성
         await admin.from('payments').insert({
           job_id,
           operator_id: job.operator_id,
           worker_id: job.worker_id,
-          gross_amount: job.price,
-          platform_fee: platformFee,
-          host_fee: hostFee,
-          host_fee_rate: HOST_FEE_RATE,
-          worker_fee: workerFee,
-          worker_fee_rate: WORKER_FEE_RATE,
-          withholding_tax: withholdingTax,
-          withholding_tax_rate: WITHHOLDING_RATE,
-          worker_payout: workerPayout,
-          worker_tax_type: 'FREELANCER',
           status: 'HELD',
+          ...paymentRow,
         })
       } else {
-        // 레코드 있음 → worker_id + 정산액 업데이트
         await admin.from('payments')
-          .update({
-            worker_id: job.worker_id,
-            worker_fee: workerFee,
-            worker_fee_rate: WORKER_FEE_RATE,
-            withholding_tax: withholdingTax,
-            withholding_tax_rate: WITHHOLDING_RATE,
-            worker_payout: workerPayout,
-            worker_tax_type: 'FREELANCER',
-          })
+          .update({ worker_id: job.worker_id, ...paymentRow })
           .eq('job_id', job_id)
       }
 

@@ -41,8 +41,18 @@ export async function POST(req: Request) {
     if (!space_id || !price || !scheduled_at) {
       return NextResponse.json({ ok: false, error: 'missing_required_fields' }, { status: 400 })
     }
-    if (price < 1000) {
-      return NextResponse.json({ ok: false, error: 'amount_too_small' }, { status: 400 })
+
+    // 가격 범위 검증 (변조 방지) — 정기청소 라우트와 동일 기준
+    const MIN_PRICE = 15000
+    const MAX_PRICE = 1_000_000
+    if (!Number.isInteger(price) || price < MIN_PRICE || price > MAX_PRICE) {
+      return NextResponse.json({ ok: false, error: 'invalid_price' }, { status: 400 })
+    }
+
+    // 과거 시각 예약 차단 (최소 30분 이후) — 예약 즉시 환불불가 구간 진입 방지
+    const when = new Date(scheduled_at).getTime()
+    if (!Number.isFinite(when) || when < Date.now() + 30 * 60 * 1000) {
+      return NextResponse.json({ ok: false, error: 'invalid_scheduled_at' }, { status: 400 })
     }
 
     // 공간 이름 + 소유권 확인

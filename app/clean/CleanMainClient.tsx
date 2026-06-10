@@ -26,6 +26,7 @@ import EmptyState from '@/components/common/EmptyState'
 import PullToRefresh from '@/components/common/PullToRefresh'
 import SetupChecklist from '@/components/common/SetupChecklist'
 import { formatKRW, formatScheduled, spaceTypeLabel, maskAddress } from '@/lib/utils'
+import { estimateWorkerPayout } from '@/lib/pricing'
 import { TIER_BENEFITS } from '@/lib/matching'
 import { useJobsRealtime } from '@/lib/useJobRealtime'
 import { statusSubline } from '@/lib/statusDisplay'
@@ -362,9 +363,9 @@ export default function CleanMainClient({ profile, activeJob, openJobs, weekEarn
                     </div>
                     <div className="text-right shrink-0 mt-0.5">
                       <div className="t-money text-[15px] text-brand-dark font-black">
-                        {formatKRW(Math.round(job.price * 0.80), { short: true })}
+                        {formatKRW(estimateWorkerPayout(job.price), { short: true })}
                       </div>
-                      <p className="text-[14px] font-bold text-text-faint mt-0.5">예상 정산</p>
+                      <p className="text-[14px] font-bold text-text-faint mt-0.5">예상 수령</p>
                     </div>
                   </Link>
                 </li>

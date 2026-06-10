@@ -162,11 +162,14 @@ export async function notifyWorkersForJob(jobId: string): Promise<{ matched: num
     }
   }
 
+  // 거리 점수 만점(30) 중 위치 미상 워커에게 줄 중립값 (≈5km 상당). 만점 부여 시 실제 근거리 워커가 밀림
+  const NEUTRAL_DISTANCE_SCORE = 15
+
   const scored = (workers || [])
     .filter((w) => !busy.has(w.id))
     .map((w) => {
-      // 위치 기록 없는 워커는 공간 좌표로 대체 (거리 페널티 없음 — 신규 워커 배제 방지)
-      const loc = lastKnown.get(w.id) ?? { lat: space_lat, lng: space_lng }
+      const loc = lastKnown.get(w.id)
+      const hasLocation = !!loc
       const score = computeMatchScore({
         worker: {
           id: w.id,
@@ -175,8 +178,8 @@ export async function notifyWorkersForJob(jobId: string): Promise<{ matched: num
           total_jobs: w.total_jobs ?? 0,
           sparkle_score: w.sparkle_score ?? 0,
         },
-        worker_lat: loc.lat,
-        worker_lng: loc.lng,
+        worker_lat: loc?.lat ?? space_lat,
+        worker_lng: loc?.lng ?? space_lng,
         space_lat,
         space_lng,
         job: {
@@ -187,7 +190,11 @@ export async function notifyWorkersForJob(jobId: string): Promise<{ matched: num
         },
         is_favorite: favSet.has(w.id),
       })
-      return { worker_id: w.id, score: score.total }
+      // 위치 미상 워커: 거리 만점 대신 중립값으로 보정 (배제하진 않되 만점 왜곡 제거)
+      const total = hasLocation
+        ? score.total
+        : score.total - score.breakdown.distance + NEUTRAL_DISTANCE_SCORE
+      return { worker_id: w.id, score: total }
     })
     .sort((a, b) => b.score - a.score)
     .slice(0, 15)

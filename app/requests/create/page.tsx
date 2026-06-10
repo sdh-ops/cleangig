@@ -98,10 +98,9 @@ export default function CreateRequestPage() {
         const matched = spaces.find((s) => s.id === paramSpaceId)
         setSpaceId(matched ? matched.id : spaces[0].id)
       }
-      // ?recurring=true → 정기 청소 모드로 pre-select
+      // ?recurring=true → 일정 지정 모드만 pre-select (정기 결제 기능 준비 중이라 isRecurring 자동 활성화 안 함)
       if (params.get('recurring') === 'true') {
-        setIsRecurring(true)
-        setWhen('schedule') // 정기 청소는 일정 지정 필요
+        setWhen('schedule')
       }
       // ?from={jobId} → "이 청소 다시 요청": 이전 작업 내용 복사, 날짜만 고르면 됨
       const fromJobId = params.get('from')
@@ -241,6 +240,12 @@ export default function CreateRequestPage() {
 
   const handleSubmit = async () => {
     if (!selectedSpace || !priceBreakdown) return
+    // 과거 시각 예약 차단 (최소 30분 이후) — 서버도 검증하지만 친절한 안내 우선
+    if (when === 'schedule' && scheduledAt && new Date(scheduledAt).getTime() < Date.now() + 30 * 60 * 1000) {
+      setStep(1)
+      setErr('예약 시간은 지금부터 최소 30분 이후로 선택해주세요.')
+      return
+    }
     setLoading(true)
     setErr(null)
     try {
@@ -461,25 +466,25 @@ export default function CreateRequestPage() {
                 </div>
               )}
 
-              {/* Recurring cleaning toggle */}
+              {/* Recurring cleaning toggle — 결제·회차 매칭 모델 확정 전까지 비활성 (준비 중) */}
               {when === 'schedule' && (
-                <div className={`card p-3.5 border-2 ${isRecurring ? 'border-brand bg-brand-softer' : 'border-line-soft'}`}>
+                <div className="card p-3.5 border-2 border-line-soft opacity-70">
                   <div className="flex items-center gap-3">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${isRecurring ? 'bg-brand text-white' : 'bg-surface-muted text-text-muted'}`}>
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center bg-surface-muted text-text-muted">
                       <Calendar size={15} strokeWidth={2.6} />
                     </div>
                     <div className="flex-1">
-                      <p className="text-[15px] font-extrabold text-ink">고정 청소로 예약</p>
-                      <p className="text-[13.5px] text-text-soft font-bold">주기적으로 동일 시간에 자동 예약 · 최대 5% 할인</p>
+                      <p className="text-[15px] font-extrabold text-ink flex items-center gap-1.5">
+                        고정 청소로 예약
+                        <span className="text-[12px] font-bold text-text-faint bg-surface-muted px-1.5 py-0.5 rounded-full">준비 중</span>
+                      </p>
+                      <p className="text-[13.5px] text-text-soft font-bold">정기 결제 기능 준비 중이에요. 우선 단건으로 예약해주세요.</p>
                     </div>
-                    <button
-                      onClick={() => setIsRecurring((v) => !v)}
-                      className={`w-11 h-6 rounded-full flex items-center px-0.5 transition ${isRecurring ? 'bg-brand justify-end' : 'bg-line-strong justify-start'}`}
-                    >
+                    <div className="w-11 h-6 rounded-full flex items-center px-0.5 bg-line-strong justify-start">
                       <div className="w-5 h-5 rounded-full bg-white shadow-sm" />
-                    </button>
+                    </div>
                   </div>
-                  {isRecurring && (
+                  {false && (
                     <div className="mt-3 pt-3 border-t border-brand/15 grid grid-cols-2 gap-3">
                       <div>
                         <label className="t-meta block mb-1.5 ml-0.5">반복 주기</label>

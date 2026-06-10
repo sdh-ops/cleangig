@@ -44,10 +44,14 @@ export function getAreaBonus(pyeong: number): number {
 }
 
 // 난이도 배율
+// 한글·영문 키 모두 허용 — 공간 등록은 한글('보통'), 스키마 기본값은 영문('NORMAL')이라 혼용됨
 export const DIFFICULTY_MULTIPLIER: Record<string, number> = {
   '쉬움':  0.85,
   '보통':  1.0,
   '어려움': 1.2,
+  EASY:    0.85,
+  NORMAL:  1.0,
+  HARD:    1.2,
 }
 
 /**
@@ -249,6 +253,15 @@ export function calculateSettlement(
     worker_payout,
     platform_revenue,
   }
+}
+
+/**
+ * 워커 예상 실수령액 (프리랜서 기준, 세금 3.3% 차감 후).
+ * 작업 카드·목록·상세에서 동일 금액을 보여주기 위한 단일 소스.
+ * (실제 정산은 워커 세금유형을 반영하지만, 목록 표시는 프리랜서 기준 추정으로 통일)
+ */
+export function estimateWorkerPayout(grossPrice: number): number {
+  return calculateSettlement(grossPrice, { taxType: 'FREELANCER' }).worker_payout
 }
 
 /**

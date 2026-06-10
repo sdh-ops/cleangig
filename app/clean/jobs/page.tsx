@@ -15,6 +15,7 @@ import EmptyState from '@/components/common/EmptyState'
 import PullToRefresh from '@/components/common/PullToRefresh'
 import JobsMap, { type JobMapItem } from './JobsMap'
 import { formatKRW, formatScheduled, spaceTypeLabel, shortAddress, haversineKm, difficultyLabel, parseGeoPoint } from '@/lib/utils'
+import { estimateWorkerPayout } from '@/lib/pricing'
 import { useJobsRealtime } from '@/lib/useJobRealtime'
 import { getPosition, checkPermission } from '@/lib/geolocation'
 import type { JobStatus, SpaceType } from '@/lib/types'
@@ -578,7 +579,7 @@ export default function JobsListPage() {
                             <div className="flex flex-col items-end">
                               <span className="text-[14px] text-text-faint font-bold">예상 수령</span>
                               <span className="t-money text-[14.5px] text-brand-dark font-black">
-                                {formatKRW(Math.round(job.price * 0.80 * 0.967), { short: true })}
+                                {formatKRW(estimateWorkerPayout(job.price), { short: true })}
                               </span>
                             </div>
                           </div>

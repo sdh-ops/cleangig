@@ -33,6 +33,7 @@ import StatusStepper from '@/components/common/StatusStepper'
 import DisputeModal from '@/components/common/DisputeModal'
 import ReviewModal from '@/components/common/ReviewModal'
 import { formatKRW, formatScheduled, spaceTypeLabel, maskAddress, haversineKm } from '@/lib/utils'
+import { estimateWorkerPayout } from '@/lib/pricing'
 import { notify } from '@/lib/notifications'
 import { toast } from '@/lib/toast'
 import { openNaverRoute, searchNaverAddress } from '@/lib/naver'
@@ -169,7 +170,7 @@ export default function WorkerJobDetail() {
         id, status, worker_id, operator_id, price, scheduled_at,
         estimated_duration, is_urgent, special_instructions, checklist, supply_shortages,
         supply_status, supply_check_items, extra_charge_status, extra_charge_amount, extra_charge_reason, extra_charge_photos,
-        price_breakdown,
+        price_breakdown, completion_photos,
         spaces(id, name, type, address, address_detail, entry_code, access_codes, caution_notes, cleaning_tool_location, parking_guide, trash_guide, photos, location),
         users:operator_id(id, name, phone, profile_image, avg_rating)
       `)
@@ -184,6 +185,10 @@ export default function WorkerJobDetail() {
     setJob(fetched)
     setChecklist(fetched.checklist ?? [])
     setSupplyStatus(fetched.supply_status ?? [])
+    // 재진입 시 이미 올린 완료 사진 복원 — 없으면 5장 재업로드 강요됨 (Storage 고아 방지)
+    if (Array.isArray((fetched as any).completion_photos)) {
+      setCompletionPhotos((fetched as any).completion_photos as string[])
+    }
     setLoading(false)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id])
@@ -636,7 +641,7 @@ export default function WorkerJobDetail() {
             </p>
             <div className="mt-5">
               <p className="text-[13.5px] text-white/60 font-bold">예상 수령 (세금 3.3% 차감)</p>
-              <p className="t-money text-[26px] text-brand-light">{formatKRW(job.price_breakdown?.estimated_worker_payout ?? Math.round(job.price * 0.80 * 0.967))}</p>
+              <p className="t-money text-[26px] text-brand-light">{formatKRW(job.price_breakdown?.estimated_worker_payout ?? estimateWorkerPayout(job.price))}</p>
             </div>
           </div>
         </div>
@@ -1066,6 +1071,23 @@ export default function WorkerJobDetail() {
       {isMine && flow && (
         <div className="fixed bottom-0 inset-x-0 border-t border-line-soft bg-surface/95 backdrop-blur safe-bottom">
           <div className="max-w-[480px] mx-auto px-5 py-3.5">
+            {/* 완료 제출 전 준비 상태 요약 — 무엇이 남았는지 누르기 전에 보이게 */}
+            {job.status === 'IN_PROGRESS' && (() => {
+              const reqTotal = checklist.filter((c) => c.required).length
+              const reqDone = checklist.filter((c) => c.required && c.completed).length
+              const checklistOk = reqDone >= reqTotal
+              const photosOk = completionPhotos.length >= MIN_COMPLETION_PHOTOS
+              return (
+                <div className="mb-2.5 flex items-center gap-2">
+                  <span className={`flex-1 text-center text-[14px] font-bold px-2 py-2 rounded-xl ${checklistOk ? 'bg-success-soft text-success' : 'bg-surface-muted text-text-soft'}`}>
+                    {checklistOk ? '✓' : ''} 체크리스트 {reqDone}/{reqTotal}
+                  </span>
+                  <span className={`flex-1 text-center text-[14px] font-bold px-2 py-2 rounded-xl ${photosOk ? 'bg-success-soft text-success' : 'bg-surface-muted text-text-soft'}`}>
+                    {photosOk ? '✓' : ''} 완료사진 {completionPhotos.length}/{MIN_COMPLETION_PHOTOS}
+                  </span>
+                </div>
+              )
+            })()}
             {err && (
               <div className="mb-2.5 p-2.5 rounded-xl bg-danger-soft border border-danger/20 flex items-start gap-2">
                 <AlertTriangle size={14} className="text-danger shrink-0 mt-0.5" />

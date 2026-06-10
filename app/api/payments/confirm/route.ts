@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { notifyWorkersForJob } from '@/lib/notify'
+import { calculateSettlement } from '@/lib/pricing'
 
 export const runtime = 'nodejs'
 
@@ -124,38 +125,53 @@ export async function POST(req: Request) {
 
     if (jobErr || !job) {
       console.error('[confirm] job insert error', jobErr)
-      // 결제는 됐는데 job 생성 실패 → 심각. 수동 처리 필요. payment_key는 저장해둠
+      // 결제는 승인됐는데 job 생성 실패 → 즉시 Toss 자동 환불 (돈만 빠지는 사각지대 제거)
+      let refunded = false
+      try {
+        const cancelRes = await fetch(`https://api.tosspayments.com/v1/payments/${paymentKey}/cancel`, {
+          method: 'POST',
+          headers: { Authorization: `Basic ${encKey}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ cancelReason: '작업 생성 실패 — 자동 환불', cancelAmount: amount }),
+        })
+        refunded = cancelRes.ok
+        if (!cancelRes.ok) {
+          console.error('[confirm] 자동 환불 실패 — 수동 처리 필요. orderId:', orderId, 'paymentKey:', paymentKey)
+        }
+      } catch (e) {
+        console.error('[confirm] 자동 환불 호출 예외 — 수동 처리 필요. orderId:', orderId, e)
+      }
       await admin.from('payment_orders')
         .update({ status: 'FAILED', pg_payment_key: paymentKey })
         .eq('id', orderId)
-      return NextResponse.json({ ok: false, error: 'job_creation_failed' }, { status: 500 })
+      return NextResponse.json(
+        {
+          ok: false,
+          error: 'job_creation_failed',
+          refunded,
+          message: refunded
+            ? '작업 생성에 실패하여 결제가 자동 환불됐습니다. 다시 시도해주세요.'
+            : '작업 생성에 실패했습니다. 결제 환불은 고객센터에서 처리됩니다.',
+        },
+        { status: 500 },
+      )
     }
 
     // 4. payment 레코드 생성 (HELD = 에스크로 보관)
-    const pb = jd.price_breakdown ?? {}
-    const hostFee = pb.host_fee ?? Math.round(jd.price * 0.05)
-    const workerFee = pb.worker_fee ?? Math.round(jd.price * 0.15)
-    const platformFee = pb.platform_revenue ?? hostFee + workerFee
-    // 정산 공식: gross − host_fee − worker_fee (lib/pricing.ts calculateSettlement과 동일)
-    const workerSubtotal = jd.price - hostFee - workerFee
-    const withholdingTax = pb.estimated_withholding ?? Math.round(workerSubtotal * 0.033)
-    const workerPayout = pb.estimated_worker_payout ?? workerSubtotal - withholdingTax
-    // Derive actual fee rates from breakdown amounts (avoids stale hardcoded values)
-    const hostFeeRate = jd.price > 0 ? Math.round((hostFee / jd.price) * 1000) / 1000 : 0.05
-    const workerFeeRate = jd.price > 0 ? Math.round((workerFee / jd.price) * 1000) / 1000 : 0.15
+    // 워커 미정 시점 추정치 — 프리랜서 기준. 최종 정산액은 approve에서 워커 세금유형·추가청구 반영해 재계산.
+    const s = calculateSettlement(jd.price, { taxType: 'FREELANCER' })
 
     await admin.from('payments').insert({
       job_id: job.id,
       operator_id: jd.operator_id,
-      gross_amount: jd.price,
-      platform_fee: platformFee,
-      host_fee: hostFee,
-      host_fee_rate: hostFeeRate,
-      worker_fee: workerFee,
-      worker_fee_rate: workerFeeRate,
-      withholding_tax: withholdingTax,
-      withholding_tax_rate: 0.033,
-      worker_payout: workerPayout,
+      gross_amount: s.gross_amount,
+      platform_fee: s.platform_revenue,
+      host_fee: s.host_fee,
+      host_fee_rate: s.host_fee_rate,
+      worker_fee: s.worker_fee,
+      worker_fee_rate: s.worker_fee_rate,
+      withholding_tax: s.withholding_tax,
+      withholding_tax_rate: s.withholding_tax_rate,
+      worker_payout: s.worker_payout,
       worker_tax_type: 'FREELANCER',
       status: 'HELD',
       pg_provider: 'toss',

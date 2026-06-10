@@ -37,3 +37,6 @@ CREATE POLICY favs_worker_select ON public.favorite_partners
 
 -- ── notify_user RPC 제거 (RLS 우회 SECURITY DEFINER) ────────────────
 DROP FUNCTION IF EXISTS public.notify_user(uuid, text, text, text);
+
+-- ── 공간 통신판매업 신고번호 컬럼 (입력 UI는 있으나 저장 컬럼 부재였음) ──
+ALTER TABLE public.spaces ADD COLUMN IF NOT EXISTS mail_order_no text;

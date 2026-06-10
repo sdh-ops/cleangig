@@ -5,6 +5,7 @@ import { LocateFixed, Loader2, MapPin, X, Search } from 'lucide-react'
 import { waitForNaverMaps, loadNaverMapsScript, openNaverRoute } from '@/lib/naver'
 import { getPosition } from '@/lib/geolocation'
 import { formatKRW, haversineKm, maskAddress, spaceTypeLabel } from '@/lib/utils'
+import { estimateWorkerPayout } from '@/lib/pricing'
 import type { SpaceType } from '@/lib/types'
 
 export type JobMapItem = {
@@ -61,7 +62,7 @@ function pinStyle(price: number, urgent: boolean): { bg: string; gradient: strin
 }
 
 function buildPinHtml(job: JobMapItem, selected: boolean): string {
-  const payout = Math.round(job.price * 0.80) // host 5% + worker 15% = 20% total fee
+  const payout = estimateWorkerPayout(job.price) // 세후 실수령 (host 5% + worker 15% + 세금 3.3%)
   const { gradient, bg, ring, icon } = pinStyle(job.price, !!job.is_urgent)
   const scale = selected ? 1.18 : 1
   const shadow = selected
@@ -403,9 +404,9 @@ export default function JobsMap({
                 </div>
                 <div className="text-right shrink-0">
                   <div className="t-money text-[17px] text-brand-dark font-black">
-                    {formatKRW(Math.round(selJob.price * 0.80), { short: true })}
+                    {formatKRW(estimateWorkerPayout(selJob.price), { short: true })}
                   </div>
-                  <p className="text-[14px] font-bold text-text-faint mt-0.5">예상 정산</p>
+                  <p className="text-[14px] font-bold text-text-faint mt-0.5">예상 수령</p>
                 </div>
               </div>
               <div className="flex gap-2 mt-3">
