@@ -27,6 +27,7 @@ import {
   DollarSign,
 } from 'lucide-react'
 import StatusChip from '@/components/common/StatusChip'
+import StatusStepper from '@/components/common/StatusStepper'
 import ReviewModal from '@/components/common/ReviewModal'
 import DisputeModal from '@/components/common/DisputeModal'
 import WorkerLiveMap from '@/components/common/WorkerLiveMap'
@@ -363,21 +364,6 @@ export default function RequestDetailClient({ job: initialJob, userId, initialIs
   const canReview = isOwner && ['APPROVED', 'PAID_OUT'].includes(job.status) && !!job.users?.id
   const canDispute = ['EN_ROUTE', 'ARRIVED', 'IN_PROGRESS', 'SUBMITTED', 'APPROVED'].includes(job.status)
 
-  // 상태 타임라인
-  const STATUS_STEPS: { key: string; label: string; icon: React.ReactNode; desc: string }[] = [
-    { key: 'OPEN',        label: '매칭 중',   icon: <Clock size={13} />,         desc: '클린파트너 배정 대기' },
-    { key: 'ASSIGNED',   label: '배정완료',  icon: <CheckCircle2 size={13} />,   desc: '클린파트너 배정 확정' },
-    { key: 'EN_ROUTE',   label: '이동 중',   icon: <Navigation size={13} />,     desc: '현장으로 이동 중' },
-    { key: 'ARRIVED',    label: '도착',      icon: <MapPin size={13} />,         desc: '현장 도착 확인' },
-    { key: 'IN_PROGRESS',label: '청소 중',   icon: <Sparkles size={13} />,       desc: '작업 진행 중' },
-    { key: 'SUBMITTED',  label: '완료 보고', icon: <CheckCircle2 size={13} />,   desc: '결과 확인 요청' },
-    { key: 'APPROVED',   label: '승인 완료', icon: <DollarSign size={13} />,     desc: '정산 처리 중' },
-    { key: 'PAID_OUT',   label: '정산완료',  icon: <Check size={13} />,          desc: '전액 정산 완료' },
-  ]
-  const activeFlowStatuses = ['OPEN','ASSIGNED','EN_ROUTE','ARRIVED','IN_PROGRESS','SUBMITTED','APPROVED','PAID_OUT']
-  const currentStepIdx = STATUS_STEPS.findIndex(s => s.key === job.status)
-  const isActiveFlow = activeFlowStatuses.includes(job.status)
-
   return (
     <div className="sseuksak-shell">
       <header className="sticky top-0 z-20 glass border-b border-line-soft safe-top">
@@ -428,50 +414,12 @@ export default function RequestDetailClient({ job: initialJob, userId, initialIs
           </div>
         </div>
 
-        {/* 진행 타임라인 */}
-        {isActiveFlow && (
-          <div className="px-5 pt-3 pb-1 relative z-10">
-            <div className="card p-4 mb-0">
-              <h3 className="text-[12px] font-extrabold text-text-soft uppercase tracking-wide mb-3">진행 현황</h3>
-              <div className="relative">
-                {/* 연결선 */}
-                <div className="absolute left-[15px] top-4 bottom-4 w-0.5 bg-line-soft" />
-                <ul className="flex flex-col gap-3 relative z-10">
-                  {STATUS_STEPS.filter(s => activeFlowStatuses.includes(s.key)).map((step, i) => {
-                    const done = i < currentStepIdx
-                    const active = i === currentStepIdx
-                    return (
-                      <li key={step.key} className="flex items-center gap-3">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 border-2 transition-all ${
-                          active  ? 'bg-brand border-brand text-white shadow-brand-sm ring-4 ring-brand/20' :
-                          done    ? 'bg-brand border-brand text-white' :
-                                    'bg-surface border-line-soft text-text-faint'
-                        }`}>
-                          {step.icon}
-                        </div>
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2">
-                            <span className={`text-[13px] font-extrabold ${active ? 'text-ink' : done ? 'text-text-soft' : 'text-text-faint'}`}>
-                              {step.label}
-                            </span>
-                            {active && (
-                              <span className="text-[10px] font-black text-brand bg-brand-softer px-2 py-0.5 rounded-full">
-                                현재
-                              </span>
-                            )}
-                          </div>
-                          {active && (
-                            <p className="text-[11px] font-medium text-text-soft mt-0.5">{step.desc}</p>
-                          )}
-                        </div>
-                      </li>
-                    )
-                  })}
-                </ul>
-              </div>
-            </div>
+        {/* 진행 현황 — 사용자용 5단계 (내부 상태 10개 대신) */}
+        <div className="px-5 pt-3 pb-1 relative z-10">
+          <div className="card p-4 mb-0">
+            <StatusStepper status={job.status} role="operator" />
           </div>
-        )}
+        </div>
 
         <div className="px-5 -mt-4 relative z-10">
           {/* Worker card */}

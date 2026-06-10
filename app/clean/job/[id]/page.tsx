@@ -29,6 +29,7 @@ import {
   EyeOff,
 } from 'lucide-react'
 import StatusChip from '@/components/common/StatusChip'
+import StatusStepper from '@/components/common/StatusStepper'
 import DisputeModal from '@/components/common/DisputeModal'
 import ReviewModal from '@/components/common/ReviewModal'
 import { formatKRW, formatScheduled, spaceTypeLabel, maskAddress, haversineKm } from '@/lib/utils'
@@ -79,10 +80,10 @@ type JobFull = {
 }
 
 const STATUS_FLOW: Partial<Record<JobStatus, { next: JobStatus; label: string; btnLabel: string; icon: typeof Navigation }>> = {
-  ASSIGNED: { next: 'EN_ROUTE', label: '배정 완료', btnLabel: '현장으로 출발하기', icon: Navigation },
-  EN_ROUTE: { next: 'ARRIVED', label: '이동 중', btnLabel: '현장 도착', icon: MapPin },
-  ARRIVED: { next: 'IN_PROGRESS', label: '도착', btnLabel: '청소 시작하기', icon: Sparkles },
-  IN_PROGRESS: { next: 'SUBMITTED', label: '청소 중', btnLabel: '작업 완료 보고', icon: CheckCircle2 },
+  ASSIGNED: { next: 'EN_ROUTE', label: '배정 완료', btnLabel: '출발했어요', icon: Navigation },
+  EN_ROUTE: { next: 'ARRIVED', label: '이동 중', btnLabel: '도착했어요', icon: MapPin },
+  ARRIVED: { next: 'IN_PROGRESS', label: '도착', btnLabel: '청소 시작', icon: Sparkles },
+  IN_PROGRESS: { next: 'SUBMITTED', label: '청소 중', btnLabel: '다 끝났어요', icon: CheckCircle2 },
 }
 
 const SUPPLY_OPTIONS = ['휴지', '물티슈', '종량제봉투', '주방세제', '핸드워시', '섬유유연제', '청소세제', '수세미', '키친타월', '일회용장갑']
@@ -655,6 +656,13 @@ export default function WorkerJobDetail() {
         </div>
 
         <div className="px-5 -mt-4 relative z-10">
+          {/* 진행 현황 — 사용자용 5단계 */}
+          {isMine && (
+            <div className="card p-4 mb-4">
+              <StatusStepper status={job.status} role="worker" />
+            </div>
+          )}
+
           {/* 지도 네비게이션 카드 — 40-60대 타겟: 큰 버튼, 명확한 레이블 */}
           {isMine && job.status !== 'OPEN' && job.spaces?.address && (
             <div className="card p-4 mb-4">

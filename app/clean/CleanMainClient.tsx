@@ -28,6 +28,7 @@ import SetupChecklist from '@/components/common/SetupChecklist'
 import { formatKRW, formatScheduled, spaceTypeLabel, maskAddress } from '@/lib/utils'
 import { TIER_BENEFITS } from '@/lib/matching'
 import { useJobsRealtime } from '@/lib/useJobRealtime'
+import { statusSubline } from '@/lib/statusDisplay'
 import type { JobStatus, SpaceType } from '@/lib/types'
 
 type Profile = {
@@ -231,11 +232,8 @@ export default function CleanMainClient({ profile, activeJob, openJobs, weekEarn
                   <div className="mt-4 p-3.5 rounded-2xl bg-white/10 flex items-center justify-between">
                     <div className="flex-1 min-w-0">
                       <p className="text-[10.5px] text-white/60 font-bold mb-0.5">지금 해야 할 일</p>
-                      <p className="text-[13.5px] font-extrabold text-brand-light leading-snug">
-                        {activeJob.status === 'ASSIGNED' && '현장으로 출발하세요'}
-                        {activeJob.status === 'EN_ROUTE' && '도착 후 ARRIVED 버튼 눌러주세요'}
-                        {activeJob.status === 'ARRIVED' && '체크리스트를 시작하세요'}
-                        {activeJob.status === 'IN_PROGRESS' && '청소 완료 후 사진 제출'}
+                      <p className="text-[14.5px] font-extrabold text-brand-light leading-snug">
+                        {statusSubline(activeJob.status, 'worker')}
                       </p>
                     </div>
                     <div className="w-11 h-11 rounded-full bg-brand flex items-center justify-center shrink-0 ml-3">
