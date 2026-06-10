@@ -113,6 +113,8 @@ export async function POST(req: Request) {
       status: 'OPEN',
       scheduled_at: jd.scheduled_at,
       estimated_duration: jd.estimated_duration ?? 90,
+      time_window_start: jd.time_window_start ?? null,
+      time_window_end: jd.time_window_end ?? null,
       price: jd.price,
       price_breakdown: jd.price_breakdown ?? null,
       checklist: jd.checklist ?? [],

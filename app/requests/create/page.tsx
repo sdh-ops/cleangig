@@ -61,6 +61,7 @@ export default function CreateRequestPage() {
   const [when, setWhen] = useState<'now' | 'schedule'>('now')
   const [scheduledDate, setScheduledDate] = useState<string>('')
   const [scheduledTime, setScheduledTime] = useState<string>('')
+  const [endTime, setEndTime] = useState<string>('')
   const [isUrgent, setIsUrgent] = useState(false)
 
   const [difficulty, setDifficulty] = useState<'쉬움' | '보통' | '어려움'>('보통')
@@ -206,6 +207,31 @@ export default function CreateRequestPage() {
     return nowBase || new Date().toISOString()
   }, [when, scheduledDate, scheduledTime, nowBase])
 
+  // 종료 시각 — 예약 모드에서 필수. 시작 이후가 아니면 null (자정 넘김은 미지원)
+  const scheduledEndAt = useMemo(() => {
+    if (when !== 'schedule' || !scheduledDate || !scheduledTime || !endTime) return null
+    if (endTime <= scheduledTime) return null
+    return new Date(`${scheduledDate}T${endTime}:00`).toISOString()
+  }, [when, scheduledDate, scheduledTime, endTime])
+
+  // 작업 예상 소요(분) = 종료 − 시작. '지금 요청'은 기본 90분
+  const durationMin = useMemo(() => {
+    if (when !== 'schedule' || !scheduledEndAt) return 90
+    const diff = Math.round((new Date(scheduledEndAt).getTime() - new Date(scheduledAt).getTime()) / 60000)
+    return Math.min(Math.max(diff, 30), 480)
+  }, [when, scheduledAt, scheduledEndAt])
+
+  // 시작 시간 선택·변경 시 종료를 +90분으로 자동 제안 (종료가 비었거나 시작보다 빠르면 재제안)
+  useEffect(() => {
+    if (!scheduledTime) return
+    if (endTime && endTime > scheduledTime) return // 사용자가 유효하게 지정한 값은 보존
+    const [h, m] = scheduledTime.split(':').map(Number)
+    const total = h * 60 + m + 90
+    if (total >= 24 * 60) return // 자정 넘으면 자동 제안 생략
+    setEndTime(`${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scheduledTime])
+
   // 면적+난이도로 추천 기본가 산출 (요청마다 난이도 다르게 가능)
   const suggestedPrice = useMemo(() => {
     if (!selectedSpace) return 0
@@ -232,7 +258,12 @@ export default function CreateRequestPage() {
   }, [selectedSpace, finalPrice, scheduledAt, fees])
 
   const canProceed = (() => {
-    if (step === 1) return !!spaceId && !!scheduledAt
+    if (step === 1) {
+      if (!spaceId || !scheduledAt) return false
+      // 예약 모드: 날짜·시작·종료 모두 + 종료 > 시작
+      if (when === 'schedule') return !!scheduledEndAt
+      return true
+    }
     // 출입 방법이 있거나, "비밀번호 없이 진행"을 명시적으로 선택해야 결제 가능
     if (step === 2) return !!priceBreakdown && (hasAccessInfo || proceedWithoutCodes)
     return false
@@ -260,7 +291,7 @@ export default function CreateRequestPage() {
           body: JSON.stringify({
             space_id: selectedSpace.id,
             first_scheduled_at: scheduledAt,
-            estimated_duration: 90,
+            estimated_duration: durationMin,
             price: priceBreakdown.total,
             price_breakdown: priceBreakdown,
             checklist: checklist.map((c) => ({ ...c, completed: false })),
@@ -283,7 +314,9 @@ export default function CreateRequestPage() {
         body: JSON.stringify({
           space_id: selectedSpace.id,
           scheduled_at: scheduledAt,
-          estimated_duration: 90,
+          estimated_duration: durationMin,
+          time_window_start: when === 'schedule' ? scheduledAt : null,
+          time_window_end: scheduledEndAt,
           price: priceBreakdown.total,
           price_breakdown: priceBreakdown,
           checklist: checklist.map((c) => ({ ...c, completed: false })),
@@ -428,15 +461,27 @@ export default function CreateRequestPage() {
               </div>
 
               {when === 'schedule' && (
-                <div className="grid grid-cols-2 gap-3">
+                <div className="flex flex-col gap-3">
                   <div>
-                    <label className="t-meta block mb-2 ml-1">날짜</label>
-                    <input type="date" value={scheduledDate} onChange={(e) => setScheduledDate(e.target.value)} className="input" min={new Date().toISOString().slice(0, 10)} />
+                    <label htmlFor="req-date" className="t-meta block mb-2 ml-1">날짜</label>
+                    <input id="req-date" type="date" value={scheduledDate} onChange={(e) => setScheduledDate(e.target.value)} className="input" min={new Date().toISOString().slice(0, 10)} />
                   </div>
-                  <div>
-                    <label className="t-meta block mb-2 ml-1">시간</label>
-                    <input type="time" value={scheduledTime} onChange={(e) => setScheduledTime(e.target.value)} className="input" step={1800} />
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label htmlFor="req-start" className="t-meta block mb-2 ml-1">시작 시간</label>
+                      <input id="req-start" type="time" value={scheduledTime} onChange={(e) => setScheduledTime(e.target.value)} className="input" step={1800} />
+                    </div>
+                    <div>
+                      <label htmlFor="req-end" className="t-meta block mb-2 ml-1">종료 시간</label>
+                      <input id="req-end" type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} className="input" step={1800} />
+                    </div>
                   </div>
+                  {scheduledTime && endTime && endTime <= scheduledTime && (
+                    <p className="text-[14px] font-bold text-danger ml-1 -mt-1">종료 시간은 시작 시간보다 늦어야 해요.</p>
+                  )}
+                  {scheduledEndAt && (
+                    <p className="text-[14px] font-bold text-text-soft ml-1 -mt-1">예상 작업 시간 약 {Math.floor(durationMin / 60) > 0 ? `${Math.floor(durationMin / 60)}시간 ` : ''}{durationMin % 60 > 0 ? `${durationMin % 60}분` : ''}</p>
+                  )}
                 </div>
               )}
 
@@ -535,7 +580,7 @@ export default function CreateRequestPage() {
                 <div className="flex-1 min-w-0">
                   <h4 className="text-[16px] font-extrabold text-ink truncate">{selectedSpace.name}</h4>
                   <p className="text-[14.5px] text-text-soft font-bold truncate mt-0.5 flex items-center gap-1">
-                    <Clock size={13} /> {formatScheduled(scheduledAt)}
+                    <Clock size={13} /> {formatScheduled(scheduledAt)}{scheduledEndAt ? ` ~ ${new Date(scheduledEndAt).toLocaleTimeString('ko-KR', { hour: 'numeric', minute: '2-digit' })}` : ''}
                   </p>
                 </div>
                 <button
