@@ -23,6 +23,7 @@ import MetricCard from '@/components/common/MetricCard'
 import PullToRefresh from '@/components/common/PullToRefresh'
 import SetupChecklist from '@/components/common/SetupChecklist'
 import { formatKRW, formatScheduled, spaceTypeLabel } from '@/lib/utils'
+import { useJobsRealtime } from '@/lib/useJobRealtime'
 import type { JobStatus, SpaceType } from '@/lib/types'
 
 type Profile = {
@@ -111,6 +112,9 @@ export default function DashboardClient({
       kstHour < 18 ? '안녕하세요' : '좋은 저녁이에요'
     )
   }, [])
+
+  // 내 요청 상태 변화 실시간 반영 (오늘 작업 카드가 새로고침 없이 갱신)
+  useJobsRealtime({ onRefresh: () => router.refresh() })
 
   const completionRate = monthCount > 0 ? Math.round((monthApproved / monthCount) * 100) : 0
 

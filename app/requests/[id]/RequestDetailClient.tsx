@@ -1,9 +1,10 @@
 'use client'
 
 import Link from 'next/link'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
+import { useJobRealtime, type JobRealtimeRow } from '@/lib/useJobRealtime'
 import {
   ChevronLeft,
   Home,
@@ -258,6 +259,19 @@ export default function RequestDetailClient({ job: initialJob, userId, initialIs
   const [showDispute, setShowDispute] = useState(false)
   const [respondingExtra, setRespondingExtra] = useState(false)
   const [err, setErr] = useState<string | null>(null)
+
+  // router.refresh()로 서버 컴포넌트가 새 props를 내려보내면 로컬 상태에 동기화
+  useEffect(() => { setJob(initialJob) }, [initialJob])
+
+  // 실시간 — 워커의 출발/도착/청소중/완료보고가 새로고침 없이 보임 (#1 불만 시나리오)
+  useJobRealtime(job.id, {
+    onUpdate: (row: JobRealtimeRow) => {
+      setJob((j) => ({ ...j, ...row } as JobFull))
+      // 워커 join(users)은 payload에 없음 — 새로 배정되면 서버에서 프로필 재로드
+      if (row.worker_id && !initialJob.users?.id) router.refresh()
+    },
+    refetch: () => router.refresh(),
+  })
 
   const checklist = job.checklist_completed?.length ? job.checklist_completed : (job.checklist || [])
   const extraStatus = job.extra_charge_status ?? 'NONE'

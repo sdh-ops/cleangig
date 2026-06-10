@@ -15,6 +15,7 @@ import EmptyState from '@/components/common/EmptyState'
 import PullToRefresh from '@/components/common/PullToRefresh'
 import JobsMap, { type JobMapItem } from './JobsMap'
 import { formatKRW, formatScheduled, spaceTypeLabel, shortAddress, haversineKm, difficultyLabel, parseGeoPoint } from '@/lib/utils'
+import { useJobsRealtime } from '@/lib/useJobRealtime'
 import type { JobStatus, SpaceType } from '@/lib/types'
 
 type Job = {
@@ -107,8 +108,8 @@ export default function JobsListPage() {
   }, [])
 
   // ─── fetchJobs ───────────────────────────────────────────────────────
-  const fetchJobs = useCallback(async (opts?: { center?: { lat: number; lng: number } }) => {
-    setLoading(true)
+  const fetchJobs = useCallback(async (opts?: { center?: { lat: number; lng: number }; silent?: boolean }) => {
+    if (!opts?.silent) setLoading(true)
 
     let query = supabase
       .from('jobs')
@@ -173,12 +174,17 @@ export default function JobsListPage() {
     setLoading(false)
   }, [sort, typeFilter, difficultyFilter, q, radius, searchCenter])
 
+  // fetchJobs는 모든 필터를 deps로 가진 useCallback — identity 변화가 곧 "필터 바뀜" 신호.
+  // (기존엔 difficultyFilter 누락으로 난이도 변경 시 재조회 안 되는 버그 있었음)
   useEffect(() => {
     clearTimeout(debounceRef.current)
     debounceRef.current = setTimeout(() => { fetchJobs() }, q ? 300 : 0)
     return () => clearTimeout(debounceRef.current)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sort, typeFilter, q, radius, searchCenter])
+  }, [fetchJobs, q])
+
+  // 실시간: 새 OPEN 일감 INSERT는 즉시 수신.
+  // 다른 워커가 잡은 일감의 제거는 RLS 때문에 이벤트가 안 와서 30초 폴링 병행.
+  useJobsRealtime({ filter: 'status=eq.OPEN', pollMs: 30_000, onRefresh: () => fetchJobs({ silent: true }) })
 
   // ─── 지역 검색 (지도 이동 후) ────────────────────────────────────────
   const handleRegionSearch = useCallback((lat: number, lng: number) => {

@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { useJobRealtime, type JobRealtimeRow } from '@/lib/useJobRealtime'
 import Link from 'next/link'
 import {
   ChevronLeft,
@@ -155,6 +156,32 @@ export default function WorkerJobDetail() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [job?.status, userId, job?.id])
 
+  const fetchJob = useCallback(async () => {
+    const { data, error } = await supabase
+      .from('jobs')
+      .select(`
+        id, status, worker_id, operator_id, price, scheduled_at,
+        estimated_duration, is_urgent, special_instructions, checklist, supply_shortages,
+        supply_status, extra_charge_status, extra_charge_amount, extra_charge_reason, extra_charge_photos,
+        price_breakdown,
+        spaces(id, name, type, address, address_detail, entry_code, access_codes, caution_notes, cleaning_tool_location, parking_guide, trash_guide, photos, location),
+        users:operator_id(id, name, phone, profile_image, avg_rating)
+      `)
+      .eq('id', id)
+      .single()
+    if (error || !data) {
+      setErr('작업을 찾을 수 없습니다.')
+      setLoading(false)
+      return
+    }
+    const fetched = data as unknown as JobFull
+    setJob(fetched)
+    setChecklist(fetched.checklist ?? [])
+    setSupplyStatus(fetched.supply_status ?? [])
+    setLoading(false)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id])
+
   useEffect(() => {
     ;(async () => {
       const { data: { user } } = await supabase.auth.getUser()
@@ -173,30 +200,24 @@ export default function WorkerJobDetail() {
         })
       }
 
-      const { data, error } = await supabase
-        .from('jobs')
-        .select(`
-          id, status, worker_id, operator_id, price, scheduled_at,
-          estimated_duration, is_urgent, special_instructions, checklist, supply_shortages,
-          supply_status, extra_charge_status, extra_charge_amount, extra_charge_reason, extra_charge_photos,
-          price_breakdown,
-          spaces(id, name, type, address, address_detail, entry_code, access_codes, caution_notes, cleaning_tool_location, parking_guide, trash_guide, photos, location),
-          users:operator_id(id, name, phone, profile_image, avg_rating)
-        `)
-        .eq('id', id)
-        .single()
-      if (error || !data) {
-        setErr('작업을 찾을 수 없습니다.')
-        setLoading(false)
-        return
-      }
-      setJob(data as any)
-      setChecklist(((data as any).checklist as ChecklistItem[]) ?? [])
-      setSupplyStatus(((data as any).supply_status as SupplyStatusItem[]) ?? [])
-      setLoading(false)
+      await fetchJob()
     })()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id])
+
+  // 실시간 상태 반영 — 사장님 승인·분쟁·추가청구 결정이 새로고침 없이 보임
+  useJobRealtime(id, {
+    onUpdate: (row: JobRealtimeRow) => {
+      // join(spaces/users)은 payload에 없음 → 기존 상태에 병합.
+      // checklist/supply 로컬 편집 상태는 클로버 방지 위해 realtime 병합에서 제외.
+      setJob((j) => {
+        if (!j) return j
+        const { checklist: _c, supply_status: _s, ...rest } = row
+        return { ...j, ...rest } as JobFull
+      })
+    },
+    refetch: fetchJob,
+  })
 
   const isMine = !!userId && job?.worker_id === userId
   const isOpen = job?.status === 'OPEN'

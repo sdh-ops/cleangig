@@ -15,6 +15,7 @@ import CalendarView from '@/components/common/CalendarView'
 import EmptyState from '@/components/common/EmptyState'
 import StatusChip from '@/components/common/StatusChip'
 import { formatKRW, formatScheduled } from '@/lib/utils'
+import { useJobsRealtime } from '@/lib/useJobRealtime'
 import type { JobStatus } from '@/lib/types'
 
 interface Job {
@@ -47,6 +48,9 @@ const CALENDAR_COLOR: Record<string, string> = {
 export default function RequestsClient({ jobs }: Props) {
   const router = useRouter()
   const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list')
+
+  // 내 요청 상태 변화 실시간 반영 (RLS가 본인 job만 이벤트 전달)
+  useJobsRealtime({ onRefresh: () => router.refresh() })
 
   const calendarEvents = jobs.map((j) => ({
     id: j.id,

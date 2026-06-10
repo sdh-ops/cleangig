@@ -27,6 +27,7 @@ import PullToRefresh from '@/components/common/PullToRefresh'
 import SetupChecklist from '@/components/common/SetupChecklist'
 import { formatKRW, formatScheduled, spaceTypeLabel, maskAddress } from '@/lib/utils'
 import { TIER_BENEFITS } from '@/lib/matching'
+import { useJobsRealtime } from '@/lib/useJobRealtime'
 import type { JobStatus, SpaceType } from '@/lib/types'
 
 type Profile = {
@@ -77,6 +78,10 @@ export default function CleanMainClient({ profile, activeJob, openJobs, weekEarn
 
   const [showPushBanner, setShowPushBanner] = useState(false)
   const [pushLoading, setPushLoading] = useState(false)
+
+  // 내 작업 + 새 OPEN 일감 실시간 반영.
+  // RLS 특성상 다른 워커가 잡은 일감의 '제거' 이벤트는 안 와서 30초 폴링 병행.
+  useJobsRealtime({ onRefresh: () => router.refresh(), pollMs: 30_000 })
 
   useEffect(() => {
     if (typeof window === 'undefined') return
