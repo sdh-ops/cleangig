@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { LocateFixed, Loader2, MapPin, X, Search } from 'lucide-react'
 import { waitForNaverMaps, loadNaverMapsScript, openNaverRoute } from '@/lib/naver'
+import { getPosition } from '@/lib/geolocation'
 import { formatKRW, haversineKm, maskAddress, spaceTypeLabel } from '@/lib/utils'
 import type { SpaceType } from '@/lib/types'
 
@@ -297,13 +298,12 @@ export default function JobsMap({
   const goToMyLocation = useCallback(() => {
     if (!mapInstance.current) return
     const naver = (window as any).naver
-    navigator.geolocation?.getCurrentPosition(pos => {
-      mapInstance.current.panTo(
-        new naver.maps.LatLng(pos.coords.latitude, pos.coords.longitude),
-        { duration: 400 }
-      )
+    // 공유 캐시 사용 — 다른 화면에서 이미 허용/조회했으면 프롬프트 없이 즉시
+    getPosition({ maxAgeMs: 60_000 }).then((res) => {
+      if (!res.ok || !mapInstance.current) return
+      mapInstance.current.panTo(new naver.maps.LatLng(res.lat, res.lng), { duration: 400 })
       mapInstance.current.setZoom(15)
-    }, undefined, { enableHighAccuracy: true, timeout: 8000 })
+    })
   }, [])
 
   // ─── "이 지역 검색" ──────────────────────────────────────────────────

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { waitForNaverMaps, loadNaverMapsScript } from '@/lib/naver'
+import { getPosition, checkPermission } from '@/lib/geolocation'
 import { Loader2, MapPin } from 'lucide-react'
 
 type Marker = {
@@ -76,25 +77,25 @@ export default function NaverMap({
         })
       }
 
-      if (showCurrent && navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          (pos) => {
-            if (canceled) return
-            const me = new naver.maps.Marker({
-              position: new naver.maps.LatLng(pos.coords.latitude, pos.coords.longitude),
-              map,
-              icon: {
-                content:
-                  '<div style="width:16px;height:16px;background:#3B82F6;border:3px solid white;border-radius:50%;box-shadow:0 0 0 4px rgba(59,130,246,0.25)"></div>',
-                anchor: new naver.maps.Point(8, 8),
-              },
-              zIndex: 500,
-            })
-            currentMarker.current = me
-          },
-          () => {},
-          { enableHighAccuracy: true },
-        )
+      if (showCurrent) {
+        // 지도 렌더마다 권한 프롬프트 띄우지 않음 — 이미 허용된 경우에만 현위치 표시
+        ;(async () => {
+          const perm = await checkPermission()
+          if (perm !== 'granted' || canceled) return
+          const res = await getPosition({ maxAgeMs: 60_000 })
+          if (!res.ok || canceled) return
+          const me = new naver.maps.Marker({
+            position: new naver.maps.LatLng(res.lat, res.lng),
+            map,
+            icon: {
+              content:
+                '<div style="width:16px;height:16px;background:#3B82F6;border:3px solid white;border-radius:50%;box-shadow:0 0 0 4px rgba(59,130,246,0.25)"></div>',
+              anchor: new naver.maps.Point(8, 8),
+            },
+            zIndex: 500,
+          })
+          currentMarker.current = me
+        })()
       }
     })()
     return () => {

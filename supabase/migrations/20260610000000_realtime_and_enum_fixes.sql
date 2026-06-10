@@ -30,7 +30,13 @@ end $$;
 alter type payment_status add value if not exists 'PAID_OUT';
 
 -- ---------------------------------------------
--- 3) claim_job — 워커 지원 원자적 처리
+-- 3) 위치 미확인 도착 플래그
+--    (워커가 위치 권한 거부 시 침묵 통과 대신 명시 동의 + 기록)
+-- ---------------------------------------------
+alter table public.jobs add column if not exists arrival_unverified boolean not null default false;
+
+-- ---------------------------------------------
+-- 4) claim_job — 워커 지원 원자적 처리
 --    OPEN + worker_id null인 경우에만 배정. 동시 탭 시 한 명만 성공.
 -- ---------------------------------------------
 create or replace function public.claim_job(p_job_id uuid)

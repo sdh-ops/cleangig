@@ -34,6 +34,8 @@ import ReviewModal from '@/components/common/ReviewModal'
 import { formatKRW, formatScheduled, spaceTypeLabel, maskAddress, haversineKm } from '@/lib/utils'
 import { notify } from '@/lib/notifications'
 import { openNaverRoute, searchNaverAddress } from '@/lib/naver'
+import { getPosition, startTracking, getCachedFix, type GeoErrorReason } from '@/lib/geolocation'
+import LocationPermissionGate from '@/components/common/LocationPermissionGate'
 import type { ChecklistItem, JobStatus, SpaceType } from '@/lib/types'
 
 type SupplyLevel = 'low' | 'out'
@@ -117,6 +119,10 @@ export default function WorkerJobDetail() {
   const [currentChecklistIdx, setCurrentChecklistIdx] = useState<number | null>(null)
   const [workerReady, setWorkerReady] = useState<{ bank: boolean; tax: boolean } | null>(null)
   const [codeRevealed, setCodeRevealed] = useState(false)
+  // 위치 권한 거부/실패 상태 — 안내 카드 노출용
+  const [geoDenied, setGeoDenied] = useState<GeoErrorReason | null>(null)
+  // 위치 확인 없이 도착 처리 확인 다이얼로그
+  const [showUnverifiedArrival, setShowUnverifiedArrival] = useState(false)
 
   // 완료 증거 사진 (SUBMITTED 전 최소 1장 필수)
   const [completionPhotos, setCompletionPhotos] = useState<string[]>([])
@@ -130,29 +136,26 @@ export default function WorkerJobDetail() {
   const [uploadingExtra, setUploadingExtra] = useState(false)
   const [submittingExtra, setSubmittingExtra] = useState(false)
 
-  // Periodic GPS ping while worker is traveling/working
+  // 이동·작업 중 위치 공유 — watchPosition 1개 (권한 프롬프트 1회), DB 쓰기는 45초 스로틀.
+  // 기존 setInterval+getCurrentPosition 패턴은 일부 안드로이드에서 프롬프트가 반복되던 원인.
   useEffect(() => {
     if (!job || !userId || job.worker_id !== userId) return
     if (!['EN_ROUTE', 'ARRIVED', 'IN_PROGRESS'].includes(job.status)) return
-    if (typeof navigator === 'undefined' || !navigator.geolocation) return
 
-    const ping = () => {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          supabase.from('worker_locations').insert({
-            job_id: job.id,
-            worker_id: userId,
-            lat: pos.coords.latitude,
-            lng: pos.coords.longitude,
+    const stop = startTracking(
+      (fix) => {
+        supabase
+          .from('worker_locations')
+          .insert({ job_id: job.id, worker_id: userId, lat: fix.lat, lng: fix.lng })
+          .then(({ error }) => {
+            // 위치 기록 실패는 작업 진행을 막지 않음 — 콘솔에만 남김
+            if (error) console.warn('[worker_locations] insert 실패:', error.message)
           })
-        },
-        () => {},
-        { enableHighAccuracy: true, timeout: 15000, maximumAge: 30000 },
-      )
-    }
-    ping()
-    const t = setInterval(ping, 45_000)
-    return () => clearInterval(t)
+      },
+      (reason) => setGeoDenied(reason),
+      { throttleMs: 45_000 },
+    )
+    return stop
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [job?.status, userId, job?.id])
 
@@ -255,28 +258,33 @@ export default function WorkerJobDetail() {
     setTransitioning(false)
   }
 
-  const advanceStatus = async () => {
+  const advanceStatus = async (opts?: { skipArrivalCheck?: boolean }) => {
     if (!job || !flow) return
-    if (job.status === 'EN_ROUTE') {
-      try {
-        const pos = await new Promise<GeolocationPosition>((resolve, reject) => {
-          navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true, timeout: 10000 })
-        })
+    let arrivalUnverified = false
+    if (job.status === 'EN_ROUTE' && !opts?.skipArrivalCheck) {
+      // 추적 중이라 캐시가 신선함 — 추가 프롬프트 없이 검증
+      const pos = await getPosition({ maxAgeMs: 30_000, timeoutMs: 10_000 })
+      if (pos.ok) {
         const coords = job.spaces?.location?.coordinates
         if (coords && coords.length === 2) {
-          const km = haversineKm(pos.coords.latitude, pos.coords.longitude, coords[1], coords[0])
+          const km = haversineKm(pos.lat, pos.lng, coords[1], coords[0])
           if (km > 0.2) {
             setErr(`현장에서 약 ${km.toFixed(1)}km 떨어져 있어요. 현장 100m 이내에서 도착을 눌러주세요.`)
             return
           }
         }
-      } catch {
-        // ignore if user refused geolocation
+      } else {
+        // 기존엔 침묵 통과 → 이제 명시적 확인 (위치 없이 도착 처리할지)
+        setGeoDenied(pos.reason)
+        setShowUnverifiedArrival(true)
+        return
       }
     }
+    if (opts?.skipArrivalCheck) arrivalUnverified = true
     setTransitioning(true)
     try {
       const payload: Record<string, unknown> = { status: flow.next, updated_at: new Date().toISOString() }
+      if (arrivalUnverified && flow.next === 'ARRIVED') payload.arrival_unverified = true
       if (flow.next === 'IN_PROGRESS') payload.started_at = new Date().toISOString()
       if (flow.next === 'SUBMITTED') {
         const required = checklist.filter((c) => c.required)
@@ -305,19 +313,15 @@ export default function WorkerJobDetail() {
       if (error) throw error
 
       if (flow.next === 'EN_ROUTE' || flow.next === 'ARRIVED') {
-        if (navigator.geolocation && userId) {
-          navigator.geolocation.getCurrentPosition(
-            (pos) => {
-              supabase.from('worker_locations').insert({
-                job_id: job.id,
-                worker_id: userId,
-                lat: pos.coords.latitude,
-                lng: pos.coords.longitude,
-              })
-            },
-            () => {},
-            { enableHighAccuracy: true, timeout: 8000 },
-          )
+        // 추적(watchPosition)이 곧 시작/진행 중 — 캐시 좌표만 기록, 추가 프롬프트 없음
+        const cached = getCachedFix()
+        if (cached && userId) {
+          supabase
+            .from('worker_locations')
+            .insert({ job_id: job.id, worker_id: userId, lat: cached.lat, lng: cached.lng })
+            .then(({ error }) => {
+              if (error) console.warn('[worker_locations] insert 실패:', error.message)
+            })
         }
       }
 
@@ -1009,6 +1013,50 @@ export default function WorkerJobDetail() {
         </div>
       </div>
 
+      {/* 위치 권한 거부 안내 — 이동·작업 중에만 */}
+      {isMine && geoDenied && ['EN_ROUTE', 'ARRIVED', 'IN_PROGRESS'].includes(job.status) && (
+        <div className="pb-24">
+          <LocationPermissionGate reason={geoDenied} />
+        </div>
+      )}
+
+      {/* 위치 확인 없이 도착 처리 확인 */}
+      {showUnverifiedArrival && (
+        <div
+          className="fixed inset-0 z-50 bg-ink/40 flex items-end sm:items-center justify-center"
+          onClick={() => setShowUnverifiedArrival(false)}
+        >
+          <div
+            className="w-full max-w-[480px] rounded-t-3xl sm:rounded-3xl bg-surface p-6 pb-8 safe-bottom"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="h-section mb-2">위치를 확인할 수 없어요</h3>
+            <p className="text-[15px] text-text-muted leading-relaxed mb-5">
+              위치 권한이 꺼져 있어 현장 도착을 확인할 수 없어요.
+              <br />
+              위치 확인 없이 도착 처리할까요? (사장님에게 &quot;위치 미확인&quot;으로 표시될 수 있어요)
+            </p>
+            <div className="flex flex-col gap-2">
+              <button
+                onClick={() => {
+                  setShowUnverifiedArrival(false)
+                  advanceStatus({ skipArrivalCheck: true })
+                }}
+                className="btn btn-primary w-full"
+              >
+                네, 도착했어요
+              </button>
+              <button
+                onClick={() => setShowUnverifiedArrival(false)}
+                className="btn btn-ghost w-full"
+              >
+                취소
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Bottom action */}
       {isMine && flow && (
         <div className="fixed bottom-0 inset-x-0 border-t border-line-soft bg-surface/95 backdrop-blur safe-bottom">
@@ -1019,7 +1067,7 @@ export default function WorkerJobDetail() {
                 <p className="text-[12px] font-bold text-danger leading-snug">{err}</p>
               </div>
             )}
-            <button onClick={advanceStatus} disabled={transitioning} className="btn btn-primary w-full">
+            <button onClick={() => advanceStatus()} disabled={transitioning} className="btn btn-primary w-full">
               {transitioning ? (
                 <Loader2 size={20} className="animate-spin" />
               ) : (

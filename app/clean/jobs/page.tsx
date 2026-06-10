@@ -16,6 +16,7 @@ import PullToRefresh from '@/components/common/PullToRefresh'
 import JobsMap, { type JobMapItem } from './JobsMap'
 import { formatKRW, formatScheduled, spaceTypeLabel, shortAddress, haversineKm, difficultyLabel, parseGeoPoint } from '@/lib/utils'
 import { useJobsRealtime } from '@/lib/useJobRealtime'
+import { getPosition, checkPermission } from '@/lib/geolocation'
 import type { JobStatus, SpaceType } from '@/lib/types'
 
 type Job = {
@@ -77,34 +78,31 @@ export default function JobsListPage() {
   const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
   // ─── GPS ─────────────────────────────────────────────────────────────
+  // 사용자 액션(반경 토글·내 주변 버튼)으로 호출 — 필요 시 권한 프롬프트 1회
   const requestGps = useCallback((cb?: () => void) => {
-    if (!navigator.geolocation) { setGpsError(true); return }
     setGpsLoading(true)
     setGpsError(false)
-    navigator.geolocation.getCurrentPosition(
-      pos => {
-        setUserLat(pos.coords.latitude)
-        setUserLng(pos.coords.longitude)
-        setSearchCenter({ lat: pos.coords.latitude, lng: pos.coords.longitude })
-        setGpsLoading(false)
-        cb?.()
-      },
-      () => { setGpsLoading(false); setGpsError(true) },
-      { enableHighAccuracy: true, timeout: 10000 }
-    )
+    getPosition({ maxAgeMs: 60_000 }).then((res) => {
+      setGpsLoading(false)
+      if (!res.ok) { setGpsError(true); return }
+      setUserLat(res.lat)
+      setUserLng(res.lng)
+      setSearchCenter({ lat: res.lat, lng: res.lng })
+      cb?.()
+    })
   }, [])
 
-  // 마운트 시 조용히 GPS
+  // 마운트 시: 이미 허용된 경우에만 조용히 조회 — 페이지 진입마다 프롬프트 띄우지 않음
   useEffect(() => {
-    navigator.geolocation?.getCurrentPosition(
-      pos => {
-        setUserLat(pos.coords.latitude)
-        setUserLng(pos.coords.longitude)
-        setSearchCenter({ lat: pos.coords.latitude, lng: pos.coords.longitude })
-      },
-      () => {},
-      { enableHighAccuracy: false, timeout: 6000 }
-    )
+    ;(async () => {
+      const perm = await checkPermission()
+      if (perm !== 'granted') return
+      const res = await getPosition({ maxAgeMs: 120_000, highAccuracy: false })
+      if (!res.ok) return
+      setUserLat(res.lat)
+      setUserLng(res.lng)
+      setSearchCenter({ lat: res.lat, lng: res.lng })
+    })()
   }, [])
 
   // ─── fetchJobs ───────────────────────────────────────────────────────
