@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server'
+import { createClient } from '@/lib/supabase/server'
+import { isPlatformAdmin } from '@/lib/admin'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -6,10 +8,8 @@ export const runtime = 'nodejs'
 /**
  * GET /api/health
  *
- * 운영 환경 준비 상태 진단 — 필수 환경 변수 존재 여부 확인
- * 실제 DB 연결 테스트는 하지 않음 (경량 체크)
- *
- * 관리자 페이지에서 호출하거나 배포 후 수동 확인용으로 사용
+ * 공개 응답: { ok, status }만 — 어떤 시크릿이 설정/미설정인지는 노출하지 않음
+ * 관리자 응답: 환경변수별 체크 상세 포함 (배포 후 진단용)
  */
 export async function GET() {
   const checks: { name: string; ok: boolean; note?: string }[] = [
@@ -40,12 +40,34 @@ export async function GET() {
   ]
 
   const allOk = checks.every((c) => c.ok)
-  const missing = checks.filter((c) => !c.ok)
+  const status = allOk ? 'healthy' : 'degraded'
 
+  // 상세 진단은 관리자에게만 — 비관리자/비로그인에겐 상태만
+  let isAdmin = false
+  try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user) {
+      const { data: me } = await supabase
+        .from('users')
+        .select('email, role')
+        .eq('id', user.id)
+        .single()
+      isAdmin = isPlatformAdmin(me?.email, me?.role)
+    }
+  } catch {
+    // 세션 조회 실패 = 비관리자 취급
+  }
+
+  if (!isAdmin) {
+    return NextResponse.json({ ok: allOk, status }, { status: allOk ? 200 : 503 })
+  }
+
+  const missing = checks.filter((c) => !c.ok)
   return NextResponse.json(
     {
       ok: allOk,
-      status: allOk ? 'healthy' : 'degraded',
+      status,
       checks,
       missing: missing.map((c) => ({ name: c.name, note: c.note })),
     },

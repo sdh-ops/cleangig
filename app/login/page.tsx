@@ -6,6 +6,7 @@ import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ChevronLeft, Mail, Lock, AlertCircle, Loader2, Sparkles } from 'lucide-react'
 import Logo from '@/components/common/Logo'
+import { toKoreanErrorMessage } from '@/lib/errors'
 
 function LoginContent() {
   const searchParams = useSearchParams()
@@ -45,7 +46,7 @@ function LoginContent() {
       if (mode === 'email') {
         const { data: authData, error } = await supabase.auth.signInWithPassword({ email, password })
         if (error) {
-          setMessage(error.message === 'Invalid login credentials' ? '이메일 또는 비밀번호가 일치하지 않습니다.' : error.message)
+          setMessage(toKoreanErrorMessage(error.message))
           setMessageType('error')
           setLoading(false)
           return
@@ -65,7 +66,7 @@ function LoginContent() {
           options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
         })
         if (error) {
-          setMessage(error.message)
+          setMessage(toKoreanErrorMessage(error.message))
           setMessageType('error')
           setLoading(false)
           return

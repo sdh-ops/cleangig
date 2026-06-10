@@ -1,7 +1,11 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { notifyWorkersForJob } from '@/lib/notify'
 
 export const runtime = 'nodejs'
+
+const MIN_PRICE = 15000
+const MAX_PRICE = 1_000_000
 
 /**
  * 고정 청소 (Recurring) 생성
@@ -46,16 +50,32 @@ export async function POST(req: Request) {
     if (!space_id || !first_scheduled_at || typeof price !== 'number') {
       return NextResponse.json({ ok: false, error: 'bad_request' }, { status: 400 })
     }
-    const n = Math.min(Math.max(Number(occurrences) || 4, 1), 12)
 
-    const stepDays = frequency === 'MONTHLY' ? 30 : frequency === 'BIWEEKLY' ? 14 : 7
+    // 가격 서버 검증 — 클라이언트 계산값 신뢰 금지
+    if (!Number.isInteger(price) || price < MIN_PRICE || price > MAX_PRICE) {
+      return NextResponse.json({ ok: false, error: 'invalid_price' }, { status: 400 })
+    }
+
+    // 공간 소유권 검증
+    const { data: space } = await supabase
+      .from('spaces')
+      .select('id, operator_id')
+      .eq('id', space_id)
+      .single()
+    if (!space || space.operator_id !== user.id) {
+      return NextResponse.json({ ok: false, error: 'forbidden_space' }, { status: 403 })
+    }
+
+    const n = Math.min(Math.max(Number(occurrences) || 4, 1), 12)
     const seriesId = crypto.randomUUID()
 
     const rows: Record<string, unknown>[] = []
     const start = new Date(first_scheduled_at)
     for (let i = 0; i < n; i++) {
       const d = new Date(start)
-      d.setDate(d.getDate() + i * stepDays)
+      // MONTHLY는 달력 기준(말일 보정 포함), 나머지는 일 단위
+      if (frequency === 'MONTHLY') d.setMonth(d.getMonth() + i)
+      else d.setDate(d.getDate() + i * (frequency === 'BIWEEKLY' ? 14 : 7))
       rows.push({
         space_id,
         operator_id: user.id,
@@ -83,17 +103,13 @@ export async function POST(req: Request) {
     const { data: inserted, error } = await supabase.from('jobs').insert(rows).select('id')
     if (error) throw error
 
-    // 첫 회차만 자동 매칭 트리거
+    // 첫 회차만 자동 매칭 트리거 — 서버 직접 호출 (origin 헤더 기반 fetch 제거)
     const firstId = inserted?.[0]?.id
     if (firstId) {
-      const originHdr = req.headers.get('origin') || req.headers.get('host')
-      const origin = originHdr ? (originHdr.startsWith('http') ? originHdr : `https://${originHdr}`) : ''
-      if (origin) {
-        fetch(`${origin}/api/jobs/notify-workers`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', cookie: req.headers.get('cookie') || '' },
-          body: JSON.stringify({ job_id: firstId }),
-        }).catch(() => null)
+      try {
+        await notifyWorkersForJob(firstId)
+      } catch (e) {
+        console.error('[recurring] notify-workers 실패:', e)
       }
     }
 

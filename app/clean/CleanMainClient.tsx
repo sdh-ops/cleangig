@@ -135,7 +135,7 @@ export default function CleanMainClient({ profile, activeJob, openJobs, weekEarn
           </div>
           <button
             onClick={handleDismissPush}
-            className="shrink-0 p-1 rounded-full text-text-faint hover:text-ink transition-colors"
+            className="shrink-0 p-2.5 rounded-full text-text-faint hover:text-ink transition-colors"
             aria-label="닫기"
           >
             <X size={15} />
@@ -159,7 +159,7 @@ export default function CleanMainClient({ profile, activeJob, openJobs, weekEarn
               </div>
               {/* Tier ring indicator */}
               <div
-                className="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full border-2 border-white flex items-center justify-center text-[11px] font-black"
+                className="absolute -bottom-0.5 -right-0.5 w-6 h-6 rounded-full border-2 border-white flex items-center justify-center text-[12px] font-black"
                 style={{ backgroundColor: tierInfo.color, color: '#fff' }}
               >
                 {tier.charAt(0)}
@@ -230,7 +230,7 @@ export default function CleanMainClient({ profile, activeJob, openJobs, weekEarn
                   </div>
 
                   <div className="mt-4 p-3.5 rounded-2xl bg-white/10">
-                    <p className="text-[13px] text-white/60 font-bold mb-0.5">지금 해야 할 일</p>
+                    <p className="text-[13px] text-white/80 font-bold mb-0.5">지금 해야 할 일</p>
                     <p className="text-[15px] font-extrabold text-brand-light leading-snug">
                       {statusSubline(activeJob.status, 'worker')}
                     </p>
@@ -364,7 +364,7 @@ export default function CleanMainClient({ profile, activeJob, openJobs, weekEarn
                       <div className="t-money text-[15px] text-brand-dark font-black">
                         {formatKRW(Math.round(job.price * 0.80), { short: true })}
                       </div>
-                      <p className="text-[12px] font-bold text-text-faint mt-0.5">예상 정산</p>
+                      <p className="text-[14px] font-bold text-text-faint mt-0.5">예상 정산</p>
                     </div>
                   </Link>
                 </li>

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { isPlatformAdmin } from '@/lib/admin'
 
 export const runtime = 'nodejs'
@@ -34,8 +35,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: false, error: 'missing_params' }, { status: 400 })
     }
 
-    // admin RLS policies (auth.jwt() email-based) bypass need for service role key
-    const admin = supabase
+    // service_role 클라이언트 — RLS 정책 변경과 무관하게 정산 상태 변경 보장
+    const admin = createAdminClient()
 
     // 현재 payment 조회
     const { data: payment, error: fetchErr } = await admin
@@ -182,10 +183,8 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ ok: false, error: 'invalid_action' }, { status: 400 })
   } catch (e) {
+    // 내부 에러 상세는 서버 로그에만 — 클라이언트에 DB 구조 노출 금지
     console.error('[settle-payment]', e)
-    return NextResponse.json(
-      { ok: false, error: e instanceof Error ? e.message : 'internal' },
-      { status: 500 },
-    )
+    return NextResponse.json({ ok: false, error: 'internal' }, { status: 500 })
   }
 }

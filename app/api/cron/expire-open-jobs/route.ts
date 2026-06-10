@@ -63,6 +63,7 @@ export async function GET(request: Request) {
         .eq('status', 'HELD')
         .maybeSingle()
 
+      let refundExecuted = false
       if (payment) {
         // Toss 환불 (pg_payment_key 있을 때)
         if (payment.pg_payment_key && process.env.TOSS_SECRET_KEY) {
@@ -75,24 +76,34 @@ export async function GET(request: Request) {
               body: JSON.stringify({ cancelReason: '매칭 파트너 없음 — 자동 전액 환불', cancelAmount: payment.gross_amount }),
             },
           )
-          if (!tossRes.ok) {
+          if (tossRes.ok) {
+            refundExecuted = true
+          } else {
             const tossErr = await tossRes.json().catch(() => ({}))
-            console.error('[expire-open-jobs] Toss cancel failed', tossErr)
+            console.error('[expire-open-jobs] Toss cancel failed — 수동 환불 필요. payment:', payment.id, tossErr)
           }
         }
 
-        await supabase
-          .from('payments')
-          .update({ status: 'REFUNDED', updated_at: now })
-          .eq('id', payment.id)
+        // 환불 성공 시에만 REFUNDED — 실패 시 HELD 유지해 관리자 settle-payment로 재시도 가능
+        if (refundExecuted || !payment.pg_payment_key) {
+          await supabase
+            .from('payments')
+            .update({ status: 'REFUNDED', updated_at: now })
+            .eq('id', payment.id)
+        }
       }
 
-      // 공간파트너에게 알림
+      // 공간파트너에게 알림 — 환불 실제 실행 여부에 따라 문구 분기
       const spaceName = (job as any).spaces?.name ?? '작업'
+      const refundMsg = refundExecuted
+        ? ' 결제가 전액 환불됩니다.'
+        : payment
+          ? ' 환불이 순차 처리될 예정입니다. 지연 시 고객센터로 문의해주세요.'
+          : ''
       await supabase.from('notifications').insert({
         user_id: job.operator_id,
         title: '청소 요청이 자동 취소됐어요',
-        message: `${spaceName} 작업에 4시간 내 매칭된 클린파트너가 없어 취소됐습니다. 결제가 전액 환불됩니다.`,
+        message: `${spaceName} 작업에 4시간 내 매칭된 클린파트너가 없어 취소됐습니다.${refundMsg}`,
         url: `/requests`,
         type: 'job_expired',
         is_read: false,

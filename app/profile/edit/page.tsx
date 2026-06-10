@@ -77,7 +77,7 @@ export default function ProfileEditPage() {
 
   if (loading) {
     return (
-      <div className="sseuksak-shell flex items-center justify-center">
+      <div role="status" aria-label="불러오는 중" className="sseuksak-shell flex items-center justify-center">
         <Loader2 size={24} className="animate-spin text-brand" />
       </div>
     )
@@ -113,28 +113,28 @@ export default function ProfileEditPage() {
 
         <div className="flex flex-col gap-4">
           <div>
-            <label className="t-meta block mb-2 ml-1">이름</label>
+            <label htmlFor="edit-name" className="t-meta block mb-2 ml-1">이름</label>
             <div className="relative">
               <User size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-text-faint" />
-              <input value={name} onChange={(e) => setName(e.target.value)} className="input pl-11" />
+              <input id="edit-name" value={name} onChange={(e) => setName(e.target.value)} className="input pl-11" />
             </div>
           </div>
           <div>
-            <label className="t-meta block mb-2 ml-1">연락처</label>
+            <label htmlFor="edit-phone" className="t-meta block mb-2 ml-1">연락처</label>
             <div className="relative">
               <Phone size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-text-faint" />
-              <input value={phone} onChange={(e) => setPhone(e.target.value.replace(/[^0-9\-+]/g, ''))} className="input pl-11" inputMode="tel" />
+              <input id="edit-phone" value={phone} onChange={(e) => setPhone(e.target.value.replace(/[^0-9\-+]/g, ''))} className="input pl-11" inputMode="tel" />
             </div>
           </div>
           {role === 'operator' && (
             <div>
-              <label className="t-meta block mb-2 ml-1">사업체명 (선택)</label>
-              <input value={business} onChange={(e) => setBusiness(e.target.value)} className="input" />
+              <label htmlFor="edit-business" className="t-meta block mb-2 ml-1">사업체명 (선택)</label>
+              <input id="edit-business" value={business} onChange={(e) => setBusiness(e.target.value)} className="input" />
             </div>
           )}
           <div>
-            <label className="t-meta block mb-2 ml-1">한 줄 소개</label>
-            <textarea value={bio} onChange={(e) => setBio(e.target.value)} className="input min-h-[80px]" rows={2} maxLength={120} placeholder="예) 홍대 일대 파티룸 · 에어비앤비 청소 전문" />
+            <label htmlFor="edit-bio" className="t-meta block mb-2 ml-1">한 줄 소개</label>
+            <textarea id="edit-bio" value={bio} onChange={(e) => setBio(e.target.value)} className="input min-h-[80px]" rows={2} maxLength={120} placeholder="예) 홍대 일대 파티룸 · 에어비앤비 청소 전문" />
           </div>
           {err && <div className="p-3 bg-danger-soft rounded-xl text-[15px] font-bold text-danger">{err}</div>}
         </div>

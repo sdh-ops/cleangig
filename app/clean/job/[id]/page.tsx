@@ -794,9 +794,10 @@ export default function WorkerJobDetail() {
                     <img src={url} alt="" className="w-20 h-20 rounded-xl object-cover border border-line-soft" />
                     <button
                       onClick={() => setCompletionPhotos((p) => p.filter((_, j) => j !== i))}
-                      className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-danger text-white flex items-center justify-center"
+                      aria-label="사진 삭제"
+                      className="absolute -top-1.5 -right-1.5 w-7 h-7 rounded-full bg-danger text-white flex items-center justify-center"
                     >
-                      <X size={11} />
+                      <X size={14} />
                     </button>
                   </div>
                 ))}
@@ -805,7 +806,7 @@ export default function WorkerJobDetail() {
                   disabled={uploadingCompletion}
                   className="w-20 h-20 rounded-xl border-2 border-dashed border-line flex flex-col items-center justify-center gap-1 text-text-faint hover:border-brand hover:text-brand-dark transition"
                 >
-                  {uploadingCompletion ? <Loader2 size={18} className="animate-spin" /> : <><Camera size={18} /><span className="text-[12px] font-bold">사진 추가</span></>}
+                  {uploadingCompletion ? <Loader2 size={18} className="animate-spin" /> : <><Camera size={18} /><span className="text-[14px] font-bold">사진 추가</span></>}
                 </button>
               </div>
               {completionPhotos.length > 0 && completionPhotos.length < MIN_COMPLETION_PHOTOS && (
@@ -840,6 +841,7 @@ export default function WorkerJobDetail() {
                     <button
                       key={name}
                       onClick={() => cycleSupply(name)}
+                      aria-pressed={!!item}
                       className={`px-3 py-1.5 rounded-full text-[14.5px] font-bold border transition ${colorClass}`}
                     >
                       {item && <span className="mr-1 text-[13px]">{'●'}</span>}
@@ -906,9 +908,10 @@ export default function WorkerJobDetail() {
                           <img src={url} alt="" className="w-full h-full rounded-lg object-cover border border-line-soft" />
                           <button
                             onClick={() => setExtraPhotos((p) => p.filter((_, j) => j !== i))}
-                            className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-danger text-white flex items-center justify-center"
+                            aria-label="사진 삭제"
+                            className="absolute -top-1.5 -right-1.5 w-7 h-7 rounded-full bg-danger text-white flex items-center justify-center"
                           >
-                            <X size={11} />
+                            <X size={14} />
                           </button>
                         </div>
                       ))}
@@ -919,7 +922,7 @@ export default function WorkerJobDetail() {
                           className="w-16 h-16 rounded-lg border-2 border-dashed border-line-strong flex flex-col items-center justify-center gap-1 text-text-faint"
                         >
                           {uploadingExtra ? <Loader2 size={14} className="animate-spin" /> : <ImageIcon size={16} />}
-                          <span className="text-[11px] font-bold">추가</span>
+                          <span className="text-[13px] font-bold">추가</span>
                         </button>
                       )}
                     </div>

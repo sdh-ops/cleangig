@@ -46,6 +46,7 @@ export async function subscribeToPush(): Promise<PushSubscription | null> {
 }
 
 export async function unsubscribeFromPush(): Promise<void> {
+  if (typeof window === 'undefined' || !('serviceWorker' in navigator)) return
   const reg = await navigator.serviceWorker.ready
   const sub = await reg.pushManager.getSubscription()
   if (sub) {

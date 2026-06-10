@@ -134,7 +134,8 @@ export function calculatePrice(opts: PriceOptions): PriceBreakdown {
 
   let night_surcharge = 0
   try {
-    const hour = new Date(opts.scheduled_at).getHours()
+    // KST 고정 — 서버(UTC)·클라(KST) 어디서 실행돼도 동일한 할증 판정
+    const hour = (new Date(opts.scheduled_at).getUTCHours() + 9) % 24
     if (opts.night_premium ?? (hour >= 22 || hour < 6)) {
       night_surcharge = Math.round(total * 0.2)
       total += night_surcharge

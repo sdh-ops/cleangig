@@ -49,7 +49,7 @@ export default function PreferencesPage() {
   }
 
   if (loading) {
-    return <div className="sseuksak-shell flex items-center justify-center"><Loader2 size={24} className="animate-spin text-brand" /></div>
+    return <div role="status" aria-label="불러오는 중" className="sseuksak-shell flex items-center justify-center"><Loader2 size={24} className="animate-spin text-brand" /></div>
   }
 
   return (

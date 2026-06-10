@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { notifyWorkersForJob } from '@/lib/notify'
 
 export const runtime = 'nodejs'
 
@@ -68,6 +69,18 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: false, error: 'order_expired' }, { status: 400 })
     }
 
+    // 동시 confirm 방지 (CAS): PENDING → PROCESSING 전이에 성공한 요청만 진행.
+    // 같은 orderId로 동시에 들어온 두 요청 중 하나만 Toss 승인을 호출한다.
+    const { data: claimed } = await admin
+      .from('payment_orders')
+      .update({ status: 'PROCESSING' })
+      .eq('id', orderId)
+      .eq('status', order.status) // 읽은 시점 상태 그대로일 때만
+      .select('id')
+    if (!claimed || claimed.length === 0) {
+      return NextResponse.json({ ok: false, error: 'confirm_in_progress' }, { status: 409 })
+    }
+
     // 2. Toss 결제 승인 API 호출
     const encKey = Buffer.from(`${TOSS_SECRET_KEY}:`).toString('base64')
     const tossRes = await fetch(TOSS_CONFIRM_URL, {
@@ -123,7 +136,8 @@ export async function POST(req: Request) {
     const hostFee = pb.host_fee ?? Math.round(jd.price * 0.05)
     const workerFee = pb.worker_fee ?? Math.round(jd.price * 0.15)
     const platformFee = pb.platform_revenue ?? hostFee + workerFee
-    const workerSubtotal = jd.price - workerFee
+    // 정산 공식: gross − host_fee − worker_fee (lib/pricing.ts calculateSettlement과 동일)
+    const workerSubtotal = jd.price - hostFee - workerFee
     const withholdingTax = pb.estimated_withholding ?? Math.round(workerSubtotal * 0.033)
     const workerPayout = pb.estimated_worker_payout ?? workerSubtotal - withholdingTax
     // Derive actual fee rates from breakdown amounts (avoids stale hardcoded values)
@@ -155,13 +169,12 @@ export async function POST(req: Request) {
       .update({ status: 'COMPLETED', pg_payment_key: paymentKey, job_id: job.id })
       .eq('id', orderId)
 
-    // 6. 워커 매칭 알림 (fire-and-forget)
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://cleangig.vercel.app'
-    fetch(`${appUrl}/api/jobs/notify-workers`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ job_id: job.id }),
-    }).catch((e) => console.warn('[confirm] notify-workers failed', e))
+    // 6. 워커 매칭 알림 — 서버에서 직접 호출 (HTTP 홉 제거: 기존 fetch는 쿠키 미전달로 401 유실)
+    try {
+      await notifyWorkersForJob(job.id)
+    } catch (e) {
+      console.error('[confirm] notify-workers 실패 (결제는 정상 완료):', e)
+    }
 
     return NextResponse.json({ ok: true, jobId: job.id })
   } catch (e) {

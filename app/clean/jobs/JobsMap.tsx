@@ -405,7 +405,7 @@ export default function JobsMap({
                   <div className="t-money text-[17px] text-brand-dark font-black">
                     {formatKRW(Math.round(selJob.price * 0.80), { short: true })}
                   </div>
-                  <p className="text-[12px] font-bold text-text-faint mt-0.5">예상 정산</p>
+                  <p className="text-[14px] font-bold text-text-faint mt-0.5">예상 정산</p>
                 </div>
               </div>
               <div className="flex gap-2 mt-3">
@@ -425,7 +425,8 @@ export default function JobsMap({
                 </a>
                 <button
                   onClick={() => { setSelected(null); onJobSelect?.(null) }}
-                  className="w-9 h-9 rounded-xl bg-surface-muted flex items-center justify-center text-text-faint active:scale-95 transition"
+                  aria-label="닫기"
+                  className="w-11 h-11 rounded-xl bg-surface-muted flex items-center justify-center text-text-faint active:scale-95 transition"
                 >
                   <X size={16} />
                 </button>

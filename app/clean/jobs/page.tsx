@@ -576,7 +576,7 @@ export default function JobsListPage() {
                               )}
                             </p>
                             <div className="flex flex-col items-end">
-                              <span className="text-[11.5px] text-text-faint font-bold">예상 수령</span>
+                              <span className="text-[14px] text-text-faint font-bold">예상 수령</span>
                               <span className="t-money text-[14.5px] text-brand-dark font-black">
                                 {formatKRW(Math.round(job.price * 0.80 * 0.967), { short: true })}
                               </span>

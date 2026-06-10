@@ -15,6 +15,7 @@ import {
   AlertCircle,
 } from 'lucide-react'
 import type { TaxType, VatType } from '@/lib/types'
+import { toKoreanErrorMessage } from '@/lib/errors'
 
 export default function TaxProfilePage() {
   const router = useRouter()
@@ -141,14 +142,14 @@ export default function TaxProfilePage() {
       }
       router.replace('/profile')
     } catch (e) {
-      setErr(e instanceof Error ? e.message : '저장 실패')
+      setErr(toKoreanErrorMessage(e instanceof Error ? e.message : null))
     } finally {
       setSaving(false)
     }
   }
 
   if (loading) {
-    return <div className="sseuksak-shell flex items-center justify-center"><Loader2 size={24} className="animate-spin text-brand" /></div>
+    return <div role="status" aria-label="불러오는 중" className="sseuksak-shell flex items-center justify-center"><Loader2 size={24} className="animate-spin text-brand" /></div>
   }
 
   return (
@@ -199,10 +200,11 @@ export default function TaxProfilePage() {
         {taxType === 'FREELANCER' && (
           <>
             <div>
-              <label className="t-meta block mb-2 ml-1">
+              <label htmlFor="resident-last" className="t-meta block mb-2 ml-1">
                 주민번호 뒷자리 7자리 {residentAlreadySet ? '(등록됨)' : '*'}
               </label>
               <input
+                id="resident-last"
                 type="password"
                 inputMode="numeric"
                 maxLength={7}
@@ -233,8 +235,9 @@ export default function TaxProfilePage() {
         {(taxType === 'INDIVIDUAL_BUSINESS' || taxType === 'BUSINESS') && (
           <>
             <div>
-              <label className="t-meta block mb-2 ml-1">사업자등록번호 *</label>
+              <label htmlFor="biz-reg-number" className="t-meta block mb-2 ml-1">사업자등록번호 *</label>
               <input
+                id="biz-reg-number"
                 value={bizRegNumber}
                 onChange={(e) => setBizRegNumber(e.target.value.replace(/[^0-9-]/g, ''))}
                 placeholder="000-00-00000"
@@ -244,12 +247,12 @@ export default function TaxProfilePage() {
               />
             </div>
             <div>
-              <label className="t-meta block mb-2 ml-1">상호 *</label>
-              <input value={bizName} onChange={(e) => setBizName(e.target.value)} className="input" maxLength={40} />
+              <label htmlFor="biz-name" className="t-meta block mb-2 ml-1">상호 *</label>
+              <input id="biz-name" value={bizName} onChange={(e) => setBizName(e.target.value)} className="input" maxLength={40} />
             </div>
             <div>
-              <label className="t-meta block mb-2 ml-1">대표자명 *</label>
-              <input value={bizHolder} onChange={(e) => setBizHolder(e.target.value)} className="input" maxLength={20} />
+              <label htmlFor="biz-holder" className="t-meta block mb-2 ml-1">대표자명 *</label>
+              <input id="biz-holder" value={bizHolder} onChange={(e) => setBizHolder(e.target.value)} className="input" maxLength={20} />
             </div>
             <div>
               <label className="t-meta block mb-2 ml-1">과세 구분</label>
@@ -258,6 +261,7 @@ export default function TaxProfilePage() {
                   <button
                     key={t}
                     onClick={() => setBizVatType(t)}
+                    aria-pressed={bizVatType === t}
                     className={`chip !text-[13.5px] !px-2 !py-2 ${bizVatType === t ? 'chip-brand' : 'chip-muted'}`}
                   >
                     {t === 'GENERAL' ? '일반과세' : t === 'SIMPLE' ? '간이과세' : '면세'}
@@ -286,8 +290,9 @@ export default function TaxProfilePage() {
         )}
 
         <div>
-          <label className="t-meta block mb-2 ml-1">세금 관련 이메일 (선택)</label>
+          <label htmlFor="biz-email" className="t-meta block mb-2 ml-1">세금 관련 이메일 (선택)</label>
           <input
+            id="biz-email"
             type="email"
             value={bizEmail}
             onChange={(e) => setBizEmail(e.target.value)}

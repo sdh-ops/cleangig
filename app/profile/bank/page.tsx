@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import { ChevronLeft, Home, Check, Loader2, Banknote, ShieldCheck } from 'lucide-react'
+import { toKoreanErrorMessage } from '@/lib/errors'
 
 const BANKS = [
   'KB국민', '신한', '우리', '하나', 'NH농협', 'IBK기업', 'SC제일', '씨티',
@@ -58,12 +59,12 @@ export default function BankAccountPage() {
       updated_at: new Date().toISOString(),
     }).eq('id', userId)
     setSaving(false)
-    if (error) { setErr(error.message); return }
+    if (error) { setErr(toKoreanErrorMessage(error.message)); return }
     router.replace('/profile')
   }
 
   if (loading) {
-    return <div className="sseuksak-shell flex items-center justify-center"><Loader2 size={24} className="animate-spin text-brand" /></div>
+    return <div role="status" aria-label="불러오는 중" className="sseuksak-shell flex items-center justify-center"><Loader2 size={24} className="animate-spin text-brand" /></div>
   }
 
   return (
@@ -91,18 +92,19 @@ export default function BankAccountPage() {
         </div>
 
         <div>
-          <label className="t-meta block mb-2 ml-1">은행</label>
-          <select value={bankName} onChange={(e) => setBankName(e.target.value)} className="input">
+          <label htmlFor="bank-name" className="t-meta block mb-2 ml-1">은행</label>
+          <select id="bank-name" value={bankName} onChange={(e) => setBankName(e.target.value)} className="input">
             <option value="">은행 선택</option>
             {BANKS.map((b) => <option key={b} value={b}>{b}</option>)}
           </select>
         </div>
 
         <div>
-          <label className="t-meta block mb-2 ml-1">계좌번호</label>
+          <label htmlFor="account-number" className="t-meta block mb-2 ml-1">계좌번호</label>
           <div className="relative">
             <Banknote size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-text-faint" />
             <input
+              id="account-number"
               value={accountNumber}
               onChange={(e) => setAccountNumber(e.target.value.replace(/[^0-9\-]/g, ''))}
               className="input pl-11"
@@ -113,8 +115,8 @@ export default function BankAccountPage() {
         </div>
 
         <div>
-          <label className="t-meta block mb-2 ml-1">예금주</label>
-          <input value={holder} onChange={(e) => setHolder(e.target.value)} className="input" placeholder="본인 명의" />
+          <label htmlFor="account-holder" className="t-meta block mb-2 ml-1">예금주</label>
+          <input id="account-holder" value={holder} onChange={(e) => setHolder(e.target.value)} className="input" placeholder="본인 명의" />
         </div>
 
         {err && <div className="p-3 bg-danger-soft rounded-xl text-[15px] font-bold text-danger">{err}</div>}

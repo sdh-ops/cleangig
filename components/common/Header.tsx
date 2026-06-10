@@ -49,9 +49,9 @@ export default function Header({
             <Link
               href="/"
               aria-label="홈"
-              className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-surface-muted active:scale-95 transition"
+              className="flex items-center justify-center w-10 h-10 rounded-full hover:bg-surface-muted active:scale-95 transition"
             >
-              <Home size={16} className="text-text-soft" />
+              <Home size={18} className="text-text-soft" />
             </Link>
           </div>
         )}

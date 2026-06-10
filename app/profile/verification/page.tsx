@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 import { uploadImage } from '@/lib/storage'
 import Link from 'next/link'
 import { ChevronLeft, Home, ShieldCheck, Check, Loader2, Upload, AlertCircle, BadgeCheck } from 'lucide-react'
+import { toKoreanErrorMessage } from '@/lib/errors'
 
 export default function VerificationPage() {
   const router = useRouter()
@@ -44,14 +45,14 @@ export default function VerificationPage() {
       }).eq('id', userId)
       setSubmitted(true)
     } catch (e) {
-      setErr(e instanceof Error ? e.message : '업로드 실패')
+      setErr(toKoreanErrorMessage(e instanceof Error ? e.message : null))
     } finally {
       setUploading(false)
     }
   }
 
   if (loading) {
-    return <div className="sseuksak-shell flex items-center justify-center"><Loader2 size={24} className="animate-spin text-brand" /></div>
+    return <div role="status" aria-label="불러오는 중" className="sseuksak-shell flex items-center justify-center"><Loader2 size={24} className="animate-spin text-brand" /></div>
   }
 
   return (

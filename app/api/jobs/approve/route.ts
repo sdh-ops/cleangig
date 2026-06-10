@@ -63,7 +63,8 @@ export async function POST(req: Request) {
       const hostFee = pb.host_fee ?? Math.round(job.price * HOST_FEE_RATE)
       const workerFee = pb.worker_fee ?? Math.round(job.price * WORKER_FEE_RATE)
       const platformFee = pb.platform_revenue ?? hostFee + workerFee
-      const workerSubtotal = job.price - workerFee
+      // 정산 공식: gross − host_fee − worker_fee (lib/pricing.ts calculateSettlement과 동일)
+      const workerSubtotal = job.price - hostFee - workerFee
       const withholdingTax = pb.estimated_withholding ?? Math.round(workerSubtotal * WITHHOLDING_RATE)
       const workerPayout = pb.estimated_worker_payout ?? workerSubtotal - withholdingTax
 
@@ -131,18 +132,19 @@ export async function POST(req: Request) {
 
     // 5. 정기 청소 → 다음 인스턴스 자동 생성 (중복 방지: 이미 다음 작업 존재하면 skip)
     if ((job as any).is_recurring && (job as any).recurring_config) {
+      // 자동 다음 회차 생성은 legacy { interval } 형식만 대상.
+      // recurring 라우트의 { frequency } 시리즈는 전 회차를 선생성하므로 여기서 연장하지 않음
+      // (연장 시 결제 없는 OPEN 작업이 무한 생성됨).
       const rc = (job as any).recurring_config as { interval?: string; day_of_week?: number }
-      const intervalMs: Record<string, number> = {
-        daily: 86400_000,
-        weekly: 7 * 86400_000,
-        biweekly: 14 * 86400_000,
-        monthly: 30 * 86400_000,
-      }
-      const ms = rc.interval ? intervalMs[rc.interval] : null
+      const interval = (rc.interval ?? '').toLowerCase()
+      const stepDaysMap: Record<string, number> = { daily: 1, weekly: 7, biweekly: 14 }
 
-      if (ms) {
+      if (interval && (interval === 'monthly' || stepDaysMap[interval])) {
         const currentScheduled = new Date((job as any).scheduled_at ?? Date.now())
-        const nextScheduled = new Date(currentScheduled.getTime() + ms)
+        const nextScheduled = new Date(currentScheduled)
+        // monthly는 달력 기준(말일 보정 포함) — 30일 고정 오프셋은 월별 편차 발생
+        if (interval === 'monthly') nextScheduled.setMonth(nextScheduled.getMonth() + 1)
+        else nextScheduled.setDate(nextScheduled.getDate() + stepDaysMap[interval])
 
         // 중복 방지: 같은 space_id, is_recurring=true, OPEN/ASSIGNED 상태로 이미 예정된 작업 존재 여부
         const { count: dupCount } = await admin

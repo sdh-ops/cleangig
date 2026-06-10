@@ -99,7 +99,9 @@ export function computeMatchScore(inp: MatchInputs): MatchScore {
   const urgency_bonus = inp.job.is_urgent ? 5 : 0
 
   const raw = distance + rating + experience + sparkle + favorite_bonus + urgency_bonus + preferred_bonus
-  const total = Math.round(Math.min(100, raw * tier_mult + raw * (1 - tier_mult) * 0.9))
+  // 티어 가중: STARTER ×0.82 ~ MASTER ×1.0 — 티어가 우선순위에 실제 반영되되,
+  // 신규 워커도 근거리·고평점이면 경쟁 가능한 수준으로 유지
+  const total = Math.round(Math.min(100, raw * (0.7 + 0.3 * tier_mult)))
 
   const tags: string[] = []
   if (distance_km <= 2) tags.push('근거리')

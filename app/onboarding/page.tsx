@@ -122,7 +122,10 @@ export default function OnboardingPage() {
           <ChevronLeft size={22} />
         </button>
         <div className="flex-1" />
-        <div className="flex items-center gap-1.5 pr-2">
+        <div
+          className="flex items-center gap-1.5 pr-2"
+          aria-label={`3단계 중 ${step === 'role' ? 1 : step === 'profile' ? 2 : 3}단계`}
+        >
           <div className={`h-1.5 w-6 rounded-full ${step === 'role' ? 'bg-brand' : 'bg-line'}`} />
           <div className={`h-1.5 w-6 rounded-full ${step === 'profile' ? 'bg-brand' : 'bg-line'}`} />
           <div className={`h-1.5 w-6 rounded-full ${step === 'done' ? 'bg-brand' : 'bg-line'}`} />
@@ -227,10 +230,11 @@ export default function OnboardingPage() {
 
           <div className="mt-8 flex flex-col gap-4">
             <div>
-              <label className="t-meta block mb-2 ml-1">이름</label>
+              <label htmlFor="onboarding-name" className="t-meta block mb-2 ml-1">이름</label>
               <div className="relative">
                 <UserIcon size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-text-faint" />
                 <input
+                  id="onboarding-name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="홍길동"
@@ -239,10 +243,11 @@ export default function OnboardingPage() {
               </div>
             </div>
             <div>
-              <label className="t-meta block mb-2 ml-1">연락처</label>
+              <label htmlFor="onboarding-phone" className="t-meta block mb-2 ml-1">연락처</label>
               <div className="relative">
                 <Phone size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-text-faint" />
                 <input
+                  id="onboarding-phone"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value.replace(/[^0-9\-+]/g, ''))}
                   placeholder="010-0000-0000"
@@ -253,8 +258,9 @@ export default function OnboardingPage() {
             </div>
             {selectedRole === 'operator' && (
               <div>
-                <label className="t-meta block mb-2 ml-1">사업체명 <span className="text-text-faint font-normal">(선택)</span></label>
+                <label htmlFor="onboarding-business-name" className="t-meta block mb-2 ml-1">사업체명 <span className="text-text-faint font-normal">(선택)</span></label>
                 <input
+                  id="onboarding-business-name"
                   value={businessName}
                   onChange={(e) => setBusinessName(e.target.value)}
                   placeholder="예) 홍대파티룸"
@@ -429,7 +435,7 @@ function ConsentRow({
         id={id}
         checked={checked}
         onChange={(e) => onChange(e.target.checked)}
-        className="w-4 h-4 rounded accent-brand cursor-pointer shrink-0"
+        className="w-5 h-5 rounded accent-brand cursor-pointer shrink-0"
       />
       <label htmlFor={id} className="flex-1 text-[15px] font-semibold text-ink-soft cursor-pointer leading-snug">
         {required && <span className="text-danger font-black mr-1">[필수]</span>}
