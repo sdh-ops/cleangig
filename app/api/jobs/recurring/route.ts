@@ -40,6 +40,7 @@ export async function POST(req: Request) {
       preferred_worker_id,
       frequency = 'WEEKLY',
       occurrences = 4,
+      supply_check_items,
     } = body || {}
 
     if (!space_id || !first_scheduled_at || typeof price !== 'number') {
@@ -67,6 +68,7 @@ export async function POST(req: Request) {
         special_instructions: special_instructions ?? null,
         is_urgent: false,
         is_recurring: true,
+        supply_check_items: Array.isArray(supply_check_items) ? supply_check_items : [],
         preferred_worker_id: preferred_worker_id ?? null,
         recurring_config: {
           series_id: seriesId,

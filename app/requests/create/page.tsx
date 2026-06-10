@@ -28,6 +28,9 @@ import type { SpaceType, ChecklistItem } from '@/lib/types'
 
 type EditableCheck = { id: string; label: string; required: boolean }
 
+// 공간파트너가 요청 시 고르는 비품 — 워커는 이 중 고른 것만 상태 체크
+const SUPPLY_OPTIONS = ['휴지', '물티슈', '종량제봉투', '주방세제', '핸드워시', '섬유유연제', '청소세제', '수세미', '키친타월', '일회용장갑']
+
 type Space = {
   id: string
   name: string
@@ -65,6 +68,8 @@ export default function CreateRequestPage() {
   const [instructions, setInstructions] = useState('')
   const [checklist, setChecklist] = useState<EditableCheck[]>([]) // 이번 청소용 (공간 템플릿에서 복제)
   const [newCheckItem, setNewCheckItem] = useState('')
+  // 비품 체크 요청 — 고른 항목만 클린파트너가 상태 체크 (안 고르면 워커 화면에 비품 카드 미표시)
+  const [supplyCheckItems, setSupplyCheckItems] = useState<string[]>([])
   const [fees, setFees] = useState<FeeSettings>(DEFAULT_FEES)
   const [isRecurring, setIsRecurring] = useState(false)
   const [frequency, setFrequency] = useState<'WEEKLY' | 'BIWEEKLY' | 'MONTHLY'>('WEEKLY')
@@ -103,13 +108,14 @@ export default function CreateRequestPage() {
       if (fromJobId) {
         const { data: prevJob } = await supabase
           .from('jobs')
-          .select('id, space_id, special_instructions, checklist')
+          .select('id, space_id, special_instructions, checklist, supply_check_items')
           .eq('id', fromJobId)
           .eq('operator_id', user.id)
           .maybeSingle()
         if (prevJob) {
           if (spaces?.some((s) => s.id === prevJob.space_id)) setSpaceId(prevJob.space_id)
           if (prevJob.special_instructions) setInstructions(prevJob.special_instructions)
+          if (Array.isArray(prevJob.supply_check_items)) setSupplyCheckItems(prevJob.supply_check_items)
           if (Array.isArray(prevJob.checklist) && prevJob.checklist.length > 0) {
             prefillChecklistRef.current = prevJob.checklist
               .map((c: any) => ({ id: rid('ck'), label: String(c.label ?? ''), required: !!c.required }))
@@ -256,6 +262,7 @@ export default function CreateRequestPage() {
             special_instructions: instructions || null,
             frequency,
             occurrences,
+            supply_check_items: supplyCheckItems,
           }),
         })
         const data = await res.json()
@@ -278,6 +285,7 @@ export default function CreateRequestPage() {
           special_instructions: instructions || null,
           is_urgent: isUrgent || when === 'now',
           is_recurring: false,
+          supply_check_items: supplyCheckItems,
         }),
       })
       const orderData = await res.json()
@@ -736,6 +744,38 @@ export default function CreateRequestPage() {
                       <Plus size={17} />
                     </button>
                   </div>
+                </div>
+              </div>
+
+              {/* 비품 체크 요청 — 고른 항목만 클린파트너가 청소 중 상태 체크 */}
+              <div>
+                <label className="t-meta block mb-1 ml-1">비품 확인 요청 (선택)</label>
+                <p className="text-[13.5px] text-text-soft font-semibold mb-2.5 ml-1 leading-snug">
+                  떨어지면 곤란한 비품을 골라주세요. 클린파트너가 청소하면서 남은 양을 체크해 알려줘요. 안 고르면 비품 확인은 생략돼요.
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {SUPPLY_OPTIONS.map((name) => {
+                    const on = supplyCheckItems.includes(name)
+                    return (
+                      <button
+                        key={name}
+                        type="button"
+                        onClick={() =>
+                          setSupplyCheckItems((list) =>
+                            on ? list.filter((s) => s !== name) : [...list, name],
+                          )
+                        }
+                        className={`px-3.5 py-2 rounded-full text-[15px] font-bold border-2 transition active:scale-95 ${
+                          on
+                            ? 'bg-brand-softer border-brand text-brand-dark'
+                            : 'bg-surface border-line-soft text-text-muted'
+                        }`}
+                      >
+                        {on && <Check size={14} className="inline -mt-0.5 mr-1" strokeWidth={3} />}
+                        {name}
+                      </button>
+                    )
+                  })}
                 </div>
               </div>
 

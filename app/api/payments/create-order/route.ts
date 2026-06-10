@@ -35,6 +35,7 @@ export async function POST(req: Request) {
       is_recurring,
       frequency,
       occurrences,
+      supply_check_items,
     } = body
 
     if (!space_id || !price || !scheduled_at) {
@@ -76,6 +77,7 @@ export async function POST(req: Request) {
         is_recurring: is_recurring ?? false,
         frequency: frequency ?? null,
         occurrences: occurrences ?? null,
+        supply_check_items: Array.isArray(supply_check_items) ? supply_check_items : [],
       },
       amount: price,
       order_name: orderName,

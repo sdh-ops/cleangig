@@ -57,6 +57,7 @@ type JobFull = {
   checklist?: ChecklistItem[]
   supply_shortages?: string[] | null
   supply_status?: SupplyStatusItem[] | null
+  supply_check_items?: string[] | null
   extra_charge_amount?: number | null
   extra_charge_reason?: string | null
   extra_charge_status?: ExtraChargeStatus | null
@@ -89,6 +90,9 @@ const STATUS_FLOW: Partial<Record<JobStatus, { next: JobStatus; label: string; b
 
 const SUPPLY_OPTIONS = ['휴지', '물티슈', '종량제봉투', '주방세제', '핸드워시', '섬유유연제', '청소세제', '수세미', '키친타월', '일회용장갑']
 
+/** 완료 사진 최소 장수 — 전체 공간 + 세부 사진을 마지막에 한번에 */
+const MIN_COMPLETION_PHOTOS = 5
+
 const LEVEL_LABELS: Record<SupplyLevel, string> = {
   low: '거의 다 씀',
   out: '없음',
@@ -115,10 +119,7 @@ export default function WorkerJobDetail() {
   const [showDispute, setShowDispute] = useState(false)
   const [showReview, setShowReview] = useState(false)
   const [showExtraCharge, setShowExtraCharge] = useState(false)
-  const [uploadingIdx, setUploadingIdx] = useState<number | null>(null)
-  const fileRef = useRef<HTMLInputElement>(null)
   const extraPhotoRef = useRef<HTMLInputElement>(null)
-  const [currentChecklistIdx, setCurrentChecklistIdx] = useState<number | null>(null)
   const [workerReady, setWorkerReady] = useState<{ bank: boolean; tax: boolean } | null>(null)
   const [codeRevealed, setCodeRevealed] = useState(false)
   // 위치 권한 거부/실패 상태 — 안내 카드 노출용
@@ -167,7 +168,7 @@ export default function WorkerJobDetail() {
       .select(`
         id, status, worker_id, operator_id, price, scheduled_at,
         estimated_duration, is_urgent, special_instructions, checklist, supply_shortages,
-        supply_status, extra_charge_status, extra_charge_amount, extra_charge_reason, extra_charge_photos,
+        supply_status, supply_check_items, extra_charge_status, extra_charge_amount, extra_charge_reason, extra_charge_photos,
         price_breakdown,
         spaces(id, name, type, address, address_detail, entry_code, access_codes, caution_notes, cleaning_tool_location, parking_guide, trash_guide, photos, location),
         users:operator_id(id, name, phone, profile_image, avg_rating)
@@ -344,9 +345,9 @@ export default function WorkerJobDetail() {
           setTransitioning(false)
           return
         }
-        // 완료 사진 최소 1장 필수
-        if (completionPhotos.length === 0) {
-          setErr('청소 완료 사진을 최소 1장 올려주세요.')
+        // 완료 사진 최소 5장 필수 (전체 + 세부)
+        if (completionPhotos.length < MIN_COMPLETION_PHOTOS) {
+          setErr(`청소 완료 사진을 최소 ${MIN_COMPLETION_PHOTOS}장 올려주세요. (전체 공간 + 세부)`)
           setTransitioning(false)
           return
         }
@@ -471,38 +472,6 @@ export default function WorkerJobDetail() {
     })
   }
 
-  const openCamera = (idx: number) => {
-    setCurrentChecklistIdx(idx)
-    fileRef.current?.click()
-  }
-
-  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file || currentChecklistIdx === null || !job) return
-    setUploadingIdx(currentChecklistIdx)
-    try {
-      const path = `jobs/${job.id}/${Date.now()}-${file.name}`
-      const { error: upErr } = await supabase.storage.from('photos').upload(path, file, { upsert: true })
-      if (upErr) throw upErr
-      const { data: urlData } = supabase.storage.from('photos').getPublicUrl(path)
-      const idx = currentChecklistIdx
-      setChecklist((list) => {
-        const next = list.map((c, i) => (i === idx ? { ...c, completed: true, photo_url: urlData.publicUrl } : c))
-        supabase.from('jobs').update({ checklist: next }).eq('id', job.id)
-          .then(({ error }) => {
-            if (error) toast('사진은 올라갔지만 저장에 실패했어요. 다시 시도해주세요.', 'error')
-          })
-        return next
-      })
-    } catch (e) {
-      setErr(e instanceof Error ? e.message : '사진 업로드 실패')
-    } finally {
-      setUploadingIdx(null)
-      setCurrentChecklistIdx(null)
-      if (fileRef.current) fileRef.current.value = ''
-    }
-  }
-
   const handleExtraPhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file || !job) return
@@ -522,15 +491,20 @@ export default function WorkerJobDetail() {
   }
 
   const handleCompletionPhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file || !job) return
+    const files = Array.from(e.target.files ?? [])
+    if (files.length === 0 || !job) return
     setUploadingCompletion(true)
     try {
-      const path = `jobs/${job.id}/completion-${Date.now()}-${file.name}`
-      const { error: upErr } = await supabase.storage.from('photos').upload(path, file, { upsert: true })
-      if (upErr) throw upErr
-      const { data: urlData } = supabase.storage.from('photos').getPublicUrl(path)
-      setCompletionPhotos((prev) => [...prev, urlData.publicUrl])
+      // 한번에 여러 장 선택 가능 — 순차 업로드 후 모아서 추가
+      const uploaded: string[] = []
+      for (const file of files) {
+        const path = `jobs/${job.id}/completion-${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${file.name}`
+        const { error: upErr } = await supabase.storage.from('photos').upload(path, file, { upsert: true })
+        if (upErr) throw upErr
+        const { data: urlData } = supabase.storage.from('photos').getPublicUrl(path)
+        uploaded.push(urlData.publicUrl)
+      }
+      setCompletionPhotos((prev) => [...prev, ...uploaded])
     } catch (e) {
       setErr(e instanceof Error ? e.message : '사진 업로드 실패')
     } finally {
@@ -616,6 +590,8 @@ export default function WorkerJobDetail() {
 
   const durationMin = job.estimated_duration ?? 90
   const requiredCount = checklist.filter((c) => c.required).length
+  // 공간파트너가 요청 시 고른 비품만 체크 — 안 골랐으면 비품 카드 미표시
+  const requestedSupplies = Array.isArray(job.supply_check_items) ? job.supply_check_items : []
   const completedRequired = checklist.filter((c) => c.required && c.completed).length
   const extraStatus = job.extra_charge_status ?? 'NONE'
 
@@ -764,40 +740,29 @@ export default function WorkerJobDetail() {
                   {completedRequired}/{requiredCount} 완료
                 </span>
               </div>
+              <p className="text-[14px] text-text-soft font-semibold mb-3 leading-snug">
+                항목을 누르면 체크돼요. 사진은 청소가 다 끝난 뒤 아래에서 한번에 올리면 돼요.
+              </p>
               <ul className="flex flex-col gap-2.5">
                 {checklist.map((c, i) => (
-                  <li key={c.id} className={`p-3 rounded-xl border-2 ${c.completed ? 'bg-brand-softer border-brand/30' : 'bg-surface border-line-soft'}`}>
-                    <div className="flex items-start gap-3">
-                      <button
-                        onClick={() => toggleChecklist(i)}
-                        className={`w-6 h-6 rounded-md flex items-center justify-center shrink-0 mt-0.5 transition ${c.completed ? 'bg-brand text-white' : 'bg-surface-muted'}`}
+                  <li key={c.id}>
+                    <button
+                      onClick={() => toggleChecklist(i)}
+                      className={`w-full p-3.5 rounded-xl border-2 flex items-center gap-3 text-left transition active:scale-[0.99] ${c.completed ? 'bg-brand-softer border-brand/30' : 'bg-surface border-line-soft'}`}
+                    >
+                      <span
+                        className={`w-7 h-7 rounded-md flex items-center justify-center shrink-0 transition ${c.completed ? 'bg-brand text-white' : 'bg-surface-muted'}`}
                       >
-                        {c.completed && <Check size={15} strokeWidth={3} />}
-                      </button>
-                      <div className="flex-1">
-                        <p className="text-[15px] font-semibold text-ink leading-snug">
-                          {c.label}
-                          {c.required && <span className="ml-2 text-[14.5px] font-black text-danger">필수</span>}
-                        </p>
-                        {c.photo_url && (
-                          <div className="mt-2">
-                            <img src={c.photo_url} alt="" className="w-20 h-20 rounded-lg object-cover border border-line-soft" />
-                          </div>
-                        )}
-                      </div>
-                      <button
-                        onClick={() => openCamera(i)}
-                        disabled={uploadingIdx === i}
-                        className="shrink-0 flex items-center gap-1 px-2.5 h-8 rounded-lg bg-surface text-text-muted text-xs font-bold border border-line-soft hover:bg-surface-muted"
-                      >
-                        {uploadingIdx === i ? <Loader2 size={12} className="animate-spin" /> : <Camera size={13} />}
-                        {c.photo_url ? '변경' : '사진'}
-                      </button>
-                    </div>
+                        {c.completed && <Check size={17} strokeWidth={3} />}
+                      </span>
+                      <span className="flex-1 text-[16px] font-semibold text-ink leading-snug">
+                        {c.label}
+                        {c.required && <span className="ml-2 text-[14.5px] font-black text-danger">필수</span>}
+                      </span>
+                    </button>
                   </li>
                 ))}
               </ul>
-              <input ref={fileRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handlePhotoUpload} />
             </div>
           )}
 
@@ -807,16 +772,19 @@ export default function WorkerJobDetail() {
             <div className="card p-4 mb-4">
               <div className="flex items-center justify-between mb-1">
                 <h3 className="text-[15px] font-extrabold text-ink">완료 사진</h3>
-                <span className="text-[13px] font-black text-danger bg-danger-soft px-2 py-0.5 rounded-full">필수 1장 이상</span>
+                <span className={`text-[13px] font-black px-2.5 py-1 rounded-full ${completionPhotos.length >= MIN_COMPLETION_PHOTOS ? 'text-emerald-700 bg-emerald-50' : 'text-danger bg-danger-soft'}`}>
+                  {completionPhotos.length}/{MIN_COMPLETION_PHOTOS}장
+                </span>
               </div>
-              <p className="text-[13.5px] text-text-soft font-semibold mb-3 leading-snug">
-                청소 완료된 공간 전체 사진을 찍어주세요. 공간파트너가 확인 후 승인합니다.
+              <p className="text-[14px] text-text-soft font-semibold mb-3 leading-snug">
+                청소 다 끝나면 <b className="text-ink">전체 공간 사진 + 잘 닦인 곳 세부 사진</b>을 합쳐서 최소 {MIN_COMPLETION_PHOTOS}장 올려주세요. 한번에 여러 장 선택해도 돼요.
               </p>
               <input
                 ref={completionPhotoRef}
                 type="file"
                 accept="image/*"
                 capture="environment"
+                multiple
                 className="hidden"
                 onChange={handleCompletionPhotoUpload}
               />
@@ -840,24 +808,32 @@ export default function WorkerJobDetail() {
                   {uploadingCompletion ? <Loader2 size={18} className="animate-spin" /> : <><Camera size={18} /><span className="text-[12px] font-bold">사진 추가</span></>}
                 </button>
               </div>
-              {completionPhotos.length > 0 && (
-                <p className="text-[13.5px] font-bold text-emerald-600 flex items-center gap-1">
-                  <CheckCircle2 size={12} /> {completionPhotos.length}장 업로드 완료
+              {completionPhotos.length > 0 && completionPhotos.length < MIN_COMPLETION_PHOTOS && (
+                <p className="text-[14px] font-bold text-danger flex items-center gap-1">
+                  <AlertTriangle size={13} /> {MIN_COMPLETION_PHOTOS - completionPhotos.length}장 더 올려주세요
+                </p>
+              )}
+              {completionPhotos.length >= MIN_COMPLETION_PHOTOS && (
+                <p className="text-[14px] font-bold text-emerald-600 flex items-center gap-1">
+                  <CheckCircle2 size={13} /> {completionPhotos.length}장 업로드 완료
                 </p>
               )}
             </div>
           )}
 
-          {isMine && job.status === 'IN_PROGRESS' && (
+          {isMine && job.status === 'IN_PROGRESS' && requestedSupplies.length > 0 && (
             <div className="card p-4 mb-4">
               <h3 className="text-[15px] font-extrabold text-ink mb-1">비품 상태 체크</h3>
-              <div className="flex items-center gap-3 mb-3 text-[15px] font-semibold">
+              <p className="text-[14px] text-text-soft font-semibold mb-3 leading-snug">
+                공간파트너가 확인을 요청한 비품이에요. 남은 양에 따라 눌러주세요.
+              </p>
+              <div className="flex items-center gap-2 mb-3 text-[14px] font-semibold flex-wrap">
                 <span className="px-2.5 py-1 rounded-full bg-sun-soft text-[#92580C] border border-sun/30 font-bold">1번 탭: 거의 다 씀</span>
                 <span className="px-2.5 py-1 rounded-full bg-danger-soft text-danger border border-danger/20 font-bold">2번 탭: 없음</span>
                 <span className="px-2.5 py-1 rounded-full bg-surface text-text-muted border border-line-soft font-bold">3번 탭: 정상</span>
               </div>
               <div className="flex flex-wrap gap-2">
-                {SUPPLY_OPTIONS.map((name) => {
+                {requestedSupplies.map((name) => {
                   const item = supplyStatus.find((s) => s.name === name)
                   const colorClass = item ? LEVEL_COLORS[item.level] : 'bg-surface text-text-muted border-line-soft hover:border-line-strong'
                   return (

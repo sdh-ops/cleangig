@@ -105,6 +105,7 @@ export async function POST(req: Request) {
       special_instructions: jd.special_instructions ?? null,
       is_urgent: jd.is_urgent ?? false,
       is_recurring: jd.is_recurring ?? false,
+      supply_check_items: Array.isArray(jd.supply_check_items) ? jd.supply_check_items : [],
       auto_approved: false,
     }).select('id').single()
 
