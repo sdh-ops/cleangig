@@ -22,6 +22,8 @@ import {
 import { calculatePrice, suggestBasePrice, DEFAULT_FEES, type FeeSettings } from '@/lib/pricing'
 import { getFeeSettings } from '@/lib/settings'
 import { formatKRW, formatScheduled, spaceTypeLabel, rid } from '@/lib/utils'
+import AccessCodesEditor, { makeAccessCode, type AccessCode } from '@/components/common/AccessCodesEditor'
+import { Lock } from 'lucide-react'
 import type { SpaceType, ChecklistItem } from '@/lib/types'
 
 type EditableCheck = { id: string; label: string; required: boolean }
@@ -34,6 +36,8 @@ type Space = {
   base_price: number
   size_sqm?: number
   checklist_template?: ChecklistItem[]
+  access_codes?: { id?: string; label: string; value: string }[] | null
+  entry_code?: string | null
 }
 
 type StepId = 1 | 2 | 3
@@ -71,7 +75,7 @@ export default function CreateRequestPage() {
       const [{ data: spaces }, feeSettings] = await Promise.all([
         supabase
           .from('spaces')
-          .select('id, name, type, address, base_price, size_sqm, checklist_template')
+          .select('id, name, type, address, base_price, size_sqm, checklist_template, access_codes, entry_code')
           .eq('operator_id', user.id)
           .eq('is_active', true)
           .order('created_at', { ascending: false }),
@@ -102,13 +106,52 @@ export default function CreateRequestPage() {
 
   const selectedSpace = useMemo(() => spaces.find((s) => s.id === spaceId), [spaces, spaceId])
 
+  // ─── 출입 비밀번호 — 워커가 못 들어가는 사고 방지 ───────────────────
+  // 갭(개편 전): 요청 생성이 access_codes를 조회조차 안 해서
+  // 비밀번호 미등록 공간도 경고 없이 진행됐음.
+  const hasAccessInfo = useMemo(() => {
+    if (!selectedSpace) return false
+    const codes = selectedSpace.access_codes ?? []
+    return codes.some((c) => c.value?.trim()) || !!selectedSpace.entry_code?.trim()
+  }, [selectedSpace])
+
+  const [editCodes, setEditCodes] = useState<AccessCode[]>([])
+  const [savingCodes, setSavingCodes] = useState(false)
+  const [proceedWithoutCodes, setProceedWithoutCodes] = useState(false)
+
   // 공간 선택 시 해당 공간 체크리스트 템플릿을 이번 청소용으로 복제 (여기서 자유 수정 가능)
   useEffect(() => {
     const tpl = selectedSpace?.checklist_template ?? []
     setChecklist(
       tpl.map((c: any) => ({ id: rid('ck'), label: c.label, required: !!c.required })),
     )
+    // 공간 바뀌면 비밀번호 입력/동의 상태 초기화
+    setEditCodes([makeAccessCode()])
+    setProceedWithoutCodes(false)
   }, [spaceId]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // 비밀번호를 공간에 저장 (이번 요청뿐 아니라 다음 요청에도 재사용)
+  const saveAccessCodes = async () => {
+    if (!selectedSpace) return
+    const valid = editCodes.filter((c) => c.label.trim() && c.value.trim())
+    if (valid.length === 0) {
+      setErr('비밀번호를 입력해주세요. (예: 공동현관 1234)')
+      return
+    }
+    setSavingCodes(true)
+    setErr(null)
+    const { error } = await supabase
+      .from('spaces')
+      .update({ access_codes: valid, updated_at: new Date().toISOString() })
+      .eq('id', selectedSpace.id)
+    setSavingCodes(false)
+    if (error) {
+      setErr('비밀번호 저장에 실패했어요. 다시 시도해주세요.')
+      return
+    }
+    // 로컬 spaces 상태에도 반영 → hasAccessInfo 즉시 true
+    setSpaces((list) => list.map((s) => (s.id === selectedSpace.id ? { ...s, access_codes: valid } : s)))
+  }
 
   const [nowBase, setNowBase] = useState<string>('')
   useEffect(() => {
@@ -153,7 +196,8 @@ export default function CreateRequestPage() {
   const canProceed = (() => {
     if (step === 1) return !!spaceId
     if (step === 2) return !!scheduledAt
-    if (step === 3) return !!priceBreakdown
+    // 출입 방법이 있거나, "비밀번호 없이 진행"을 명시적으로 선택해야 결제 가능
+    if (step === 3) return !!priceBreakdown && (hasAccessInfo || proceedWithoutCodes)
     return false
   })()
 
@@ -449,6 +493,76 @@ export default function CreateRequestPage() {
                   </p>
                 </div>
               </div>
+
+              {/* 출입 비밀번호 — 클린파트너가 들어갈 수 있는지 확인 */}
+              {hasAccessInfo ? (
+                <div className="card p-4 border border-success/25 bg-success-soft/40">
+                  <div className="flex items-center gap-2.5 mb-2">
+                    <div className="w-8 h-8 rounded-lg bg-success/15 text-success flex items-center justify-center shrink-0">
+                      <Lock size={15} />
+                    </div>
+                    <p className="text-[14px] font-extrabold text-ink flex-1">출입 비밀번호 등록됨</p>
+                    <button
+                      type="button"
+                      onClick={() => router.push(`/spaces/${selectedSpace.id}/edit`)}
+                      className="text-[12.5px] font-bold text-brand-dark underline"
+                    >
+                      수정
+                    </button>
+                  </div>
+                  <div className="flex flex-col gap-1 pl-10">
+                    {(selectedSpace.access_codes ?? []).filter((c) => c.value?.trim()).map((c, i) => (
+                      <p key={i} className="text-[13px] font-bold text-ink-soft">
+                        {c.label} · ••••
+                      </p>
+                    ))}
+                    {(selectedSpace.access_codes ?? []).filter((c) => c.value?.trim()).length === 0 &&
+                      selectedSpace.entry_code?.trim() && (
+                        <p className="text-[13px] font-bold text-ink-soft">출입문 · ••••</p>
+                      )}
+                  </div>
+                  <p className="text-[12px] text-text-soft font-semibold mt-2 pl-10">
+                    배정된 클린파트너에게만 보여요.
+                  </p>
+                </div>
+              ) : (
+                <div className="card p-4 border-2 border-sun/40 bg-sun-soft">
+                  <div className="flex items-start gap-2.5 mb-3">
+                    <div className="w-8 h-8 rounded-lg bg-sun/20 text-[#92580C] flex items-center justify-center shrink-0">
+                      <AlertCircle size={16} />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-[14.5px] font-extrabold text-ink leading-snug">
+                        출입 방법이 등록되지 않았어요
+                      </p>
+                      <p className="text-[12.5px] text-ink-soft font-semibold mt-1 leading-relaxed">
+                        비밀번호가 없으면 클린파트너가 못 들어가요. 지금 등록해 두면 다음 요청에도 자동으로 쓰여요.
+                      </p>
+                    </div>
+                  </div>
+                  <AccessCodesEditor codes={editCodes} onChange={setEditCodes} />
+                  <button
+                    type="button"
+                    onClick={saveAccessCodes}
+                    disabled={savingCodes}
+                    className="btn btn-primary w-full mt-3 !min-h-[48px]"
+                  >
+                    {savingCodes ? <Loader2 size={18} className="animate-spin" /> : '비밀번호 저장'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setProceedWithoutCodes((v) => !v)}
+                    className={`w-full mt-2 flex items-center justify-center gap-2 py-2.5 rounded-xl text-[13px] font-bold transition ${
+                      proceedWithoutCodes
+                        ? 'bg-ink text-white'
+                        : 'text-text-muted underline'
+                    }`}
+                  >
+                    {proceedWithoutCodes && <Check size={15} strokeWidth={3} />}
+                    비밀번호 없이 진행할게요 (문이 열려 있거나 직접 열어줄 거예요)
+                  </button>
+                </div>
+              )}
 
               {/* 난이도 */}
               <div>

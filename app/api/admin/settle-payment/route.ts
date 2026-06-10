@@ -96,6 +96,16 @@ export async function POST(req: Request) {
 
       if (error) throw error
 
+      // job도 최종 상태로 정렬 (APPROVED → PAID_OUT)
+      if (payment.job_id) {
+        const { error: jobErr } = await admin
+          .from('jobs')
+          .update({ status: 'PAID_OUT', updated_at: new Date().toISOString() })
+          .eq('id', payment.job_id)
+          .eq('status', 'APPROVED')
+        if (jobErr) console.error('[settle/mark_paid] job 상태 갱신 실패:', jobErr.message)
+      }
+
       // 워커 입금 완료 알림
       if (payment.worker_id) {
         await admin.from('notifications').insert({

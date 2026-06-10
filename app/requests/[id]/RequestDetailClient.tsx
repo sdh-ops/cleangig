@@ -357,7 +357,8 @@ export default function RequestDetailClient({ job: initialJob, userId, initialIs
   }
 
   const isOwner = job.operator_id === userId
-  const canCancel = isOwner && ['OPEN', 'ASSIGNED'].includes(job.status)
+  // API(/api/jobs/cancel)는 EN_ROUTE/ARRIVED까지 허용 — UI도 정렬
+  const canCancel = isOwner && ['OPEN', 'ASSIGNED', 'EN_ROUTE', 'ARRIVED'].includes(job.status)
   const canApprove = isOwner && job.status === 'SUBMITTED'
   const canReview = isOwner && ['APPROVED', 'PAID_OUT'].includes(job.status) && !!job.users?.id
   const canDispute = ['EN_ROUTE', 'ARRIVED', 'IN_PROGRESS', 'SUBMITTED', 'APPROVED'].includes(job.status)
@@ -685,7 +686,12 @@ export default function RequestDetailClient({ job: initialJob, userId, initialIs
                 <Star size={16} /> {job.users?.name} 님께 리뷰 남기기
               </button>
             )}
-            {canCancel && (
+            {canCancel && job.status === 'OPEN' && (
+              <button onClick={() => setShowCancel(true)} className="btn btn-secondary w-full !border-danger/30 !text-danger">
+                <Trash2 size={16} /> 요청 취소 ({cancelRefundRate(job.scheduled_at).label})
+              </button>
+            )}
+            {canCancel && job.status !== 'OPEN' && (
               <button onClick={() => setShowCancel(true)} className="btn btn-ghost w-full !text-danger">
                 <Trash2 size={16} /> 요청 취소
               </button>
