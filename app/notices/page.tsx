@@ -30,7 +30,7 @@ const FALLBACK_NOTICES = [
   {
     date: '2026-04-15',
     badge: '안전',
-    title: '에스크로 결제 + AI 품질 검수',
+    title: '안전 결제 + AI 품질 확인',
     body: '모든 청소 대금은 작업 승인 후 정산되어, 양쪽 모두를 보호합니다.',
     icon: 'ShieldCheck',
     tone: 'info',

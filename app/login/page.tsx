@@ -174,7 +174,7 @@ function LoginContent() {
                   {[
                     { emoji: '🔒', text: '보안 결제' },
                     { emoji: '⭐', text: '검증된 파트너' },
-                    { emoji: '💰', text: '에스크로 보호' },
+                    { emoji: '💰', text: '결제금 안전 보관' },
                   ].map((b, i) => (
                     <div key={i} className="bg-surface-muted rounded-xl p-2.5 text-center border border-line-soft">
                       <div className="text-lg mb-0.5">{b.emoji}</div>

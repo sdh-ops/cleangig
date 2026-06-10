@@ -719,7 +719,7 @@ export default function CreateRequestPage() {
               <div className="p-4 rounded-2xl bg-brand-softer border border-brand/15 flex items-start gap-2.5">
                 <AlertCircle size={16} className="text-brand-dark shrink-0 mt-0.5" />
                 <div className="text-[14.5px] text-brand-dark font-semibold leading-snug">
-                  <b>에스크로 안전 결제</b>: 청소 완료 후 공간파트너가 승인하면 클린파트너에게 자동 정산됩니다.
+                  <b>안전 결제</b>: 청소 완료 후 공간파트너가 승인하면 클린파트너에게 자동 정산됩니다.
                 </div>
               </div>
             </div>

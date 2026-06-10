@@ -103,7 +103,7 @@ function SuccessInner() {
         </div>
         <h1 className="text-[26px] font-black text-ink">결제 완료!</h1>
         <p className="text-[14px] text-text-muted font-semibold mt-3 leading-relaxed">
-          에스크로로 안전하게 보관됐어요.
+          결제금을 안전하게 보관하고 있어요.
           <br />
           청소 완료 후 클린파트너에게 정산됩니다.
         </p>

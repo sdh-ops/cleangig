@@ -134,7 +134,7 @@ export default function RoleSwitcher({ userId, currentRole, canOperate = false, 
                 {targetRole === 'operator' ? (
                   <>
                     <Bullet icon={<Zap size={14} />}>공간을 등록하고 원클릭 청소 요청</Bullet>
-                    <Bullet icon={<Check size={14} />}>에스크로 결제 + AI 품질 검수</Bullet>
+                    <Bullet icon={<Check size={14} />}>안전 결제 + AI 품질 확인</Bullet>
                     <Bullet icon={<Check size={14} />}>기존 클린파트너 데이터는 그대로 보존</Bullet>
                   </>
                 ) : (

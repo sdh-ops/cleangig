@@ -72,11 +72,11 @@ export default async function JoinHostPage() {
         >
           청소부가 안 와도
           <br />
-          <span style={{ color: '#0EA5E9' }}>에스크로</span>가 보호해요.
+          결제금은 <span style={{ color: '#0EA5E9' }}>안전하게 보관</span>돼요.
         </h1>
 
         <p className="mt-4 text-[14px] text-text-muted font-semibold leading-relaxed relative">
-          검증된 클린파트너 매칭 · 에스크로 결제 보호
+          검증된 클린파트너 매칭 · 안전 결제 보호
           <br />
           문제 생기면 플랫폼이 분쟁 해결까지.
         </p>
@@ -107,7 +107,7 @@ export default async function JoinHostPage() {
 
           <div className="relative p-5">
             <p style={{ fontSize: 11, fontWeight: 700, color: 'rgba(56,189,248,0.8)', marginBottom: 6 }}>
-              에스크로 결제 시스템
+              안전 결제 시스템
             </p>
             <p style={{ fontSize: 20, fontWeight: 900, color: '#FFFFFF', lineHeight: 1.2, letterSpacing: '-0.025em', marginBottom: 16 }}>
               청소 완료가 확인된 후에만
@@ -119,7 +119,7 @@ export default async function JoinHostPage() {
               {[
                 { step: '요청', sub: '30초 등록' },
                 { step: '매칭', sub: '검증된 파트너' },
-                { step: '완료', sub: '사진 검수' },
+                { step: '완료', sub: '사진 확인' },
               ].map((s) => (
                 <div
                   key={s.step}
@@ -160,7 +160,7 @@ export default async function JoinHostPage() {
           {[
             {
               icon: <ShieldCheck size={15} />,
-              title: '에스크로 결제 — 품질 보장',
+              title: '안전 결제 — 품질 보장',
               desc: '청소 완료 확인 전까지 결제 보호. 미출근·품질 미달 시 환불.',
               color: '#10B981',
             },
@@ -244,7 +244,7 @@ export default async function JoinHostPage() {
             <p className="text-[15px] font-black text-sky-700">5%</p>
           </div>
           <p className="text-[13.5px] text-text-muted font-semibold leading-relaxed">
-            결제 금액의 5%만 수수료로 청구됩니다. 에스크로 보호·분쟁 해결·매칭 서비스가 모두 포함된 금액입니다.
+            결제 금액의 5%만 수수료로 청구됩니다. 결제금 안전 보관·분쟁 해결·매칭 서비스가 모두 포함된 금액입니다.
           </p>
         </div>
       </div>

@@ -83,7 +83,7 @@ export default function LandingClient() {
             <span className="w-1.5 h-1.5 rounded-full bg-success inline-block" />
             지금 활성
           </span>
-          <span className="text-[13.5px] text-text-faint font-bold">에스크로 결제 · AI 사진 검수</span>
+          <span className="text-[13.5px] text-text-faint font-bold">안전 결제 · AI 사진 확인</span>
         </div>
       </div>
 
@@ -241,7 +241,7 @@ function HostCard() {
           {[
             { step: '01', text: '요청 등록', sub: '30초' },
             { step: '02', text: '파트너 매칭', sub: '빠른 매칭' },
-            { step: '03', text: '완료 확인', sub: 'AI 검수' },
+            { step: '03', text: '완료 확인', sub: 'AI 확인' },
           ].map((s) => (
             <div
               key={s.step}
@@ -258,7 +258,7 @@ function HostCard() {
         {/* Feature list */}
         <ul className="flex flex-col gap-2">
           <DarkLI icon={<Zap size={11} />}>예약·당일 모두 OK — 스케줄 자동 관리</DarkLI>
-          <DarkLI icon={<ShieldCheck size={11} />}>에스크로 결제 · AI 사진 검수 · 체크리스트</DarkLI>
+          <DarkLI icon={<ShieldCheck size={11} />}>안전 결제 · AI 사진 확인 · 체크리스트</DarkLI>
           <DarkLI icon={<Sparkles size={11} />}>출발부터 완료까지 실시간 상태 알림</DarkLI>
         </ul>
       </div>

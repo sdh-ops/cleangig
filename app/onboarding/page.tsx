@@ -157,7 +157,7 @@ export default function OnboardingPage() {
               title="공간파트너"
               subtitle="청소 맡기기"
               description="파티룸·에어비앤비·무인매장을 운영하며 청소를 원클릭으로 맡기고 싶어요."
-              tags={['원클릭 요청', '에스크로 결제', 'AI 품질 검수']}
+              tags={['원클릭 요청', '안전 결제', 'AI 품질 확인']}
             />
           </div>
 
@@ -171,7 +171,7 @@ export default function OnboardingPage() {
               <ul className="flex flex-col gap-1.5">
                 {[
                   '작업 수입에서 플랫폼 수수료 15%가 차감됩니다.',
-                  '에스크로 정산 — 미지급 리스크 없음.',
+                  '일한 돈은 떼일 걱정 없이 100% 지급돼요.',
                   '첫 작업 시 보증금 5,000원 차감 (활동 종료 시 전액 환불).',
                 ].map((t) => (
                   <li key={t} className="text-[13.5px] font-semibold text-amber-900 flex items-start gap-1.5">
@@ -190,7 +190,7 @@ export default function OnboardingPage() {
               <ul className="flex flex-col gap-1.5">
                 {[
                   '결제 금액의 5%만 플랫폼 수수료로 청구됩니다.',
-                  '에스크로 보호 — 완료 확인 전까지 결제 보관.',
+                  '결제금 안전 보관 — 완료 확인 전까지 결제 보관.',
                   '미출근·품질 미달 시 환불 보장.',
                 ].map((t) => (
                   <li key={t} className="text-[13.5px] font-semibold text-sky-900 flex items-start gap-1.5">

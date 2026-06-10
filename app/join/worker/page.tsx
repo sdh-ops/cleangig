@@ -77,7 +77,7 @@ export default async function JoinWorkerPage() {
         </h1>
 
         <p className="mt-4 text-[14px] text-text-muted font-semibold leading-relaxed relative">
-          초기 비용 0원 · 자유로운 시간 · 에스크로 정산 보장
+          초기 비용 0원 · 자유로운 시간 · 지급 보장
           <br />
           지금 바로 시작하세요.
         </p>
@@ -143,7 +143,7 @@ export default async function JoinWorkerPage() {
           {[
             {
               icon: <ShieldCheck size={15} />,
-              title: '에스크로 정산 100% 보장',
+              title: '일한 돈 100% 지급 보장',
               desc: '작업 완료 후 미지급 걱정 없음. 플랫폼이 결제를 보관했다가 정산.',
               color: '#10B981',
             },
@@ -219,12 +219,12 @@ export default async function JoinWorkerPage() {
             <p className="text-[15px] font-black text-amber-700">15%</p>
           </div>
           <p className="text-[13.5px] text-text-muted font-semibold leading-relaxed">
-            건당 수입에서 15%가 차감됩니다. 에스크로 정산 보장·분쟁 해결·매칭 서비스가 포함된 수수료입니다.
+            건당 수입에서 15%가 차감됩니다. 지급 보장·분쟁 해결·매칭 서비스가 포함된 수수료입니다.
             미소 등 타 플랫폼(10~20%) 대비 경쟁력 있는 수준입니다.
           </p>
           <div className="flex items-center gap-1.5 mt-2">
             <CheckCircle2 size={12} className="text-emerald-500 shrink-0" />
-            <p className="text-[13.5px] font-bold text-emerald-700">에스크로 정산 → 미지급 리스크 없음</p>
+            <p className="text-[13.5px] font-bold text-emerald-700">일한 돈 떼일 걱정 없음 — 100% 지급</p>
           </div>
         </div>
       </div>

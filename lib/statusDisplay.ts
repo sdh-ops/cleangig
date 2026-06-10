@@ -29,8 +29,8 @@ export const WORKER_STEPS: StatusStep[] = [
   { step: 1, label: '배정' },
   { step: 2, label: '이동' },
   { step: 3, label: '청소' },
-  { step: 4, label: '검수 대기' },
-  { step: 5, label: '정산' },
+  { step: 4, label: '확인 대기' },
+  { step: 5, label: '입금' },
 ]
 
 /** 내부 상태 → 5단계 매핑. DISPUTED/CANCELED는 null (배너 처리). */
@@ -83,8 +83,8 @@ export function statusSubline(status: JobStatus, role: ViewerRole): string {
     case 'ARRIVED': return '도착! 출입 비밀번호를 확인하세요'
     case 'IN_PROGRESS': return '체크리스트를 하나씩 완료해 주세요'
     case 'SUBMITTED': return '사장님이 확인하고 있어요 (최대 24시간)'
-    case 'APPROVED': return '확인 완료! 곧 정산돼요'
-    case 'PAID_OUT': return '정산이 완료됐어요 🎉'
+    case 'APPROVED': return '확인 완료! 곧 입금돼요'
+    case 'PAID_OUT': return '입금까지 끝났어요 🎉'
     case 'DISPUTED': return '문제를 확인하고 있어요'
     case 'CANCELED': return '취소된 작업이에요'
   }

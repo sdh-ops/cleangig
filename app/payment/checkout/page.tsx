@@ -80,7 +80,7 @@ function CheckoutInner() {
         <div className="mx-5 mt-3 flex items-center gap-2 p-3 rounded-xl bg-brand-softer border border-brand/15">
           <ShieldCheck size={16} className="text-brand-dark shrink-0" />
           <p className="text-[14.5px] font-bold text-brand-dark leading-snug">
-            에스크로 안전 결제 · 청소 완료 후 클린파트너에게 정산됩니다
+            안전 결제 · 청소 완료 후 클린파트너에게 정산됩니다
           </p>
         </div>
 

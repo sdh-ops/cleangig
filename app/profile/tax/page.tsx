@@ -165,7 +165,7 @@ export default function TaxProfilePage() {
         <div className="card p-4 bg-info-soft border border-info/15 flex items-start gap-3">
           <ShieldCheck size={18} className="text-info shrink-0 mt-0.5" />
           <div className="text-[14.5px] text-ink-soft font-semibold leading-snug">
-            세금 유형에 따라 정산 방식이 달라집니다. <b>프리랜서</b>는 3.3% 원천징수 후 지급, <b>사업자</b>는 본인이 부가세 신고합니다.
+            세금 유형에 따라 정산 방식이 달라집니다. <b>프리랜서</b>는 세금 3.3%를 떼고 지급, <b>사업자</b>는 본인이 부가세 신고합니다.
           </div>
         </div>
 
@@ -177,7 +177,7 @@ export default function TaxProfilePage() {
               onClick={() => setTaxType('FREELANCER')}
               icon={<UserIcon size={18} />}
               title="프리랜서"
-              desc="개인 사업소득 · 3.3% 원천징수 후 정산"
+              desc="개인 사업소득 · 세금 3.3% 떼고 정산"
             />
             <TaxOption
               selected={taxType === 'INDIVIDUAL_BUSINESS'}
@@ -291,7 +291,7 @@ export default function TaxProfilePage() {
             type="email"
             value={bizEmail}
             onChange={(e) => setBizEmail(e.target.value)}
-            placeholder="세금계산서 / 원천징수 영수증 수신용"
+            placeholder="세금 서류(계산서·영수증) 받을 이메일"
             className="input"
           />
         </div>

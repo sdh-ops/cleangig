@@ -58,7 +58,7 @@ export default function EarningsClient({ profile, payments, totalEarned, pending
               <Receipt size={16} />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-[14.5px] font-bold text-text-soft">올해 원천징수 누계</p>
+              <p className="text-[14.5px] font-bold text-text-soft">올해 낸 세금(3.3%)</p>
               <p className="t-money text-[16px] text-ink mt-0.5">{formatKRW(ytdWht)}</p>
             </div>
             <Link href="/profile/tax" className="text-[14.5px] font-black text-brand-dark flex items-center gap-0.5">
@@ -111,7 +111,7 @@ export default function EarningsClient({ profile, payments, totalEarned, pending
                       <div className="t-money text-[15px] text-ink">+{formatKRW(p.worker_payout)}</div>
                       {(p.withholding_tax ?? 0) > 0 ? (
                         <p className="text-[13px] font-bold text-text-faint mt-0.5">
-                          수수료 −{formatKRW((p.worker_fee || 0) + (p.host_fee || 0) || (p.platform_fee || 0))} · 원천징수 −{formatKRW(p.withholding_tax || 0)}
+                          수수료 −{formatKRW((p.worker_fee || 0) + (p.host_fee || 0) || (p.platform_fee || 0))} · 세금(3.3%) −{formatKRW(p.withholding_tax || 0)}
                         </p>
                       ) : (
                         <p className="text-[13px] font-bold text-text-faint mt-0.5">
@@ -146,7 +146,7 @@ function Stat({ label, value, icon }: { label: string; value: string; icon: Reac
 function statusLabel(s: PaymentStatus): string {
   const map: Record<PaymentStatus, string> = {
     PENDING: '결제 대기',
-    HELD: '에스크로 보관',
+    HELD: '안전 보관 중',
     RELEASED: '정산 완료',
     PAID_OUT: '입금 완료',
     REFUNDED: '환불',
