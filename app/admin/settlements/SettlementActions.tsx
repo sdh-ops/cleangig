@@ -11,11 +11,19 @@ export default function SettlementActions({
   action,
   label,
   tone,
+  confirmText,
+  disabled,
+  disabledReason,
 }: {
   paymentId: string
   action: Action
   label: string
   tone: 'warning' | 'success' | 'danger'
+  /** 실행 전 확인 문구 — 지정 시 window.confirm 통과해야 진행 (오송금·거짓 입금완료 방지) */
+  confirmText?: string
+  /** 비활성화 — 계좌 미등록 등으로 처리 불가할 때 */
+  disabled?: boolean
+  disabledReason?: string
 }) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
@@ -23,7 +31,8 @@ export default function SettlementActions({
   const [err, setErr] = useState<string | null>(null)
 
   const handle = async () => {
-    if (done || loading) return
+    if (done || loading || disabled) return
+    if (confirmText && !window.confirm(confirmText)) return
     setLoading(true)
     setErr(null)
     try {
@@ -50,6 +59,17 @@ export default function SettlementActions({
     return (
       <span className="flex items-center gap-1 text-[14.5px] font-black text-emerald-600">
         <CheckCircle2 size={14} /> 완료
+      </span>
+    )
+  }
+
+  if (disabled) {
+    return (
+      <span
+        className="inline-flex items-center px-3 py-1.5 rounded-xl text-[14px] font-bold bg-slate-100 text-slate-400 cursor-not-allowed"
+        title={disabledReason}
+      >
+        {disabledReason || label}
       </span>
     )
   }

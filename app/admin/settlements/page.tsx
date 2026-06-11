@@ -4,6 +4,7 @@ import { isPlatformAdmin } from '@/lib/admin'
 import { formatKRW, timeAgo } from '@/lib/utils'
 import { Banknote, Clock, CheckCircle2, AlertCircle, Wallet } from 'lucide-react'
 import SettlementActions from './SettlementActions'
+import CopyField from './CopyField'
 
 export const dynamic = 'force-dynamic'
 
@@ -95,20 +96,27 @@ export default async function SettlementsPage() {
         empty="이체 대기 중인 건이 없어요"
         highlight
       >
-        {released.map((p) => (
-          <PaymentRow
-            key={p.id}
-            payment={p}
-            action={
-              <SettlementActions
-                paymentId={p.id}
-                action="mark_paid"
-                label="입금 완료"
-                tone="success"
-              />
-            }
-          />
-        ))}
+        {released.map((p) => {
+          const bank = p.worker?.bank_account as any
+          const hasBank = bank?.bank_name && bank?.account_number
+          return (
+            <PaymentRow
+              key={p.id}
+              payment={p}
+              action={
+                <SettlementActions
+                  paymentId={p.id}
+                  action="mark_paid"
+                  label="입금 완료"
+                  tone="success"
+                  disabled={!hasBank}
+                  disabledReason={!hasBank ? '계좌 미등록' : undefined}
+                  confirmText={`${p.worker?.name ?? '워커'}님 계좌로 ${formatKRW(p.worker_payout)}을(를) 실제로 이체하셨나요?\n\n${hasBank ? `${bank.bank_name} ${bank.account_number}${bank.account_holder ? ` (${bank.account_holder})` : ''}` : ''}\n\n확인을 누르면 워커에게 "입금 완료" 알림이 발송됩니다.`}
+                />
+              }
+            />
+          )
+        })}
       </Section>
 
       {/* PAID_OUT — 히스토리 */}
@@ -193,11 +201,16 @@ function PaymentRow({ payment: p, action }: { payment: any; action?: React.React
           </span>
         </div>
 
-        {/* 계좌 */}
+        {/* 계좌 — 계좌번호 클릭 시 복사 (뱅킹앱 붙여넣기) */}
         {hasBankInfo ? (
           <div className="flex items-center gap-1.5 text-[14.5px] font-bold text-slate-600">
             <Banknote size={12} className="text-slate-400 shrink-0" />
-            <span>{bank.bank_name} {bank.account_number}</span>
+            <span>{bank.bank_name}</span>
+            <CopyField
+              value={String(bank.account_number).replace(/[^0-9]/g, '')}
+              label={bank.account_number}
+              className="font-bold text-slate-700 hover:text-sky-600"
+            />
             {bank.account_holder && (
               <span className="text-slate-400">({bank.account_holder})</span>
             )}
@@ -215,11 +228,13 @@ function PaymentRow({ payment: p, action }: { payment: any; action?: React.React
         </p>
       </div>
 
-      {/* 금액 */}
+      {/* 금액 — 송금액 클릭 시 숫자만 복사 */}
       <div className="text-right shrink-0">
-        <p className="text-[15px] font-black text-slate-900">
-          +{formatKRW(p.worker_payout)}
-        </p>
+        <CopyField
+          value={String(p.worker_payout ?? 0)}
+          label={`+${formatKRW(p.worker_payout)}`}
+          className="text-[15px] font-black text-slate-900 hover:text-sky-600"
+        />
         <p className="text-[13px] font-semibold text-slate-400 mt-0.5">
           거래 {formatKRW(p.gross_amount, { short: true })} · 수수료 −{formatKRW((p.worker_fee ?? 0) + (p.host_fee ?? 0))}
           {p.withholding_tax > 0 && ` · 원천징수 −${formatKRW(p.withholding_tax)}`}
