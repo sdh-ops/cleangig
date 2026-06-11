@@ -29,12 +29,10 @@ export default async function WorkerProfilePage({ params }: { params: Promise<{ 
     .eq('id', id)
     .single()
 
-  if (workerError) {
-    console.error('[worker-profile] DB query failed:', workerError.message, { id })
-    // Supabase 쿼리 실패 → 404보다 의미 있는 에러 페이지
-    throw new Error(`worker-profile fetch error: ${workerError.message}`)
+  if (workerError || !worker || worker.role !== 'worker') {
+    if (workerError) console.error('[worker-profile] DB error:', workerError.message, { id })
+    notFound()
   }
-  if (!worker || worker.role !== 'worker') notFound()
 
   const { data: reviews } = await supabase
     .from('reviews')
