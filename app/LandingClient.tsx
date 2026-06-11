@@ -324,7 +324,7 @@ function WorkerCard() {
               className="num-display"
               style={{ fontSize: 52, color: '#0369A1', lineHeight: 1 }}
             >
-              3~5만
+              1~4만
             </span>
             <span style={{ fontSize: 22, fontWeight: 900, color: '#0369A1' }}>원</span>
           </div>
@@ -360,7 +360,7 @@ function WorkerCard() {
         {/* Feature list */}
         <ul className="flex flex-col gap-2">
           <SunLI icon={<ShieldCheck size={11} />}>가입 즉시 시작 — 장비 구매·창업비용 없음</SunLI>
-          <SunLI icon={<Clock size={11} />}>원하는 시간·지역만 골라서 본업 눈치 없이</SunLI>
+          <SunLI icon={<Clock size={11} />}>원하는 시간·지역만 골라서 보는 눈 없이</SunLI>
           <SunLI icon={<Star size={11} />}>실적 쌓을수록 수수료 낮아지고 우선 매칭</SunLI>
         </ul>
       </div>
