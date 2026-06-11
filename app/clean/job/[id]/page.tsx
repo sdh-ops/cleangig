@@ -81,6 +81,10 @@ type JobFull = {
     trash_guide?: string
     photos?: string[]
     location?: { coordinates?: [number, number] } | null
+    has_toilet?: boolean
+    has_kitchen?: boolean
+    has_bed?: boolean
+    has_balcony?: boolean
   }
   users?: { id: string; name: string; phone?: string; profile_image?: string; avg_rating?: number } | null
 }
@@ -94,8 +98,37 @@ const STATUS_FLOW: Partial<Record<JobStatus, { next: JobStatus; label: string; b
 
 const SUPPLY_OPTIONS = ['휴지', '물티슈', '종량제봉투', '주방세제', '핸드워시', '섬유유연제', '청소세제', '수세미', '키친타월', '일회용장갑']
 
-/** 완료 사진 최소 장수 — 전체 공간 + 세부 사진을 마지막에 한번에 */
 const MIN_COMPLETION_PHOTOS = 5
+const MAX_COMPLETION_PHOTOS = 10
+
+type PhotoShot = { label: string; hint: string }
+
+function getPhotoGuide(spaces: JobFull['spaces']): PhotoShot[] {
+  const shots: PhotoShot[] = [
+    { label: '공간 전체 ①', hint: '입구 방향에서 공간이 넓게 보이도록' },
+    { label: '공간 전체 ②', hint: '반대편 대각선 — 다른 각도로' },
+  ]
+  const type = spaces?.type
+  if (type === 'partyroom')
+    shots.push({ label: '테이블·의자 정리 상태', hint: '테이블 위 닦인 것 보이게' })
+  if (type === 'gym')
+    shots.push({ label: '운동기구 상태', hint: '기구 닦인 것 + 거울 포함' })
+  if (type === 'workspace')
+    shots.push({ label: '테이블·카운터', hint: '닦인 표면이 잘 보이게' })
+  if (type === 'study_cafe')
+    shots.push({ label: '책상·좌석 정리', hint: '모든 좌석 깔끔한 것 보이게' })
+  if (spaces?.has_kitchen)
+    shots.push({ label: '주방·싱크대', hint: '설거지 완료 + 조리대 닦인 것' })
+  if (spaces?.has_toilet)
+    shots.push({ label: '화장실', hint: '변기·세면대·바닥 모두 보이게' })
+  if (spaces?.has_bed)
+    shots.push({ label: '침대·침구 정리', hint: '시트 정리된 상태' })
+  if (spaces?.has_balcony)
+    shots.push({ label: '테라스·발코니', hint: '바닥 청소 후 상태' })
+  if (shots.length < MIN_COMPLETION_PHOTOS)
+    shots.push({ label: '가장 잘 닦인 포인트', hint: '청소 하이라이트 자유롭게 1장' })
+  return shots
+}
 
 const LEVEL_LABELS: Record<SupplyLevel, string> = {
   low: '거의 다 씀',
@@ -178,7 +211,7 @@ export default function WorkerJobDetail() {
         estimated_duration, time_window_start, time_window_end, is_urgent, special_instructions, checklist, supply_shortages,
         supply_status, supply_check_items, extra_charge_status, extra_charge_amount, extra_charge_reason, extra_charge_photos,
         price_breakdown, completion_photos,
-        spaces(id, name, type, address, address_detail, entry_code, access_codes, caution_notes, cleaning_tool_location, parking_guide, trash_guide, photos, location),
+        spaces(id, name, type, address, address_detail, entry_code, access_codes, caution_notes, cleaning_tool_location, parking_guide, trash_guide, photos, location, has_toilet, has_kitchen, has_bed, has_balcony),
         users:operator_id(id, name, phone, profile_image, avg_rating)
       `)
       .eq('id', id)
@@ -545,15 +578,24 @@ export default function WorkerJobDetail() {
     if (files.length === 0 || !job) return
     setUploadingCompletion(true)
     try {
-      // 한번에 여러 장 선택 가능 — 장마다 즉시 반영 (중간 실패해도 성공분 보존)
       let failed = 0
+      // 핸들러 실행 시점의 장수를 기준으로 MAX 초과 방지 (async loop 중 낙관적 카운팅)
+      let localCount = completionPhotos.length
       for (const file of files) {
+        if (localCount >= MAX_COMPLETION_PHOTOS) {
+          setErr(`최대 ${MAX_COMPLETION_PHOTOS}장까지 올릴 수 있어요.`)
+          break
+        }
         try {
           const path = `jobs/${job.id}/completion-${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${file.name}`
           const { error: upErr } = await supabase.storage.from('photos').upload(path, file, { upsert: true })
           if (upErr) throw upErr
           const { data: urlData } = supabase.storage.from('photos').getPublicUrl(path)
-          setCompletionPhotos((prev) => [...prev, urlData.publicUrl])
+          setCompletionPhotos((prev) => {
+            if (prev.length >= MAX_COMPLETION_PHOTOS) return prev
+            return [...prev, urlData.publicUrl]
+          })
+          localCount++
         } catch {
           failed++
         }
@@ -837,61 +879,104 @@ export default function WorkerJobDetail() {
             </div>
           )}
 
-          {/* 비품 상태 2레벨 체크 */}
           {/* 완료 증거 사진 (IN_PROGRESS 상태에서 업로드, SUBMITTED 전 필수) */}
-          {isMine && job.status === 'IN_PROGRESS' && (
-            <div className="card p-4 mb-4">
-              <div className="flex items-center justify-between mb-1">
-                <h3 className="text-[15px] font-extrabold text-ink">완료 사진</h3>
-                <span className={`text-[13px] font-black px-2.5 py-1 rounded-full ${completionPhotos.length >= MIN_COMPLETION_PHOTOS ? 'text-emerald-700 bg-emerald-50' : 'text-danger bg-danger-soft'}`}>
-                  {completionPhotos.length}/{MIN_COMPLETION_PHOTOS}장
-                </span>
-              </div>
-              <p className="text-[14px] text-text-soft font-semibold mb-3 leading-snug">
-                청소 다 끝나면 <b className="text-ink">전체 공간 사진 + 잘 닦인 곳 세부 사진</b>을 합쳐서 최소 {MIN_COMPLETION_PHOTOS}장 올려주세요. 한번에 여러 장 선택해도 돼요.
-              </p>
-              <input
-                ref={completionPhotoRef}
-                type="file"
-                accept="image/*"
-                capture="environment"
-                multiple
-                className="hidden"
-                onChange={handleCompletionPhotoUpload}
-              />
-              <div className="flex gap-2 flex-wrap mb-3">
-                {completionPhotos.map((url, i) => (
-                  <div key={i} className="relative">
-                    <img src={url} alt="" className="w-20 h-20 rounded-xl object-cover border border-line-soft" />
+          {isMine && job.status === 'IN_PROGRESS' && (() => {
+            const guide = getPhotoGuide(job.spaces)
+            const required = Math.max(MIN_COMPLETION_PHOTOS, guide.length)
+            const done = completionPhotos.length
+            const atMax = done >= MAX_COMPLETION_PHOTOS
+            return (
+              <div className="card p-4 mb-4">
+                {/* 헤더 */}
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-[15px] font-extrabold text-ink">완료 사진</h3>
+                  <span className={`text-[13px] font-black px-2.5 py-1 rounded-full ${done >= MIN_COMPLETION_PHOTOS ? 'text-emerald-700 bg-emerald-50' : 'text-danger bg-danger-soft'}`}>
+                    {done} / {MAX_COMPLETION_PHOTOS}장
+                  </span>
+                </div>
+
+                {/* 공간별 촬영 가이드 */}
+                <div className="bg-brand-softer rounded-xl p-3 mb-3">
+                  <p className="text-[13px] font-black text-brand-dark mb-2 flex items-center gap-1">
+                    📸 촬영 가이드 <span className="font-semibold text-brand-dark/70">(최소 {MIN_COMPLETION_PHOTOS}장 · 최대 {MAX_COMPLETION_PHOTOS}장)</span>
+                  </p>
+                  <ol className="flex flex-col gap-1.5">
+                    {guide.map((shot, i) => (
+                      <li key={i} className="flex items-start gap-2">
+                        <span className={`shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-[11px] font-black mt-0.5 ${
+                          i < done ? 'bg-emerald-500 text-white' : 'bg-brand/20 text-brand-dark'
+                        }`}>{i < done ? '✓' : i + 1}</span>
+                        <div>
+                          <span className="text-[13.5px] font-extrabold text-ink">{shot.label}</span>
+                          <span className="text-[12.5px] text-text-soft font-semibold ml-1.5">{shot.hint}</span>
+                        </div>
+                      </li>
+                    ))}
+                    {done > guide.length && Array.from({ length: done - guide.length }).map((_, i) => (
+                      <li key={`extra-${i}`} className="flex items-start gap-2">
+                        <span className="shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-[11px] font-black mt-0.5 bg-emerald-500 text-white">✓</span>
+                        <span className="text-[13.5px] font-bold text-text-soft">추가 사진 {guide.length + i + 1}</span>
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+
+                <input
+                  ref={completionPhotoRef}
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  multiple
+                  className="hidden"
+                  onChange={handleCompletionPhotoUpload}
+                />
+
+                {/* 업로드된 사진 그리드 */}
+                <div className="flex gap-2 flex-wrap mb-3">
+                  {completionPhotos.map((url, i) => (
+                    <div key={i} className="relative">
+                      <img src={url} alt="" className="w-20 h-20 rounded-xl object-cover border border-line-soft" />
+                      <button
+                        onClick={() => setCompletionPhotos((p) => p.filter((_, j) => j !== i))}
+                        aria-label="사진 삭제"
+                        className="absolute -top-1.5 -right-1.5 w-7 h-7 rounded-full bg-danger text-white flex items-center justify-center"
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+                  ))}
+                  {!atMax && (
                     <button
-                      onClick={() => setCompletionPhotos((p) => p.filter((_, j) => j !== i))}
-                      aria-label="사진 삭제"
-                      className="absolute -top-1.5 -right-1.5 w-7 h-7 rounded-full bg-danger text-white flex items-center justify-center"
+                      onClick={() => completionPhotoRef.current?.click()}
+                      disabled={uploadingCompletion}
+                      className="w-20 h-20 rounded-xl border-2 border-dashed border-line flex flex-col items-center justify-center gap-1 text-text-faint hover:border-brand hover:text-brand-dark transition"
                     >
-                      <X size={14} />
+                      {uploadingCompletion
+                        ? <Loader2 size={18} className="animate-spin" />
+                        : <><Camera size={18} /><span className="text-[13px] font-bold">사진 추가</span></>}
                     </button>
-                  </div>
-                ))}
-                <button
-                  onClick={() => completionPhotoRef.current?.click()}
-                  disabled={uploadingCompletion}
-                  className="w-20 h-20 rounded-xl border-2 border-dashed border-line flex flex-col items-center justify-center gap-1 text-text-faint hover:border-brand hover:text-brand-dark transition"
-                >
-                  {uploadingCompletion ? <Loader2 size={18} className="animate-spin" /> : <><Camera size={18} /><span className="text-[14px] font-bold">사진 추가</span></>}
-                </button>
+                  )}
+                </div>
+
+                {/* 상태 메시지 */}
+                {done > 0 && done < MIN_COMPLETION_PHOTOS && (
+                  <p className="text-[14px] font-bold text-danger flex items-center gap-1">
+                    <AlertTriangle size={13} /> {MIN_COMPLETION_PHOTOS - done}장 더 올려주세요
+                  </p>
+                )}
+                {done >= MIN_COMPLETION_PHOTOS && !atMax && (
+                  <p className="text-[14px] font-bold text-emerald-600 flex items-center gap-1">
+                    <CheckCircle2 size={13} /> {done}장 완료 — 추가로 더 올릴 수 있어요 (최대 {MAX_COMPLETION_PHOTOS}장)
+                  </p>
+                )}
+                {atMax && (
+                  <p className="text-[14px] font-bold text-emerald-600 flex items-center gap-1">
+                    <CheckCircle2 size={13} /> {done}장 — 최대 장수 완료!
+                  </p>
+                )}
               </div>
-              {completionPhotos.length > 0 && completionPhotos.length < MIN_COMPLETION_PHOTOS && (
-                <p className="text-[14px] font-bold text-danger flex items-center gap-1">
-                  <AlertTriangle size={13} /> {MIN_COMPLETION_PHOTOS - completionPhotos.length}장 더 올려주세요
-                </p>
-              )}
-              {completionPhotos.length >= MIN_COMPLETION_PHOTOS && (
-                <p className="text-[14px] font-bold text-emerald-600 flex items-center gap-1">
-                  <CheckCircle2 size={13} /> {completionPhotos.length}장 업로드 완료
-                </p>
-              )}
-            </div>
-          )}
+            )
+          })()}
 
           {isMine && job.status === 'IN_PROGRESS' && requestedSupplies.length > 0 && (
             <div className="card p-4 mb-4">
@@ -1149,7 +1234,7 @@ export default function WorkerJobDetail() {
                     {checklistOk ? '✓' : ''} 체크리스트 {reqDone}/{reqTotal}
                   </span>
                   <span className={`flex-1 text-center text-[14px] font-bold px-2 py-2 rounded-xl ${photosOk ? 'bg-success-soft text-success' : 'bg-surface-muted text-text-soft'}`}>
-                    {photosOk ? '✓' : ''} 완료사진 {completionPhotos.length}/{MIN_COMPLETION_PHOTOS}
+                    {photosOk ? '✓' : ''} 완료사진 {completionPhotos.length}/{MAX_COMPLETION_PHOTOS}
                   </span>
                 </div>
               )

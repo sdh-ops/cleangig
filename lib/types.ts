@@ -35,6 +35,7 @@ export interface User {
     biz_type?: string
     biz_category?: string
     biz_vat_type?: VatType
+    biz_address?: string
     resident_id_last?: string
     age_verified?: boolean
     terms_agreed_at?: string
@@ -162,6 +163,7 @@ export interface Review {
     reviewee_id: string
     rating: number
     rating_breakdown?: Record<string, number>
+    tags?: string[]
     comment?: string
     is_public: boolean
     created_at: string

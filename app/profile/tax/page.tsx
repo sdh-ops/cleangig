@@ -35,6 +35,7 @@ export default function TaxProfilePage() {
   const [bizHolder, setBizHolder] = useState('')
   const [bizVatType, setBizVatType] = useState<VatType>('SIMPLE')
   const [bizEmail, setBizEmail] = useState('')
+  const [bizAddress, setBizAddress] = useState('')
   const [agreeSensitive, setAgreeSensitive] = useState(false)
 
   useEffect(() => {
@@ -43,7 +44,7 @@ export default function TaxProfilePage() {
       if (!user) { router.replace('/login'); return }
       setUserId(user.id)
       const { data } = await supabase.from('users')
-        .select('tax_type, resident_id_last, biz_reg_number, biz_reg_image, biz_name, biz_holder, biz_vat_type, biz_email')
+        .select('tax_type, resident_id_last, biz_reg_number, biz_reg_image, biz_name, biz_holder, biz_vat_type, biz_email, biz_address')
         .eq('id', user.id).single()
       if (data) {
         setTaxType((data.tax_type as TaxType) || '')
@@ -55,6 +56,7 @@ export default function TaxProfilePage() {
         setBizHolder(data.biz_holder || '')
         setBizVatType((data.biz_vat_type as VatType) || 'SIMPLE')
         setBizEmail(data.biz_email || '')
+        setBizAddress(data.biz_address || '')
       }
       setLoading(false)
     })()
@@ -116,6 +118,7 @@ export default function TaxProfilePage() {
         biz_holder: taxType !== 'FREELANCER' ? bizHolder.trim() : null,
         biz_vat_type: taxType !== 'FREELANCER' ? bizVatType : null,
         biz_email: bizEmail.trim() || null,
+        biz_address: taxType !== 'FREELANCER' ? bizAddress.trim() || null : null,
         updated_at: new Date().toISOString(),
       }
       // 프리랜서가 아니면 기존 주민번호 제거
@@ -253,6 +256,17 @@ export default function TaxProfilePage() {
             <div>
               <label htmlFor="biz-holder" className="t-meta block mb-2 ml-1">대표자명 *</label>
               <input id="biz-holder" value={bizHolder} onChange={(e) => setBizHolder(e.target.value)} className="input" maxLength={20} />
+            </div>
+            <div>
+              <label htmlFor="biz-address" className="t-meta block mb-2 ml-1">사업장 주소</label>
+              <input
+                id="biz-address"
+                value={bizAddress}
+                onChange={(e) => setBizAddress(e.target.value)}
+                placeholder="예) 서울시 강남구 테헤란로 123"
+                className="input"
+                maxLength={100}
+              />
             </div>
             <div>
               <label className="t-meta block mb-2 ml-1">과세 구분</label>
