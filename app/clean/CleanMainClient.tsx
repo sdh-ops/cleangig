@@ -155,7 +155,7 @@ export default function CleanMainClient({ profile, activeJob, openJobs, weekEarn
                 {profile.profile_image ? (
                   <img src={profile.profile_image} alt="" className="w-full h-full object-cover" />
                 ) : (
-                  <span>{profile.name.charAt(0)}</span>
+                  <span>{(profile.name ?? '?').charAt(0)}</span>
                 )}
               </div>
               {/* Tier ring indicator */}

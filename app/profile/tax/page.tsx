@@ -315,6 +315,7 @@ export default function TaxProfilePage() {
                 {(['GENERAL', 'SIMPLE', 'EXEMPT'] as VatType[]).map((t) => (
                   <button
                     key={t}
+                    type="button"
                     onClick={() => setBizVatType(t)}
                     aria-pressed={bizVatType === t}
                     className={`chip !text-[13.5px] !px-2 !py-2 ${bizVatType === t ? 'chip-brand' : 'chip-muted'}`}

@@ -35,6 +35,7 @@ export default function VerificationPage() {
   const [bizRegImage, setBizRegImage] = useState<string | null>(null)
   const [uploadingBiz, setUploadingBiz] = useState(false)
   const [rejectedReason, setRejectedReason] = useState<string | null>(null)
+  const [existingPrefs, setExistingPrefs] = useState<Record<string, unknown>>({})
 
   useEffect(() => {
     (async () => {
@@ -59,6 +60,7 @@ export default function VerificationPage() {
         setBizEmail(data.biz_email || '')
         setBizRegImage(data.biz_reg_image || null)
         const prefs = (data.preferences as Record<string, unknown>) || {}
+        setExistingPrefs(prefs)
         if (prefs.verification_status === 'rejected') {
           setRejectedReason((prefs.verification_rejected_reason as string) || '')
         }
@@ -75,7 +77,7 @@ export default function VerificationPage() {
     try {
       const { url } = await uploadImage('docs', userId, file, { folder: 'id' })
       await supabase.from('users').update({
-        preferences: { verification_doc_url: url, submitted_at: new Date().toISOString() },
+        preferences: { ...existingPrefs, verification_doc_url: url, submitted_at: new Date().toISOString() },
       }).eq('id', userId)
       setSubmitted(true)
     } catch (e) {
@@ -114,7 +116,7 @@ export default function VerificationPage() {
         biz_reg_number: bizRegNumber.replace(/-/g, ''),
         biz_vat_type: bizVatType,
         biz_reg_image: bizRegImage,
-        preferences: { verification_doc_url: bizRegImage, submitted_at: new Date().toISOString() },
+        preferences: { ...existingPrefs, verification_doc_url: bizRegImage, submitted_at: new Date().toISOString() },
       }
       if (bizAddress.trim()) payload.biz_address = bizAddress.trim()
       if (bizType.trim()) payload.biz_type = bizType.trim()

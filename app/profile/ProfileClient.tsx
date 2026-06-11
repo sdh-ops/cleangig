@@ -85,7 +85,7 @@ export default function ProfileClient({ profile, totalCompletedJobs, isAdmin = f
               {profile.profile_image ? (
                 <img src={profile.profile_image} alt="" className="w-full h-full object-cover" />
               ) : (
-                profile.name.charAt(0)
+                (profile.name ?? '?').charAt(0)
               )}
             </div>
             <div className="flex-1">

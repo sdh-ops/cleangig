@@ -149,7 +149,7 @@ function WorkerProfileCard({ worker, jobId, jobStatus, isFavorite, onToggleFavor
               {worker.profile_image ? (
                 <img src={worker.profile_image} alt={worker.name} className="w-full h-full object-cover" />
               ) : (
-                worker.name.charAt(0)
+                (worker.name ?? '?').charAt(0)
               )}
             </div>
             {/* 티어 뱃지 (오른쪽 하단) */}
