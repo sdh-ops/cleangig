@@ -9,6 +9,7 @@ import NaverMap from '@/components/common/NaverMap'
 import AccessCodesEditor, { makeAccessCode, type AccessCode } from '@/components/common/AccessCodesEditor'
 import { geocode } from '@/lib/naver'
 import { spaceTypeLabel } from '@/lib/utils'
+import { parseLocation, toEwkt } from '@/lib/geo'
 import type { SpaceType } from '@/lib/types'
 
 export default function EditSpacePage() {
@@ -63,8 +64,9 @@ export default function EditSpacePage() {
           ? [makeAccessCode('출입문', data.entry_code)]
           : [makeAccessCode('출입문', '')]
       setAccessCodes(loaded)
-      if (data.location?.coordinates) {
-        setCoords({ lat: data.location.coordinates[1], lng: data.location.coordinates[0] })
+      const parsedLoc = parseLocation(data.location)
+      if (parsedLoc) {
+        setCoords(parsedLoc)
       }
       setLoading(false)
     })()
@@ -101,7 +103,7 @@ export default function EditSpacePage() {
         parking_guide: parkingGuide || null,
         trash_guide: trashGuide || null,
         entry_code: filledCodes[0]?.value || null,
-        location: coords ? { type: 'Point', coordinates: [coords.lng, coords.lat] } : null,
+        location: coords ? toEwkt(coords.lat, coords.lng) : null,
       }
       // access_codes / caution_notes 컬럼 미존재 DB 대비 fallback
       let { error } = await supabase

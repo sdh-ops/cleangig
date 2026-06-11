@@ -15,6 +15,7 @@ import EmptyState from '@/components/common/EmptyState'
 import PullToRefresh from '@/components/common/PullToRefresh'
 import JobsMap, { type JobMapItem } from './JobsMap'
 import { formatKRW, formatScheduled, spaceTypeLabel, shortAddress, haversineKm, difficultyLabel, parseGeoPoint } from '@/lib/utils'
+import { parseLocation } from '@/lib/geo'
 import { estimateWorkerPayout } from '@/lib/pricing'
 import { useJobsRealtime } from '@/lib/useJobRealtime'
 import { getPosition, checkPermission } from '@/lib/geolocation'
@@ -153,18 +154,18 @@ export default function JobsListPage() {
     const ref = opts?.center ?? searchCenter
     if (radius && ref) {
       list = list.filter(j => {
-        const c = j.spaces?.location?.coordinates
-        return c && haversineKm(ref.lat, ref.lng, c[1], c[0]) <= radius
+        const c = parseLocation(j.spaces?.location)
+        return c && haversineKm(ref.lat, ref.lng, c.lat, c.lng) <= radius
       })
     }
 
     // 거리순 정렬
     if (sort === 'near' && ref) {
       list = [...list].sort((a, b) => {
-        const ca = a.spaces?.location?.coordinates
-        const cb_ = b.spaces?.location?.coordinates
-        const da = ca ? haversineKm(ref.lat, ref.lng, ca[1], ca[0]) : Infinity
-        const db = cb_ ? haversineKm(ref.lat, ref.lng, cb_[1], cb_[0]) : Infinity
+        const ca = parseLocation(a.spaces?.location)
+        const cb_ = parseLocation(b.spaces?.location)
+        const da = ca ? haversineKm(ref.lat, ref.lng, ca.lat, ca.lng) : Infinity
+        const db = cb_ ? haversineKm(ref.lat, ref.lng, cb_.lat, cb_.lng) : Infinity
         return da - db
       })
     }
@@ -520,9 +521,9 @@ export default function JobsListPage() {
             ) : (
               <ul className="flex flex-col gap-3">
                 {jobs.map(job => {
-                  const coords = job.spaces?.location?.coordinates
-                  const dist = coords && coords.length === 2 && distRef
-                    ? haversineKm(distRef.lat, distRef.lng, coords[1], coords[0])
+                  const coords = parseLocation(job.spaces?.location)
+                  const dist = coords && distRef
+                    ? haversineKm(distRef.lat, distRef.lng, coords.lat, coords.lng)
                     : null
                   return (
                     <li key={job.id}>

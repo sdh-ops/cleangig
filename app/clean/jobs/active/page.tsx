@@ -8,6 +8,7 @@ import EmptyState from '@/components/common/EmptyState'
 import NaverMap from '@/components/common/NaverMap'
 import { Clock, MapPin, Sparkles, ChevronRight } from 'lucide-react'
 import { formatKRW, formatScheduled, maskAddress, spaceTypeLabel } from '@/lib/utils'
+import { parseLocation } from '@/lib/geo'
 import type { JobStatus } from '@/lib/types'
 
 export default async function ActiveJobsPage() {
@@ -25,10 +26,11 @@ export default async function ActiveJobsPage() {
   const jobs = (data || []) as any[]
 
   const markers = jobs
-    .filter((j) => j.spaces?.location?.coordinates)
-    .map((j, i) => ({
-      lat: j.spaces.location.coordinates[1],
-      lng: j.spaces.location.coordinates[0],
+    .map((j, i) => ({ j, i, loc: parseLocation(j.spaces?.location) }))
+    .filter(({ loc }) => loc !== null)
+    .map(({ j, i, loc }) => ({
+      lat: loc!.lat,
+      lng: loc!.lng,
       title: `${i + 1}. ${j.spaces.name}`,
       tone: (j.is_urgent ? 'danger' : 'brand') as 'danger' | 'brand',
     }))

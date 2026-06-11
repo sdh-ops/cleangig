@@ -2,6 +2,7 @@ import 'server-only'
 import webpush from 'web-push'
 import { createAdminClient } from './supabase/admin'
 import { computeMatchScore } from './matching'
+import { parseLocation } from './geo'
 
 /**
  * 서버 전용 알림 허브.
@@ -114,9 +115,9 @@ export async function notifyWorkersForJob(jobId: string): Promise<{ matched: num
   if (!job) return { matched: 0, skipped: 'job_not_found' }
   if (job.status !== 'OPEN') return { matched: 0, skipped: 'not_open' }
 
-  const coords = (job as any).spaces?.location?.coordinates as [number, number] | undefined
-  const space_lat = coords?.[1] ?? 37.5665
-  const space_lng = coords?.[0] ?? 126.978
+  const spaceLoc = parseLocation((job as any).spaces?.location)
+  const space_lat = spaceLoc?.lat ?? 37.5665
+  const space_lng = spaceLoc?.lng ?? 126.978
 
   // 가용 클린파트너 (can_work + is_active)
   const { data: workers } = await admin

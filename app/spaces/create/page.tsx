@@ -22,6 +22,7 @@ import { makeChecklist, DEFAULT_CHECKLISTS } from '@/lib/checklists'
 import { suggestBasePrice } from '@/lib/pricing'
 import { spaceTypeLabel, rid } from '@/lib/utils'
 import { geocode } from '@/lib/naver'
+import { toEwkt } from '@/lib/geo'
 
 const TYPE_OPTIONS: { value: SpaceType; icon: string }[] = [
   { value: 'airbnb', icon: '🏠' },
@@ -160,8 +161,8 @@ export default function CreateSpacePage() {
         type,
         address: address.trim(),
         address_detail: addressDetail.trim() || null,
-        // 코드베이스 전역에서 location.coordinates(GeoJSON)로 읽으므로 GeoJSON으로 저장
-        location: coords ? { type: 'Point', coordinates: [coords.lng, coords.lat] } : null,
+        // PostGIS geometry 컬럼 — EWKT 문자열로 저장 (GeoJSON 객체는 parse error)
+        location: coords ? toEwkt(coords.lat, coords.lng) : null,
         size_pyeong: sizePyeong ? parseFloat(sizePyeong) : null,
         size_sqm: sizeSqm ? Math.round(sizeSqm) : null,
         base_price: basePrice,

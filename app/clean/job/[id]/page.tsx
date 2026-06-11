@@ -33,6 +33,7 @@ import StatusStepper from '@/components/common/StatusStepper'
 import DisputeModal from '@/components/common/DisputeModal'
 import ReviewModal from '@/components/common/ReviewModal'
 import { formatKRW, formatScheduled, spaceTypeLabel, maskAddress, haversineKm } from '@/lib/utils'
+import { parseLocation } from '@/lib/geo'
 import { estimateWorkerPayout } from '@/lib/pricing'
 import { notify } from '@/lib/notifications'
 import { toast } from '@/lib/toast'
@@ -347,9 +348,9 @@ export default function WorkerJobDetail() {
       // 추적 중이라 캐시가 신선함 — 추가 프롬프트 없이 검증
       const pos = await getPosition({ maxAgeMs: 30_000, timeoutMs: 10_000 })
       if (pos.ok) {
-        const coords = job.spaces?.location?.coordinates
-        if (coords && coords.length === 2) {
-          const km = haversineKm(pos.lat, pos.lng, coords[1], coords[0])
+        const spaceLoc = parseLocation(job.spaces?.location)
+        if (spaceLoc) {
+          const km = haversineKm(pos.lat, pos.lng, spaceLoc.lat, spaceLoc.lng)
           if (km > 0.2) {
             setErr(`현장에서 약 ${km.toFixed(1)}km 떨어져 있어요. 현장 100m 이내에서 도착을 눌러주세요.`)
             return
@@ -618,9 +619,9 @@ export default function WorkerJobDetail() {
 
   const openNaverDirections = () => {
     if (!job?.spaces) return
-    const coords = job.spaces.location?.coordinates
-    if (coords && coords.length === 2) {
-      openNaverRoute({ lat: coords[1], lng: coords[0], name: job.spaces.name })
+    const spaceLoc = parseLocation(job.spaces.location)
+    if (spaceLoc) {
+      openNaverRoute({ lat: spaceLoc.lat, lng: spaceLoc.lng, name: job.spaces.name })
     } else {
       // 좌표 없으면 주소 검색 fallback
       searchNaverAddress(job.spaces.address)

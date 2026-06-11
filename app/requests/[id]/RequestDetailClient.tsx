@@ -32,7 +32,7 @@ import StatusStepper from '@/components/common/StatusStepper'
 import ReviewModal from '@/components/common/ReviewModal'
 import DisputeModal from '@/components/common/DisputeModal'
 import WorkerLiveMap from '@/components/common/WorkerLiveMap'
-import { formatKRW, formatScheduled, spaceTypeLabel } from '@/lib/utils'
+import { formatKRW, formatScheduled, spaceTypeLabel, parseGeoPoint } from '@/lib/utils'
 import { cancelRefundRate } from '@/lib/pricing'
 import { notify } from '@/lib/notifications'
 import type { JobStatus, SpaceType } from '@/lib/types'
@@ -496,14 +496,14 @@ export default function RequestDetailClient({ job: initialJob, userId, initialIs
           ) : null}
 
           {/* Live worker location */}
-          {['EN_ROUTE', 'ARRIVED', 'IN_PROGRESS'].includes(job.status) && job.spaces?.location?.coordinates && (
+          {['EN_ROUTE', 'ARRIVED', 'IN_PROGRESS'].includes(job.status) && parseGeoPoint(job.spaces?.location) && (
             <div className="card p-4 mb-4">
               <h3 className="text-[15px] font-extrabold text-ink mb-3">실시간 위치</h3>
               <WorkerLiveMap
                 jobId={job.id}
-                spaceLat={job.spaces.location.coordinates[1]}
-                spaceLng={job.spaces.location.coordinates[0]}
-                spaceName={job.spaces.name}
+                spaceLat={parseGeoPoint(job.spaces!.location)!.lat}
+                spaceLng={parseGeoPoint(job.spaces!.location)!.lng}
+                spaceName={job.spaces!.name}
                 height={220}
               />
             </div>

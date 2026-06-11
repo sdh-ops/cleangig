@@ -20,7 +20,7 @@ import {
   X,
 } from 'lucide-react'
 import NaverMap from '@/components/common/NaverMap'
-import { formatKRW, spaceTypeLabel } from '@/lib/utils'
+import { formatKRW, spaceTypeLabel, parseGeoPoint } from '@/lib/utils'
 import type { SpaceType } from '@/lib/types'
 
 type Space = {
@@ -30,7 +30,7 @@ type Space = {
   type: SpaceType
   address: string
   address_detail?: string
-  location?: { coordinates?: [number, number] } | null
+  location?: unknown // PostGIS geometry — WKB hex 또는 GeoJSON, parseGeoPoint로 읽기
   size_pyeong?: number
   size_sqm?: number
   base_price: number
@@ -66,9 +66,7 @@ export default function SpaceDetailClient({ space, isOwner, totalJobs, monthCoun
   const [showDelete, setShowDelete] = useState(false)
   const [isActive, setIsActive] = useState(space.is_active)
 
-  const coords = space.location?.coordinates
-    ? { lat: space.location.coordinates[1], lng: space.location.coordinates[0] }
-    : null
+  const coords = parseGeoPoint(space.location)
 
   const toggleActive = async () => {
     setToggling(true)

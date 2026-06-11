@@ -5,6 +5,7 @@ import { LocateFixed, Loader2, MapPin, X, Search } from 'lucide-react'
 import { waitForNaverMaps, loadNaverMapsScript, openNaverRoute } from '@/lib/naver'
 import { getPosition } from '@/lib/geolocation'
 import { formatKRW, haversineKm, maskAddress, spaceTypeLabel } from '@/lib/utils'
+import { parseLocation } from '@/lib/geo'
 import { estimateWorkerPayout } from '@/lib/pricing'
 import type { SpaceType } from '@/lib/types'
 
@@ -230,10 +231,7 @@ export default function JobsMap({
     const naver = (window as any).naver
     if (!naver?.maps?.Marker) return
 
-    const validJobs = jobs.filter(j => {
-      const c = j.spaces?.location?.coordinates
-      return c && c.length === 2 && !isNaN(c[0]) && !isNaN(c[1])
-    })
+    const validJobs = jobs.filter(j => parseLocation(j.spaces?.location) !== null)
 
     // 사라진 핀 제거
     const currentIds = new Set(validJobs.map(j => j.id))
@@ -242,8 +240,7 @@ export default function JobsMap({
     })
 
     validJobs.forEach(job => {
-      const coords = job.spaces!.location!.coordinates!
-      const lat = coords[1], lng = coords[0]
+      const { lat, lng } = parseLocation(job.spaces?.location)!
       const isSel = job.id === selectedJobId
 
       if (markersRef.current.has(job.id)) {
@@ -267,14 +264,14 @@ export default function JobsMap({
     // 핀 있을 때 fitBounds (radius 없고 아직 fit 안 된 경우)
     if (!initialFitDone.current && validJobs.length > 0 && !radius) {
       if (validJobs.length === 1) {
-        const c = validJobs[0].spaces!.location!.coordinates!
-        mapInstance.current.setCenter(new naver.maps.LatLng(c[1], c[0]))
+        const c = parseLocation(validJobs[0].spaces?.location)!
+        mapInstance.current.setCenter(new naver.maps.LatLng(c.lat, c.lng))
         mapInstance.current.setZoom(14)
       } else {
         const bounds = new naver.maps.LatLngBounds()
         validJobs.slice(0, 20).forEach(j => {
-          const c = j.spaces!.location!.coordinates!
-          bounds.extend(new naver.maps.LatLng(c[1], c[0]))
+          const c = parseLocation(j.spaces?.location)!
+          bounds.extend(new naver.maps.LatLng(c.lat, c.lng))
         })
         if (userLat && userLng) bounds.extend(new naver.maps.LatLng(userLat, userLng))
         mapInstance.current.fitBounds(bounds, { top: 60, right: 40, bottom: 200, left: 40 })
@@ -289,10 +286,10 @@ export default function JobsMap({
   useEffect(() => {
     if (!ready || !mapInstance.current || !selectedJobId) return
     const job = jobs.find(j => j.id === selectedJobId)
-    const c = job?.spaces?.location?.coordinates
+    const c = parseLocation(job?.spaces?.location)
     if (!c) return
     const naver = (window as any).naver
-    mapInstance.current.panTo(new naver.maps.LatLng(c[1], c[0]), { duration: 300 })
+    mapInstance.current.panTo(new naver.maps.LatLng(c.lat, c.lng), { duration: 300 })
   }, [ready, selectedJobId, jobs])
 
   // ─── 현위치 버튼 ─────────────────────────────────────────────────────
@@ -318,11 +315,11 @@ export default function JobsMap({
   }, [onRegionSearch])
 
   const selJob = selected ?? (selectedJobId ? jobs.find(j => j.id === selectedJobId) ?? null : null)
-  const selCoords = selJob?.spaces?.location?.coordinates
+  const selCoords = parseLocation(selJob?.spaces?.location)
   const selDist = selCoords && userLat && userLng
-    ? haversineKm(userLat, userLng, selCoords[1], selCoords[0])
+    ? haversineKm(userLat, userLng, selCoords.lat, selCoords.lng)
     : null
-  const pinCount = jobs.filter(j => j.spaces?.location?.coordinates).length
+  const pinCount = jobs.filter(j => parseLocation(j.spaces?.location) !== null).length
 
   return (
     <div className="relative w-full h-full overflow-hidden rounded-2xl">
@@ -412,7 +409,7 @@ export default function JobsMap({
               <div className="flex gap-2 mt-3">
                 {selCoords && (
                   <button
-                    onClick={() => openNaverRoute({ lat: selCoords[1], lng: selCoords[0], name: selJob.spaces?.name })}
+                    onClick={() => openNaverRoute({ lat: selCoords.lat, lng: selCoords.lng, name: selJob.spaces?.name })}
                     className="flex-1 h-9 rounded-xl bg-brand-softer text-brand-dark text-[14.5px] font-extrabold flex items-center justify-center gap-1.5 border border-brand/20 active:scale-95 transition"
                   >
                     🗺 네이버 길찾기
