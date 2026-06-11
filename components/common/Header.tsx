@@ -56,9 +56,9 @@ export default function Header({
           </div>
         )}
         {showLogo && !showBack && (
-          <div className="pl-2">
+          <Link href="/" aria-label="홈으로" className="pl-2 flex items-center active:opacity-70 transition-opacity">
             <Logo size="sm" variant="full" />
-          </div>
+          </Link>
         )}
         <div className="flex-1 px-2 min-w-0">
           {title && (

@@ -148,7 +148,7 @@ export default function CleanMainClient({ profile, activeJob, openJobs, weekEarn
 
         {/* Profile strip */}
         <section className="mb-5 pt-2">
-          <div className="flex items-center gap-3">
+          <Link href={`/profile/worker/${profile.id}`} className="flex items-center gap-3 active:opacity-70 transition-opacity">
             {/* Avatar */}
             <div className="relative shrink-0">
               <div className="w-14 h-14 rounded-full bg-gradient-to-br from-brand to-brand-dark flex items-center justify-center text-white font-black text-lg shadow-brand-sm overflow-hidden">
@@ -201,10 +201,8 @@ export default function CleanMainClient({ profile, activeJob, openJobs, weekEarn
               })()}
             </div>
 
-            <Link href="/profile" className="text-[14.5px] font-bold text-text-muted flex items-center gap-0.5 shrink-0">
-              프로필 <ChevronRight size={13} />
-            </Link>
-          </div>
+            <ChevronRight size={16} className="text-text-faint shrink-0" />
+          </Link>
         </section>
 
         {/* Setup checklist */}
