@@ -174,9 +174,9 @@ export default function OnboardingPage() {
             <div className="mx-0 mt-2 mb-1 rounded-2xl p-4" style={{ background: 'rgba(14,165,233,0.06)', border: '1px solid rgba(14,165,233,0.2)' }}>
               <p className="text-[14.5px] font-black text-sky-800 mb-2">클린파트너 수수료 안내</p>
               <ul className="flex flex-col gap-1.5">
-                {['처음엔 수수료 14%(스타터), 실적 쌓으면 최대 8%까지 낮아져요.',
+                {['처음 2건은 수수료 2% 특별 프로모션! 이후엔 스타터 6%, 실적 쌓으면 최저 3%.',
                   '일한 돈은 떼일 걱정 없이 100% 지급돼요.',
-                  '첫 작업 시 보증금 5,000원 차감 (활동 종료 시 전액 환불).'].map((t) => (
+                  '완료 후 3일 이내 정산 (골드·마스터는 익일 정산).'].map((t) => (
                   <li key={t} className="text-[13.5px] font-semibold text-sky-900 flex items-start gap-1.5">
                     <span className="shrink-0 mt-0.5 text-sky-500">•</span>{t}
                   </li>
@@ -188,7 +188,7 @@ export default function OnboardingPage() {
             <div className="mx-0 mt-2 mb-1 rounded-2xl p-4" style={{ background: 'rgba(14,165,233,0.06)', border: '1px solid rgba(14,165,233,0.18)' }}>
               <p className="text-[14.5px] font-black text-sky-800 mb-2">공간파트너 수수료 안내</p>
               <ul className="flex flex-col gap-1.5">
-                {['결제 금액의 5%만 플랫폼 수수료로 청구됩니다.',
+                {['결제 금액의 12%만 플랫폼 수수료로 청구됩니다.',
                   '결제금 안전 보관 — 완료 확인 전까지 결제 보관.',
                   '미출근·품질 미달 시 환불 보장.'].map((t) => (
                   <li key={t} className="text-[13.5px] font-semibold text-sky-900 flex items-start gap-1.5">

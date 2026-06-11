@@ -59,7 +59,7 @@ export async function PATCH(req: Request) {
       .update({
         worker_id: job.worker_id,
         worker_fee: workerFee,
-        worker_fee_rate: 0.05,
+        worker_fee_rate: 0.06,
         withholding_tax: withholdingTax,
         withholding_tax_rate: 0.033,
         worker_payout: workerPayout,

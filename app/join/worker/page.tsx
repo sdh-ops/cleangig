@@ -216,10 +216,10 @@ export default async function JoinWorkerPage() {
           <p className="text-[13.5px] font-black text-sky-700 uppercase tracking-wider mb-2">수수료 안내</p>
           <div className="grid grid-cols-4 gap-1.5 mb-2.5">
             {[
-              { tier: '스타터', fee: '14%', note: '시작' },
-              { tier: '실버', fee: '12%', note: '' },
-              { tier: '골드', fee: '10%', note: '' },
-              { tier: '마스터', fee: '8%', note: '최저' },
+              { tier: '스타터', fee: '6%', note: '시작' },
+              { tier: '실버', fee: '5%', note: '' },
+              { tier: '골드', fee: '4%', note: '' },
+              { tier: '마스터', fee: '3%', note: '최저' },
             ].map((t) => (
               <div key={t.tier} className="rounded-xl bg-white/70 border border-sky-200/60 p-2 text-center">
                 <p className="text-[12px] font-bold text-sky-700">{t.tier}</p>
@@ -229,7 +229,7 @@ export default async function JoinWorkerPage() {
             ))}
           </div>
           <p className="text-[13.5px] text-text-muted font-semibold leading-relaxed">
-            실적이 쌓일수록 수수료가 내려가요. 마스터 등급이 되면 업계 최저 수준인 8%만 납부합니다.
+            처음 2건은 수수료 2% 특별 프로모션! 이후 스타터 6%에서 시작해 마스터가 되면 업계 최저 3%로 낮아져요.
           </p>
           <div className="flex items-center gap-1.5 mt-2">
             <CheckCircle2 size={12} className="text-emerald-500 shrink-0" />

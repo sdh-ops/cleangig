@@ -3,9 +3,9 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { getFeeSettings, saveFeeSettings } from '@/lib/settings'
-import { calculateSettlement, DEFAULT_FEES, type FeeSettings } from '@/lib/pricing'
+import { calculateSettlement, DEFAULT_FEES, WORKER_FEE_RATE_BY_TIER, type FeeSettings } from '@/lib/pricing'
 import { formatKRW } from '@/lib/utils'
-import { Loader2, Check, RotateCcw, Calculator, Save, AlertCircle } from 'lucide-react'
+import { Loader2, Check, RotateCcw, Calculator, Save, AlertCircle, TrendingDown } from 'lucide-react'
 
 export default function AdminFeeSettingsPage() {
   const supabase = createClient()
@@ -71,14 +71,40 @@ export default function AdminFeeSettingsPage() {
     <div>
       <div className="mb-6">
         <h1 className="h-hero text-ink">수수료 · 세율 설정</h1>
-        <p className="t-caption mt-1">트랜잭션별로 적용되는 수수료율을 조정하세요. 기본값: 공간파트너 5% · 클린파트너 14% (스타터 기준, 등급별 차등) · 원천징수 3.3% · 부가세 10%.</p>
+        <p className="t-caption mt-1">트랜잭션별로 적용되는 수수료율을 조정하세요. 기본값: 공간파트너 12% · 클린파트너 6% (스타터 기준, 등급별 6→3% 차등) · 원천징수 3.3% · 부가세 10%.</p>
+      </div>
+
+      {/* 티어별 수수료율 요약 */}
+      <div className="card p-5 mb-4">
+        <div className="flex items-center gap-2 mb-3">
+          <TrendingDown size={16} className="text-brand-dark" />
+          <h3 className="h-section text-ink">클린파트너 등급별 수수료율</h3>
+        </div>
+        <p className="t-caption mb-3">아래 수치는 코드에 고정된 등급별 요율입니다 (DB 설정값과 별개). 등급이 올라갈수록 수수료가 낮아집니다.</p>
+        <div className="grid grid-cols-4 gap-2">
+          {[
+            { tier: '스타터', rate: WORKER_FEE_RATE_BY_TIER['STARTER'], color: 'bg-slate-100 border-slate-200', label: '시작', badge: 'text-slate-600' },
+            { tier: '실버',   rate: WORKER_FEE_RATE_BY_TIER['SILVER'],  color: 'bg-slate-100 border-slate-200', label: '10건+', badge: 'text-slate-500' },
+            { tier: '골드',   rate: WORKER_FEE_RATE_BY_TIER['GOLD'],   color: 'bg-amber-50 border-amber-200',  label: '50건+', badge: 'text-amber-600' },
+            { tier: '마스터', rate: WORKER_FEE_RATE_BY_TIER['MASTER'], color: 'bg-sky-50 border-sky-200',     label: '150건+', badge: 'text-sky-600' },
+          ].map((t) => (
+            <div key={t.tier} className={`rounded-xl border p-3 text-center ${t.color}`}>
+              <p className={`text-[12px] font-black uppercase tracking-wide ${t.badge}`}>{t.tier}</p>
+              <p className="text-[22px] font-black text-ink mt-1">{Math.round(t.rate * 100)}%</p>
+              <p className="text-[11px] font-bold text-text-faint mt-0.5">{t.label}</p>
+            </div>
+          ))}
+        </div>
+        <div className="mt-3 p-3 rounded-xl bg-brand-softer border border-brand/20">
+          <p className="text-[13.5px] font-bold text-brand-dark">🎁 처음 2건 프로모션: 워커 수수료 2% 적용 (스타터 기준 66% 할인)</p>
+        </div>
       </div>
 
       <div className="grid md:grid-cols-2 gap-4">
         <div className="card p-5">
-          <h3 className="h-section text-ink mb-4">요율</h3>
+          <h3 className="h-section text-ink mb-4">기본 요율 (DB 설정)</h3>
           <RateInput label="공간파트너 수수료" value={host} onChange={setHost} suffix="%" hint="공간파트너 거래액에서 차감" />
-          <RateInput label="클린파트너 수수료" value={worker} onChange={setWorker} suffix="%" hint="클린파트너 정산액에서 차감" />
+          <RateInput label="클린파트너 수수료 (스타터 기준)" value={worker} onChange={setWorker} suffix="%" hint="등급별 차등 적용 — 위 표 참고" />
           <RateInput label="원천징수율 (프리랜서)" value={wht} onChange={setWht} suffix="%" hint="소득세 3% + 지방세 0.3% = 3.3%" />
           <RateInput label="부가세율" value={vat} onChange={setVat} suffix="%" hint="참조용 (과세사업자 대상)" />
 

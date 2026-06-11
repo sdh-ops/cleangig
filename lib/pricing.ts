@@ -1,15 +1,15 @@
 /**
  * 쓱싹 Pricing & Payment Engine (한국 법 기준)
  *
- * 수수료 구조 (테스트 버전 — 단일 고정 수수료):
- *   - 공간파트너(호스트): 5%
- *   - 클린파트너(워커):   15%
- *   - 플랫폼 총 수익:     20%
+ * 수수료 구조 (2026-06 개편):
+ *   - 공간파트너(호스트): 12%
+ *   - 클린파트너(워커):   6% (스타터 기준, 등급별 6→3%)
+ *   - 플랫폼 총 수익:     18%
  *
  * 구조:
  *   - Host Payment (공간 운영자 결제액, 부가세 포함 가능)
- *   - Host Fee (플랫폼 매출, 5%)
- *   - Worker Fee (플랫폼 매출, 15%)
+ *   - Host Fee (플랫폼 매출, 12%)
+ *   - Worker Fee (플랫폼 매출, 6%→3%)
  *   - Withholding Tax (원천징수, 프리랜서 3.3%: 소득세 3% + 지방세 0.3%)
  *   - Worker Payout (작업자 실 수령액)
  *
@@ -67,7 +67,7 @@ export function suggestBasePrice(
   const areaBonus = pyeong ? getAreaBonus(pyeong) : 0
   const multiplier = DIFFICULTY_MULTIPLIER[difficulty] ?? 1.0
   const raw = (base + areaBonus) * multiplier
-  return Math.max(15000, Math.round(raw / 1000) * 1000)
+  return Math.max(25000, Math.round(raw / 1000) * 1000)
 }
 
 export type TaxType = 'FREELANCER' | 'INDIVIDUAL_BUSINESS' | 'BUSINESS'
@@ -80,23 +80,29 @@ export type FeeSettings = {
 }
 
 export const DEFAULT_FEES: FeeSettings = {
-  host_fee_rate: 0.05,
-  worker_fee_rate: 0.14, // STARTER 기준 기본 워커 수수료 (등급별 차등: 14→8%)
+  host_fee_rate: 0.12,
+  worker_fee_rate: 0.06, // STARTER 기준 기본 워커 수수료 (등급별 차등: 6→3%)
   withholding_tax_rate: 0.033,
   vat_rate: 0.10,
 }
 
 /** 등급별 워커 수수료율 (2026-06 개편 — 실차등) */
 export const WORKER_FEE_RATE_BY_TIER: Record<string, number> = {
-  STARTER: 0.14,
-  SILVER: 0.12,
-  GOLD: 0.10,
-  MASTER: 0.08,
+  STARTER: 0.06,
+  SILVER: 0.05,
+  GOLD: 0.04,
+  MASTER: 0.03,
 }
 
 /** 등급 → 워커 수수료율 (미상 시 STARTER) */
 export function workerFeeRateForTier(tier?: string | null): number {
-  return WORKER_FEE_RATE_BY_TIER[tier ?? 'STARTER'] ?? 0.14
+  return WORKER_FEE_RATE_BY_TIER[tier ?? 'STARTER'] ?? 0.06
+}
+
+/** 첫 2건 프로모션: jobs_completed < 2이면 워커 수수료 2% */
+export function workerFeeRateWithPromo(tier?: string | null, jobsCompleted?: number | null): number {
+  if ((jobsCompleted ?? 99) < 2) return 0.02
+  return workerFeeRateForTier(tier)
 }
 
 /** 등급별 에스크로 보류일 (정산 속도 차등). GOLD↑ 익일 정산 */
@@ -245,7 +251,7 @@ export type SettlementBreakdown = {
  * 정산 계산.
  *
  * 정책(2026-06 개편):
- *  - 워커 수수료는 등급별 차등 (workerFeeRate로 주입, 기본 STARTER 14%)
+ *  - 워커 수수료는 등급별 차등 (workerFeeRate로 주입, 기본 STARTER 6%)
  *  - 긴급·심야 할증(premium)에는 플랫폼 수수료를 매기지 않고 100% 워커에게 귀속
  *    → 기피 시간대 매칭 유인. commissionable = gross − premium 에만 수수료 부과
  */

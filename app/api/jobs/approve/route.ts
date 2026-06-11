@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { calculateSettlement, premiumFromBreakdown, workerFeeRateForTier, type TaxType } from '@/lib/pricing'
+import { calculateSettlement, premiumFromBreakdown, workerFeeRateWithPromo, type TaxType } from '@/lib/pricing'
 
 export const runtime = 'nodejs'
 
@@ -59,14 +59,14 @@ export async function POST(req: Request) {
         .select('id', { count: 'exact', head: true })
         .eq('job_id', job_id)
 
-      // 워커 세금 유형·등급 조회 (사업자면 원천징수 없음 / 등급별 수수료 차등)
+      // 워커 세금 유형·등급·완료건수 조회 (사업자면 원천징수 없음 / 등급·프로모션별 수수료 차등)
       const { data: worker } = await admin
         .from('users')
-        .select('tax_type, tier')
+        .select('tax_type, tier, jobs_completed')
         .eq('id', job.worker_id)
         .single()
       const taxType: TaxType = (worker?.tax_type as TaxType) ?? 'FREELANCER'
-      const workerFeeRate = workerFeeRateForTier(worker?.tier)
+      const workerFeeRate = workerFeeRateWithPromo(worker?.tier, worker?.jobs_completed)
 
       // 승인된 추가 청구액을 정산 총액에 합산 (승인 시점이 정산 확정 지점)
       const approvedExtra =

@@ -289,7 +289,7 @@ export default function CreateRequestPage() {
     let p = suggestBasePrice(selectedSpace.type, pyeong, difficulty)
     if (isUrgent || when === 'now') p += 10000 // 긴급 할증
     if (isRecurring) p = Math.round(p * 0.95 / 1000) * 1000 // 정기 할인 5%
-    return Math.max(15000, p)
+    return Math.max(25000, p)
   }, [selectedSpace, difficulty, isUrgent, when, isRecurring])
 
   // 실제 가격 = 공간파트너가 조정했으면 그 값, 아니면 추천가
@@ -863,16 +863,16 @@ export default function CreateRequestPage() {
                 </div>
                 <div className="card p-4 bg-surface-soft">
                   <div className="flex items-center justify-between mb-4">
-                    <button type="button" onClick={() => setCustomPrice(Math.max(15000, finalPrice - 1000))}
+                    <button type="button" onClick={() => setCustomPrice(Math.max(25000, finalPrice - 1000))}
                       className="w-10 h-10 rounded-full border-2 border-line-strong flex items-center justify-center text-xl font-black text-ink hover:bg-surface-muted active:scale-95">−</button>
                     <p className="t-money text-[28px] text-ink">{finalPrice.toLocaleString()}원</p>
                     <button type="button" onClick={() => setCustomPrice(finalPrice + 1000)}
                       className="w-10 h-10 rounded-full border-2 border-line-strong flex items-center justify-center text-xl font-black text-ink hover:bg-surface-muted active:scale-95">+</button>
                   </div>
-                  <input type="range" min={15000} max={150000} step={1000} value={finalPrice}
+                  <input type="range" min={25000} max={150000} step={1000} value={finalPrice}
                     onChange={(e) => setCustomPrice(parseInt(e.target.value))} className="w-full accent-brand" />
                   <div className="flex justify-between text-[13px] text-text-faint font-bold mt-1">
-                    <span>최소 1.5만</span><span>최대 15만</span>
+                    <span>최소 2.5만</span><span>최대 15만</span>
                   </div>
                 </div>
               </div>
