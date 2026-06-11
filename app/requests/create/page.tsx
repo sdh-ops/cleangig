@@ -329,6 +329,11 @@ export default function CreateRequestPage() {
     }
     setLoading(true)
     setErr(null)
+    // '지금 요청'은 제출 시점 기준으로 재계산 — 페이지에 머무는 동안 nowBase(로드+30분)가
+    // 낡아져 서버의 최소 30분 검증에 걸리는 문제 방지
+    const effectiveScheduledAt = when === 'now'
+      ? new Date(Date.now() + 35 * 60 * 1000).toISOString()
+      : scheduledAt
     try {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error('로그인이 필요합니다.')
@@ -340,7 +345,7 @@ export default function CreateRequestPage() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             space_id: selectedSpace.id,
-            first_scheduled_at: scheduledAt,
+            first_scheduled_at: effectiveScheduledAt,
             estimated_duration: durationMin,
             price: priceBreakdown.total,
             price_breakdown: priceBreakdown,
@@ -363,7 +368,7 @@ export default function CreateRequestPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           space_id: selectedSpace.id,
-          scheduled_at: scheduledAt,
+          scheduled_at: effectiveScheduledAt,
           estimated_duration: durationMin,
           time_window_start: when === 'schedule' ? scheduledAt : null,
           time_window_end: scheduledEndAt,
@@ -377,7 +382,16 @@ export default function CreateRequestPage() {
         }),
       })
       const orderData = await res.json()
-      if (!orderData?.ok) throw new Error(orderData?.error || '주문 생성 실패')
+      if (!orderData?.ok) {
+        const errorMessages: Record<string, string> = {
+          invalid_scheduled_at: '청소 시작 시간은 지금부터 최소 30분 이후여야 해요. 시간을 다시 선택해주세요.',
+          invalid_price: '결제 금액이 올바르지 않아요. 페이지를 새로고침 후 다시 시도해주세요.',
+          space_not_found: '공간 정보를 찾을 수 없어요. 공간이 삭제되지 않았는지 확인해주세요.',
+          space_inactive: '비활성화된 공간이에요. 공간 설정에서 활성화 후 다시 요청해주세요.',
+          missing_required_fields: '필수 정보가 누락됐어요. 공간과 시간을 다시 확인해주세요.',
+        }
+        throw new Error(errorMessages[orderData?.error] || '주문 생성에 실패했어요. 잠시 후 다시 시도해주세요.')
+      }
 
       const params = new URLSearchParams({
         orderId: orderData.orderId,
