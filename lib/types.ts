@@ -61,6 +61,7 @@ export interface Space {
     size_sqm?: number
     size_pyeong?: number
     floor_count?: number
+    access_guide?: string
     cleaning_tool_location?: string
     parking_guide?: string
     trash_guide?: string

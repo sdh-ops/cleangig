@@ -67,6 +67,7 @@ export default function CreateSpacePage() {
   const [photos, setPhotos] = useState<string[]>([])
   const [referencePhotos, setReferencePhotos] = useState<string[]>([])
 
+  const [accessGuide, setAccessGuide] = useState('')
   const [toolLocation, setToolLocation] = useState('')
   const [parkingGuide, setParkingGuide] = useState('')
   const [trashGuide, setTrashGuide] = useState('')
@@ -167,6 +168,7 @@ export default function CreateSpacePage() {
         size_sqm: sizeSqm ? Math.round(sizeSqm) : null,
         base_price: basePrice,
         estimated_duration: 90,
+        access_guide: accessGuide || null,
         cleaning_tool_location: toolLocation || null,
         parking_guide: parkingGuide || null,
         trash_guide: trashGuide || null,
@@ -438,6 +440,21 @@ export default function CreateSpacePage() {
                 <AccessCodesEditor codes={accessCodes} onChange={setAccessCodes} />
                 <p className="text-[13.5px] text-text-soft font-medium mt-2 ml-1 leading-snug">
                   지금 없으면 나중에 공간 설정에서 추가하거나, 작업 당일 클린파트너에게 직접 알려주셔도 됩니다.
+                </p>
+              </div>
+
+              {/* 세부 진입 방법 */}
+              <div>
+                <label className="t-meta block mb-2 ml-1">🚶 현장 진입 방법 <span className="text-text-faint font-normal">(선택)</span></label>
+                <textarea
+                  value={accessGuide}
+                  onChange={(e) => setAccessGuide(e.target.value)}
+                  placeholder={"예) 건물 정문 오른쪽 골목으로 들어오시면 주차장이 있고, 그 왼쪽 계단으로 올라오시면 됩니다.\n엘리베이터가 없어 7층까지 계단 이용 후 옥상 방향으로 한 층 더 올라오세요."}
+                  className="input min-h-[100px]"
+                  rows={3}
+                />
+                <p className="text-[13px] text-text-faint font-medium mt-1.5 ml-1">
+                  네이버 지도로 찾을 수 없는 세부 위치를 알려주세요. 출발 전·도착 시 클린파트너에게 자동 표시됩니다.
                 </p>
               </div>
 

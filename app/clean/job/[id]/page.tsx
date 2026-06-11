@@ -76,6 +76,7 @@ type JobFull = {
     entry_code?: string
     access_codes?: { label: string; value: string }[]
     caution_notes?: string
+    access_guide?: string
     cleaning_tool_location?: string
     parking_guide?: string
     trash_guide?: string
@@ -211,7 +212,7 @@ export default function WorkerJobDetail() {
         estimated_duration, time_window_start, time_window_end, is_urgent, special_instructions, checklist, supply_shortages,
         supply_status, supply_check_items, extra_charge_status, extra_charge_amount, extra_charge_reason, extra_charge_photos,
         price_breakdown, completion_photos,
-        spaces(id, name, type, address, address_detail, entry_code, access_codes, caution_notes, cleaning_tool_location, parking_guide, trash_guide, photos, location, has_toilet, has_kitchen, has_bed, has_balcony),
+        spaces(id, name, type, address, address_detail, entry_code, access_codes, caution_notes, access_guide, cleaning_tool_location, parking_guide, trash_guide, photos, location, has_toilet, has_kitchen, has_bed, has_balcony),
         users:operator_id(id, name, phone, profile_image, avg_rating)
       `)
       .eq('id', id)
@@ -765,6 +766,19 @@ export default function WorkerJobDetail() {
           {/* 도착 직후엔 출입 비밀번호가 첫 번째 — 문 앞에서 바로 보이게 */}
           {job.status === 'ARRIVED' && renderAccessCodes()}
 
+          {/* ARRIVED: 진입 방법을 출입코드 바로 다음에 한 번 더 — 건물 안에서 길 잃지 않게 */}
+          {isMine && job.status === 'ARRIVED' && job.spaces?.access_guide && (
+            <div className="card p-4 mb-4 bg-brand-softer border border-brand/15">
+              <div className="flex items-center gap-2 mb-2.5">
+                <span className="text-[17px]">🚶</span>
+                <span className="text-[14px] font-black text-brand-dark">현장 진입 방법</span>
+              </div>
+              <p className="text-[14.5px] font-semibold text-ink leading-relaxed whitespace-pre-wrap">
+                {job.spaces.access_guide}
+              </p>
+            </div>
+          )}
+
           {/* 지도 네비게이션 카드 — 출발 전(배정·이동 중)에만 표시. 도착/청소 중엔 숨김 */}
           {isMine && (job.status === 'ASSIGNED' || job.status === 'EN_ROUTE') && job.spaces?.address && (
             <div className="card p-4 mb-4">
@@ -781,6 +795,19 @@ export default function WorkerJobDetail() {
                 <Navigation size={18} strokeWidth={2.5} />
                 네이버지도로 출발
               </button>
+            </div>
+          )}
+
+          {/* 세부 진입 안내 — 네이버 지도에 없는 건물 내부 찾아가는 방법 */}
+          {isMine && job.spaces?.access_guide && ['ASSIGNED', 'EN_ROUTE', 'ARRIVED'].includes(job.status) && (
+            <div className="card p-4 mb-4 bg-brand-softer border border-brand/15">
+              <div className="flex items-center gap-2 mb-2.5">
+                <span className="text-[17px]">🚶</span>
+                <span className="text-[14px] font-black text-brand-dark">현장 진입 방법</span>
+              </div>
+              <p className="text-[14.5px] font-semibold text-ink leading-relaxed whitespace-pre-wrap">
+                {job.spaces.access_guide}
+              </p>
             </div>
           )}
 
@@ -832,7 +859,20 @@ export default function WorkerJobDetail() {
             </div>
           )}
 
-          {/* Onsite guide */}
+          {/* 청소 시작 후 — 청소도구 위치 강조 카드 */}
+          {isMine && job.status === 'IN_PROGRESS' && job.spaces?.cleaning_tool_location && (
+            <div className="card p-4 mb-4 bg-emerald-50 border border-emerald-200">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-[17px]">🧽</span>
+                <span className="text-[14px] font-black text-emerald-800">청소도구 위치</span>
+              </div>
+              <p className="text-[14.5px] font-semibold text-ink leading-relaxed whitespace-pre-wrap">
+                {job.spaces.cleaning_tool_location}
+              </p>
+            </div>
+          )}
+
+          {/* Onsite guide — 주차·청소도구·쓰레기 */}
           {isMine && (job.spaces?.cleaning_tool_location || job.spaces?.parking_guide || job.spaces?.trash_guide) && (
             <div className="card p-4 mb-4">
               <h3 className="text-[15px] font-extrabold text-ink mb-3">현장 안내</h3>

@@ -29,6 +29,7 @@ export default function EditSpacePage() {
   const [sizePyeong, setSizePyeong] = useState('')
   const [photos, setPhotos] = useState<string[]>([])
   const [referencePhotos, setReferencePhotos] = useState<string[]>([])
+  const [accessGuide, setAccessGuide] = useState('')
   const [toolLocation, setToolLocation] = useState('')
   const [parkingGuide, setParkingGuide] = useState('')
   const [trashGuide, setTrashGuide] = useState('')
@@ -52,6 +53,7 @@ export default function EditSpacePage() {
       setSizePyeong(data.size_pyeong?.toString() || '')
       setPhotos(data.photos || [])
       setReferencePhotos(data.reference_photos || [])
+      setAccessGuide(data.access_guide || '')
       setToolLocation(data.cleaning_tool_location || '')
       setParkingGuide(data.parking_guide || '')
       setTrashGuide(data.trash_guide || '')
@@ -99,6 +101,7 @@ export default function EditSpacePage() {
         size_sqm: sizePyeong ? Math.round(parseFloat(sizePyeong) * 3.3 * 10) / 10 : null,
         photos,
         reference_photos: referencePhotos,
+        access_guide: accessGuide || null,
         cleaning_tool_location: toolLocation || null,
         parking_guide: parkingGuide || null,
         trash_guide: trashGuide || null,
@@ -225,6 +228,19 @@ export default function EditSpacePage() {
         <ImageUploader bucket="spaces" folder="photos" value={photos} onChange={setPhotos} max={6} label="공간 사진" />
         <ImageUploader bucket="spaces" folder="reference" value={referencePhotos} onChange={setReferencePhotos} max={4} label="참고 사진 (완료 예시)" />
 
+        <div>
+          <label className="t-meta block mb-2 ml-1">🚶 현장 진입 방법 <span className="text-text-faint font-normal">(선택)</span></label>
+          <textarea
+            value={accessGuide}
+            onChange={(e) => setAccessGuide(e.target.value)}
+            className="input min-h-[100px]"
+            rows={3}
+            placeholder={"예) 주차장 왼쪽 계단으로 올라오시면 입구가 있습니다.\n7층에서 내리신 후 오른쪽 계단으로 한 층 더 올라오세요."}
+          />
+          <p className="text-[13px] text-text-faint font-medium mt-1.5 ml-1">
+            출발 전·도착 시 클린파트너에게 자동 표시됩니다.
+          </p>
+        </div>
         <div>
           <label className="t-meta block mb-2 ml-1">청소도구 위치</label>
           <textarea value={toolLocation} onChange={(e) => setToolLocation(e.target.value)} className="input min-h-[80px]" rows={2} />
