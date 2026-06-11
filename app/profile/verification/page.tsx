@@ -7,8 +7,9 @@ import { uploadImage } from '@/lib/storage'
 import Link from 'next/link'
 import {
   ChevronLeft, Home, ShieldCheck, Check, Loader2, Upload,
-  AlertCircle, BadgeCheck, Building2, FileText,
+  AlertCircle, BadgeCheck, Building2, FileText, Mail,
 } from 'lucide-react'
+import type { VatType } from '@/lib/types'
 import { toKoreanErrorMessage } from '@/lib/errors'
 
 export default function VerificationPage() {
@@ -24,8 +25,13 @@ export default function VerificationPage() {
 
   // 공간파트너 사업자 정보
   const [bizName, setBizName] = useState('')
+  const [bizHolder, setBizHolder] = useState('')
   const [bizRegNumber, setBizRegNumber] = useState('')
   const [bizAddress, setBizAddress] = useState('')
+  const [bizType, setBizType] = useState('')
+  const [bizCategory, setBizCategory] = useState('')
+  const [bizVatType, setBizVatType] = useState<'GENERAL' | 'SIMPLE' | 'EXEMPT'>('GENERAL')
+  const [bizEmail, setBizEmail] = useState('')
   const [bizRegImage, setBizRegImage] = useState<string | null>(null)
   const [uploadingBiz, setUploadingBiz] = useState(false)
 
@@ -36,15 +42,20 @@ export default function VerificationPage() {
       setUserId(user.id)
       const { data } = await supabase
         .from('users')
-        .select('is_verified, role, business_name, biz_reg_number, biz_address, biz_reg_image')
+        .select('is_verified, role, business_name, biz_holder, biz_reg_number, biz_address, biz_type, biz_category, biz_vat_type, biz_email, biz_reg_image')
         .eq('id', user.id)
         .single()
       if (data) {
         setIsVerified(data.is_verified)
         setRole(data.role || 'operator')
         setBizName(data.business_name || '')
+        setBizHolder(data.biz_holder || '')
         setBizRegNumber(data.biz_reg_number || '')
         setBizAddress(data.biz_address || '')
+        setBizType(data.biz_type || '')
+        setBizCategory(data.biz_category || '')
+        setBizVatType((data.biz_vat_type as 'GENERAL' | 'SIMPLE' | 'EXEMPT') || 'GENERAL')
+        setBizEmail(data.biz_email || '')
         setBizRegImage(data.biz_reg_image || null)
       }
       setLoading(false)
@@ -87,16 +98,23 @@ export default function VerificationPage() {
   const handleOperatorSubmit = async () => {
     setErr(null)
     if (!bizName.trim()) { setErr('업체명을 입력해주세요.'); return }
+    if (!bizHolder.trim()) { setErr('대표자명을 입력해주세요.'); return }
+    if (!bizRegNumber.trim()) { setErr('사업자등록번호를 입력해주세요.'); return }
     if (!bizRegImage) { setErr('사업자등록증 또는 신분증 사진을 업로드해주세요.'); return }
     setUploading(true)
     try {
       const payload: Record<string, unknown> = {
         business_name: bizName.trim(),
+        biz_holder: bizHolder.trim(),
+        biz_reg_number: bizRegNumber.replace(/-/g, ''),
+        biz_vat_type: bizVatType,
         biz_reg_image: bizRegImage,
         preferences: { verification_doc_url: bizRegImage, submitted_at: new Date().toISOString() },
       }
-      if (bizRegNumber.trim()) payload.biz_reg_number = bizRegNumber.replace(/-/g, '')
       if (bizAddress.trim()) payload.biz_address = bizAddress.trim()
+      if (bizType.trim()) payload.biz_type = bizType.trim()
+      if (bizCategory.trim()) payload.biz_category = bizCategory.trim()
+      if (bizEmail.trim()) payload.biz_email = bizEmail.trim()
       const { error } = await supabase.from('users').update(payload).eq('id', userId)
       if (error) throw error
       setSubmitted(true)
@@ -171,17 +189,21 @@ export default function VerificationPage() {
               <ul className="flex flex-col gap-2 text-[14.5px] font-semibold text-ink-soft">
                 <li className="flex items-start gap-2">
                   <Check size={14} className="text-brand shrink-0 mt-0.5" />
-                  업체명 필수 · 사업자번호·주소 선택
+                  업체명·대표자명·사업자번호 필수
                 </li>
                 <li className="flex items-start gap-2">
                   <Check size={14} className="text-brand shrink-0 mt-0.5" />
-                  사업자등록증 사본 또는 신분증 사진 필수
+                  업태·종목·이메일 입력 시 세금계산서 자동 발행
+                </li>
+                <li className="flex items-start gap-2">
+                  <Check size={14} className="text-brand shrink-0 mt-0.5" />
+                  사업자등록증 사본 필수
                 </li>
               </ul>
             </div>
 
             <div>
-              <label htmlFor="op-biz-name" className="t-meta block mb-2 ml-1">업체명 *</label>
+              <label htmlFor="op-biz-name" className="t-meta block mb-2 ml-1">업체명 (상호) *</label>
               <input
                 id="op-biz-name"
                 value={bizName}
@@ -193,7 +215,19 @@ export default function VerificationPage() {
             </div>
 
             <div>
-              <label htmlFor="op-biz-reg" className="t-meta block mb-2 ml-1">사업자등록번호 (선택)</label>
+              <label htmlFor="op-biz-holder" className="t-meta block mb-2 ml-1">대표자명 *</label>
+              <input
+                id="op-biz-holder"
+                value={bizHolder}
+                onChange={(e) => setBizHolder(e.target.value)}
+                placeholder="예) 홍길동"
+                className="input"
+                maxLength={20}
+              />
+            </div>
+
+            <div>
+              <label htmlFor="op-biz-reg" className="t-meta block mb-2 ml-1">사업자등록번호 *</label>
               <input
                 id="op-biz-reg"
                 value={bizRegNumber}
@@ -215,6 +249,80 @@ export default function VerificationPage() {
                 className="input"
                 maxLength={100}
               />
+            </div>
+
+            <div>
+              <label className="t-meta block mb-2 ml-1">업태 (선택)</label>
+              <div className="flex flex-wrap gap-2 mb-2">
+                {['부동산업', '숙박·음식점업', '서비스업', '예술·여가', '도·소매업'].map((t) => (
+                  <button
+                    key={t}
+                    type="button"
+                    onClick={() => setBizType(bizType === t ? '' : t)}
+                    className={`px-3 py-1.5 rounded-full text-[13.5px] font-bold border-2 transition ${
+                      bizType === t ? 'border-brand bg-brand-softer text-brand-dark' : 'border-line-soft text-text-soft'
+                    }`}
+                  >
+                    {t}
+                  </button>
+                ))}
+              </div>
+              <input
+                value={bizType}
+                onChange={(e) => setBizType(e.target.value)}
+                placeholder="직접 입력 또는 위에서 선택"
+                className="input"
+                maxLength={30}
+              />
+            </div>
+
+            <div>
+              <label htmlFor="op-biz-category" className="t-meta block mb-2 ml-1">종목 (선택)</label>
+              <input
+                id="op-biz-category"
+                value={bizCategory}
+                onChange={(e) => setBizCategory(e.target.value)}
+                placeholder="예) 공간임대, 파티룸운영, 스튜디오임대"
+                className="input"
+                maxLength={40}
+              />
+            </div>
+
+            <div>
+              <label className="t-meta block mb-2 ml-1">과세 유형</label>
+              <div className="grid grid-cols-3 gap-2">
+                {(['GENERAL', 'SIMPLE', 'EXEMPT'] as VatType[]).map((t) => (
+                  <button
+                    key={t}
+                    type="button"
+                    onClick={() => setBizVatType(t as 'GENERAL' | 'SIMPLE' | 'EXEMPT')}
+                    aria-pressed={bizVatType === t}
+                    className={`chip !text-[13.5px] !px-2 !py-2 ${bizVatType === t ? 'chip-brand' : 'chip-muted'}`}
+                  >
+                    {t === 'GENERAL' ? '일반과세' : t === 'SIMPLE' ? '간이과세' : '면세'}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label htmlFor="op-biz-email" className="t-meta block mb-2 ml-1">
+                세금계산서 수신 이메일 (권장)
+              </label>
+              <div className="relative">
+                <Mail size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-faint pointer-events-none" />
+                <input
+                  id="op-biz-email"
+                  type="email"
+                  value={bizEmail}
+                  onChange={(e) => setBizEmail(e.target.value)}
+                  placeholder="세금계산서·영수증 자동 발송 이메일"
+                  className="input pl-9"
+                />
+              </div>
+              <p className="text-[13px] text-text-faint font-medium mt-1.5 ml-1">
+                정산 시 세금계산서를 이 이메일로 자동 발송합니다.
+              </p>
             </div>
 
             <div>

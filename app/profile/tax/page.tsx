@@ -33,6 +33,8 @@ export default function TaxProfilePage() {
   const [bizRegImage, setBizRegImage] = useState<string | null>(null)
   const [bizName, setBizName] = useState('')
   const [bizHolder, setBizHolder] = useState('')
+  const [bizType, setBizType] = useState('')
+  const [bizCategory, setBizCategory] = useState('')
   const [bizVatType, setBizVatType] = useState<VatType>('SIMPLE')
   const [bizEmail, setBizEmail] = useState('')
   const [bizAddress, setBizAddress] = useState('')
@@ -44,7 +46,7 @@ export default function TaxProfilePage() {
       if (!user) { router.replace('/login'); return }
       setUserId(user.id)
       const { data } = await supabase.from('users')
-        .select('tax_type, resident_id_last, biz_reg_number, biz_reg_image, biz_name, biz_holder, biz_vat_type, biz_email, biz_address')
+        .select('tax_type, resident_id_last, biz_reg_number, biz_reg_image, biz_name, biz_holder, biz_type, biz_category, biz_vat_type, biz_email, biz_address')
         .eq('id', user.id).single()
       if (data) {
         setTaxType((data.tax_type as TaxType) || '')
@@ -54,6 +56,8 @@ export default function TaxProfilePage() {
         setBizRegImage(data.biz_reg_image || null)
         setBizName(data.biz_name || '')
         setBizHolder(data.biz_holder || '')
+        setBizType(data.biz_type || '')
+        setBizCategory(data.biz_category || '')
         setBizVatType((data.biz_vat_type as VatType) || 'SIMPLE')
         setBizEmail(data.biz_email || '')
         setBizAddress(data.biz_address || '')
@@ -116,6 +120,8 @@ export default function TaxProfilePage() {
         biz_reg_image: taxType !== 'FREELANCER' ? bizRegImage : null,
         biz_name: taxType !== 'FREELANCER' ? bizName.trim() : null,
         biz_holder: taxType !== 'FREELANCER' ? bizHolder.trim() : null,
+        biz_type: taxType !== 'FREELANCER' ? bizType.trim() || null : null,
+        biz_category: taxType !== 'FREELANCER' ? bizCategory.trim() || null : null,
         biz_vat_type: taxType !== 'FREELANCER' ? bizVatType : null,
         biz_email: bizEmail.trim() || null,
         biz_address: taxType !== 'FREELANCER' ? bizAddress.trim() || null : null,
@@ -266,6 +272,41 @@ export default function TaxProfilePage() {
                 placeholder="예) 서울시 강남구 테헤란로 123"
                 className="input"
                 maxLength={100}
+              />
+            </div>
+            <div>
+              <label className="t-meta block mb-2 ml-1">업태 (선택)</label>
+              <div className="flex flex-wrap gap-2 mb-2">
+                {['서비스업', '청소업', '개인서비스업', '가사서비스업'].map((t) => (
+                  <button
+                    key={t}
+                    type="button"
+                    onClick={() => setBizType(bizType === t ? '' : t)}
+                    className={`px-3 py-1.5 rounded-full text-[13.5px] font-bold border-2 transition ${
+                      bizType === t ? 'border-brand bg-brand-softer text-brand-dark' : 'border-line-soft text-text-soft'
+                    }`}
+                  >
+                    {t}
+                  </button>
+                ))}
+              </div>
+              <input
+                value={bizType}
+                onChange={(e) => setBizType(e.target.value)}
+                placeholder="직접 입력 또는 위에서 선택"
+                className="input"
+                maxLength={30}
+              />
+            </div>
+            <div>
+              <label htmlFor="biz-category" className="t-meta block mb-2 ml-1">종목 (선택)</label>
+              <input
+                id="biz-category"
+                value={bizCategory}
+                onChange={(e) => setBizCategory(e.target.value)}
+                placeholder="예) 청소용역, 가사도우미"
+                className="input"
+                maxLength={40}
               />
             </div>
             <div>
