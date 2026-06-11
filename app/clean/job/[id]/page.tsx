@@ -1130,19 +1130,33 @@ export default function WorkerJobDetail() {
               <h3 className="text-[15px] font-extrabold text-ink mb-2">이 작업에 지원하시겠어요?</h3>
               <p className="t-caption mb-4">지원하면 바로 배정돼요. 예약 시간에 맞춰 현장으로 방문해주세요.</p>
               {workerReady && (!workerReady.bank || !workerReady.tax) ? (
-                <div className="p-3 rounded-xl bg-info-soft border border-info/15 mb-3">
-                  <p className="text-[13.5px] font-semibold text-ink-soft leading-snug">
-                    💡 지금 바로 지원할 수 있어요. <b>정산 받기 전</b>까지만{' '}
-                    {!workerReady.bank && <Link href="/profile/bank" className="text-brand-dark underline font-bold">계좌</Link>}
-                    {(!workerReady.bank && !workerReady.tax) && ' · '}
-                    {!workerReady.tax && <Link href="/profile/tax" className="text-brand-dark underline font-bold">세금 유형</Link>}
-                    {' '}등록하면 됩니다.
-                  </p>
+                // 계좌·세금 미설정 시 하드 차단 — 버튼 숨김
+                <div className="flex flex-col gap-2.5">
+                  <div className="p-3.5 rounded-xl bg-sun-soft border border-sun/20 flex items-start gap-2">
+                    <span className="text-lg shrink-0">⚠️</span>
+                    <div>
+                      <p className="text-[14.5px] font-extrabold text-ink mb-1">정산 설정 완료 후 지원 가능해요</p>
+                      <p className="text-[13.5px] font-semibold text-text-soft leading-snug">
+                        작업 완료 후 바로 정산받으려면 아래 항목을 먼저 등록해주세요.
+                      </p>
+                    </div>
+                  </div>
+                  {!workerReady.bank && (
+                    <Link href="/profile/bank" className="btn btn-secondary w-full !text-[14.5px]">
+                      💳 정산 계좌 등록하기
+                    </Link>
+                  )}
+                  {!workerReady.tax && (
+                    <Link href="/profile/tax" className="btn btn-secondary w-full !text-[14.5px]">
+                      🧾 세금 유형 설정하기
+                    </Link>
+                  )}
                 </div>
-              ) : null}
-              <button onClick={() => setShowConsent(true)} className="btn btn-primary w-full">
-                지원하기 <Zap size={18} strokeWidth={2.5} />
-              </button>
+              ) : (
+                <button onClick={() => setShowConsent(true)} className="btn btn-primary w-full">
+                  지원하기 <Zap size={18} strokeWidth={2.5} />
+                </button>
+              )}
             </div>
           )}
 
