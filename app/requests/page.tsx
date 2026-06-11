@@ -115,7 +115,7 @@ export default async function RequestsPage(props: { searchParams?: Promise<{ tab
                           </span>
                         )}
                         {j.spaces?.has_kitchen && (
-                          <span className="text-[13px] font-bold bg-orange-50 text-orange-700 px-1.5 py-0.5 rounded-md border border-orange-100">
+                          <span className="text-[13px] font-bold bg-rose-50 text-rose-700 px-1.5 py-0.5 rounded-md border border-rose-100">
                             🍳 주방
                           </span>
                         )}

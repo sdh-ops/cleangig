@@ -135,7 +135,7 @@ function SideLink({
       <span className="flex-1">{label}</span>
       {!!badge && badge > 0 && (
         <span className={`min-w-[20px] h-5 px-1.5 rounded-full text-[13px] font-black flex items-center justify-center
-          ${badgeTone === 'danger' ? 'bg-red-500 text-white' : 'bg-amber-400 text-amber-900'}`}>
+          ${badgeTone === 'danger' ? 'bg-red-500 text-white' : 'bg-sky-500 text-white'}`}>
           {badge}
         </span>
       )}
@@ -157,7 +157,7 @@ function MobileTab({
       <span className="text-[13px] font-bold">{label}</span>
       {!!badge && badge > 0 && (
         <span className={`absolute top-2 right-[calc(50%-18px)] min-w-[16px] h-4 px-1 rounded-full text-[11px] font-black flex items-center justify-center
-          ${danger ? 'bg-red-500 text-white' : 'bg-amber-400 text-amber-900'}`}>
+          ${danger ? 'bg-red-500 text-white' : 'bg-sky-500 text-white'}`}>
           {badge}
         </span>
       )}

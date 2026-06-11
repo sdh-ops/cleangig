@@ -65,7 +65,7 @@ async function sendWebPush(admin: AdminClient, userIds: string[], payload: Notif
 
   try {
     webpush.setVapidDetails(
-      process.env.VAPID_SUBJECT || 'mailto:support@sseuksak.com',
+      process.env.VAPID_SUBJECT || 'mailto:sdh@thenanbiz.com',
       vapidPub,
       vapidPriv,
     )

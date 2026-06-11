@@ -45,7 +45,7 @@ export default function PrivacyPage() {
           <Section title="5. 개인정보 처리 위탁">
             <div className="rounded-xl bg-surface-muted p-3 text-[14.5px]">
               <b>Supabase Inc.</b> · 데이터베이스·스토리지 호스팅<br />
-              <b>Naver Cloud Platform</b> · 지도 API, SMS 발송<br />
+              <b>Naver Cloud Platform</b> · 지도 API<br />
               <b>토스페이먼츠</b> · 결제 대행 (추후 연동)<br />
               <b>Vercel Inc.</b> · 서비스 배포·인프라
             </div>

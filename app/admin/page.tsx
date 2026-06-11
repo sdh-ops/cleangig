@@ -90,18 +90,18 @@ export default async function AdminDashboardPage() {
               <Link
                 key={j.id}
                 href={`/requests/${j.id}`}
-                className="flex items-center gap-3 p-3.5 rounded-2xl bg-amber-50 border border-amber-200 hover:bg-amber-100 transition active:scale-[0.99]"
+                className="flex items-center gap-3 p-3.5 rounded-2xl bg-sky-50 border border-sky-200 hover:bg-sky-100 transition active:scale-[0.99]"
               >
-                <div className="w-9 h-9 rounded-xl bg-amber-400 flex items-center justify-center shrink-0">
+                <div className="w-9 h-9 rounded-xl bg-sky-500 flex items-center justify-center shrink-0">
                   <CheckCircle2 size={16} className="text-white" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-[15px] font-extrabold text-slate-900 truncate">{j.spaces?.name}</p>
-                  <p className="text-[13.5px] font-bold text-amber-700">{j.worker?.name} 완료 보고 · 검수 대기 중</p>
+                  <p className="text-[13.5px] font-bold text-sky-700">{j.worker?.name} 완료 보고 · 검수 대기 중</p>
                 </div>
                 <div className="text-right shrink-0">
                   <p className="text-[15px] font-extrabold text-slate-900">{formatKRW(j.price, { short: true })}</p>
-                  <p className="text-[13px] text-amber-600 font-bold">승인하기 →</p>
+                  <p className="text-[13px] text-sky-600 font-bold">승인하기 →</p>
                 </div>
               </Link>
             ))}

@@ -168,7 +168,7 @@ export default async function JoinHostPage() {
               icon: <Zap size={15} />,
               title: '당일 · 예약 모두 가능',
               desc: '급하게 청소 필요한 날도 30초 등록으로 가까운 파트너 매칭.',
-              color: '#F59E0B',
+              color: '#0EA5E9',
             },
             {
               icon: <RefreshCcw size={15} />,
@@ -271,7 +271,7 @@ export default async function JoinHostPage() {
 
         <p className="text-center text-[13.5px] text-text-faint font-semibold mt-3">
           청소 일감 찾는 클린파트너로 가입하려면?{' '}
-          <Link href="/join/worker" className="underline font-bold text-amber-600">
+          <Link href="/join/worker" className="underline font-bold text-sky-600">
             여기
           </Link>
         </p>

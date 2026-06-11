@@ -168,17 +168,17 @@ export default function OnboardingPage() {
           {selectedRole === 'worker' && (
             <div
               className="mx-0 mt-2 mb-1 rounded-2xl p-4"
-              style={{ background: 'rgba(245,158,11,0.07)', border: '1px solid rgba(245,158,11,0.2)' }}
+              style={{ background: 'rgba(14,165,233,0.06)', border: '1px solid rgba(14,165,233,0.2)' }}
             >
-              <p className="text-[14.5px] font-black text-amber-800 mb-2">클린파트너 수수료 안내</p>
+              <p className="text-[14.5px] font-black text-sky-800 mb-2">클린파트너 수수료 안내</p>
               <ul className="flex flex-col gap-1.5">
                 {[
                   '처음엔 수수료 14%(스타터), 실적 쌓으면 최대 8%까지 낮아져요.',
                   '일한 돈은 떼일 걱정 없이 100% 지급돼요.',
                   '첫 작업 시 보증금 5,000원 차감 (활동 종료 시 전액 환불).',
                 ].map((t) => (
-                  <li key={t} className="text-[13.5px] font-semibold text-amber-900 flex items-start gap-1.5">
-                    <span className="shrink-0 mt-0.5 text-amber-600">•</span>{t}
+                  <li key={t} className="text-[13.5px] font-semibold text-sky-900 flex items-start gap-1.5">
+                    <span className="shrink-0 mt-0.5 text-sky-500">•</span>{t}
                   </li>
                 ))}
               </ul>

@@ -45,17 +45,17 @@ export default async function JoinWorkerPage() {
           className="absolute inset-0 pointer-events-none"
           style={{
             background:
-              'radial-gradient(ellipse at 10% 20%, rgba(245,158,11,0.15) 0%, transparent 55%),' +
-              'radial-gradient(ellipse at 90% 80%, rgba(245,158,11,0.08) 0%, transparent 50%)',
+              'radial-gradient(ellipse at 10% 20%, rgba(14,165,233,0.12) 0%, transparent 55%),' +
+              'radial-gradient(ellipse at 90% 80%, rgba(14,165,233,0.07) 0%, transparent 50%)',
           }}
         />
 
         <div
           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full mb-4"
-          style={{ background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.25)' }}
+          style={{ background: 'rgba(14,165,233,0.1)', border: '1px solid rgba(14,165,233,0.25)' }}
         >
-          <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-          <span style={{ fontSize: 11, fontWeight: 900, color: '#92580C', letterSpacing: '0.08em' }}>
+          <span className="w-1.5 h-1.5 rounded-full bg-sky-400 animate-pulse" />
+          <span style={{ fontSize: 11, fontWeight: 900, color: '#0369A1', letterSpacing: '0.08em' }}>
             클린파트너 모집 중
           </span>
         </div>
@@ -73,7 +73,7 @@ export default async function JoinWorkerPage() {
         >
           청소하고
           <br />
-          <span style={{ color: '#D97706' }}>바로 입금</span>받으세요.
+          <span style={{ color: '#0284C7' }}>바로 입금</span>받으세요.
         </h1>
 
         <p className="mt-4 text-[14px] text-text-muted font-semibold leading-relaxed relative">
@@ -88,31 +88,31 @@ export default async function JoinWorkerPage() {
         <div
           className="rounded-3xl overflow-hidden relative"
           style={{
-            background: 'linear-gradient(160deg, #FFFBEB 0%, #FEF3C7 50%, #FDE68A 100%)',
-            border: '1px solid rgba(245,158,11,0.2)',
-            boxShadow: '0 16px 40px rgba(245,158,11,0.18)',
+            background: 'linear-gradient(160deg, #EFF6FF 0%, #DBEAFE 50%, #BFDBFE 100%)',
+            border: '1px solid rgba(14,165,233,0.2)',
+            boxShadow: '0 16px 40px rgba(14,165,233,0.15)',
           }}
         >
           <div
             aria-hidden
             className="absolute -top-6 -left-6 w-36 h-36 rounded-full pointer-events-none"
-            style={{ background: 'radial-gradient(circle, rgba(252,211,77,0.55) 0%, transparent 70%)' }}
+            style={{ background: 'radial-gradient(circle, rgba(56,189,248,0.4) 0%, transparent 70%)' }}
           />
 
           <div className="relative p-5">
-            <p style={{ fontSize: 11, fontWeight: 700, color: '#92580C', opacity: 0.8, marginBottom: 6 }}>
+            <p style={{ fontSize: 11, fontWeight: 700, color: '#0369A1', opacity: 0.8, marginBottom: 6 }}>
               청소 1건당 예상 수입
             </p>
             <div className="flex items-baseline gap-1.5 mb-1">
               <span
                 className="num-display"
-                style={{ fontSize: 52, color: '#92580C', lineHeight: 1 }}
+                style={{ fontSize: 52, color: '#0369A1', lineHeight: 1 }}
               >
                 2~3만
               </span>
-              <span style={{ fontSize: 22, fontWeight: 900, color: '#92580C' }}>원</span>
+              <span style={{ fontSize: 22, fontWeight: 900, color: '#0369A1' }}>원</span>
             </div>
-            <p style={{ fontSize: 11, fontWeight: 700, color: 'rgba(146,88,12,0.65)' }}>
+            <p style={{ fontSize: 11, fontWeight: 700, color: 'rgba(3,105,161,0.65)' }}>
               공간 종류·난이도·면적에 따라 차등
             </p>
 
@@ -125,10 +125,10 @@ export default async function JoinWorkerPage() {
                 <div
                   key={s.label}
                   className="rounded-xl p-2.5 text-center"
-                  style={{ background: 'rgba(255,255,255,0.55)', border: '1px solid rgba(245,158,11,0.2)' }}
+                  style={{ background: 'rgba(255,255,255,0.6)', border: '1px solid rgba(14,165,233,0.2)' }}
                 >
-                  <p style={{ fontSize: 15, fontWeight: 900, color: '#92580C', letterSpacing: '-0.02em' }}>{s.value}</p>
-                  <p style={{ fontSize: 10, fontWeight: 700, color: 'rgba(146,88,12,0.7)', marginTop: 2 }}>{s.label}</p>
+                  <p style={{ fontSize: 15, fontWeight: 900, color: '#0369A1', letterSpacing: '-0.02em' }}>{s.value}</p>
+                  <p style={{ fontSize: 10, fontWeight: 700, color: 'rgba(3,105,161,0.7)', marginTop: 2 }}>{s.label}</p>
                 </div>
               ))}
             </div>
@@ -157,7 +157,7 @@ export default async function JoinWorkerPage() {
               icon: <Zap size={15} />,
               title: '즉시 시작, 장비 불필요',
               desc: '공간에 비치된 도구 사용. 별도 구매·자격증 없이 가능.',
-              color: '#F59E0B',
+              color: '#0EA5E9',
             },
             {
               icon: <Star size={15} />,
@@ -196,7 +196,7 @@ export default async function JoinWorkerPage() {
               <div key={s.step} className="flex items-center gap-3">
                 <span
                   className="w-6 h-6 rounded-full flex items-center justify-center shrink-0 text-[13px] font-black"
-                  style={{ background: 'rgba(245,158,11,0.15)', color: '#92580C' }}
+                  style={{ background: 'rgba(14,165,233,0.12)', color: '#0369A1' }}
                 >
                   {s.step}
                 </span>
@@ -211,9 +211,9 @@ export default async function JoinWorkerPage() {
       <div className="px-5 mb-4">
         <div
           className="rounded-2xl p-4"
-          style={{ background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.15)' }}
+          style={{ background: 'rgba(14,165,233,0.05)', border: '1px solid rgba(14,165,233,0.15)' }}
         >
-          <p className="text-[13.5px] font-black text-amber-700 uppercase tracking-wider mb-2">수수료 안내</p>
+          <p className="text-[13.5px] font-black text-sky-700 uppercase tracking-wider mb-2">수수료 안내</p>
           <div className="grid grid-cols-4 gap-1.5 mb-2.5">
             {[
               { tier: '스타터', fee: '14%', note: '시작' },
@@ -221,10 +221,10 @@ export default async function JoinWorkerPage() {
               { tier: '골드', fee: '10%', note: '' },
               { tier: '마스터', fee: '8%', note: '최저' },
             ].map((t) => (
-              <div key={t.tier} className="rounded-xl bg-white/60 border border-amber-200/60 p-2 text-center">
-                <p className="text-[12px] font-bold text-amber-700">{t.tier}</p>
+              <div key={t.tier} className="rounded-xl bg-white/70 border border-sky-200/60 p-2 text-center">
+                <p className="text-[12px] font-bold text-sky-700">{t.tier}</p>
                 <p className="text-[17px] font-black text-ink mt-0.5">{t.fee}</p>
-                {t.note ? <p className="text-[11px] font-bold text-amber-500 mt-0.5">{t.note}</p> : <p className="text-[11px] text-transparent mt-0.5">-</p>}
+                {t.note ? <p className="text-[11px] font-bold text-sky-500 mt-0.5">{t.note}</p> : <p className="text-[11px] text-transparent mt-0.5">-</p>}
               </div>
             ))}
           </div>
@@ -250,8 +250,8 @@ export default async function JoinWorkerPage() {
             minHeight: 58,
             fontSize: 17,
             borderRadius: 'var(--radius-xl)',
-            background: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)',
-            boxShadow: '0 8px 24px rgba(245,158,11,0.35)',
+            background: 'linear-gradient(135deg, #0EA5E9 0%, #0284C7 100%)',
+            boxShadow: '0 8px 24px rgba(14,165,233,0.35)',
           }}
         >
           클린파트너 무료 가입

@@ -94,7 +94,7 @@ export default async function AdminJobsPage({
               href={`/admin/jobs?status=${f.key}&period=${periodFilter}`}
               className={`shrink-0 flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[14.5px] font-bold transition
                 ${isActive
-                  ? f.tone === 'warning' ? 'bg-amber-400 text-amber-900'
+                  ? f.tone === 'warning' ? 'bg-sky-500 text-white'
                     : f.tone === 'danger'  ? 'bg-red-500 text-white'
                     : 'bg-slate-900 text-white'
                   : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'}`}
@@ -104,7 +104,7 @@ export default async function AdminJobsPage({
                 <span className={`min-w-[18px] h-4.5 px-1 rounded-full text-[13px] font-black flex items-center justify-center
                   ${isActive
                     ? 'bg-white/30 text-inherit'
-                    : f.tone === 'warning' ? 'bg-amber-100 text-amber-700'
+                    : f.tone === 'warning' ? 'bg-sky-100 text-sky-700'
                     : f.tone === 'danger'  ? 'bg-red-100 text-red-600'
                     : 'bg-slate-100 text-slate-600'}`}>
                   {f.count}

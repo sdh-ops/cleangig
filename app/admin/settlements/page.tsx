@@ -59,7 +59,7 @@ export default async function SettlementsPage() {
       {/* HELD — 즉시 정산 처리 가능 */}
       <Section
         title="정산 대기 (HELD)"
-        icon={<Clock size={14} className="text-amber-500" />}
+        icon={<Clock size={14} className="text-sky-500" />}
         count={held.length}
         empty="승인 완료 후 정산 대기 중인 건이 없어요"
       >
