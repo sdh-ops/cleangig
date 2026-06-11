@@ -78,6 +78,7 @@ type JobFull = {
   extra_charge_amount?: number | null
   extra_charge_reason?: string | null
   extra_charge_photos?: string[] | null
+  completion_photos?: string[] | null
   spaces?: {
     id: string
     name: string
@@ -431,7 +432,7 @@ export default function RequestDetailClient({ job: initialJob, userId, initialIs
         </div>
       </header>
 
-      <div className="flex-1 pb-28 overflow-y-auto">
+      <div className={`flex-1 overflow-y-auto ${canApprove ? 'pb-36' : 'pb-28'}`}>
         {/* Hero */}
         <div className="relative bg-ink text-white px-5 pt-5 pb-8">
           <div className="absolute -top-10 -right-8 w-48 h-48 rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(14,165,233,0.25) 0%, transparent 70%)' }} />
@@ -622,6 +623,33 @@ export default function RequestDetailClient({ job: initialJob, userId, initialIs
             </div>
           )}
 
+          {/* 완료 사진 — SUBMITTED 이후 operator/admin 확인용 */}
+          {Array.isArray(job.completion_photos) && job.completion_photos.length > 0 &&
+            ['SUBMITTED', 'APPROVED', 'PAID_OUT'].includes(job.status) && (
+            <div className="card p-4 mb-4">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-[15px] font-extrabold text-ink">청소 완료 사진</h3>
+                <span className="text-[13px] font-black text-brand-dark bg-brand-softer px-2.5 py-1 rounded-full">
+                  {job.completion_photos.length}장
+                </span>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                {job.completion_photos.map((url, i) => (
+                  <a key={i} href={url} target="_blank" rel="noopener noreferrer">
+                    <img
+                      src={url}
+                      alt={`완료사진 ${i + 1}`}
+                      className="w-full aspect-square rounded-xl object-cover border border-line-soft hover:opacity-90 transition"
+                    />
+                  </a>
+                ))}
+              </div>
+              <p className="text-[13.5px] text-text-soft font-semibold mt-2">
+                사진을 눌러 원본 크기로 확인할 수 있어요.
+              </p>
+            </div>
+          )}
+
           {/* Price breakdown */}
           {job.price_breakdown && (
             <div className="card p-4 mb-4">
@@ -713,6 +741,20 @@ export default function RequestDetailClient({ job: initialJob, userId, initialIs
           </div>
         </div>
       </div>
+
+      {/* 승인 고정 하단 바 — SUBMITTED 상태에서 항상 보이게 */}
+      {canApprove && (
+        <div className="fixed bottom-0 inset-x-0 border-t border-line-soft bg-surface/95 backdrop-blur safe-bottom z-20">
+          <div className="max-w-[480px] mx-auto px-5 py-3.5">
+            <p className="text-[13.5px] font-bold text-text-soft text-center mb-2">
+              사진을 확인했다면 승인해주세요
+            </p>
+            <button onClick={handleApprove} disabled={approving} className="btn btn-primary w-full">
+              {approving ? <Loader2 size={18} className="animate-spin" /> : <>승인하고 정산 진행 <CheckCircle2 size={18} /></>}
+            </button>
+          </div>
+        </div>
+      )}
 
       {job.users?.id && (
         <ReviewModal
