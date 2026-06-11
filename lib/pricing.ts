@@ -99,9 +99,9 @@ export function workerFeeRateForTier(tier?: string | null): number {
   return WORKER_FEE_RATE_BY_TIER[tier ?? 'STARTER'] ?? 0.06
 }
 
-/** 첫 2건 프로모션: jobs_completed < 2이면 워커 수수료 2% */
-export function workerFeeRateWithPromo(tier?: string | null, jobsCompleted?: number | null): number {
-  if ((jobsCompleted ?? 99) < 2) return 0.02
+/** 첫 2건 프로모션: total_jobs < 2이면 워커 수수료 2% */
+export function workerFeeRateWithPromo(tier?: string | null, totalJobs?: number | null): number {
+  if ((totalJobs ?? 99) < 2) return 0.02
   return workerFeeRateForTier(tier)
 }
 

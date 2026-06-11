@@ -62,11 +62,11 @@ export async function POST(req: Request) {
       // 워커 세금 유형·등급·완료건수 조회 (사업자면 원천징수 없음 / 등급·프로모션별 수수료 차등)
       const { data: worker } = await admin
         .from('users')
-        .select('tax_type, tier, jobs_completed')
+        .select('tax_type, tier, total_jobs')
         .eq('id', job.worker_id)
         .single()
       const taxType: TaxType = (worker?.tax_type as TaxType) ?? 'FREELANCER'
-      const workerFeeRate = workerFeeRateWithPromo(worker?.tier, worker?.jobs_completed)
+      const workerFeeRate = workerFeeRateWithPromo(worker?.tier, worker?.total_jobs)
 
       // 승인된 추가 청구액을 정산 총액에 합산 (승인 시점이 정산 확정 지점)
       const approvedExtra =
