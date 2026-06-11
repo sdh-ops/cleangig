@@ -53,6 +53,8 @@ type JobFull = {
   price: number
   scheduled_at: string
   estimated_duration?: number
+  time_window_start?: string | null
+  time_window_end?: string | null
   is_urgent?: boolean
   special_instructions?: string
   checklist?: ChecklistItem[]
@@ -168,7 +170,7 @@ export default function WorkerJobDetail() {
       .from('jobs')
       .select(`
         id, status, worker_id, operator_id, price, scheduled_at,
-        estimated_duration, is_urgent, special_instructions, checklist, supply_shortages,
+        estimated_duration, time_window_start, time_window_end, is_urgent, special_instructions, checklist, supply_shortages,
         supply_status, supply_check_items, extra_charge_status, extra_charge_amount, extra_charge_reason, extra_charge_photos,
         price_breakdown, completion_photos,
         spaces(id, name, type, address, address_detail, entry_code, access_codes, caution_notes, cleaning_tool_location, parking_guide, trash_guide, photos, location),
@@ -620,6 +622,10 @@ export default function WorkerJobDetail() {
   }
 
   const durationMin = job.estimated_duration ?? 90
+  // 시간대 자유(윈도우) 판정 — 마감까지 여유가 소요시간보다 15분+ 넓으면 워커가 시간 선택
+  const windowEndMs = job.time_window_end ? new Date(job.time_window_end).getTime() : null
+  const windowMin = windowEndMs ? Math.round((windowEndMs - new Date(job.scheduled_at).getTime()) / 60000) : 0
+  const isFlexibleWindow = windowMin > durationMin + 15
   const requiredCount = checklist.filter((c) => c.required).length
   // 공간파트너가 요청 시 고른 비품만 체크 — 안 골랐으면 비품 카드 미표시
   const requestedSupplies = Array.isArray(job.supply_check_items) ? job.supply_check_items : []
@@ -659,8 +665,16 @@ export default function WorkerJobDetail() {
             </div>
             <h2 className="text-[22px] font-black leading-tight">{job.spaces?.name}</h2>
             <p className="text-[15px] text-white/80 font-semibold mt-2 flex items-center gap-1.5">
-              <Clock size={13} /> {formatScheduled(job.scheduled_at)} · {durationMin}분 소요
+              <Clock size={13} />
+              {isFlexibleWindow && windowEndMs
+                ? `${formatScheduled(job.scheduled_at)} ~ ${new Date(windowEndMs).toLocaleTimeString('ko-KR', { hour: 'numeric', minute: '2-digit' })} 사이 · ${durationMin}분 소요`
+                : `${formatScheduled(job.scheduled_at)} · ${durationMin}분 소요`}
             </p>
+            {isFlexibleWindow && (
+              <p className="text-[13.5px] text-brand-light font-bold mt-1 flex items-center gap-1.5">
+                🕒 이 시간대 안에서 편한 시간에 시작하면 돼요 (마감 전 완료)
+              </p>
+            )}
             <p className="text-[15px] text-white/80 font-semibold mt-1 flex items-center gap-1.5">
               <MapPin size={13} /> {isMine ? job.spaces?.address : maskAddress(job.spaces?.address || '')}
               {job.spaces?.address_detail && isMine ? ` ${job.spaces.address_detail}` : ''}

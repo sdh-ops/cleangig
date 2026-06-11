@@ -65,6 +65,7 @@ export default function CreateRequestPage() {
   const [scheduledDate, setScheduledDate] = useState<string>('')
   const [scheduledTime, setScheduledTime] = useState<string>('')
   const [endTime, setEndTime] = useState<string>('')
+  const [durationChoice, setDurationChoice] = useState<number>(90) // 예상 소요(분)
   const [isUrgent, setIsUrgent] = useState(false)
 
   const [difficulty, setDifficulty] = useState<'쉬움' | '보통' | '어려움'>('보통')
@@ -157,11 +158,27 @@ export default function CreateRequestPage() {
     return () => { cancelled = true }
   }, [selectedSpace?.id, selectedSpace?.ical_url])
 
-  // 슬롯 선택 → 예약 종료 시각을 청소 시작으로. 종료시각은 +90분 자동 제안되도록 비움
+  // 슬롯 선택 → 예약 종료 +60분 버퍼를 '청소 가능 시작'으로 (손님 퇴실 여유). 마감은 자동 제안되도록 비움
   const pickSlot = (slot: CleaningSlot) => {
     setWhen('schedule')
-    setScheduledDate(slot.date)
-    setScheduledTime(slot.time ?? '11:00') // 시간제 예약은 종료 시각, 체크아웃형은 오전 11시 기본
+    if (slot.time) {
+      const [h, m] = slot.time.split(':').map(Number)
+      const total = h * 60 + m + 60 // +60분 버퍼
+      const nextDay = total >= 24 * 60
+      const t = total % (24 * 60)
+      setScheduledTime(`${String(Math.floor(t / 60)).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}`)
+      // 버퍼가 자정을 넘기면 날짜도 +1
+      if (nextDay) {
+        const d = new Date(`${slot.date}T00:00:00`)
+        d.setDate(d.getDate() + 1)
+        setScheduledDate(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`)
+      } else {
+        setScheduledDate(slot.date)
+      }
+    } else {
+      setScheduledDate(slot.date)
+      setScheduledTime('11:00') // 체크아웃형(날짜만): 오전 11시 기본
+    }
     setEndTime('')
   }
 
@@ -234,7 +251,9 @@ export default function CreateRequestPage() {
     return nowBase || new Date().toISOString()
   }, [when, scheduledDate, scheduledTime, nowBase])
 
-  // 종료 시각 — 예약 모드에서 필수. 종료가 시작보다 빠르거나 같으면 다음날 종료(자정 넘김)로 해석
+  // 윈도우 모델: scheduledTime=청소 가능 시작, endTime=마감 시각(다음 예약 전), durationChoice=예상 소요(분)
+  //  - 마감이 가능 시작보다 빠르거나 같으면 다음날 마감(자정 넘김)으로 해석
+  //  - 마감 − 시작 == 소요 → 사실상 시간 고정 / 더 넓으면 워커가 그 안에서 자율 선택
   const isOvernight = when === 'schedule' && !!scheduledTime && !!endTime && endTime <= scheduledTime
   const scheduledEndAt = useMemo(() => {
     if (when !== 'schedule' || !scheduledDate || !scheduledTime || !endTime) return null
@@ -243,18 +262,22 @@ export default function CreateRequestPage() {
     return end.toISOString()
   }, [when, scheduledDate, scheduledTime, endTime])
 
-  // 작업 예상 소요(분) = 종료 − 시작 (자정 넘김 포함 최대 12시간). '지금 요청'은 기본 90분
-  const durationMin = useMemo(() => {
-    if (when !== 'schedule' || !scheduledEndAt) return 90
-    const diff = Math.round((new Date(scheduledEndAt).getTime() - new Date(scheduledAt).getTime()) / 60000)
-    return Math.min(Math.max(diff, 30), 720)
-  }, [when, scheduledAt, scheduledEndAt])
+  // 예상 소요시간(분) — 윈도우 폭과 별개. '지금 요청'은 기본 90분
+  const durationMin = when === 'schedule' ? durationChoice : 90
 
-  // 시작 시간 선택·변경 시 종료를 +90분으로 자동 제안 (종료가 비어있을 때만 — 자정 넘김은 wrap)
+  // 윈도우 폭(분). 소요보다 짧으면 무효(마감 안에 청소 못 끝냄)
+  const windowMin = useMemo(() => {
+    if (when !== 'schedule' || !scheduledEndAt) return 0
+    return Math.round((new Date(scheduledEndAt).getTime() - new Date(scheduledAt).getTime()) / 60000)
+  }, [when, scheduledAt, scheduledEndAt])
+  const windowValid = when !== 'schedule' || (windowMin >= durationMin && windowMin <= 720)
+  const isFlexible = when === 'schedule' && windowMin > durationMin + 15 // 여유 15분 이상이면 '시간대 자유'
+
+  // 가능 시작 선택 시 마감을 (시작 + 소요)로 자동 제안 (마감이 비어있을 때만)
   useEffect(() => {
     if (!scheduledTime || endTime) return
     const [h, m] = scheduledTime.split(':').map(Number)
-    const total = (h * 60 + m + 90) % (24 * 60)
+    const total = (h * 60 + m + durationChoice) % (24 * 60)
     setEndTime(`${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scheduledTime])
@@ -287,8 +310,8 @@ export default function CreateRequestPage() {
   const canProceed = (() => {
     if (step === 1) {
       if (!spaceId || !scheduledAt) return false
-      // 예약 모드: 날짜·시작·종료 모두 + 종료 > 시작
-      if (when === 'schedule') return !!scheduledEndAt
+      // 예약 모드: 날짜·가능시작·마감 모두 + 마감이 소요시간 이상 확보
+      if (when === 'schedule') return !!scheduledEndAt && windowValid
       return true
     }
     // 출입 방법이 있거나, "비밀번호 없이 진행"을 명시적으로 선택해야 결제 가능
@@ -528,19 +551,56 @@ export default function CreateRequestPage() {
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label htmlFor="req-start" className="t-meta block mb-2 ml-1">시작 시간</label>
+                      <label htmlFor="req-start" className="t-meta block mb-2 ml-1">청소 가능 시작</label>
                       <input id="req-start" type="time" value={scheduledTime} onChange={(e) => setScheduledTime(e.target.value)} className="input" step={1800} />
                     </div>
                     <div>
-                      <label htmlFor="req-end" className="t-meta block mb-2 ml-1">종료 시간</label>
+                      <label htmlFor="req-end" className="t-meta block mb-2 ml-1">마감 (다음 예약 전)</label>
                       <input id="req-end" type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} className="input" step={1800} />
                     </div>
                   </div>
-                  {scheduledEndAt && (
-                    <p className="text-[14px] font-bold text-text-soft ml-1 -mt-1">
-                      예상 작업 시간 약 {Math.floor(durationMin / 60) > 0 ? `${Math.floor(durationMin / 60)}시간 ` : ''}{durationMin % 60 > 0 ? `${durationMin % 60}분` : ''}
-                      {isOvernight && <span className="text-brand-dark"> · 다음날 종료</span>}
+
+                  {/* 예상 소요시간 — 윈도우 폭과 별개 */}
+                  <div>
+                    <label className="t-meta block mb-2 ml-1">예상 소요시간</label>
+                    <div className="grid grid-cols-4 gap-2">
+                      {[
+                        { m: 60, l: '1시간' },
+                        { m: 90, l: '1시간 반' },
+                        { m: 120, l: '2시간' },
+                        { m: 180, l: '3시간' },
+                      ].map((opt) => (
+                        <button
+                          key={opt.m}
+                          onClick={() => setDurationChoice(opt.m)}
+                          aria-pressed={durationChoice === opt.m}
+                          className={`h-11 rounded-xl text-[14px] font-extrabold border-2 transition ${durationChoice === opt.m ? 'border-brand bg-brand-softer text-brand-dark' : 'border-line-soft bg-surface text-text-muted'}`}
+                        >
+                          {opt.l}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {scheduledEndAt && !windowValid && (
+                    <p className="text-[14px] font-bold text-danger ml-1">
+                      마감까지 시간이 예상 소요({Math.floor(durationMin / 60) > 0 ? `${Math.floor(durationMin / 60)}시간 ` : ''}{durationMin % 60 > 0 ? `${durationMin % 60}분` : ''})보다 짧아요. 마감을 늦추거나 소요를 줄여주세요.
                     </p>
+                  )}
+                  {scheduledEndAt && windowValid && (
+                    <div className="rounded-xl bg-surface-muted px-3.5 py-3 -mt-1">
+                      {isFlexible ? (
+                        <p className="text-[14px] font-bold text-ink leading-relaxed">
+                          🕒 이 시간대 안에서 <span className="text-brand-dark">클린파트너가 시간을 정해</span> 청소해요 (약 {Math.floor(durationMin / 60) > 0 ? `${Math.floor(durationMin / 60)}시간 ` : ''}{durationMin % 60 > 0 ? `${durationMin % 60}분` : ''} 소요)
+                          {isOvernight && <span className="text-brand-dark"> · 마감 다음날</span>}
+                        </p>
+                      ) : (
+                        <p className="text-[14px] font-bold text-ink leading-relaxed">
+                          ⏱ 약 {Math.floor(durationMin / 60) > 0 ? `${Math.floor(durationMin / 60)}시간 ` : ''}{durationMin % 60 > 0 ? `${durationMin % 60}분` : ''} 소요 예정 (시간 거의 고정)
+                          {isOvernight && <span className="text-brand-dark"> · 마감 다음날</span>}
+                        </p>
+                      )}
+                    </div>
                   )}
                 </div>
               )}
@@ -640,8 +700,16 @@ export default function CreateRequestPage() {
                 <div className="flex-1 min-w-0">
                   <h4 className="text-[16px] font-extrabold text-ink truncate">{selectedSpace.name}</h4>
                   <p className="text-[14.5px] text-text-soft font-bold truncate mt-0.5 flex items-center gap-1">
-                    <Clock size={13} /> {formatScheduled(scheduledAt)}{scheduledEndAt ? ` ~ ${new Date(scheduledEndAt).toLocaleTimeString('ko-KR', { hour: 'numeric', minute: '2-digit' })}` : ''}
+                    <Clock size={13} />
+                    {when === 'schedule' && scheduledEndAt
+                      ? `${formatScheduled(scheduledAt)} ~ ${new Date(scheduledEndAt).toLocaleTimeString('ko-KR', { hour: 'numeric', minute: '2-digit' })}${isFlexible ? ' 사이' : ''}`
+                      : formatScheduled(scheduledAt)}
                   </p>
+                  {when === 'schedule' && (
+                    <p className="text-[13.5px] text-text-faint font-bold truncate flex items-center gap-1 mt-0.5">
+                      {isFlexible ? '이 시간대 안에서 청소' : '예정 시간 청소'} · 약 {Math.floor(durationMin / 60) > 0 ? `${Math.floor(durationMin / 60)}시간 ` : ''}{durationMin % 60 > 0 ? `${durationMin % 60}분` : ''}
+                    </p>
+                  )}
                 </div>
                 <button
                   type="button"

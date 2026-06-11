@@ -55,6 +55,7 @@ type JobFull = {
   price: number
   scheduled_at: string
   estimated_duration?: number
+  time_window_end?: string | null
   is_urgent?: boolean
   special_instructions?: string
   price_breakdown?: {
@@ -257,6 +258,11 @@ export default function RequestDetailClient({ job: initialJob, userId, initialIs
   const [approving, setApproving] = useState(false)
   const [canceling, setCanceling] = useState(false)
   const [showCancel, setShowCancel] = useState(false)
+  const [showReschedule, setShowReschedule] = useState(false)
+  const [rescheduling, setRescheduling] = useState(false)
+  const [rsDate, setRsDate] = useState('')
+  const [rsStart, setRsStart] = useState('')
+  const [rsEnd, setRsEnd] = useState('')
   const [showReview, setShowReview] = useState(false)
   const [showDispute, setShowDispute] = useState(false)
   const [respondingExtra, setRespondingExtra] = useState(false)
@@ -327,6 +333,47 @@ export default function RequestDetailClient({ job: initialJob, userId, initialIs
       setErr(e instanceof Error ? e.message : '취소 실패')
     }
     setCanceling(false)
+  }
+
+  const openReschedule = () => {
+    const d = new Date(job.scheduled_at)
+    const pad = (n: number) => String(n).padStart(2, '0')
+    setRsDate(`${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`)
+    setRsStart(`${pad(d.getHours())}:${pad(d.getMinutes())}`)
+    const end = job.time_window_end ? new Date(job.time_window_end) : new Date(d.getTime() + (job.estimated_duration ?? 90) * 60000)
+    setRsEnd(`${pad(end.getHours())}:${pad(end.getMinutes())}`)
+    setErr(null)
+    setShowReschedule(true)
+  }
+
+  const handleReschedule = async () => {
+    if (!rsDate || !rsStart || !rsEnd) { setErr('날짜와 시간을 입력해주세요.'); return }
+    const startAt = new Date(`${rsDate}T${rsStart}:00`)
+    const endAt = new Date(`${rsDate}T${rsEnd}:00`)
+    if (rsEnd <= rsStart) endAt.setDate(endAt.getDate() + 1) // 자정 넘김
+    if (startAt.getTime() < Date.now() + 30 * 60 * 1000) { setErr('변경 시간은 지금부터 최소 30분 이후로 선택해주세요.'); return }
+    const durationMin = Math.min(Math.max(Math.round((endAt.getTime() - startAt.getTime()) / 60000), 30), 720)
+    setRescheduling(true)
+    setErr(null)
+    try {
+      const res = await fetch('/api/jobs/reschedule', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          job_id: job.id,
+          scheduled_at: startAt.toISOString(),
+          time_window_end: endAt.toISOString(),
+          estimated_duration: durationMin,
+        }),
+      })
+      const data = await res.json()
+      if (!data?.ok) throw new Error(data?.error || '시간 변경 실패')
+      setShowReschedule(false)
+      router.refresh()
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : '시간 변경 실패')
+    }
+    setRescheduling(false)
   }
 
   const handleExtraCharge = async (approve: boolean) => {
@@ -643,6 +690,11 @@ export default function RequestDetailClient({ job: initialJob, userId, initialIs
                 <Star size={16} /> {job.users?.name} 님께 리뷰 남기기
               </button>
             )}
+            {isOwner && ['OPEN', 'ASSIGNED'].includes(job.status) && (
+              <button onClick={openReschedule} className="btn btn-secondary w-full">
+                <Clock size={16} /> 청소 시간 변경
+              </button>
+            )}
             {canCancel && job.status === 'OPEN' && (
               <button onClick={() => setShowCancel(true)} className="btn btn-secondary w-full !border-danger/30 !text-danger">
                 <Trash2 size={16} /> 요청 취소 ({cancelRefundRate(job.scheduled_at).label})
@@ -693,6 +745,46 @@ export default function RequestDetailClient({ job: initialJob, userId, initialIs
       />
 
       {/* Cancel modal */}
+      {showReschedule && (
+        <div
+          className="fixed inset-0 z-50 bg-ink/40 backdrop-blur-sm flex items-end sm:items-center justify-center"
+          onClick={() => setShowReschedule(false)}
+        >
+          <div
+            className="w-full max-w-[480px] rounded-t-3xl sm:rounded-3xl bg-surface p-6 pb-8 safe-bottom"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="h-section">청소 시간 변경</h3>
+              <button onClick={() => setShowReschedule(false)} className="w-8 h-8 rounded-full hover:bg-surface-muted flex items-center justify-center">
+                <X size={18} />
+              </button>
+            </div>
+            <p className="t-caption mb-4">손님 이용 시간이 바뀌었나요? 청소 시간을 조정하세요. {job.worker_id ? '배정된 클린파트너에게 자동으로 알려드려요.' : ''}</p>
+            <div className="flex flex-col gap-3">
+              <div>
+                <label htmlFor="rs-date" className="t-meta block mb-2 ml-1">날짜</label>
+                <input id="rs-date" type="date" value={rsDate} onChange={(e) => setRsDate(e.target.value)} className="input" min={new Date().toISOString().slice(0, 10)} />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label htmlFor="rs-start" className="t-meta block mb-2 ml-1">청소 가능 시작</label>
+                  <input id="rs-start" type="time" value={rsStart} onChange={(e) => setRsStart(e.target.value)} className="input" step={1800} />
+                </div>
+                <div>
+                  <label htmlFor="rs-end" className="t-meta block mb-2 ml-1">마감</label>
+                  <input id="rs-end" type="time" value={rsEnd} onChange={(e) => setRsEnd(e.target.value)} className="input" step={1800} />
+                </div>
+              </div>
+            </div>
+            {err && <p className="text-[14px] font-bold text-danger mt-3">{err}</p>}
+            <button onClick={handleReschedule} disabled={rescheduling} className="btn btn-primary w-full mt-5">
+              {rescheduling ? <Loader2 size={18} className="animate-spin" /> : '시간 변경하기'}
+            </button>
+          </div>
+        </div>
+      )}
+
       {showCancel && (
         <div
           className="fixed inset-0 z-50 bg-ink/40 backdrop-blur-sm flex items-end sm:items-center justify-center"
