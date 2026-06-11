@@ -56,7 +56,8 @@ function LoginContent() {
           .select('role, phone')
           .eq('id', authData.user.id)
           .maybeSingle()
-        if (profile?.role === 'operator') router.push('/dashboard')
+        if (profile?.role === 'admin') router.push('/admin')
+        else if (profile?.role === 'operator') router.push('/dashboard')
         else if (profile?.role === 'worker') router.push('/clean')
         else router.push('/onboarding')
       } else {
