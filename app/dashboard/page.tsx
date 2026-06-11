@@ -7,19 +7,13 @@ export default async function DashboardPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const { data: profile } = await supabase
-    .from('users')
-    .select('*')
-    .eq('id', user.id)
-    .single()
-  if (!profile) redirect('/onboarding')
-  if (profile.role === 'worker') redirect('/clean')
-
   const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0)
   const todayEnd = new Date(); todayEnd.setHours(23, 59, 59, 999)
   const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1)
 
-  const [todayJobsRes, spacesRes, recentJobsRes, monthJobsRes, unreadRes, recurringRes] = await Promise.all([
+  // profile을 데이터 쿼리와 함께 병렬 — 직렬 왕복 1회 절감
+  const [profileRes, todayJobsRes, spacesRes, recentJobsRes, monthJobsRes, unreadRes, recurringRes] = await Promise.all([
+    supabase.from('users').select('*').eq('id', user.id).single(),
     supabase
       .from('jobs')
       .select('id, status, price, scheduled_at, estimated_duration, is_urgent, spaces(name, type, address)')
@@ -58,6 +52,10 @@ export default async function DashboardPage() {
       .order('scheduled_at')
       .limit(5),
   ])
+
+  const profile = profileRes.data
+  if (!profile) redirect('/onboarding')
+  if (profile.role === 'worker') redirect('/clean')
 
   const monthJobs = (monthJobsRes.data as { status: string; price: number }[] | null) || []
   const monthTotal = monthJobs.reduce((s, j) => s + (j.price || 0), 0)
