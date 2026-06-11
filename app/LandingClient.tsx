@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
+import LegalFooter from '@/components/common/LegalFooter'
 import {
   Sparkles,
   ShieldCheck,
@@ -165,6 +166,9 @@ export default function LandingClient() {
           에 동의합니다.
         </p>
       </div>
+
+      {/* 전자상거래법 제10조 사업자정보 표시 */}
+      <LegalFooter />
     </div>
   )
 }
