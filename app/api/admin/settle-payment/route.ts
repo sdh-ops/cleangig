@@ -87,6 +87,23 @@ export async function POST(req: Request) {
         return NextResponse.json({ ok: false, error: `not_released (current: ${payment.status})` }, { status: 400 })
       }
 
+      // 서버측 계좌 검증 — UI disabled를 우회한 직접 호출/조작 차단
+      // 계좌 없는데 PAID_OUT 처리하면 워커에게 거짓 "입금완료" 알림이 발송되는 사고 방지
+      if (payment.worker_id) {
+        const { data: worker } = await admin
+          .from('users')
+          .select('bank_account')
+          .eq('id', payment.worker_id)
+          .single()
+        const bank = worker?.bank_account as { bank_name?: string; account_number?: string } | null
+        if (!bank?.bank_name || !bank?.account_number) {
+          return NextResponse.json(
+            { ok: false, error: 'no_bank_account' },
+            { status: 400 },
+          )
+        }
+      }
+
       const { error } = await admin
         .from('payments')
         .update({

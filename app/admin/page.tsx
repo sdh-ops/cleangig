@@ -135,9 +135,9 @@ export default async function AdminDashboardPage() {
       {/* ── KPI 카드 */}
       <section className="grid grid-cols-2 gap-3">
         <KpiCard
-          label="이번 달 거래액"
-          value={formatKRW(monthGMV, { short: true })}
-          sub={`수수료 수익 ${formatKRW(platformFee, { short: true })}`}
+          label="이번 달 수수료 수익"
+          value={formatKRW(platformFee, { short: true })}
+          sub={`거래액 ${formatKRW(monthGMV, { short: true })}`}
           icon={<TrendingUp size={16} />}
           tone="brand"
         />
