@@ -529,7 +529,10 @@ export default function CreateRequestPage() {
                     <Zap size={18} strokeWidth={2.6} />
                   </div>
                   <h4 className="text-[14px] font-extrabold text-ink">지금 요청</h4>
-                  <p className="text-[14.5px] font-black text-danger mt-0.5">긴급 수수료 +10,000원</p>
+                  <p className="text-[13px] font-bold text-text-soft mt-0.5">
+                    {nowBase ? new Date(nowBase).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Seoul' }) + ' 시작' : '30분 후 시작'}
+                  </p>
+                  <p className="text-[13.5px] font-black text-danger mt-0.5">긴급 수수료 +10,000원</p>
                 </button>
                 <button
                   onClick={() => setWhen('schedule')}

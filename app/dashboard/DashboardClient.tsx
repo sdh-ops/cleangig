@@ -14,7 +14,10 @@ import {
   Wallet,
   ArrowRight,
   RefreshCcw,
+  Bell,
+  X,
 } from 'lucide-react'
+import { requestNotificationPermission, subscribeToPush } from '@/lib/push'
 import Header from '@/components/common/Header'
 import BottomNav from '@/components/common/BottomNav'
 import StatusChip from '@/components/common/StatusChip'
@@ -100,6 +103,28 @@ export default function DashboardClient({
   unreadCount,
 }: Props) {
   const router = useRouter()
+
+  const PUSH_DISMISSED_KEY = 'sseuksak:host_push_dismissed'
+  const [showPushBanner, setShowPushBanner] = useState(false)
+  const [pushLoading, setPushLoading] = useState(false)
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    if (!('Notification' in window)) return
+    if (Notification.permission === 'granted') return
+    if (localStorage.getItem(PUSH_DISMISSED_KEY)) return
+    setShowPushBanner(true)
+  }, [])
+
+  async function handleEnablePush() {
+    setPushLoading(true)
+    const granted = await requestNotificationPermission()
+    if (granted) { await subscribeToPush() }
+    else { localStorage.setItem(PUSH_DISMISSED_KEY, '1') }
+    setShowPushBanner(false)
+    setPushLoading(false)
+  }
+
   // KST 기준 인사말 — SSR(UTC)와 클라이언트(KST)가 다를 수 있어 useEffect로 클라이언트에서만 계산
   const [greeting, setGreeting] = useState('안녕하세요')
   useEffect(() => {
@@ -145,6 +170,33 @@ export default function DashboardClient({
     <div className="sseuksak-shell">
       <PullToRefresh onRefresh={() => router.refresh()} />
       <Header showLogo showBell unreadCount={unreadCount} />
+
+      {/* 푸시 알림 배너 — 클린파트너 도착·승인 요청 놓치지 않도록 */}
+      {showPushBanner && (
+        <div className="mx-4 mt-2 mb-0 rounded-2xl overflow-hidden border border-brand/30 bg-brand-softer px-4 py-3 flex items-start gap-3 shadow-sm">
+          <div className="w-9 h-9 rounded-xl bg-brand/15 flex items-center justify-center shrink-0 mt-0.5">
+            <Bell size={18} className="text-brand-dark" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-[15px] font-extrabold text-ink leading-snug">알림을 켜야 승인 요청을 받아요</p>
+            <p className="text-[13.5px] text-text-soft font-bold mt-0.5 leading-snug">클린파트너가 청소를 마치면 사진 확인 후 승인해야 정산이 됩니다.</p>
+            <button
+              onClick={handleEnablePush}
+              disabled={pushLoading}
+              className="mt-2 text-[14.5px] font-black text-white bg-brand px-4 py-1.5 rounded-full disabled:opacity-60"
+            >
+              {pushLoading ? '처리 중...' : '알림 허용하기'}
+            </button>
+          </div>
+          <button
+            onClick={() => { localStorage.setItem(PUSH_DISMISSED_KEY, '1'); setShowPushBanner(false) }}
+            className="shrink-0 p-2.5 rounded-full text-text-faint hover:text-ink transition-colors"
+            aria-label="닫기"
+          >
+            <X size={15} />
+          </button>
+        </div>
+      )}
 
       <div className="page-container flex-1">
 

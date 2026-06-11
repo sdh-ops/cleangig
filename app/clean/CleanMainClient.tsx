@@ -185,10 +185,20 @@ export default function CleanMainClient({ profile, activeJob, openJobs, weekEarn
                 <span className="text-text-faint">·</span>
                 <span>{jobsCount}건 완료</span>
               </div>
-              {/* Tier progress bar */}
+              {/* Tier progress bar + next milestone */}
               <div className="progress-bar mt-2 w-24">
                 <div className="progress-bar-fill" style={{ width: `${Math.max(tierProgress, 8)}%`, background: `linear-gradient(90deg, ${tierInfo.color}, ${tierInfo.color}cc)` }} />
               </div>
+              {tier !== 'MASTER' && (() => {
+                const nextLabel = tier === 'STARTER' ? '실버' : tier === 'SILVER' ? '골드' : '마스터'
+                const needed = tier === 'STARTER' ? 10 : tier === 'SILVER' ? 50 : 150
+                const left = Math.max(0, needed - jobsCount)
+                return left > 0 ? (
+                  <p className="text-[12px] font-bold mt-0.5" style={{ color: tierInfo.color }}>
+                    {nextLabel}까지 {left}건
+                  </p>
+                ) : null
+              })()}
             </div>
 
             <Link href="/profile" className="text-[14.5px] font-bold text-text-muted flex items-center gap-0.5 shrink-0">
