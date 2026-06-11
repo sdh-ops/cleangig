@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { parseIcal, upcomingCheckouts, isSafeIcalUrl } from '@/lib/ical'
+import { parseIcal, upcomingCleaningSlots, isSafeIcalUrl } from '@/lib/ical'
 
 export const runtime = 'nodejs'
 
@@ -10,8 +10,8 @@ const MAX_ICS_BYTES = 1024 * 1024 // 1MB — 예약 캘린더로는 충분
 /**
  * GET /api/spaces/ical?space_id=...
  *
- * 공간에 등록된 iCal(예약 캘린더) URL을 읽어 다가오는 체크아웃 날짜를 반환.
- * 본인 소유 공간만 조회 가능. 응답: { ok, checkouts: [{date, summary, nights}] }
+ * 공간에 등록된 iCal(예약 캘린더) URL을 읽어 다가오는 "예약 종료 후 청소 슬롯"을 반환.
+ * 본인 소유 공간만 조회 가능. 응답: { ok, slots: [{date, time, summary, dateOnly}] }
  */
 export async function GET(req: Request) {
   try {
@@ -29,7 +29,7 @@ export async function GET(req: Request) {
       .single()
     if (!space) return NextResponse.json({ ok: false, error: 'space_not_found' }, { status: 404 })
     if (space.operator_id !== user.id) return NextResponse.json({ ok: false, error: 'forbidden' }, { status: 403 })
-    if (!space.ical_url) return NextResponse.json({ ok: true, checkouts: [], no_ical: true })
+    if (!space.ical_url) return NextResponse.json({ ok: true, slots: [], no_ical: true })
 
     if (!isSafeIcalUrl(space.ical_url)) {
       return NextResponse.json({ ok: false, error: 'invalid_ical_url' }, { status: 400 })
@@ -56,8 +56,8 @@ export async function GET(req: Request) {
       clearTimeout(timer)
     }
 
-    const checkouts = upcomingCheckouts(parseIcal(icsText), 30)
-    return NextResponse.json({ ok: true, checkouts })
+    const slots = upcomingCleaningSlots(parseIcal(icsText), 45)
+    return NextResponse.json({ ok: true, slots })
   } catch (e) {
     console.error('[spaces/ical]', e)
     return NextResponse.json({ ok: false, error: 'internal' }, { status: 500 })

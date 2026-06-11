@@ -1,22 +1,25 @@
 import 'server-only'
 
 /**
- * 경량 iCalendar(.ics) 파서 — 에어비앤비/부킹닷컴 예약 캘린더 연동용.
+ * 경량 iCalendar(.ics) 파서 — 예약 캘린더 연동용.
  *
- * 외부 라이브러리 없이 VEVENT의 DTSTART/DTEND/SUMMARY만 추출한다.
- * 에어비앤비 내보내기 캘린더는 VALUE=DATE 형식(YYYYMMDD)이며
- * DTEND가 체크아웃 날짜다 (iCal 규약상 DTEND는 exclusive — 그날 손님이 나감).
+ * 두 형식을 모두 지원한다:
+ *  - 에어비앤비/부킹닷컴: VALUE=DATE (YYYYMMDD), DTEND가 체크아웃 날짜(exclusive)
+ *  - 스페이스클라우드/파티룸: DATETIME (YYYYMMDDTHHMMSS), 시간대 단위 예약
+ *
+ * 청소는 "예약이 끝난 직후"에 필요하므로 DTEND(날짜+시간)를 청소 슬롯의 기준으로 쓴다.
  */
 
 export type IcalEvent = {
-  start: string // YYYY-MM-DD
-  end: string   // YYYY-MM-DD (체크아웃 날짜)
+  startDate: string        // YYYY-MM-DD
+  startTime: string | null // HH:MM (날짜형이면 null)
+  endDate: string          // YYYY-MM-DD
+  endTime: string | null   // HH:MM
   summary: string
 }
 
-/** ical 본문 → 이벤트 배열. 파싱 불가 라인은 무시 (관대한 파서) */
 export function parseIcal(text: string): IcalEvent[] {
-  // RFC 5545 line unfolding: 줄바꿈 후 공백/탭으로 시작하면 이전 줄에 이어붙임
+  // RFC 5545 line unfolding
   const unfolded = text.replace(/\r?\n[ \t]/g, '')
   const lines = unfolded.split(/\r?\n/)
 
@@ -24,13 +27,16 @@ export function parseIcal(text: string): IcalEvent[] {
   let cur: Partial<IcalEvent> | null = null
 
   for (const line of lines) {
-    if (line === 'BEGIN:VEVENT') {
-      cur = {}
-      continue
-    }
+    if (line === 'BEGIN:VEVENT') { cur = {}; continue }
     if (line === 'END:VEVENT') {
-      if (cur?.start && cur?.end) {
-        events.push({ start: cur.start, end: cur.end, summary: cur.summary ?? '' })
+      if (cur?.startDate && cur?.endDate) {
+        events.push({
+          startDate: cur.startDate,
+          startTime: cur.startTime ?? null,
+          endDate: cur.endDate,
+          endTime: cur.endTime ?? null,
+          summary: cur.summary ?? '',
+        })
       }
       cur = null
       continue
@@ -39,53 +45,76 @@ export function parseIcal(text: string): IcalEvent[] {
 
     const colon = line.indexOf(':')
     if (colon < 0) continue
-    const keyPart = line.slice(0, colon)     // e.g. "DTSTART;VALUE=DATE"
+    const key = line.slice(0, colon).split(';')[0]
     const value = line.slice(colon + 1)
-    const key = keyPart.split(';')[0]
 
-    if (key === 'DTSTART') cur.start = toDateString(value)
-    else if (key === 'DTEND') cur.end = toDateString(value)
+    if (key === 'DTSTART') { cur.startDate = icalDate(value); cur.startTime = icalTime(value) }
+    else if (key === 'DTEND') { cur.endDate = icalDate(value); cur.endTime = icalTime(value) }
     else if (key === 'SUMMARY') cur.summary = value.trim()
   }
   return events
 }
 
-/** YYYYMMDD 또는 YYYYMMDDTHHMMSS(Z) → YYYY-MM-DD */
-function toDateString(v: string): string {
+function icalDate(v: string): string {
   const m = v.match(/^(\d{4})(\d{2})(\d{2})/)
-  if (!m) return ''
-  return `${m[1]}-${m[2]}-${m[3]}`
+  return m ? `${m[1]}-${m[2]}-${m[3]}` : ''
+}
+function icalTime(v: string): string | null {
+  const m = v.match(/T(\d{2})(\d{2})/)
+  return m ? `${m[1]}:${m[2]}` : null
 }
 
-export type Checkout = {
-  date: string    // 체크아웃 날짜 (청소 가능일)
+export type CleaningSlot = {
+  date: string         // 청소 가능일 (예약 종료 날짜)
+  time: string | null  // 예약 종료 시각 (시간제 예약). 날짜형(체크아웃)이면 null
   summary: string
-  nights: number  // 숙박일수 (참고용)
+  dateOnly: boolean    // true=체크아웃형(시간 없음), false=시간대 예약
 }
 
-/** 오늘 이후 daysAhead일 이내 체크아웃 목록 (날짜 오름차순, 중복 제거) */
-export function upcomingCheckouts(events: IcalEvent[], daysAhead = 30): Checkout[] {
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  const limit = new Date(today)
-  limit.setDate(limit.getDate() + daysAhead)
+/**
+ * 다가오는 "예약 종료 후 청소 슬롯" 목록.
+ * - 시간제 예약: 종료 시각(date+time)이 지금 이후
+ * - 날짜형 체크아웃: 종료 날짜가 오늘 이후
+ * 날짜+시간 오름차순, 중복 제거.
+ *
+ * @param nowMs  기준 시각 (ms) — 테스트·재현성 위해 주입
+ */
+export function upcomingCleaningSlots(events: IcalEvent[], daysAhead = 45, nowMs = Date.now()): CleaningSlot[] {
+  const now = new Date(nowMs)
+  const todayStr = toLocalDateStr(now)
+  const limitMs = nowMs + daysAhead * 86400000
 
   const seen = new Set<string>()
-  return events
-    .filter((e) => e.start && e.end)
-    .map((e) => ({
-      date: e.end,
-      summary: e.summary,
-      nights: Math.max(1, Math.round((new Date(e.end).getTime() - new Date(e.start).getTime()) / 86400000)),
-    }))
-    .filter((c) => {
-      const d = new Date(`${c.date}T00:00:00`)
-      if (d < today || d > limit) return false
-      if (seen.has(c.date)) return false
-      seen.add(c.date)
-      return true
+  const slots: { slot: CleaningSlot; sortMs: number }[] = []
+
+  for (const e of events) {
+    if (!e.endDate) continue
+    const dateOnly = !e.endTime
+    // 정렬·필터 기준 시각: 시간제는 종료 시각, 날짜형은 그날 오전 (체크아웃 후 청소 시작 가정)
+    const refMs = new Date(`${e.endDate}T${e.endTime ?? '11:00'}:00`).getTime()
+    if (!Number.isFinite(refMs)) continue
+
+    if (dateOnly) {
+      if (e.endDate < todayStr) continue
+    } else if (refMs <= nowMs) continue
+
+    if (refMs > limitMs) continue
+
+    const dedup = `${e.endDate}T${e.endTime ?? ''}`
+    if (seen.has(dedup)) continue
+    seen.add(dedup)
+
+    slots.push({
+      slot: { date: e.endDate, time: e.endTime, summary: e.summary, dateOnly },
+      sortMs: refMs,
     })
-    .sort((a, b) => a.date.localeCompare(b.date))
+  }
+
+  return slots.sort((a, b) => a.sortMs - b.sortMs).map((s) => s.slot)
+}
+
+function toLocalDateStr(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
 /** iCal URL 안전성 검증 — https 강제, 내부망/IP 직접 접근 차단 (SSRF 방지) */
@@ -99,7 +128,6 @@ export function isSafeIcalUrl(raw: string): boolean {
   if (u.protocol !== 'https:') return false
   const host = u.hostname.toLowerCase()
   if (host === 'localhost' || host.endsWith('.local') || host.endsWith('.internal')) return false
-  // IP 리터럴 차단 (IPv4/IPv6)
   if (/^\d{1,3}(\.\d{1,3}){3}$/.test(host) || host.includes(':')) return false
   return true
 }

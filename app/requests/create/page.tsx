@@ -44,7 +44,7 @@ type Space = {
   ical_url?: string | null
 }
 
-type Checkout = { date: string; summary: string; nights: number }
+type CleaningSlot = { date: string; time: string | null; summary: string; dateOnly: boolean }
 
 // 2화면 플로우: ① 어디를·언제 ② 확인(가격 크게 + 출입 비밀번호 + 결제)
 // 난이도·가격조정·체크리스트·요청사항은 ②의 "자세히 설정" 접기 안으로.
@@ -141,26 +141,28 @@ export default function CreateRequestPage() {
 
   const selectedSpace = useMemo(() => spaces.find((s) => s.id === spaceId), [spaces, spaceId])
 
-  // ─── iCal 예약 캘린더 → 체크아웃 일정 ─────────────────────────────
-  const [checkouts, setCheckouts] = useState<Checkout[]>([])
+  // ─── iCal 예약 캘린더 → 예약 종료 후 청소 슬롯 ─────────────────────
+  const [slots, setSlots] = useState<CleaningSlot[]>([])
   const [icalLoading, setIcalLoading] = useState(false)
   useEffect(() => {
-    setCheckouts([])
+    setSlots([])
     if (!selectedSpace?.ical_url) return
     let cancelled = false
     setIcalLoading(true)
     fetch(`/api/spaces/ical?space_id=${selectedSpace.id}`)
       .then((r) => r.json())
-      .then((d) => { if (!cancelled && d?.ok) setCheckouts(d.checkouts ?? []) })
+      .then((d) => { if (!cancelled && d?.ok) setSlots(d.slots ?? []) })
       .catch(() => {})
       .finally(() => { if (!cancelled) setIcalLoading(false) })
     return () => { cancelled = true }
   }, [selectedSpace?.id, selectedSpace?.ical_url])
 
-  const pickCheckout = (dateStr: string) => {
+  // 슬롯 선택 → 예약 종료 시각을 청소 시작으로. 종료시각은 +90분 자동 제안되도록 비움
+  const pickSlot = (slot: CleaningSlot) => {
     setWhen('schedule')
-    setScheduledDate(dateStr)
-    if (!scheduledTime) setScheduledTime('11:00') // 체크아웃 후 일반적 청소 시작 시간
+    setScheduledDate(slot.date)
+    setScheduledTime(slot.time ?? '11:00') // 시간제 예약은 종료 시각, 체크아웃형은 오전 11시 기본
+    setEndTime('')
   }
 
   // ─── 출입 비밀번호 — 워커가 못 들어가는 사고 방지 ───────────────────
@@ -462,32 +464,34 @@ export default function CreateRequestPage() {
                 <h2 className="h-title text-ink">언제 청소할까요?</h2>
               </div>
 
-              {/* iCal 예약 캘린더 → 체크아웃 날짜 빠른 선택 */}
-              {selectedSpace?.ical_url && (icalLoading || checkouts.length > 0) && (
+              {/* iCal 예약 캘린더 → 예약 종료 후 청소 슬롯 빠른 선택 */}
+              {selectedSpace?.ical_url && (icalLoading || slots.length > 0) && (
                 <div className="rounded-2xl border-2 border-brand/20 bg-brand-softer p-3.5">
                   <p className="text-[14px] font-extrabold text-brand-dark flex items-center gap-1.5 mb-2">
-                    <Calendar size={15} strokeWidth={2.6} /> 체크아웃 일정에서 고르기
+                    <Calendar size={15} strokeWidth={2.6} /> 예약 종료 후 청소 잡기
                   </p>
                   {icalLoading ? (
                     <p className="text-[14px] font-bold text-text-soft">예약 캘린더를 불러오는 중…</p>
                   ) : (
                     <div className="flex flex-col gap-1.5">
-                      {checkouts.slice(0, 6).map((c) => {
-                        const d = new Date(`${c.date}T00:00:00`)
-                        const label = d.toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' })
-                        const active = when === 'schedule' && scheduledDate === c.date
+                      {slots.slice(0, 8).map((s) => {
+                        const d = new Date(`${s.date}T00:00:00`)
+                        const dLabel = d.toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' })
+                        const active = when === 'schedule' && scheduledDate === s.date && (scheduledTime === (s.time ?? '11:00'))
                         return (
                           <button
-                            key={c.date}
-                            onClick={() => pickCheckout(c.date)}
+                            key={`${s.date}-${s.time ?? 'd'}`}
+                            onClick={() => pickSlot(s)}
                             className={`w-full flex items-center justify-between rounded-xl px-3.5 py-3 border-2 text-left transition ${active ? 'border-brand bg-white' : 'border-transparent bg-white/70'}`}
                           >
-                            <span className="text-[15px] font-extrabold text-ink">{label} 체크아웃</span>
-                            <span className="text-[13px] font-bold text-text-soft">{c.nights}박 후</span>
+                            <span className="text-[15px] font-extrabold text-ink">{dLabel}</span>
+                            <span className="text-[13px] font-bold text-brand-dark">
+                              {s.dateOnly ? '체크아웃' : `${s.time} 종료 후`}
+                            </span>
                           </button>
                         )
                       })}
-                      <p className="text-[13px] text-text-soft font-medium mt-0.5 ml-0.5">날짜를 고르면 아래에서 시간을 조정할 수 있어요.</p>
+                      <p className="text-[13px] text-text-soft font-medium mt-0.5 ml-0.5">선택하면 종료 시각이 시작 시간으로 들어가요. 아래에서 조정 가능.</p>
                     </div>
                   )}
                 </div>
