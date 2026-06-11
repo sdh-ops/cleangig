@@ -34,6 +34,7 @@ export default function VerificationPage() {
   const [bizEmail, setBizEmail] = useState('')
   const [bizRegImage, setBizRegImage] = useState<string | null>(null)
   const [uploadingBiz, setUploadingBiz] = useState(false)
+  const [rejectedReason, setRejectedReason] = useState<string | null>(null)
 
   useEffect(() => {
     (async () => {
@@ -42,7 +43,7 @@ export default function VerificationPage() {
       setUserId(user.id)
       const { data } = await supabase
         .from('users')
-        .select('is_verified, role, business_name, biz_holder, biz_reg_number, biz_address, biz_type, biz_category, biz_vat_type, biz_email, biz_reg_image')
+        .select('is_verified, role, business_name, biz_holder, biz_reg_number, biz_address, biz_type, biz_category, biz_vat_type, biz_email, biz_reg_image, preferences')
         .eq('id', user.id)
         .single()
       if (data) {
@@ -57,6 +58,10 @@ export default function VerificationPage() {
         setBizVatType((data.biz_vat_type as 'GENERAL' | 'SIMPLE' | 'EXEMPT') || 'GENERAL')
         setBizEmail(data.biz_email || '')
         setBizRegImage(data.biz_reg_image || null)
+        const prefs = (data.preferences as Record<string, unknown>) || {}
+        if (prefs.verification_status === 'rejected') {
+          setRejectedReason((prefs.verification_rejected_reason as string) || '')
+        }
       }
       setLoading(false)
     })()
@@ -151,6 +156,22 @@ export default function VerificationPage() {
       </header>
 
       <div className="flex-1 px-5 pt-6 pb-28 flex flex-col gap-5">
+
+        {/* 반려 안내 — 미인증·미제출 상태에서만 */}
+        {!isVerified && !submitted && rejectedReason !== null && (
+          <div className="card p-4 bg-danger-soft border border-danger/15">
+            <div className="flex items-center gap-2 mb-1.5">
+              <AlertCircle size={16} className="text-danger shrink-0" />
+              <span className="text-[14.5px] font-black text-danger">서류 재제출이 필요해요</span>
+            </div>
+            <p className="text-[14.5px] font-semibold text-ink-soft leading-snug">
+              {rejectedReason
+                ? `반려 사유: ${rejectedReason}`
+                : '제출하신 서류를 확인할 수 없어 반려됐습니다.'}
+            </p>
+            <p className="text-[13.5px] font-medium text-text-faint mt-1.5">아래에서 서류를 다시 제출해주세요.</p>
+          </div>
+        )}
 
         {isVerified ? (
           <div className="card p-6 bg-brand-softer border border-brand/15 flex items-center gap-4">

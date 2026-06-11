@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { isPlatformAdmin } from '@/lib/admin'
 import {
   LayoutDashboard, Users, Briefcase, AlertTriangle,
-  Home, Shield, Settings, ChevronRight, Wallet,
+  Home, Shield, Settings, ChevronRight, Wallet, ShieldCheck,
 } from 'lucide-react'
 import Logo from '@/components/common/Logo'
 
@@ -21,13 +21,20 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   if (!profile || !isPlatformAdmin(profile.email, profile.role)) redirect('/')
 
-  // 즉시 처리 필요 카운트 (분쟁 + 검수대기 + 정산 이체 필요)
-  const [disputeRes, submittedRes, releasedRes] = await Promise.all([
+  // 즉시 처리 필요 카운트 (분쟁 + 검수대기 + 정산 이체 필요 + 인증 심사)
+  const [disputeRes, submittedRes, releasedRes, pendingVerifyRes] = await Promise.all([
     supabase.from('disputes').select('id', { count: 'exact', head: true }).eq('status', 'OPEN'),
     supabase.from('jobs').select('id', { count: 'exact', head: true }).eq('status', 'SUBMITTED'),
     supabase.from('payments').select('id', { count: 'exact', head: true }).eq('status', 'RELEASED'),
+    supabase.from('users').select('biz_reg_image, preferences').eq('is_verified', false).limit(500),
   ])
-  const urgentCount = (disputeRes.count ?? 0) + (submittedRes.count ?? 0)
+  // 인증 심사 대기 = 미인증 + 서류 제출 + 미반려 (JS 필터 — JSON OR 조건 PostgREST 한계 회피)
+  const verifyCount = ((pendingVerifyRes.data || []) as any[]).filter((u) => {
+    const prefs = u.preferences || {}
+    if (prefs.verification_status === 'rejected') return false
+    return !!u.biz_reg_image || !!prefs.verification_doc_url
+  }).length
+  const urgentCount = (disputeRes.count ?? 0) + (submittedRes.count ?? 0) + verifyCount
   const releasedCount = releasedRes.count ?? 0
 
   return (
@@ -58,6 +65,13 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           />
 
           <p className="px-3 pt-4 pb-2 text-[13px] font-black text-white/30 uppercase tracking-widest">관리</p>
+          <SideLink
+            href="/admin/verifications"
+            icon={<ShieldCheck size={15} />}
+            label="인증 심사"
+            badge={verifyCount}
+            badgeTone="warning"
+          />
           <SideLink href="/admin/users" icon={<Users size={15} />} label="회원 관리" />
           <SideLink
             href="/admin/settlements"
