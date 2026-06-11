@@ -133,11 +133,11 @@ function Kpi({ label, value, count, tone }: {
   tone: 'warning' | 'info' | 'success'
 }) {
   const bg =
-    tone === 'warning' ? 'bg-amber-50 border-amber-200' :
+    tone === 'warning' ? 'bg-sky-50 border-sky-200' :
     tone === 'info'    ? 'bg-sky-50 border-sky-200' :
                          'bg-emerald-50 border-emerald-200'
   const text =
-    tone === 'warning' ? 'text-amber-700' :
+    tone === 'warning' ? 'text-sky-700' :
     tone === 'info'    ? 'text-sky-700' :
                          'text-emerald-700'
   return (

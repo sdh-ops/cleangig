@@ -52,4 +52,11 @@ export async function notify({
   } catch {
     // 알림 실패는 조용히 처리 — 주 기능에 영향 없음
   }
+
+  // Web Push 릴레이 (서버 전용 VAPID 발송) — fire-and-forget, UX 블로킹 없음
+  fetch('/api/notifications', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ user_id: userId, title, message, url, type }),
+  }).catch(() => {})
 }
