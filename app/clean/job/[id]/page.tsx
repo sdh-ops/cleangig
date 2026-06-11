@@ -129,6 +129,10 @@ export default function WorkerJobDetail() {
   const [geoDenied, setGeoDenied] = useState<GeoErrorReason | null>(null)
   // 위치 확인 없이 도착 처리 확인 다이얼로그
   const [showUnverifiedArrival, setShowUnverifiedArrival] = useState(false)
+  // 입장 불가(헛걸음) 신고
+  const [showNoEntry, setShowNoEntry] = useState(false)
+  const [noEntryNote, setNoEntryNote] = useState('')
+  const [reportingNoEntry, setReportingNoEntry] = useState(false)
 
   // 완료 증거 사진 (SUBMITTED 전 최소 1장 필수)
   const [completionPhotos, setCompletionPhotos] = useState<string[]>([])
@@ -313,6 +317,27 @@ export default function WorkerJobDetail() {
       setErr(e instanceof Error ? e.message : '신청 실패')
     }
     setTransitioning(false)
+  }
+
+  const handleNoEntry = async () => {
+    if (!job) return
+    setReportingNoEntry(true)
+    setErr(null)
+    try {
+      const res = await fetch('/api/jobs/no-entry', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ job_id: job.id, note: noEntryNote.trim() || undefined }),
+      })
+      const data = await res.json().catch(() => null)
+      if (!data?.ok) throw new Error(data?.message || '신고 처리에 실패했어요. 잠시 후 다시 시도해주세요.')
+      setShowNoEntry(false)
+      toast(`헛걸음 보상 ${Number(data.compensation).toLocaleString()}원이 정산에 포함됩니다.`)
+      router.replace('/clean/jobs/active')
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : '신고 실패')
+    }
+    setReportingNoEntry(false)
   }
 
   const advanceStatus = async (opts?: { skipArrivalCheck?: boolean }) => {
@@ -1144,6 +1169,44 @@ export default function WorkerJobDetail() {
                 </>
               )}
             </button>
+            {/* 입장 불가(헛걸음) 신고 — 이동/도착 단계에서만 */}
+            {['EN_ROUTE', 'ARRIVED'].includes(job.status) && (
+              <button
+                onClick={() => setShowNoEntry(true)}
+                disabled={transitioning}
+                className="btn btn-ghost w-full !text-danger mt-1.5 !min-h-[48px]"
+              >
+                <AlertTriangle size={15} /> 입장할 수 없어요 (헛걸음 신고)
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* 입장 불가 신고 모달 */}
+      {showNoEntry && (
+        <div className="fixed inset-0 z-50 bg-ink/40 flex items-end sm:items-center justify-center" onClick={() => setShowNoEntry(false)}>
+          <div className="w-full max-w-[480px] rounded-t-3xl sm:rounded-3xl bg-surface p-6 pb-8 safe-bottom" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="h-section">입장 불가 신고</h3>
+              <button onClick={() => setShowNoEntry(false)} className="w-8 h-8 rounded-full hover:bg-surface-muted flex items-center justify-center"><X size={18} /></button>
+            </div>
+            <p className="t-caption mb-3 leading-relaxed">
+              손님 미퇴실 등으로 청소를 시작할 수 없나요? 신고하면 작업이 취소되고,
+              <b className="text-ink"> {job.status === 'ARRIVED' ? '현장 도착 헛걸음 보상(작업료의 50% 또는 1만원 중 큰 값)' : '이동 보상 5,000원'}</b>이
+              정산에 포함됩니다. 공간파트너에게는 보상 제외 금액이 환불돼요.
+            </p>
+            <textarea
+              value={noEntryNote}
+              onChange={(e) => setNoEntryNote(e.target.value)}
+              placeholder="상황을 간단히 적어주세요 (선택)"
+              className="input !min-h-[80px] mb-3"
+            />
+            {err && <p className="text-[14px] font-bold text-danger mb-3">{err}</p>}
+            <button onClick={handleNoEntry} disabled={reportingNoEntry} className="btn btn-primary w-full !bg-danger">
+              {reportingNoEntry ? <Loader2 size={18} className="animate-spin" /> : '헛걸음 신고하고 보상받기'}
+            </button>
+            <button onClick={() => setShowNoEntry(false)} className="btn btn-ghost w-full mt-1.5">닫기</button>
           </div>
         </div>
       )}

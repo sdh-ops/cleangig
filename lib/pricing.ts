@@ -81,9 +81,28 @@ export type FeeSettings = {
 
 export const DEFAULT_FEES: FeeSettings = {
   host_fee_rate: 0.05,
-  worker_fee_rate: 0.15, // 테스트 버전: 고정 15% (총 수수료 20%)
+  worker_fee_rate: 0.14, // STARTER 기준 기본 워커 수수료 (등급별 차등: 14→8%)
   withholding_tax_rate: 0.033,
   vat_rate: 0.10,
+}
+
+/** 등급별 워커 수수료율 (2026-06 개편 — 실차등) */
+export const WORKER_FEE_RATE_BY_TIER: Record<string, number> = {
+  STARTER: 0.14,
+  SILVER: 0.12,
+  GOLD: 0.10,
+  MASTER: 0.08,
+}
+
+/** 등급 → 워커 수수료율 (미상 시 STARTER) */
+export function workerFeeRateForTier(tier?: string | null): number {
+  return WORKER_FEE_RATE_BY_TIER[tier ?? 'STARTER'] ?? 0.14
+}
+
+/** 등급별 에스크로 보류일 (정산 속도 차등). GOLD↑ 익일 정산 */
+export function settlementHoldDaysForTier(tier?: string | null): number {
+  if (tier === 'MASTER' || tier === 'GOLD') return 1
+  return 3
 }
 
 export type PriceOptions = {
@@ -222,15 +241,28 @@ export type SettlementBreakdown = {
   platform_revenue: number
 }
 
+/**
+ * 정산 계산.
+ *
+ * 정책(2026-06 개편):
+ *  - 워커 수수료는 등급별 차등 (workerFeeRate로 주입, 기본 STARTER 14%)
+ *  - 긴급·심야 할증(premium)에는 플랫폼 수수료를 매기지 않고 100% 워커에게 귀속
+ *    → 기피 시간대 매칭 유인. commissionable = gross − premium 에만 수수료 부과
+ */
 export function calculateSettlement(
   gross_amount: number,
-  opts?: { taxType?: TaxType | null; fees?: FeeSettings },
+  opts?: { taxType?: TaxType | null; fees?: FeeSettings; workerFeeRate?: number; premium?: number },
 ): SettlementBreakdown {
   const fees = opts?.fees ?? DEFAULT_FEES
   const taxType = opts?.taxType ?? null
-  const host_fee = Math.round(gross_amount * fees.host_fee_rate)
-  const worker_fee = Math.round(gross_amount * fees.worker_fee_rate)
-  const worker_subtotal = gross_amount - host_fee - worker_fee
+  const workerRate = opts?.workerFeeRate ?? fees.worker_fee_rate
+  const premium = Math.max(0, Math.min(opts?.premium ?? 0, gross_amount)) // 할증분 (수수료 면제)
+  const commissionable = gross_amount - premium
+
+  const host_fee = Math.round(commissionable * fees.host_fee_rate)
+  const worker_fee = Math.round(commissionable * workerRate)
+  // 워커 기준액 = (수수료 부과분 − 수수료) + 할증 전액
+  const worker_subtotal = commissionable - host_fee - worker_fee + premium
 
   const shouldWithhold = taxType === 'FREELANCER'
   const withholding_tax = shouldWithhold
@@ -245,7 +277,7 @@ export function calculateSettlement(
     host_fee,
     host_fee_rate: fees.host_fee_rate,
     worker_fee,
-    worker_fee_rate: fees.worker_fee_rate,
+    worker_fee_rate: workerRate,
     worker_subtotal,
     withholding_tax,
     withholding_tax_rate: shouldWithhold ? fees.withholding_tax_rate : 0,
@@ -256,9 +288,17 @@ export function calculateSettlement(
 }
 
 /**
- * 워커 예상 실수령액 (프리랜서 기준, 세금 3.3% 차감 후).
- * 작업 카드·목록·상세에서 동일 금액을 보여주기 위한 단일 소스.
- * (실제 정산은 워커 세금유형을 반영하지만, 목록 표시는 프리랜서 기준 추정으로 통일)
+ * price_breakdown에서 수수료 면제 대상 할증액(긴급+심야) 합산.
+ */
+export function premiumFromBreakdown(pb: { urgent_fee?: number; night_surcharge?: number } | null | undefined): number {
+  if (!pb) return 0
+  return (pb.urgent_fee ?? 0) + (pb.night_surcharge ?? 0)
+}
+
+/**
+ * 워커 예상 실수령액 (프리랜서·STARTER 기준, 세금 3.3% 차감 후).
+ * 작업 카드·목록·상세에서 동일 금액을 보여주기 위한 단일 소스 — 보수적(가장 낮은) 추정.
+ * 실제 정산은 워커 등급·세금유형·할증을 반영해 더 높을 수 있음.
  */
 export function estimateWorkerPayout(grossPrice: number): number {
   return calculateSettlement(grossPrice, { taxType: 'FREELANCER' }).worker_payout

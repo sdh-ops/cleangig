@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { calculateSettlement, type TaxType } from '@/lib/pricing'
+import { calculateSettlement, premiumFromBreakdown, workerFeeRateForTier, type TaxType } from '@/lib/pricing'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -25,7 +25,7 @@ export async function GET(request: Request) {
 
     const { data: jobs, error: fetchError } = await supabase
       .from('jobs')
-      .select('id, worker_id, operator_id, price, extra_charge_status, extra_charge_amount')
+      .select('id, worker_id, operator_id, price, price_breakdown, extra_charge_status, extra_charge_amount')
       .eq('status', 'SUBMITTED')
       .lt('updated_at', oneDayAgo.toISOString())
 
@@ -55,11 +55,13 @@ export async function GET(request: Request) {
       // 정산액 확정 — 워커 세금유형·승인된 추가청구 반영 (수동 승인과 동일 로직)
       if (job.worker_id) {
         const { data: worker } = await supabase
-          .from('users').select('tax_type').eq('id', job.worker_id).single()
+          .from('users').select('tax_type, tier').eq('id', job.worker_id).single()
         const taxType: TaxType = (worker?.tax_type as TaxType) ?? 'FREELANCER'
+        const workerFeeRate = workerFeeRateForTier(worker?.tier)
         const approvedExtra =
           (job as any).extra_charge_status === 'APPROVED' ? Number((job as any).extra_charge_amount) || 0 : 0
-        const s = calculateSettlement((job.price || 0) + approvedExtra, { taxType })
+        const premium = premiumFromBreakdown((job as any).price_breakdown) + approvedExtra
+        const s = calculateSettlement((job.price || 0) + approvedExtra, { taxType, workerFeeRate, premium })
         await supabase
           .from('payments')
           .update({

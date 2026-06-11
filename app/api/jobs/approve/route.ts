@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { calculateSettlement, type TaxType } from '@/lib/pricing'
+import { calculateSettlement, premiumFromBreakdown, workerFeeRateForTier, type TaxType } from '@/lib/pricing'
 
 export const runtime = 'nodejs'
 
@@ -59,21 +59,24 @@ export async function POST(req: Request) {
         .select('id', { count: 'exact', head: true })
         .eq('job_id', job_id)
 
-      // 워커 세금 유형 조회 (사업자면 원천징수 없음). 미설정 시 프리랜서 기본
+      // 워커 세금 유형·등급 조회 (사업자면 원천징수 없음 / 등급별 수수료 차등)
       const { data: worker } = await admin
         .from('users')
-        .select('tax_type')
+        .select('tax_type, tier')
         .eq('id', job.worker_id)
         .single()
       const taxType: TaxType = (worker?.tax_type as TaxType) ?? 'FREELANCER'
+      const workerFeeRate = workerFeeRateForTier(worker?.tier)
 
       // 승인된 추가 청구액을 정산 총액에 합산 (승인 시점이 정산 확정 지점)
       const approvedExtra =
         (job as any).extra_charge_status === 'APPROVED' ? Number((job as any).extra_charge_amount) || 0 : 0
       const grossAmount = (job.price || 0) + approvedExtra
+      // 긴급·심야 할증은 수수료 면제(100% 워커). 추가청구도 면제분으로 전액 워커 귀속
+      const premium = premiumFromBreakdown((job as any).price_breakdown) + approvedExtra
 
-      // 정산 = 단일 소스(calculateSettlement)로 계산 — 세금유형·반올림 일관성 보장
-      const s = calculateSettlement(grossAmount, { taxType })
+      // 정산 = 단일 소스(calculateSettlement) — 세금유형·등급요율·할증면제 일관 적용
+      const s = calculateSettlement(grossAmount, { taxType, workerFeeRate, premium })
 
       const paymentRow = {
         gross_amount: s.gross_amount,

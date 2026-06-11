@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { settlementHoldDaysForTier } from '@/lib/pricing'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -22,16 +23,16 @@ export async function GET(request: Request) {
   try {
     const admin = createAdminClient()
 
-    // 승인 후 3일(72h) 경과한 APPROVED jobs 조회
-    const threeDaysAgo = new Date()
-    threeDaysAgo.setDate(threeDaysAgo.getDate() - 3)
+    // 최소 보류(익일=1일) 경과한 APPROVED jobs를 가져와, 워커 등급별 보류일로 개별 판정
+    const oneDayAgo = new Date()
+    oneDayAgo.setDate(oneDayAgo.getDate() - 1)
 
     const { data: jobs, error: fetchError } = await admin
       .from('jobs')
-      .select('id, worker_id, operator_id, completed_at')
+      .select('id, worker_id, operator_id, completed_at, users:worker_id(tier)')
       .eq('status', 'APPROVED')
       .not('completed_at', 'is', null)
-      .lt('completed_at', threeDaysAgo.toISOString())
+      .lt('completed_at', oneDayAgo.toISOString())
 
     if (fetchError) throw fetchError
     if (!jobs || jobs.length === 0) {
@@ -39,8 +40,13 @@ export async function GET(request: Request) {
     }
 
     const results: { id: string; ok: boolean; worker_payout?: number; error?: string }[] = []
+    const now = Date.now()
 
     for (const job of jobs) {
+      // 등급별 보류일 — GOLD/MASTER 익일(1일), 그 외 3일. 아직 보류 중이면 skip
+      const holdDays = settlementHoldDaysForTier((job as any).users?.tier)
+      const completedMs = new Date(job.completed_at as string).getTime()
+      if (now - completedMs < holdDays * 86400000) continue
       // 해당 job의 HELD payments 조회
       const { data: payment, error: payErr } = await admin
         .from('payments')
