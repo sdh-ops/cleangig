@@ -41,7 +41,7 @@ export default function LandingClient() {
           style={{
             background:
               'radial-gradient(ellipse at 80% 10%, rgba(14,165,233,0.13) 0%, transparent 55%),' +
-              'radial-gradient(ellipse at 10% 80%, rgba(245,158,11,0.10) 0%, transparent 50%)',
+              'radial-gradient(ellipse at 10% 80%, rgba(2,132,199,0.08) 0%, transparent 50%)',
           }}
         />
 
@@ -67,7 +67,7 @@ export default function LandingClient() {
           으로.
           <br />
           청소로{' '}
-          <span className="text-gradient-sun">부수입</span>{' '}
+          <span className="text-gradient-ink">부수입</span>{' '}
           만들기.
         </h1>
 
@@ -100,11 +100,11 @@ export default function LandingClient() {
             style={{
               background: audience === 'host'
                 ? 'linear-gradient(135deg, #0A1F3D 0%, #1E3353 100%)'
-                : 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)',
+                : 'linear-gradient(135deg, #0EA5E9 0%, #0284C7 100%)',
               left: audience === 'host' ? '4px' : 'calc(50%)',
               transitionDuration: '200ms',
               transitionTimingFunction: 'var(--ease-out-expo)',
-              boxShadow: audience === 'worker' ? '0 4px 12px rgba(245,158,11,0.35)' : '0 4px 12px rgba(10,31,61,0.25)',
+              boxShadow: audience === 'worker' ? '0 4px 12px rgba(14,165,233,0.35)' : '0 4px 12px rgba(10,31,61,0.25)',
             }}
           />
           <button
@@ -272,16 +272,16 @@ function WorkerCard() {
     <div
       className="rounded-3xl overflow-hidden relative"
       style={{
-        background: 'linear-gradient(160deg, #FFFBEB 0%, #FEF3C7 50%, #FDE68A 100%)',
-        border: '1px solid rgba(245,158,11,0.2)',
-        boxShadow: '0 16px 40px rgba(245,158,11,0.18), 0 4px 12px rgba(245,158,11,0.12)',
+        background: 'linear-gradient(160deg, #F0F9FF 0%, #E0F2FE 50%, #BAE6FD 100%)',
+        border: '1px solid rgba(14,165,233,0.2)',
+        boxShadow: '0 16px 40px rgba(14,165,233,0.16), 0 4px 12px rgba(14,165,233,0.10)',
       }}
     >
       {/* Light leak */}
       <div
         aria-hidden
         className="absolute -top-6 -left-6 w-36 h-36 rounded-full pointer-events-none"
-        style={{ background: 'radial-gradient(circle, rgba(252,211,77,0.55) 0%, transparent 70%)' }}
+        style={{ background: 'radial-gradient(circle, rgba(125,211,252,0.55) 0%, transparent 70%)' }}
       />
 
       <div className="relative p-5">
@@ -289,12 +289,12 @@ function WorkerCard() {
         <div className="flex items-center gap-2 mb-5">
           <div
             className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
-            style={{ background: 'rgba(245,158,11,0.2)', color: '#92580C' }}
+            style={{ background: 'rgba(14,165,233,0.16)', color: '#075985' }}
           >
             <Wallet size={18} strokeWidth={2.5} />
           </div>
           <div>
-            <p style={{ fontSize: 10, fontWeight: 900, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#92580C' }}>
+            <p style={{ fontSize: 10, fontWeight: 900, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#075985' }}>
               클린파트너
             </p>
             <p style={{ fontSize: 15, fontWeight: 800, color: '#1C1000', letterSpacing: '-0.02em', lineHeight: 1.2 }}>
@@ -307,29 +307,29 @@ function WorkerCard() {
         <div
           className="rounded-2xl p-4 mb-4"
           style={{
-            background: 'rgba(255,255,255,0.6)',
-            border: '1.5px solid rgba(245,158,11,0.25)',
+            background: 'rgba(255,255,255,0.65)',
+            border: '1.5px solid rgba(14,165,233,0.25)',
             boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.8)',
           }}
         >
-          <p style={{ fontSize: 11, fontWeight: 700, color: '#92580C', opacity: 0.8, marginBottom: 4 }}>
+          <p style={{ fontSize: 11, fontWeight: 700, color: '#075985', opacity: 0.8, marginBottom: 4 }}>
             청소 1건당 예상 수입
           </p>
           <div className="flex items-baseline gap-1.5">
             <span
               className="num-display"
-              style={{ fontSize: 52, color: '#92580C', lineHeight: 1 }}
+              style={{ fontSize: 52, color: '#0369A1', lineHeight: 1 }}
             >
               3~5만
             </span>
-            <span style={{ fontSize: 22, fontWeight: 900, color: '#92580C' }}>원</span>
+            <span style={{ fontSize: 22, fontWeight: 900, color: '#0369A1' }}>원</span>
           </div>
           <div className="flex items-center gap-3 mt-2">
-            <p style={{ fontSize: 10.5, fontWeight: 700, color: 'rgba(146,88,12,0.7)' }}>
+            <p style={{ fontSize: 10.5, fontWeight: 700, color: 'rgba(7,89,133,0.7)' }}>
               난이도·면적별 차등
             </p>
-            <span style={{ fontSize: 10.5, fontWeight: 700, color: 'rgba(146,88,12,0.4)' }}>·</span>
-            <p style={{ fontSize: 10.5, fontWeight: 700, color: 'rgba(146,88,12,0.7)' }}>
+            <span style={{ fontSize: 10.5, fontWeight: 700, color: 'rgba(7,89,133,0.4)' }}>·</span>
+            <p style={{ fontSize: 10.5, fontWeight: 700, color: 'rgba(7,89,133,0.7)' }}>
               주 1회 정산
             </p>
           </div>
@@ -345,10 +345,10 @@ function WorkerCard() {
             <div
               key={s.label}
               className="rounded-xl p-2.5 text-center"
-              style={{ background: 'rgba(255,255,255,0.55)', border: '1px solid rgba(245,158,11,0.2)' }}
+              style={{ background: 'rgba(255,255,255,0.55)', border: '1px solid rgba(14,165,233,0.2)' }}
             >
-              <p style={{ fontSize: 15, fontWeight: 900, color: '#92580C', letterSpacing: '-0.02em' }}>{s.value}</p>
-              <p style={{ fontSize: 10, fontWeight: 700, color: 'rgba(146,88,12,0.7)', marginTop: 2 }}>{s.label}</p>
+              <p style={{ fontSize: 15, fontWeight: 900, color: '#0369A1', letterSpacing: '-0.02em' }}>{s.value}</p>
+              <p style={{ fontSize: 10, fontWeight: 700, color: 'rgba(7,89,133,0.7)', marginTop: 2 }}>{s.label}</p>
             </div>
           ))}
         </div>
@@ -381,10 +381,10 @@ function DarkLI({ icon, children }: { icon: React.ReactNode; children: React.Rea
 
 function SunLI({ icon, children }: { icon: React.ReactNode; children: React.ReactNode }) {
   return (
-    <li className="flex items-start gap-2" style={{ fontSize: 12.5, fontWeight: 600, color: 'rgba(146,88,12,0.9)' }}>
+    <li className="flex items-start gap-2" style={{ fontSize: 12.5, fontWeight: 600, color: 'rgba(7,89,133,0.9)' }}>
       <span
         className="flex items-center justify-center shrink-0 mt-0.5 rounded-lg"
-        style={{ width: 20, height: 20, background: 'rgba(245,158,11,0.2)', color: '#92580C' }}
+        style={{ width: 20, height: 20, background: 'rgba(14,165,233,0.16)', color: '#075985' }}
       >
         {icon}
       </span>

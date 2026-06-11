@@ -34,6 +34,7 @@ export default function EditSpacePage() {
   const [geoLoading, setGeoLoading] = useState(false)
   const [accessCodes, setAccessCodes] = useState<AccessCode[]>([])
   const [cautionNotes, setCautionNotes] = useState('')
+  const [icalUrl, setIcalUrl] = useState('')
 
   useEffect(() => {
     (async () => {
@@ -54,6 +55,7 @@ export default function EditSpacePage() {
       setParkingGuide(data.parking_guide || '')
       setTrashGuide(data.trash_guide || '')
       setCautionNotes(data.caution_notes || '')
+      setIcalUrl(data.ical_url || '')
       // access_codes(신규) 우선, 없으면 기존 entry_code를 '출입문' 한 줄로 변환
       const loaded: AccessCode[] = Array.isArray(data.access_codes) && data.access_codes.length > 0
         ? data.access_codes.map((c: any) => makeAccessCode(c.label || '출입문', c.value || ''))
@@ -104,7 +106,7 @@ export default function EditSpacePage() {
       // access_codes / caution_notes 컬럼 미존재 DB 대비 fallback
       let { error } = await supabase
         .from('spaces')
-        .update({ ...basePayload, access_codes: filledCodes, caution_notes: cautionNotes.trim() || null })
+        .update({ ...basePayload, access_codes: filledCodes, caution_notes: cautionNotes.trim() || null, ical_url: icalUrl.trim() || null })
         .eq('id', id)
       if (error && error.message?.includes('column')) {
         ;({ error } = await supabase.from('spaces').update(basePayload).eq('id', id))
@@ -165,6 +167,22 @@ export default function EditSpacePage() {
         <div>
           <label className="t-meta block mb-2 ml-1">상세 주소</label>
           <input value={addressDetail} onChange={(e) => setAddressDetail(e.target.value)} className="input" />
+        </div>
+
+        <div>
+          <label htmlFor="edit-ical" className="t-meta block mb-2 ml-1">예약 캘린더 연동 (선택)</label>
+          <input
+            id="edit-ical"
+            type="url"
+            inputMode="url"
+            value={icalUrl}
+            onChange={(e) => setIcalUrl(e.target.value)}
+            placeholder="https://www.airbnb.co.kr/calendar/ical/…ics"
+            className="input"
+          />
+          <p className="text-[13.5px] text-text-soft font-medium mt-1.5 ml-1 leading-snug">
+            에어비앤비 앱 → 달력 → 설정 → 캘린더 내보내기 주소. 등록하면 청소 요청 시 체크아웃 일정이 표시돼요.
+          </p>
         </div>
         {coords && (
           <div>

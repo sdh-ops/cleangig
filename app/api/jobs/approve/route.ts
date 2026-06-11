@@ -29,7 +29,7 @@ export async function POST(req: Request) {
     // 1. 권한 및 상태 확인
     const { data: job } = await supabase
       .from('jobs')
-      .select('id, operator_id, worker_id, status, price, price_breakdown, extra_charge_status, extra_charge_amount, is_recurring, recurring_config, space_id, estimated_duration, checklist, special_instructions, is_urgent, time_window_start, time_window_end, preferred_worker_id, spaces(name)')
+      .select('id, operator_id, worker_id, status, price, price_breakdown, extra_charge_status, extra_charge_amount, completed_at, is_recurring, recurring_config, space_id, estimated_duration, checklist, special_instructions, is_urgent, time_window_start, time_window_end, preferred_worker_id, spaces(name)')
       .eq('id', job_id)
       .single()
 
@@ -40,9 +40,12 @@ export async function POST(req: Request) {
     }
 
     // 2. jobs 상태 → APPROVED
+    // completed_at 누락 시 보정 — release-payments 크론이 completed_at 기준이라 null이면 정산이 영원히 안 됨
+    const approveUpdate: Record<string, unknown> = { status: 'APPROVED', updated_at: new Date().toISOString() }
+    if (!(job as any).completed_at) approveUpdate.completed_at = new Date().toISOString()
     const { error: jobErr } = await supabase
       .from('jobs')
-      .update({ status: 'APPROVED', updated_at: new Date().toISOString() })
+      .update(approveUpdate)
       .eq('id', job_id)
     if (jobErr) throw jobErr
 

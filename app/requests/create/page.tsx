@@ -41,7 +41,10 @@ type Space = {
   checklist_template?: ChecklistItem[]
   access_codes?: { id?: string; label: string; value: string }[] | null
   entry_code?: string | null
+  ical_url?: string | null
 }
+
+type Checkout = { date: string; summary: string; nights: number }
 
 // 2화면 플로우: ① 어디를·언제 ② 확인(가격 크게 + 출입 비밀번호 + 결제)
 // 난이도·가격조정·체크리스트·요청사항은 ②의 "자세히 설정" 접기 안으로.
@@ -86,7 +89,7 @@ export default function CreateRequestPage() {
       const [{ data: spaces }, feeSettings] = await Promise.all([
         supabase
           .from('spaces')
-          .select('id, name, type, address, base_price, size_sqm, checklist_template, access_codes, entry_code')
+          .select('id, name, type, address, base_price, size_sqm, checklist_template, access_codes, entry_code, ical_url')
           .eq('operator_id', user.id)
           .eq('is_active', true)
           .order('created_at', { ascending: false }),
@@ -137,6 +140,28 @@ export default function CreateRequestPage() {
   }, [])
 
   const selectedSpace = useMemo(() => spaces.find((s) => s.id === spaceId), [spaces, spaceId])
+
+  // ─── iCal 예약 캘린더 → 체크아웃 일정 ─────────────────────────────
+  const [checkouts, setCheckouts] = useState<Checkout[]>([])
+  const [icalLoading, setIcalLoading] = useState(false)
+  useEffect(() => {
+    setCheckouts([])
+    if (!selectedSpace?.ical_url) return
+    let cancelled = false
+    setIcalLoading(true)
+    fetch(`/api/spaces/ical?space_id=${selectedSpace.id}`)
+      .then((r) => r.json())
+      .then((d) => { if (!cancelled && d?.ok) setCheckouts(d.checkouts ?? []) })
+      .catch(() => {})
+      .finally(() => { if (!cancelled) setIcalLoading(false) })
+    return () => { cancelled = true }
+  }, [selectedSpace?.id, selectedSpace?.ical_url])
+
+  const pickCheckout = (dateStr: string) => {
+    setWhen('schedule')
+    setScheduledDate(dateStr)
+    if (!scheduledTime) setScheduledTime('11:00') // 체크아웃 후 일반적 청소 시작 시간
+  }
 
   // ─── 출입 비밀번호 — 워커가 못 들어가는 사고 방지 ───────────────────
   // 갭(개편 전): 요청 생성이 access_codes를 조회조차 안 해서
@@ -207,27 +232,27 @@ export default function CreateRequestPage() {
     return nowBase || new Date().toISOString()
   }, [when, scheduledDate, scheduledTime, nowBase])
 
-  // 종료 시각 — 예약 모드에서 필수. 시작 이후가 아니면 null (자정 넘김은 미지원)
+  // 종료 시각 — 예약 모드에서 필수. 종료가 시작보다 빠르거나 같으면 다음날 종료(자정 넘김)로 해석
+  const isOvernight = when === 'schedule' && !!scheduledTime && !!endTime && endTime <= scheduledTime
   const scheduledEndAt = useMemo(() => {
     if (when !== 'schedule' || !scheduledDate || !scheduledTime || !endTime) return null
-    if (endTime <= scheduledTime) return null
-    return new Date(`${scheduledDate}T${endTime}:00`).toISOString()
+    const end = new Date(`${scheduledDate}T${endTime}:00`)
+    if (endTime <= scheduledTime) end.setDate(end.getDate() + 1) // 자정 넘김
+    return end.toISOString()
   }, [when, scheduledDate, scheduledTime, endTime])
 
-  // 작업 예상 소요(분) = 종료 − 시작. '지금 요청'은 기본 90분
+  // 작업 예상 소요(분) = 종료 − 시작 (자정 넘김 포함 최대 12시간). '지금 요청'은 기본 90분
   const durationMin = useMemo(() => {
     if (when !== 'schedule' || !scheduledEndAt) return 90
     const diff = Math.round((new Date(scheduledEndAt).getTime() - new Date(scheduledAt).getTime()) / 60000)
-    return Math.min(Math.max(diff, 30), 480)
+    return Math.min(Math.max(diff, 30), 720)
   }, [when, scheduledAt, scheduledEndAt])
 
-  // 시작 시간 선택·변경 시 종료를 +90분으로 자동 제안 (종료가 비었거나 시작보다 빠르면 재제안)
+  // 시작 시간 선택·변경 시 종료를 +90분으로 자동 제안 (종료가 비어있을 때만 — 자정 넘김은 wrap)
   useEffect(() => {
-    if (!scheduledTime) return
-    if (endTime && endTime > scheduledTime) return // 사용자가 유효하게 지정한 값은 보존
+    if (!scheduledTime || endTime) return
     const [h, m] = scheduledTime.split(':').map(Number)
-    const total = h * 60 + m + 90
-    if (total >= 24 * 60) return // 자정 넘으면 자동 제안 생략
+    const total = (h * 60 + m + 90) % (24 * 60)
     setEndTime(`${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scheduledTime])
@@ -437,6 +462,37 @@ export default function CreateRequestPage() {
                 <h2 className="h-title text-ink">언제 청소할까요?</h2>
               </div>
 
+              {/* iCal 예약 캘린더 → 체크아웃 날짜 빠른 선택 */}
+              {selectedSpace?.ical_url && (icalLoading || checkouts.length > 0) && (
+                <div className="rounded-2xl border-2 border-brand/20 bg-brand-softer p-3.5">
+                  <p className="text-[14px] font-extrabold text-brand-dark flex items-center gap-1.5 mb-2">
+                    <Calendar size={15} strokeWidth={2.6} /> 체크아웃 일정에서 고르기
+                  </p>
+                  {icalLoading ? (
+                    <p className="text-[14px] font-bold text-text-soft">예약 캘린더를 불러오는 중…</p>
+                  ) : (
+                    <div className="flex flex-col gap-1.5">
+                      {checkouts.slice(0, 6).map((c) => {
+                        const d = new Date(`${c.date}T00:00:00`)
+                        const label = d.toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' })
+                        const active = when === 'schedule' && scheduledDate === c.date
+                        return (
+                          <button
+                            key={c.date}
+                            onClick={() => pickCheckout(c.date)}
+                            className={`w-full flex items-center justify-between rounded-xl px-3.5 py-3 border-2 text-left transition ${active ? 'border-brand bg-white' : 'border-transparent bg-white/70'}`}
+                          >
+                            <span className="text-[15px] font-extrabold text-ink">{label} 체크아웃</span>
+                            <span className="text-[13px] font-bold text-text-soft">{c.nights}박 후</span>
+                          </button>
+                        )
+                      })}
+                      <p className="text-[13px] text-text-soft font-medium mt-0.5 ml-0.5">날짜를 고르면 아래에서 시간을 조정할 수 있어요.</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
               <div className="grid grid-cols-2 gap-3">
                 <button
                   onClick={() => setWhen('now')}
@@ -476,11 +532,11 @@ export default function CreateRequestPage() {
                       <input id="req-end" type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} className="input" step={1800} />
                     </div>
                   </div>
-                  {scheduledTime && endTime && endTime <= scheduledTime && (
-                    <p className="text-[14px] font-bold text-danger ml-1 -mt-1">종료 시간은 시작 시간보다 늦어야 해요.</p>
-                  )}
                   {scheduledEndAt && (
-                    <p className="text-[14px] font-bold text-text-soft ml-1 -mt-1">예상 작업 시간 약 {Math.floor(durationMin / 60) > 0 ? `${Math.floor(durationMin / 60)}시간 ` : ''}{durationMin % 60 > 0 ? `${durationMin % 60}분` : ''}</p>
+                    <p className="text-[14px] font-bold text-text-soft ml-1 -mt-1">
+                      예상 작업 시간 약 {Math.floor(durationMin / 60) > 0 ? `${Math.floor(durationMin / 60)}시간 ` : ''}{durationMin % 60 > 0 ? `${durationMin % 60}분` : ''}
+                      {isOvernight && <span className="text-brand-dark"> · 다음날 종료</span>}
+                    </p>
                   )}
                 </div>
               )}

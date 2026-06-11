@@ -290,24 +290,23 @@ export default function WorkerJobDetail() {
     if (!userId || !job) return
     setTransitioning(true)
     try {
-      // claim_job: 서버측 원자적 배정 — 동시 지원 시 한 명만 성공 (postgres function)
-      const { data: claimed, error } = await supabase.rpc('claim_job', { p_job_id: job.id })
-      if (error) throw error
-      if (!claimed) {
-        setErr('이미 다른 클린파트너가 배정된 작업입니다.')
+      // 서버 라우트 — claim_job RPC(원자적 배정) + 운영자 알림(인앱+웹푸시) 서버 보장 발송
+      const res = await fetch('/api/jobs/claim', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ job_id: job.id }),
+      })
+      const data = await res.json().catch(() => null)
+      if (!data?.ok) {
+        setErr(data?.error === 'already_assigned'
+          ? '이미 다른 클린파트너가 배정된 작업입니다.'
+          : '신청에 실패했어요. 잠시 후 다시 시도해주세요.')
         setTransitioning(false)
         return
       }
       setJob((j) => (j ? { ...j, worker_id: userId, status: 'ASSIGNED' } : j))
       setShowConsent(false)
-      // 공간파트너에게 배정 알림
-      notify({
-        userId: job.operator_id,
-        title: '클린파트너가 배정됐어요!',
-        message: `${job.spaces?.name ?? '작업'}에 클린파트너가 배정됐습니다. 예약 시간에 방문 예정이에요.`,
-        url: `/requests/${job.id}`,
-        type: 'job_assigned',
-      })
+      toast('작업이 배정됐어요! 예약 시간에 맞춰 방문해주세요.')
     } catch (e) {
       setErr(e instanceof Error ? e.message : '신청 실패')
     }
@@ -339,34 +338,43 @@ export default function WorkerJobDetail() {
     if (opts?.skipArrivalCheck) arrivalUnverified = true
     setTransitioning(true)
     try {
-      const payload: Record<string, unknown> = { status: flow.next, updated_at: new Date().toISOString() }
-      if (arrivalUnverified && flow.next === 'ARRIVED') payload.arrival_unverified = true
-      if (flow.next === 'IN_PROGRESS') payload.started_at = new Date().toISOString()
+      // 클라 선검증 (친절한 메시지) — 최종 검증은 서버 RPC가 수행
       if (flow.next === 'SUBMITTED') {
-        const required = checklist.filter((c) => c.required)
-        const notDone = required.filter((c) => !c.completed)
+        const notDone = checklist.filter((c) => c.required && !c.completed)
         if (notDone.length > 0) {
           setErr(`필수 체크리스트 ${notDone.length}개가 남아있어요.`)
           setTransitioning(false)
           return
         }
-        // 완료 사진 최소 5장 필수 (전체 + 세부)
         if (completionPhotos.length < MIN_COMPLETION_PHOTOS) {
           setErr(`청소 완료 사진을 최소 ${MIN_COMPLETION_PHOTOS}장 올려주세요. (전체 공간 + 세부)`)
           setTransitioning(false)
           return
         }
-        payload.completed_at = new Date().toISOString()
-        payload.checklist_completed = checklist
-        payload.completion_photos = completionPhotos
-        // 비품 상태도 최종 저장
+      }
+
+      // 서버 RPC — 전이 순서·완료 요건을 DB에서 강제 (클라 조작 우회 차단)
+      const rpcPayload: Record<string, unknown> = {}
+      if (arrivalUnverified && flow.next === 'ARRIVED') rpcPayload.arrival_unverified = true
+      if (flow.next === 'SUBMITTED') {
+        rpcPayload.checklist_completed = checklist
+        rpcPayload.completion_photos = completionPhotos
         if (supplyStatus.length > 0) {
-          payload.supply_status = supplyStatus
-          payload.supply_shortages = supplyStatus.map((s) => s.name)
+          rpcPayload.supply_status = supplyStatus
+          rpcPayload.supply_shortages = supplyStatus.map((s) => s.name)
         }
       }
-      const { error } = await supabase.from('jobs').update(payload).eq('id', job.id)
+      const { data: advanced, error } = await supabase.rpc('advance_job_status', {
+        p_job_id: job.id,
+        p_to: flow.next,
+        p_payload: rpcPayload,
+      })
       if (error) throw error
+      if (!advanced) {
+        setErr('진행할 수 없어요. 화면을 새로고침한 뒤 다시 시도해주세요.')
+        setTransitioning(false)
+        return
+      }
 
       if (flow.next === 'EN_ROUTE' || flow.next === 'ARRIVED') {
         // 추적(watchPosition)이 곧 시작/진행 중 — 캐시 좌표만 기록, 추가 프롬프트 없음
@@ -438,7 +446,16 @@ export default function WorkerJobDetail() {
         }
       }
 
-      setJob((j) => (j ? { ...j, status: flow.next, ...(payload as any) } : j))
+      setJob((j) => {
+        if (!j) return j
+        const patch: Record<string, unknown> = { status: flow.next }
+        if (flow.next === 'SUBMITTED') {
+          patch.completion_photos = completionPhotos
+          if (supplyStatus.length > 0) patch.supply_status = supplyStatus
+        }
+        if (arrivalUnverified && flow.next === 'ARRIVED') patch.arrival_unverified = true
+        return { ...j, ...patch }
+      })
       setErr(null)
     } catch (e) {
       setErr(e instanceof Error ? e.message : '상태 변경 실패')
@@ -500,16 +517,20 @@ export default function WorkerJobDetail() {
     if (files.length === 0 || !job) return
     setUploadingCompletion(true)
     try {
-      // 한번에 여러 장 선택 가능 — 순차 업로드 후 모아서 추가
-      const uploaded: string[] = []
+      // 한번에 여러 장 선택 가능 — 장마다 즉시 반영 (중간 실패해도 성공분 보존)
+      let failed = 0
       for (const file of files) {
-        const path = `jobs/${job.id}/completion-${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${file.name}`
-        const { error: upErr } = await supabase.storage.from('photos').upload(path, file, { upsert: true })
-        if (upErr) throw upErr
-        const { data: urlData } = supabase.storage.from('photos').getPublicUrl(path)
-        uploaded.push(urlData.publicUrl)
+        try {
+          const path = `jobs/${job.id}/completion-${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${file.name}`
+          const { error: upErr } = await supabase.storage.from('photos').upload(path, file, { upsert: true })
+          if (upErr) throw upErr
+          const { data: urlData } = supabase.storage.from('photos').getPublicUrl(path)
+          setCompletionPhotos((prev) => [...prev, urlData.publicUrl])
+        } catch {
+          failed++
+        }
       }
-      setCompletionPhotos((prev) => [...prev, ...uploaded])
+      if (failed > 0) setErr(`사진 ${failed}장 업로드에 실패했어요. 해당 사진만 다시 올려주세요.`)
     } catch (e) {
       setErr(e instanceof Error ? e.message : '사진 업로드 실패')
     } finally {
@@ -529,17 +550,22 @@ export default function WorkerJobDetail() {
       setErr('추가 청구 사유를 입력해주세요.')
       return
     }
+    if (amount > 200000) {
+      setErr('추가 청구는 최대 200,000원까지 가능합니다.')
+      return
+    }
     setSubmittingExtra(true)
     setErr(null)
     try {
-      const { error } = await supabase.from('jobs').update({
-        extra_charge_amount: amount,
-        extra_charge_reason: extraReason.trim(),
-        extra_charge_status: 'REQUESTED',
-        extra_charge_photos: extraPhotos,
-        updated_at: new Date().toISOString(),
-      }).eq('id', job.id)
+      // 서버 RPC — 금액 범위·권한·상태를 DB에서 검증
+      const { data: ok, error } = await supabase.rpc('request_extra_charge', {
+        p_job_id: job.id,
+        p_amount: amount,
+        p_reason: extraReason.trim(),
+        p_photos: extraPhotos,
+      })
       if (error) throw error
+      if (!ok) throw new Error('추가 청구를 요청할 수 없어요. 이미 요청 중이거나 작업 상태를 확인해주세요.')
       setJob((j) => j ? {
         ...j,
         extra_charge_amount: amount,

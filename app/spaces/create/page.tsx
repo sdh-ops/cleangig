@@ -88,6 +88,8 @@ export default function CreateSpacePage() {
   const [vatType, setVatType] = useState<'GENERAL' | 'SIMPLE' | 'EXEMPT'>('SIMPLE')
   const [taxInvoiceRequired, setTaxInvoiceRequired] = useState(false)
   const [mailOrderNo, setMailOrderNo] = useState('')
+  // 예약 캘린더 연동 (에어비앤비 등 iCal 내보내기 URL) — 체크아웃 일정 보고 청소 요청
+  const [icalUrl, setIcalUrl] = useState('')
 
   // 타입 변경 시 체크리스트 초기화
   useEffect(() => {
@@ -195,6 +197,7 @@ export default function CreateSpacePage() {
         vat_type: bizTypeSel === 'BUSINESS' ? vatType : 'EXEMPT',
         tax_invoice_required: bizTypeSel === 'BUSINESS' ? taxInvoiceRequired : false,
         mail_order_no: mailOrderNo.trim() || null,
+        ical_url: icalUrl.trim() || null,
       }
 
       // Try extended first, fall back to core if columns missing
@@ -305,6 +308,26 @@ export default function CreateSpacePage() {
                   placeholder="2층 201호"
                   className="input"
                 />
+              </div>
+
+              <div>
+                <label htmlFor="space-ical" className="t-meta block mb-2 ml-1">예약 캘린더 연동 (선택)</label>
+                <input
+                  id="space-ical"
+                  type="url"
+                  inputMode="url"
+                  value={icalUrl}
+                  onChange={(e) => setIcalUrl(e.target.value)}
+                  placeholder="https://www.airbnb.co.kr/calendar/ical/…ics"
+                  className="input"
+                />
+                <p className="text-[13.5px] text-text-soft font-medium mt-1.5 ml-1 leading-snug">
+                  에어비앤비 앱 → 달력 → 설정 → 캘린더 내보내기 주소를 붙여넣으면,
+                  청소 요청 시 체크아웃 일정을 보고 날짜를 한 번에 고를 수 있어요.
+                </p>
+                {icalUrl.trim() && !icalUrl.trim().startsWith('https://') && (
+                  <p className="text-[14px] font-bold text-danger ml-1 mt-1">https:// 로 시작하는 주소만 사용할 수 있어요.</p>
+                )}
               </div>
 
               {address.trim() && !coords && !geoLoading && (

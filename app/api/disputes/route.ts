@@ -18,6 +18,13 @@ export async function POST(req: Request) {
     if (!job_id || !category || !description) {
       return NextResponse.json({ ok: false, error: 'bad_request' }, { status: 400 })
     }
+    // 입력 길이 제한 — 대용량 문자열로 인한 저장소 남용 방지
+    if (typeof description !== 'string' || description.trim().length === 0 || description.length > 2000) {
+      return NextResponse.json({ ok: false, error: 'description_too_long' }, { status: 400 })
+    }
+    if (typeof category !== 'string' || category.length > 50) {
+      return NextResponse.json({ ok: false, error: 'invalid_category' }, { status: 400 })
+    }
 
     const { data: job } = await supabase
       .from('jobs')
