@@ -3,7 +3,6 @@
  * DB의 platform_settings 테이블에서 값을 읽어오고, 실패 시 기본값으로 대체.
  */
 import { createClient as createBrowserClient } from './supabase/client'
-import { createAdminClient } from './supabase/admin'
 import { DEFAULT_FEES, type FeeSettings } from './pricing'
 
 export type UrgencySettings = {
@@ -80,26 +79,4 @@ export async function saveFeeSettings(
 export function invalidateFeeCache() {
   _feeCache = null
   _feeCacheTs = 0
-}
-
-/**
- * 서버 API Route 전용 — admin client로 platform_settings 직접 조회.
- * 브라우저 client를 사용할 수 없는 Edge/Node API routes에서 호출.
- * 캐시 없음 (서버리스 함수는 인스턴스가 매번 달라질 수 있음).
- */
-export async function getFeeSettingsServer(): Promise<FeeSettings> {
-  try {
-    const admin = createAdminClient()
-    const { data } = await admin
-      .from('platform_settings')
-      .select('value')
-      .eq('key', 'fees')
-      .maybeSingle()
-    if (data?.value) {
-      return { ...DEFAULT_FEES, ...(data.value as Partial<FeeSettings>) }
-    }
-  } catch {
-    // DB 오류 시 기본값 사용
-  }
-  return DEFAULT_FEES
 }

@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { notifyWorkersForJob } from '@/lib/notify'
 import { calculateSettlement, premiumFromBreakdown } from '@/lib/pricing'
-import { getFeeSettingsServer } from '@/lib/settings'
+import { getFeeSettingsServer } from '@/lib/settings.server'
 
 export const runtime = 'nodejs'
 
