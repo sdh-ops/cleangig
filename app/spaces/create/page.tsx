@@ -117,7 +117,7 @@ export default function CreateSpacePage() {
     if (step === 1) return !!type
     if (step === 2) return !!coords && !geoLoading // 지도 핀(좌표) 필수
     if (step === 3) return !!name.trim()
-    if (step === 4) return hasValidAccessCode // 출입 방법 1개 이상 필수
+    if (step === 4) return true // 출입 방법은 나중에도 설정 가능 (선택)
     if (step === 5) return checklist.length > 0
     if (step === 6) {
       if (bizTypeSel === 'BUSINESS') {
@@ -432,11 +432,11 @@ export default function CreateSpacePage() {
               {/* 출입 비밀번호 — 가변 목록 */}
               <div>
                 <label className="t-meta block mb-2 ml-1 flex items-center gap-1">
-                  🔑 출입 비밀번호 <span className="text-danger">*</span>
+                  🔑 출입 비밀번호 <span className="text-text-faint font-normal">(선택)</span>
                 </label>
                 <AccessCodesEditor codes={accessCodes} onChange={setAccessCodes} />
                 <p className="text-[13.5px] text-text-soft font-medium mt-2 ml-1 leading-snug">
-                  공동현관·출입문·청소도구함 등 필요한 만큼 추가하세요. 배정된 클린파트너에게만 공개되며 안전하게 보관됩니다.
+                  지금 없으면 나중에 공간 설정에서 추가하거나, 작업 당일 클린파트너에게 직접 알려주셔도 됩니다.
                 </p>
               </div>
 
@@ -719,7 +719,7 @@ export default function CreateSpacePage() {
               step === 1 ? '공간 유형을 선택해주세요.' :
               step === 2 ? '주소를 입력하고 검색 버튼을 눌러 위치를 확인해주세요.' :
               step === 3 ? '공간 이름을 입력해주세요.' :
-              step === 4 ? '출입 비밀번호를 하나 이상 입력해주세요.' :
+              step === 4 ? null :
               step === 5 ? '체크리스트 항목을 하나 이상 추가해주세요.' :
               step === 6 && bizTypeSel === 'BUSINESS' ? '사업자등록번호와 사업자등록증 사본을 입력해주세요.' :
               null
