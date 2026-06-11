@@ -334,7 +334,7 @@ function WorkerCard() {
             </p>
             <span style={{ fontSize: 10.5, fontWeight: 700, color: 'rgba(7,89,133,0.4)' }}>·</span>
             <p style={{ fontSize: 10.5, fontWeight: 700, color: 'rgba(7,89,133,0.7)' }}>
-              주 1회 정산
+              3일 이내 정산
             </p>
           </div>
         </div>

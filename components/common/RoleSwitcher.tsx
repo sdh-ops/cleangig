@@ -140,7 +140,7 @@ export default function RoleSwitcher({ userId, currentRole, canOperate = false, 
                 ) : (
                   <>
                     <Bullet icon={<Zap size={14} />}>내 주변 청소 작업을 자유롭게 선택</Bullet>
-                    <Bullet icon={<Check size={14} />}>주 1회 정산 · 티어 승급 혜택</Bullet>
+                    <Bullet icon={<Check size={14} />}>3일 이내 정산 · 티어 승급 혜택</Bullet>
                     <Bullet icon={<Check size={14} />}>등록한 공간·요청 내역은 그대로 유지</Bullet>
                   </>
                 )}

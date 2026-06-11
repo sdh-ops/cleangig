@@ -156,8 +156,8 @@ export default function OnboardingPage() {
               icon={<Sparkles size={28} strokeWidth={2.2} />}
               title="클린파트너"
               subtitle="청소로 부업 수익"
-              description="원하는 시간·지역에서 청소 작업을 골라 수행하고 주 1회 정산받아요."
-              tags={['자유 근무', '주 1회 정산', '티어 승급']}
+              description="원하는 시간·지역에서 청소 작업을 골라 수행하고, 완료 후 3일 이내 정산받아요."
+              tags={['자유 근무', '3일 이내 정산', '티어 승급']}
             />
             <RoleCard
               selected={selectedRole === 'operator'}

@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
+import { ADMIN_EMAILS } from '@/lib/admin'
 
 export const runtime = 'nodejs'
 
@@ -58,6 +60,27 @@ export async function POST(req: Request) {
         message: `${category} 관련 신고가 접수되어 관리자가 검토 중입니다.`,
         url: `/requests/${job_id}`,
       })
+    }
+
+    // 관리자 알림 — ADMIN_EMAILS 화이트리스트 유저에게 인앱 알림
+    if (ADMIN_EMAILS.length > 0) {
+      const adminDb = createAdminClient()
+      const { data: admins } = await adminDb
+        .from('users')
+        .select('id')
+        .in('email', ADMIN_EMAILS)
+      if (admins && admins.length > 0) {
+        await adminDb.from('notifications').insert(
+          admins.map((a) => ({
+            user_id: a.id,
+            title: '⚠️ 분쟁 신고 접수',
+            message: `[${category}] 신고가 접수됐습니다. 즉시 확인이 필요합니다.`,
+            url: '/admin/disputes',
+            type: 'general',
+            is_read: false,
+          })),
+        )
+      }
     }
 
     return NextResponse.json({ ok: true })

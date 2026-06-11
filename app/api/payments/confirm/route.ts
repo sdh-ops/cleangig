@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { notifyWorkersForJob } from '@/lib/notify'
 import { calculateSettlement, premiumFromBreakdown } from '@/lib/pricing'
+import { getFeeSettingsServer } from '@/lib/settings'
 
 export const runtime = 'nodejs'
 
@@ -160,7 +161,8 @@ export async function POST(req: Request) {
 
     // 4. payment 레코드 생성 (HELD = 에스크로 보관)
     // 워커 미정 시점 추정치 — 프리랜서·STARTER 기준. 최종 정산액은 approve에서 등급·세금유형·추가청구 반영해 재계산.
-    const s = calculateSettlement(jd.price, { taxType: 'FREELANCER', premium: premiumFromBreakdown(jd.price_breakdown) })
+    const fees = await getFeeSettingsServer()
+    const s = calculateSettlement(jd.price, { taxType: 'FREELANCER', fees, premium: premiumFromBreakdown(jd.price_breakdown) })
 
     await admin.from('payments').insert({
       job_id: job.id,
