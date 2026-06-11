@@ -214,13 +214,22 @@ export default async function JoinWorkerPage() {
           style={{ background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.15)' }}
         >
           <p className="text-[13.5px] font-black text-amber-700 uppercase tracking-wider mb-2">수수료 안내</p>
-          <div className="flex justify-between items-center mb-1.5">
-            <p className="text-[15px] font-bold text-ink">플랫폼 이용 수수료</p>
-            <p className="text-[15px] font-black text-amber-700">15%</p>
+          <div className="grid grid-cols-4 gap-1.5 mb-2.5">
+            {[
+              { tier: '스타터', fee: '14%', note: '시작' },
+              { tier: '실버', fee: '12%', note: '' },
+              { tier: '골드', fee: '10%', note: '' },
+              { tier: '마스터', fee: '8%', note: '최저' },
+            ].map((t) => (
+              <div key={t.tier} className="rounded-xl bg-white/60 border border-amber-200/60 p-2 text-center">
+                <p className="text-[12px] font-bold text-amber-700">{t.tier}</p>
+                <p className="text-[17px] font-black text-ink mt-0.5">{t.fee}</p>
+                {t.note ? <p className="text-[11px] font-bold text-amber-500 mt-0.5">{t.note}</p> : <p className="text-[11px] text-transparent mt-0.5">-</p>}
+              </div>
+            ))}
           </div>
           <p className="text-[13.5px] text-text-muted font-semibold leading-relaxed">
-            건당 수입에서 15%가 차감됩니다. 지급 보장·분쟁 해결·매칭 서비스가 포함된 수수료입니다.
-            미소 등 타 플랫폼(10~20%) 대비 경쟁력 있는 수준입니다.
+            실적이 쌓일수록 수수료가 내려가요. 마스터 등급이 되면 업계 최저 수준인 8%만 납부합니다.
           </p>
           <div className="flex items-center gap-1.5 mt-2">
             <CheckCircle2 size={12} className="text-emerald-500 shrink-0" />

@@ -173,7 +173,7 @@ export default function OnboardingPage() {
               <p className="text-[14.5px] font-black text-amber-800 mb-2">클린파트너 수수료 안내</p>
               <ul className="flex flex-col gap-1.5">
                 {[
-                  '작업 수입에서 플랫폼 수수료 15%가 차감됩니다.',
+                  '처음엔 수수료 14%(스타터), 실적 쌓으면 최대 8%까지 낮아져요.',
                   '일한 돈은 떼일 걱정 없이 100% 지급돼요.',
                   '첫 작업 시 보증금 5,000원 차감 (활동 종료 시 전액 환불).',
                 ].map((t) => (

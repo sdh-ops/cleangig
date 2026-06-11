@@ -71,7 +71,7 @@ export default function AdminFeeSettingsPage() {
     <div>
       <div className="mb-6">
         <h1 className="h-hero text-ink">수수료 · 세율 설정</h1>
-        <p className="t-caption mt-1">트랜잭션별로 적용되는 수수료율을 조정하세요. 기본값: 공간파트너 5% · 클린파트너 15% · 원천징수 3.3% · 부가세 10%.</p>
+        <p className="t-caption mt-1">트랜잭션별로 적용되는 수수료율을 조정하세요. 기본값: 공간파트너 5% · 클린파트너 14% (스타터 기준, 등급별 차등) · 원천징수 3.3% · 부가세 10%.</p>
       </div>
 
       <div className="grid md:grid-cols-2 gap-4">

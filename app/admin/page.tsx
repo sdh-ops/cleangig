@@ -58,7 +58,7 @@ export default async function AdminDashboardPage() {
   ])
 
   const monthGMV   = (monthRevenue.data || []).reduce((s: number, r: any) => s + (r.price || 0), 0)
-  const platformFee = Math.round(monthGMV * 0.20) // host 5% + worker 15% = 20% total
+  const platformFee = Math.round(monthGMV * 0.19) // host 5% + worker 14%(STARTER) ≤ 19% total
   const submittedList = (submitted.data || []) as any[]
   const disputedList  = (disputed.data  || []) as any[]
   const todayList     = (todayJobs.data  || []) as any[]

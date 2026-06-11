@@ -111,11 +111,11 @@ export default function EarningsClient({ profile, payments, totalEarned, pending
                       <div className="t-money text-[15px] text-ink">+{formatKRW(p.worker_payout)}</div>
                       {(p.withholding_tax ?? 0) > 0 ? (
                         <p className="text-[13px] font-bold text-text-faint mt-0.5">
-                          수수료 −{formatKRW((p.worker_fee || 0) + (p.host_fee || 0) || (p.platform_fee || 0))} · 세금(3.3%) −{formatKRW(p.withholding_tax || 0)}
+                          수수료 −{formatKRW(p.worker_fee || p.platform_fee || 0)} · 세금(3.3%) −{formatKRW(p.withholding_tax || 0)}
                         </p>
                       ) : (
                         <p className="text-[13px] font-bold text-text-faint mt-0.5">
-                          수수료 −{formatKRW((p.worker_fee || 0) + (p.host_fee || 0) || (p.platform_fee || 0))}
+                          수수료 −{formatKRW(p.worker_fee || p.platform_fee || 0)}
                         </p>
                       )}
                     </div>
