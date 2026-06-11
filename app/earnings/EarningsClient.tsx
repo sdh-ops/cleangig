@@ -84,43 +84,42 @@ export default function EarningsClient({ profile, payments, totalEarned, pending
           ) : (
             <ul className="flex flex-col gap-2.5">
               {payments.map((p) => (
-                <li key={p.id} className="card p-4">
-                  {/* Row 1: icon + 공간명 + 수령액 */}
-                  <div className="flex items-center gap-3">
-                    <div
-                      className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
-                        p.status === 'RELEASED' || p.status === 'PAID_OUT'
-                          ? 'bg-success-soft text-success'
-                          : p.status === 'HELD'
-                          ? 'bg-info-soft text-info'
-                          : p.status === 'FAILED'
-                          ? 'bg-danger-soft text-danger'
-                          : 'bg-surface-muted text-text-muted'
-                      }`}
-                    >
-                      {p.status === 'RELEASED' || p.status === 'PAID_OUT'
-                        ? <CheckCircle2 size={18} />
+                <li key={p.id} className="card px-4 py-3.5 flex items-center gap-3">
+                  {/* 아이콘 */}
+                  <div
+                    className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 ${
+                      p.status === 'RELEASED' || p.status === 'PAID_OUT'
+                        ? 'bg-success-soft text-success'
                         : p.status === 'HELD'
-                        ? <Clock size={18} />
-                        : <Banknote size={18} />}
-                    </div>
-                    <div className="flex-1 min-w-0">
+                        ? 'bg-info-soft text-info'
+                        : p.status === 'FAILED'
+                        ? 'bg-danger-soft text-danger'
+                        : 'bg-surface-muted text-text-muted'
+                    }`}
+                  >
+                    {p.status === 'RELEASED' || p.status === 'PAID_OUT'
+                      ? <CheckCircle2 size={16} />
+                      : p.status === 'HELD'
+                      ? <Clock size={16} />
+                      : <Banknote size={16} />}
+                  </div>
+                  {/* 텍스트 블록 */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-baseline justify-between gap-2">
                       <h4 className="text-[14.5px] font-extrabold text-ink truncate">
                         {p.jobs?.spaces?.name || '작업'}
                       </h4>
+                      <span className="t-money text-[15px] text-ink shrink-0">+{formatKRW(p.worker_payout)}</span>
                     </div>
-                    <div className="t-money text-[16px] text-ink shrink-0">+{formatKRW(p.worker_payout)}</div>
-                  </div>
-                  {/* Row 2: 상태·날짜 + 공제 내역 */}
-                  <div className="flex items-center justify-between mt-1.5 pl-[52px]">
-                    <p className="text-[13px] font-bold text-text-soft">
+                    <p className="text-[13px] font-bold text-text-soft mt-0.5">
                       {statusLabel(p.status)} · {timeAgo(p.created_at)}
                     </p>
-                    <p className="text-[12.5px] font-bold text-text-faint">
-                      {(p.withholding_tax ?? 0) > 0
-                        ? `수수료 −${formatKRW(p.worker_fee || p.platform_fee || 0, { short: true })} · 세금 −${formatKRW(p.withholding_tax || 0, { short: true })}`
-                        : `수수료 −${formatKRW(p.worker_fee || p.platform_fee || 0, { short: true })}`}
-                    </p>
+                    {(p.worker_fee || p.platform_fee || 0) > 0 && (
+                      <p className="text-[12px] font-bold text-text-faint mt-0.5">
+                        수수료 −{formatKRW(p.worker_fee || p.platform_fee || 0, { short: true })}
+                        {(p.withholding_tax ?? 0) > 0 && ` · 세금(3.3%) −${formatKRW(p.withholding_tax || 0, { short: true })}`}
+                      </p>
+                    )}
                   </div>
                 </li>
               ))}
