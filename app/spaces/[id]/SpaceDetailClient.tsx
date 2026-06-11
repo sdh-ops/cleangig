@@ -18,7 +18,19 @@ import {
   Loader2,
   Trash2,
   X,
+  Star,
 } from 'lucide-react'
+import { timeAgo } from '@/lib/utils'
+
+const WORKER_TAG_LABELS: Record<string, string> = {
+  guide: '안내가 명확해요',
+  access: '출입이 편해요',
+  fast_reply: '빠르게 답해줘요',
+  clean_space: '공간이 깔끔했어요',
+  kind: '친절해요',
+  fair: '합리적인 가격이에요',
+  again: '또 가고 싶어요',
+}
 import NaverMap from '@/components/common/NaverMap'
 import { formatKRW, spaceTypeLabel, parseGeoPoint } from '@/lib/utils'
 import type { SpaceType } from '@/lib/types'
@@ -50,15 +62,25 @@ type Space = {
   checklist_template?: { id: string; label: string; required: boolean }[]
 }
 
+type ReviewRow = {
+  id: string
+  rating: number
+  tags: string[] | null
+  comment: string | null
+  created_at: string
+  reviewer: { name: string } | null
+}
+
 type Props = {
   space: Space
   isOwner: boolean
   totalJobs: number
   monthCount: number
   lifetimeSpent: number
+  spaceReviews: ReviewRow[]
 }
 
-export default function SpaceDetailClient({ space, isOwner, totalJobs, monthCount, lifetimeSpent }: Props) {
+export default function SpaceDetailClient({ space, isOwner, totalJobs, monthCount, lifetimeSpent, spaceReviews }: Props) {
   const router = useRouter()
   const supabase = createClient()
   const [toggling, setToggling] = useState(false)
@@ -226,6 +248,46 @@ export default function SpaceDetailClient({ space, isOwner, totalJobs, monthCoun
                 markers={[{ lat: coords.lat, lng: coords.lng, title: space.name, tone: 'brand' }]}
                 interactive={false}
               />
+            </div>
+          )}
+
+          {/* 클린파트너 리뷰 */}
+          {spaceReviews.length > 0 && (
+            <div>
+              <h3 className="text-[15px] font-black text-text-faint uppercase tracking-wide mb-2 mx-1">
+                클린파트너 후기 ({spaceReviews.length})
+              </h3>
+              <ul className="flex flex-col gap-2.5">
+                {spaceReviews.map((r) => (
+                  <li key={r.id} className="card p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="flex items-center gap-0.5">
+                        {[1, 2, 3, 4, 5].map((n) => (
+                          <Star
+                            key={n}
+                            size={13}
+                            className={n <= (r.rating ?? 0) ? 'text-sun' : 'text-line-strong'}
+                            fill={n <= (r.rating ?? 0) ? 'currentColor' : 'none'}
+                          />
+                        ))}
+                      </div>
+                      <span className="text-[13.5px] font-bold text-text-soft">
+                        {r.reviewer?.name ?? '익명'} · {timeAgo(r.created_at)}
+                      </span>
+                    </div>
+                    {r.tags && r.tags.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 mb-2">
+                        {r.tags.map((t) => (
+                          <span key={t} className="text-[13px] font-bold px-2.5 py-1 rounded-full bg-brand-softer text-brand-dark">
+                            {WORKER_TAG_LABELS[t] ?? t}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    {r.comment && <p className="text-[15px] font-medium text-ink leading-snug">{r.comment}</p>}
+                  </li>
+                ))}
+              </ul>
             </div>
           )}
 

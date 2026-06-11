@@ -7,6 +7,16 @@ import { Star, BadgeCheck, Briefcase, ShieldCheck, Heart } from 'lucide-react'
 import { TIER_BENEFITS } from '@/lib/matching'
 import { timeAgo } from '@/lib/utils'
 
+const WORKER_TAG_LABELS: Record<string, string> = {
+  clean: '깔끔해요',
+  thorough: '꼼꼼해요',
+  punctual: '시간을 잘 지켜요',
+  comm: '소통이 잘 돼요',
+  kind: '친절해요',
+  pro: '전문적이에요',
+  again: '또 부탁하고 싶어요',
+}
+
 export default async function WorkerProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const supabase = await createClient()
@@ -28,7 +38,7 @@ export default async function WorkerProfilePage({ params }: { params: Promise<{ 
 
   const { data: reviews } = await supabase
     .from('reviews')
-    .select('id, rating, comment, created_at, reviewer:reviewer_id(name)')
+    .select('id, rating, tags, comment, created_at, reviewer:reviewer_id(name)')
     .eq('reviewee_id', id)
     .eq('is_public', true)
     .order('created_at', { ascending: false })
@@ -109,6 +119,15 @@ export default async function WorkerProfilePage({ params }: { params: Promise<{ 
                       {r.reviewer?.name ?? '익명'} · {timeAgo(r.created_at)}
                     </span>
                   </div>
+                  {r.tags && r.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 mb-2">
+                      {r.tags.map((t: string) => (
+                        <span key={t} className="text-[13px] font-bold px-2.5 py-1 rounded-full bg-brand-softer text-brand-dark">
+                          {WORKER_TAG_LABELS[t] ?? t}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                   {r.comment && <p className="text-[15px] font-medium text-ink leading-snug">{r.comment}</p>}
                 </li>
               ))}
