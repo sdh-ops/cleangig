@@ -387,18 +387,63 @@ export default function CleanMainClient({ profile, activeJob, openJobs, weekEarn
           <h2 className="h-section text-ink px-0.5 mb-3">쓱싹 꿀팁</h2>
           <div className="flex gap-3 overflow-x-auto no-scrollbar -mx-1 px-1 pb-1">
             {[
-              { icon: TrendingUp, label: '티어 올리는 법', desc: '평점 4.8 이상 유지 · 100건 달성', bg: 'bg-brand-softer', color: '#0EA5E9' },
-              { icon: Zap, label: '긴급 작업 잡기', desc: '알림 켜두고 가장 먼저 신청하기', bg: 'bg-sun-soft', color: '#FFB800' },
-              { icon: CheckCircle2, label: '체크리스트 100%', desc: '사진 모두 제출해 분쟁 방지', bg: 'bg-info-soft', color: '#3B82F6' },
+              {
+                icon: Zap,
+                label: '긴급 작업이 돈이 된다',
+                desc: '수수료 2% 할인 적용 — 알림 켜두고 가장 먼저 신청하면 선점',
+                badge: '수수료 혜택',
+                badgeColor: 'text-[#92580C] bg-sun-soft',
+                bg: 'bg-sun-soft',
+                color: '#FFB800',
+              },
+              {
+                icon: TrendingUp,
+                label: '티어 올리면 수수료 줄어요',
+                desc: 'BRONZE→GOLD 수수료 6%→3% 절감 · 평점 4.8 이상 + 100건 달성',
+                badge: '최대 3% 절감',
+                badgeColor: 'text-brand-dark bg-brand-softer',
+                bg: 'bg-brand-softer',
+                color: '#0EA5E9',
+              },
+              {
+                icon: CheckCircle2,
+                label: '체크리스트 100% = 분쟁 0',
+                desc: '사진 빠짐없이 제출하면 분쟁 신청 자체가 막혀요',
+                badge: '분쟁 방지',
+                badgeColor: 'text-success bg-success-soft',
+                bg: 'bg-success-soft',
+                color: '#22C55E',
+              },
+              {
+                icon: Star,
+                label: '별점은 완료 당일이 핵심',
+                desc: '작업 직후 공간 파트너에게 한마디 남기면 답장 별점 확률 3배',
+                badge: '평점 관리',
+                badgeColor: 'text-[#92580C] bg-sun-soft',
+                bg: 'bg-sun-soft',
+                color: '#FFB800',
+              },
+              {
+                icon: Navigation,
+                label: '첫 2건은 수수료 2%',
+                desc: '신규 클린파트너 프로모션 — 첫 2건 완료까지 수수료 대폭 할인',
+                badge: '신규 프로모션',
+                badgeColor: 'text-brand-dark bg-brand-softer',
+                bg: 'bg-brand-softer',
+                color: '#0EA5E9',
+              },
             ].map((t, i) => {
               const Icon = t.icon
               return (
-                <div key={i} className="shrink-0 w-[190px] card p-4">
-                  <div className={`w-9 h-9 rounded-xl ${t.bg} flex items-center justify-center mb-2.5`} style={{ color: t.color }}>
-                    <Icon size={17} strokeWidth={2.5} />
+                <div key={i} className="shrink-0 w-[200px] card p-4 flex flex-col gap-2">
+                  <div className="flex items-center justify-between">
+                    <div className={`w-9 h-9 rounded-xl ${t.bg} flex items-center justify-center`} style={{ color: t.color }}>
+                      <Icon size={17} strokeWidth={2.5} />
+                    </div>
+                    <span className={`text-[12px] font-black px-2 py-0.5 rounded-full ${t.badgeColor}`}>{t.badge}</span>
                   </div>
-                  <h4 className="text-[15px] font-extrabold text-ink">{t.label}</h4>
-                  <p className="text-[13.5px] text-text-soft font-bold mt-1 leading-snug">{t.desc}</p>
+                  <h4 className="text-[14.5px] font-extrabold text-ink leading-snug">{t.label}</h4>
+                  <p className="text-[13px] text-text-soft font-bold leading-snug">{t.desc}</p>
                 </div>
               )
             })}

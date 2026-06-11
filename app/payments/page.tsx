@@ -14,15 +14,17 @@ export default async function HostPaymentsPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const { data: profile } = await supabase.from('users').select('role').eq('id', user.id).single()
-  if (profile?.role !== 'operator') redirect('/earnings')
-
-  const { data } = await supabase
-    .from('payments')
-    .select('id, status, gross_amount, platform_fee, created_at, jobs(id, scheduled_at, spaces(name))')
-    .eq('operator_id', user.id)
-    .order('created_at', { ascending: false })
-    .limit(60)
+  const [profileRes, paymentsRes] = await Promise.all([
+    supabase.from('users').select('role').eq('id', user.id).single(),
+    supabase
+      .from('payments')
+      .select('id, status, gross_amount, platform_fee, created_at, jobs(id, scheduled_at, spaces(name))')
+      .eq('operator_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(60),
+  ])
+  if (profileRes.data?.role !== 'operator') redirect('/earnings')
+  const { data } = paymentsRes
 
   const list = (data || []) as any[]
   const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString()

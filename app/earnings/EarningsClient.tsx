@@ -85,10 +85,11 @@ export default function EarningsClient({ profile, payments, totalEarned, pending
             <ul className="flex flex-col gap-2.5">
               {payments.map((p) => (
                 <li key={p.id} className="card p-4">
+                  {/* Row 1: icon + 공간명 + 수령액 */}
                   <div className="flex items-center gap-3">
                     <div
                       className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
-                        p.status === 'RELEASED'
+                        p.status === 'RELEASED' || p.status === 'PAID_OUT'
                           ? 'bg-success-soft text-success'
                           : p.status === 'HELD'
                           ? 'bg-info-soft text-info'
@@ -97,28 +98,29 @@ export default function EarningsClient({ profile, payments, totalEarned, pending
                           : 'bg-surface-muted text-text-muted'
                       }`}
                     >
-                      {p.status === 'RELEASED' ? <CheckCircle2 size={18} /> : p.status === 'HELD' ? <Clock size={18} /> : <Banknote size={18} />}
+                      {p.status === 'RELEASED' || p.status === 'PAID_OUT'
+                        ? <CheckCircle2 size={18} />
+                        : p.status === 'HELD'
+                        ? <Clock size={18} />
+                        : <Banknote size={18} />}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h4 className="text-[14px] font-extrabold text-ink truncate">
+                      <h4 className="text-[14.5px] font-extrabold text-ink truncate">
                         {p.jobs?.spaces?.name || '작업'}
                       </h4>
-                      <p className="text-[13.5px] text-text-soft font-bold mt-0.5">
-                        {statusLabel(p.status)} · {timeAgo(p.created_at)}
-                      </p>
                     </div>
-                    <div className="text-right shrink-0">
-                      <div className="t-money text-[15px] text-ink">+{formatKRW(p.worker_payout)}</div>
-                      {(p.withholding_tax ?? 0) > 0 ? (
-                        <p className="text-[13px] font-bold text-text-faint mt-0.5">
-                          수수료 −{formatKRW(p.worker_fee || p.platform_fee || 0)} · 세금(3.3%) −{formatKRW(p.withholding_tax || 0)}
-                        </p>
-                      ) : (
-                        <p className="text-[13px] font-bold text-text-faint mt-0.5">
-                          수수료 −{formatKRW(p.worker_fee || p.platform_fee || 0)}
-                        </p>
-                      )}
-                    </div>
+                    <div className="t-money text-[16px] text-ink shrink-0">+{formatKRW(p.worker_payout)}</div>
+                  </div>
+                  {/* Row 2: 상태·날짜 + 공제 내역 */}
+                  <div className="flex items-center justify-between mt-1.5 pl-[52px]">
+                    <p className="text-[13px] font-bold text-text-soft">
+                      {statusLabel(p.status)} · {timeAgo(p.created_at)}
+                    </p>
+                    <p className="text-[12.5px] font-bold text-text-faint">
+                      {(p.withholding_tax ?? 0) > 0
+                        ? `수수료 −${formatKRW(p.worker_fee || p.platform_fee || 0, { short: true })} · 세금 −${formatKRW(p.withholding_tax || 0, { short: true })}`
+                        : `수수료 −${formatKRW(p.worker_fee || p.platform_fee || 0, { short: true })}`}
+                    </p>
                   </div>
                 </li>
               ))}
