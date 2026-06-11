@@ -18,7 +18,7 @@ const DEFAULT_PREFS: Prefs = {
   notify_urgent: true,
   notify_messages: true,
   radius_km: 5,
-  min_price: 20000,
+  min_price: 25000,
 }
 
 export default function PreferencesPage() {
