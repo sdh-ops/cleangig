@@ -749,7 +749,7 @@ export default function WorkerJobDetail() {
               {job.spaces?.address_detail && isMine ? ` ${job.spaces.address_detail}` : ''}
             </p>
             <div className="mt-5">
-              <p className="text-[13.5px] text-white/60 font-bold">예상 수령 (세금 3.3% 차감)</p>
+              <p className="text-[13.5px] text-white/60 font-bold">예상 수령액</p>
               <p className="t-money text-[26px] text-brand-light">{formatKRW(job.price_breakdown?.estimated_worker_payout ?? estimateWorkerPayout(job.price))}</p>
             </div>
           </div>
