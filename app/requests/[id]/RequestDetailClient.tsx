@@ -669,24 +669,8 @@ export default function RequestDetailClient({ job: initialJob, userId, initialIs
                   <span className="text-[15px] font-bold text-text-soft">총 결제 (VAT 포함)</span>
                   <span className="t-money text-[18px] text-ink">{formatKRW(job.price_breakdown.total ?? job.price)}</span>
                 </div>
-                {(job.price_breakdown.host_fee !== undefined || job.price_breakdown.worker_fee !== undefined) && (
-                  <div className="mt-3 pt-3 border-t border-line-soft text-[13.5px] text-text-soft font-bold space-y-1">
-                    <div className="flex justify-between">
-                      <span>플랫폼 공간파트너 수수료</span>
-                      <span>{formatKRW(job.price_breakdown.host_fee || 0)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>플랫폼 클린파트너 수수료</span>
-                      <span>{formatKRW(job.price_breakdown.worker_fee || 0)}</span>
-                    </div>
-                    {job.price_breakdown.estimated_worker_payout !== undefined && (
-                      <div className="flex justify-between text-brand-dark">
-                        <span>클린파트너 정산액 (세금 전)</span>
-                        <span>{formatKRW(job.price_breakdown.worker_payout_if_business || 0)}</span>
-                      </div>
-                    )}
-                  </div>
-                )}
+                {/* 워커 임금·플랫폼 수수료 분해는 비노출 — 공간파트너에겐 결제 금액만.
+                    상대 임금·중간 마진 노출로 인한 반감 방지 (수수료 고지는 약관·이용안내에서). */}
               </div>
             </div>
           )}
