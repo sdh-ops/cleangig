@@ -213,27 +213,27 @@ export default async function JoinWorkerPage() {
           className="rounded-2xl p-4"
           style={{ background: 'rgba(14,165,233,0.05)', border: '1px solid rgba(14,165,233,0.15)' }}
         >
-          <p className="text-[13.5px] font-black text-sky-700 uppercase tracking-wider mb-2">수수료 안내</p>
+          <p className="text-[13.5px] font-black text-sky-700 uppercase tracking-wider mb-2">정산 혜택</p>
           <div className="grid grid-cols-4 gap-1.5 mb-2.5">
             {[
-              { tier: '스타터', fee: '6%', note: '시작' },
-              { tier: '실버', fee: '5%', note: '' },
-              { tier: '골드', fee: '4%', note: '' },
-              { tier: '마스터', fee: '3%', note: '최저' },
+              { tier: '스타터', bonus: '기본', note: '시작' },
+              { tier: '실버', bonus: '+1%', note: '' },
+              { tier: '골드', bonus: '+2%', note: '' },
+              { tier: '마스터', bonus: '+3%', note: '최고' },
             ].map((t) => (
               <div key={t.tier} className="rounded-xl bg-white/70 border border-sky-200/60 p-2 text-center">
                 <p className="text-[12px] font-bold text-sky-700">{t.tier}</p>
-                <p className="text-[17px] font-black text-ink mt-0.5">{t.fee}</p>
+                <p className="text-[17px] font-black text-ink mt-0.5">{t.bonus}</p>
                 {t.note ? <p className="text-[11px] font-bold text-sky-500 mt-0.5">{t.note}</p> : <p className="text-[11px] text-transparent mt-0.5">-</p>}
               </div>
             ))}
           </div>
           <p className="text-[13.5px] text-text-muted font-semibold leading-relaxed">
-            처음 2건은 수수료 2% 특별 프로모션! 이후 스타터 6%에서 시작해 마스터가 되면 업계 최저 3%로 낮아져요.
+            클린파트너는 수수료를 따로 떼지 않아요 — 화면에 뜬 금액이 곧 받는 돈. 등급이 오르면 같은 작업도 정산액이 최대 +3%, 처음 2건은 추가 프로모션까지!
           </p>
           <div className="flex items-center gap-1.5 mt-2">
             <CheckCircle2 size={12} className="text-emerald-500 shrink-0" />
-            <p className="text-[13.5px] font-bold text-emerald-700">일한 돈 떼일 걱정 없음 — 100% 지급</p>
+            <p className="text-[13.5px] font-bold text-emerald-700">표시된 예상 수령액 그대로 지급 (세금 3.3%만 원천징수)</p>
           </div>
         </div>
       </div>

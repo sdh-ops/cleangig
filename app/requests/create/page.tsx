@@ -1004,20 +1004,7 @@ export default function CreateRequestPage() {
                   <span className="text-[15px] font-bold text-text-soft">결제 금액 (VAT 포함)</span>
                   <span className="t-money text-[22px] text-ink">{formatKRW(priceBreakdown.total)}</span>
                 </div>
-                <div className="mt-3 pt-3 border-t border-line-soft text-[13.5px] text-text-soft font-bold space-y-1">
-                  <div className="flex justify-between">
-                    <span>공간파트너 수수료 ({Math.round(fees.host_fee_rate * 100 * 10) / 10}%)</span>
-                    <span>{formatKRW(priceBreakdown.host_fee)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>클린파트너 수수료 ({Math.round(fees.worker_fee_rate * 100 * 10) / 10}%)</span>
-                    <span>{formatKRW(priceBreakdown.worker_fee)}</span>
-                  </div>
-                  <div className="flex justify-between text-brand-dark">
-                    <span>클린파트너 예상 수령 (프리랜서 기준)</span>
-                    <span>{formatKRW(priceBreakdown.estimated_worker_payout)}</span>
-                  </div>
-                </div>
+                {/* 모델A: 워커 임금·플랫폼 수수료 분해 비노출 — 공간파트너에겐 결제 금액만 */}
               </div>
               </>
               )}

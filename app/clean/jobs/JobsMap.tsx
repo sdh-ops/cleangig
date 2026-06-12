@@ -63,7 +63,7 @@ function pinStyle(price: number, urgent: boolean): { bg: string; gradient: strin
 }
 
 function buildPinHtml(job: JobMapItem, selected: boolean): string {
-  const payout = estimateWorkerPayout(job.price) // 세후 실수령 (STARTER 기준: host 12% + worker 6% + 세금 3.3%)
+  const payout = estimateWorkerPayout(job.price) // 세후 실수령 (모델A STARTER 기준: 이용료 15% + 세금 3.3%)
   const { gradient, bg, ring, icon } = pinStyle(job.price, !!job.is_urgent)
   const scale = selected ? 1.18 : 1
   const shadow = selected

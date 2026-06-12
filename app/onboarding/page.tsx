@@ -172,10 +172,10 @@ export default function OnboardingPage() {
 
           {selectedRole === 'worker' && (
             <div className="mx-0 mt-2 mb-1 rounded-2xl p-4" style={{ background: 'rgba(14,165,233,0.06)', border: '1px solid rgba(14,165,233,0.2)' }}>
-              <p className="text-[14.5px] font-black text-sky-800 mb-2">클린파트너 수수료 안내</p>
+              <p className="text-[14.5px] font-black text-sky-800 mb-2">클린파트너 정산 안내</p>
               <ul className="flex flex-col gap-1.5">
-                {['처음 2건은 수수료 2% 특별 프로모션! 이후엔 스타터 6%, 실적 쌓으면 최저 3%.',
-                  '일한 돈은 떼일 걱정 없이 100% 지급돼요.',
+                {['수수료를 따로 떼지 않아요 — 화면의 예상 수령액 그대로 지급 (세금 3.3%만 원천징수).',
+                  '등급이 오르면 같은 작업도 정산액 최대 +3%, 처음 2건은 추가 프로모션.',
                   '완료 후 3일 이내 정산 (골드·마스터는 익일 정산).'].map((t) => (
                   <li key={t} className="text-[13.5px] font-semibold text-sky-900 flex items-start gap-1.5">
                     <span className="shrink-0 mt-0.5 text-sky-500">•</span>{t}
@@ -186,9 +186,9 @@ export default function OnboardingPage() {
           )}
           {selectedRole === 'operator' && (
             <div className="mx-0 mt-2 mb-1 rounded-2xl p-4" style={{ background: 'rgba(14,165,233,0.06)', border: '1px solid rgba(14,165,233,0.18)' }}>
-              <p className="text-[14.5px] font-black text-sky-800 mb-2">공간파트너 수수료 안내</p>
+              <p className="text-[14.5px] font-black text-sky-800 mb-2">공간파트너 결제 안내</p>
               <ul className="flex flex-col gap-1.5">
-                {['결제 금액의 12%만 플랫폼 수수료로 청구됩니다.',
+                {['결제 금액에 매칭·안전결제·분쟁해결 서비스가 모두 포함돼요.',
                   '결제금 안전 보관 — 완료 확인 전까지 결제 보관.',
                   '미출근·품질 미달 시 환불 보장.'].map((t) => (
                   <li key={t} className="text-[13.5px] font-semibold text-sky-900 flex items-start gap-1.5">

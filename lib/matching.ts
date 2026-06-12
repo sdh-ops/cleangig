@@ -145,42 +145,43 @@ export function computeWorkerTier(stats: { total_jobs: number; avg_rating: numbe
 }
 
 /**
- * 티어별 혜택
+ * 티어별 혜택 (모델A — 2026-06 재개편)
  *
- * fee_rate: 플랫폼 수수료율 (작업 수익에서 차감)
- * fee_discount: 스타터 대비 절감율
+ * 모델A: 워커 수수료 폐지. 워커는 "책정가 = 받는 돈"으로 인식.
+ * 등급이 오르면 플랫폼 이용료가 인하(15→12%)되어 같은 작업이라도 워커 책정가↑.
+ * 워커 노출 카피는 "수수료" 대신 "정산액 +X%"로 긍정 프레이밍.
+ *
+ * fee_rate: 플랫폼 이용료율 (호스트 결제액 기준 — pricing.PLATFORM_FEE_RATE_BY_TIER와 일치)
+ * fee_discount: 스타터(15%) 대비 이용료 절감 p.p. = 워커 정산액 증가분
  * priority: 매칭 우선순위 (높을수록 우선)
- *
- * 2026-06 개편: 등급별 수수료 실차등(6→3%) + 우수 등급 빠른 정산.
- * 단일 소스는 lib/pricing.ts의 WORKER_FEE_RATE_BY_TIER. 여기 fee_rate는 그 값과 일치시킨다.
  */
 export const TIER_BENEFITS: Record<string, {
-  fee_rate: number       // 워커 수수료율 (pricing.WORKER_FEE_RATE_BY_TIER와 동일)
-  fee_discount: number   // 스타터(6%) 대비 절감 p.p.
+  fee_rate: number       // 플랫폼 이용료율 (pricing.PLATFORM_FEE_RATE_BY_TIER와 동일)
+  fee_discount: number   // 스타터(15%) 대비 절감 p.p. (= 워커 정산액 증가)
   priority: number
   label: string
   color: string
   badge: string          // 표시용 뱃지 텍스트
-  perks: string[]        // 혜택 요약
+  perks: string[]        // 혜택 요약 (워커 노출 — 수수료 단어 회피)
 }> = {
   STARTER: {
-    fee_rate: 0.06, fee_discount: 0, priority: 0,
+    fee_rate: 0.15, fee_discount: 0, priority: 0,
     label: '스타터', color: '#94A3B8', badge: 'STARTER',
-    perks: ['수수료 6%', '기본 매칭', '3일 이내 정산'],
+    perks: ['기본 정산', '3일 이내 정산'],
   },
   SILVER: {
-    fee_rate: 0.05, fee_discount: 0.01, priority: 1,
+    fee_rate: 0.14, fee_discount: 0.01, priority: 1,
     label: '실버', color: '#64748B', badge: 'SILVER',
-    perks: ['수수료 5%', '매칭 우선순위 ↑', '실버 배지', '3일 이내 정산'],
+    perks: ['정산액 +1%', '매칭 우선순위 ↑', '실버 배지', '3일 이내 정산'],
   },
   GOLD: {
-    fee_rate: 0.04, fee_discount: 0.02, priority: 2,
+    fee_rate: 0.13, fee_discount: 0.02, priority: 2,
     label: '골드', color: '#F59E0B', badge: 'GOLD',
-    perks: ['수수료 4%', '매칭 최우선', '골드 배지', '익일 정산'],
+    perks: ['정산액 +2%', '매칭 최우선', '골드 배지', '익일 정산'],
   },
   MASTER: {
-    fee_rate: 0.03, fee_discount: 0.03, priority: 3,
+    fee_rate: 0.12, fee_discount: 0.03, priority: 3,
     label: '마스터', color: '#0EA5E9', badge: 'MASTER',
-    perks: ['수수료 3%', '단독 공간 제안', '마스터 배지', '익일 정산', '전담 매니저'],
+    perks: ['정산액 +3%', '단독 공간 제안', '마스터 배지', '익일 정산', '전담 매니저'],
   },
 }

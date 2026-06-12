@@ -58,7 +58,7 @@ export default async function AdminDashboardPage() {
   ])
 
   const monthGMV   = (monthRevenue.data || []).reduce((s: number, r: any) => s + (r.price || 0), 0)
-  const platformFee = Math.round(monthGMV * 0.18) // host 12% + worker 6%(STARTER) = 18% total
+  const platformFee = Math.round(monthGMV * 0.15) // 모델A: 단일 이용료 STARTER 15% (등급 섞이면 평균 더 낮음)
   const submittedList = (submitted.data || []) as any[]
   const disputedList  = (disputed.data  || []) as any[]
   const todayList     = (todayJobs.data  || []) as any[]

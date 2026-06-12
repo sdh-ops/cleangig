@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { calculateSettlement, premiumFromBreakdown, workerFeeRateWithPromo, type TaxType } from '@/lib/pricing'
+import { calculateSettlement, premiumFromBreakdown, platformFeeRateWithPromo, type TaxType } from '@/lib/pricing'
 
 export const runtime = 'nodejs'
 
@@ -66,7 +66,7 @@ export async function POST(req: Request) {
         .eq('id', job.worker_id)
         .single()
       const taxType: TaxType = (worker?.tax_type as TaxType) ?? 'FREELANCER'
-      const workerFeeRate = workerFeeRateWithPromo(worker?.tier, worker?.total_jobs)
+      const platformFeeRate = platformFeeRateWithPromo(worker?.tier, worker?.total_jobs)
 
       // 승인된 추가 청구액을 정산 총액에 합산 (승인 시점이 정산 확정 지점)
       const approvedExtra =
@@ -76,7 +76,7 @@ export async function POST(req: Request) {
       const premium = premiumFromBreakdown((job as any).price_breakdown) + approvedExtra
 
       // 정산 = 단일 소스(calculateSettlement) — 세금유형·등급요율·할증면제 일관 적용
-      const s = calculateSettlement(grossAmount, { taxType, workerFeeRate, premium })
+      const s = calculateSettlement(grossAmount, { taxType, platformFeeRate, premium })
 
       const paymentRow = {
         gross_amount: s.gross_amount,

@@ -110,9 +110,10 @@ function Stat({ label, value, icon }: { label: string; value: string; icon: Reac
 
 function PaymentRow({ p }: { p: Payment }) {
   const [open, setOpen] = useState(false)
-  const fee = p.worker_fee || p.platform_fee || 0
+  // 모델A: 워커 수수료 폐지. platform_fee(호스트 이용료)는 워커와 무관하므로 fallback에서 제외.
+  // 과거 데이터(worker_fee>0)만 수수료 줄 표시, 신규는 fee=0 → "작업 대금=책정가(세전)".
+  const fee = p.worker_fee ?? 0
   const tax = p.withholding_tax ?? 0
-  // 워커 관점 작업 대금 = 실수령 + 떼인 것들 (역산). host_fee는 공간파트너 부담이라 제외.
   const grossForWorker = p.worker_payout + fee + tax
   const hasBreakdown = fee > 0 || tax > 0
   const settled = p.status === 'RELEASED' || p.status === 'PAID_OUT'

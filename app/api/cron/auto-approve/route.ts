@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { calculateSettlement, premiumFromBreakdown, workerFeeRateForTier, type TaxType } from '@/lib/pricing'
+import { calculateSettlement, premiumFromBreakdown, platformFeeRateForTier, type TaxType } from '@/lib/pricing'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -57,11 +57,11 @@ export async function GET(request: Request) {
         const { data: worker } = await supabase
           .from('users').select('tax_type, tier').eq('id', job.worker_id).single()
         const taxType: TaxType = (worker?.tax_type as TaxType) ?? 'FREELANCER'
-        const workerFeeRate = workerFeeRateForTier(worker?.tier)
+        const platformFeeRate = platformFeeRateForTier(worker?.tier)
         const approvedExtra =
           (job as any).extra_charge_status === 'APPROVED' ? Number((job as any).extra_charge_amount) || 0 : 0
         const premium = premiumFromBreakdown((job as any).price_breakdown) + approvedExtra
-        const s = calculateSettlement((job.price || 0) + approvedExtra, { taxType, workerFeeRate, premium })
+        const s = calculateSettlement((job.price || 0) + approvedExtra, { taxType, platformFeeRate, premium })
         await supabase
           .from('payments')
           .update({

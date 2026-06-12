@@ -240,11 +240,11 @@ export default async function JoinHostPage() {
         >
           <p className="text-[13.5px] font-black text-sky-700 uppercase tracking-wider mb-2">요금 안내</p>
           <div className="flex justify-between items-center mb-1.5">
-            <p className="text-[15px] font-bold text-ink">플랫폼 이용 수수료</p>
-            <p className="text-[15px] font-black text-sky-700">12%</p>
+            <p className="text-[15px] font-bold text-ink">안전결제 · 매칭 · 분쟁해결</p>
+            <p className="text-[15px] font-black text-sky-700">모두 포함</p>
           </div>
           <p className="text-[13.5px] text-text-muted font-semibold leading-relaxed">
-            결제 금액의 12%만 수수료로 청구됩니다. 결제금 안전 보관·분쟁 해결·매칭 서비스가 모두 포함된 금액입니다.
+            표시된 결제 금액에 검증된 클린파트너 매칭, 안전결제(에스크로 보관), 분쟁 해결 서비스가 모두 포함됩니다. 별도 추가 비용은 없어요.
           </p>
         </div>
       </div>

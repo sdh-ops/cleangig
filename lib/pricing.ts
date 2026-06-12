@@ -1,17 +1,16 @@
 /**
  * 쓱싹 Pricing & Payment Engine (한국 법 기준)
  *
- * 수수료 구조 (2026-06 개편):
- *   - 공간파트너(호스트): 12%
- *   - 클린파트너(워커):   6% (스타터 기준, 등급별 6→3%)
- *   - 플랫폼 총 수익:     18%
+ * 수수료 구조 — 모델A (2026-06 재개편):
+ *   - 워커 수수료 폐지. 플랫폼은 호스트 결제액의 단일 이용료만 수취
+ *   - 플랫폼 이용료: 스타터 15% → 마스터 12% (등급별 차등)
+ *   - 워커는 "책정가(= 결제액 − 이용료) 전액 수령" → 떼이는 항목 없음, 반감 제거
  *
  * 구조:
  *   - Host Payment (공간 운영자 결제액, 부가세 포함 가능)
- *   - Host Fee (플랫폼 매출, 12%)
- *   - Worker Fee (플랫폼 매출, 6%→3%)
+ *   - Platform Fee (플랫폼 매출, 호스트 결제액의 15→12%) — DB는 host_fee 컬럼에 저장
  *   - Withholding Tax (원천징수, 프리랜서 3.3%: 소득세 3% + 지방세 0.3%)
- *   - Worker Payout (작업자 실 수령액)
+ *   - Worker Payout (작업자 실 수령액 = 책정가 − 원천징수)
  *
  * 세금 유형:
  *   - FREELANCER: 개인 프리랜서 → 3.3% 원천징수 후 정산
@@ -73,36 +72,57 @@ export function suggestBasePrice(
 export type TaxType = 'FREELANCER' | 'INDIVIDUAL_BUSINESS' | 'BUSINESS'
 
 export type FeeSettings = {
-  host_fee_rate: number       // 0.05
-  worker_fee_rate: number     // 0.15
+  host_fee_rate: number        // [deprecated] 모델A 이전 호스트 수수료
+  worker_fee_rate: number      // [deprecated] 모델A 이전 워커 수수료
+  platform_fee_rate: number    // 모델A 단일 플랫폼 이용료 (호스트 결제액 기준, STARTER 0.15)
   withholding_tax_rate: number // 0.033 (소득세 3% + 지방세 0.3%)
   vat_rate: number             // 0.10
 }
 
 export const DEFAULT_FEES: FeeSettings = {
-  host_fee_rate: 0.12,
-  worker_fee_rate: 0.06, // STARTER 기준 기본 워커 수수료 (등급별 차등: 6→3%)
+  host_fee_rate: 0.12,   // deprecated (모델A에서 미사용)
+  worker_fee_rate: 0.06, // deprecated
+  platform_fee_rate: 0.15, // 모델A: STARTER 단일 이용료 (등급별 15→12%)
   withholding_tax_rate: 0.033,
   vat_rate: 0.10,
 }
 
-/** 등급별 워커 수수료율 (2026-06 개편 — 실차등) */
-export const WORKER_FEE_RATE_BY_TIER: Record<string, number> = {
-  STARTER: 0.06,
-  SILVER: 0.05,
-  GOLD: 0.04,
-  MASTER: 0.03,
+/**
+ * 모델A 수수료 정책 (2026-06 재개편):
+ *  - 워커 수수료 폐지 → 워커는 "책정가 = 받는 돈"으로 인식 (반감 제거)
+ *  - 플랫폼은 호스트 결제액의 단일 이용료만 수취 (STARTER 15% → MASTER 12%)
+ *  - 호스트 총 부담 동일, 워커 수령 상향, 플랫폼 마진은 물량·리텐션으로 방어
+ *
+ * 등급별 플랫폼 이용료율 — 등급 오를수록 인하 → 워커 실수령 증가
+ */
+export const PLATFORM_FEE_RATE_BY_TIER: Record<string, number> = {
+  STARTER: 0.15,
+  SILVER: 0.14,
+  GOLD: 0.13,
+  MASTER: 0.12,
 }
 
-/** 등급 → 워커 수수료율 (미상 시 STARTER) */
+/** 등급 → 플랫폼 이용료율 (미상 시 STARTER 15%) */
+export function platformFeeRateForTier(tier?: string | null): number {
+  return PLATFORM_FEE_RATE_BY_TIER[tier ?? 'STARTER'] ?? 0.15
+}
+
+/** 첫 2건 프로모션: total_jobs < 2이면 플랫폼 이용료 10% (워커 수령 더↑) */
+export function platformFeeRateWithPromo(tier?: string | null, totalJobs?: number | null): number {
+  if ((totalJobs ?? 99) < 2) return 0.10
+  return platformFeeRateForTier(tier)
+}
+
+// ── 하위호환 별칭 (구 호출부 안전망 — 신규 코드는 platform* 사용) ──
+/** @deprecated 모델A에서 워커 수수료 폐지. platformFeeRateForTier 사용 */
+export const WORKER_FEE_RATE_BY_TIER = PLATFORM_FEE_RATE_BY_TIER
+/** @deprecated platformFeeRateForTier 사용 */
 export function workerFeeRateForTier(tier?: string | null): number {
-  return WORKER_FEE_RATE_BY_TIER[tier ?? 'STARTER'] ?? 0.06
+  return platformFeeRateForTier(tier)
 }
-
-/** 첫 2건 프로모션: total_jobs < 2이면 워커 수수료 2% */
+/** @deprecated platformFeeRateWithPromo 사용 */
 export function workerFeeRateWithPromo(tier?: string | null, totalJobs?: number | null): number {
-  if ((totalJobs ?? 99) < 2) return 0.02
-  return workerFeeRateForTier(tier)
+  return platformFeeRateWithPromo(tier, totalJobs)
 }
 
 /** 등급별 에스크로 보류일 (정산 속도 차등). GOLD↑ 익일 정산 */
@@ -248,27 +268,35 @@ export type SettlementBreakdown = {
 }
 
 /**
- * 정산 계산.
+ * 정산 계산 — 모델A (단일 플랫폼 이용료).
  *
- * 정책(2026-06 개편):
- *  - 워커 수수료는 등급별 차등 (workerFeeRate로 주입, 기본 STARTER 6%)
- *  - 긴급·심야 할증(premium)에는 플랫폼 수수료를 매기지 않고 100% 워커에게 귀속
- *    → 기피 시간대 매칭 유인. commissionable = gross − premium 에만 수수료 부과
+ * 정책(2026-06 재개편):
+ *  - 워커 수수료 폐지. 플랫폼은 호스트 결제액의 단일 이용료(platformFeeRate)만 수취
+ *    → 워커는 "책정가(= gross − 이용료) 전액 수령"으로 인식, 떼이는 항목 없음
+ *  - 등급별 이용료 차등(STARTER 15% → MASTER 12%, platformFeeRate로 주입)
+ *  - 긴급·심야 할증(premium)에는 이용료를 매기지 않고 100% 워커 귀속
+ *    → 기피 시간대 매칭 유인. commissionable = gross − premium 에만 이용료 부과
+ *
+ * 반환 SettlementBreakdown은 DB 컬럼 호환 위해 기존 필드 재사용:
+ *  - host_fee = platform_fee (전체 이용료), worker_fee = 0
+ *  - platform_revenue = platform_fee
+ *
+ * 하위호환: opts.workerFeeRate가 오면 platformFeeRate로 해석(구 호출부 안전).
  */
 export function calculateSettlement(
   gross_amount: number,
-  opts?: { taxType?: TaxType | null; fees?: FeeSettings; workerFeeRate?: number; premium?: number },
+  opts?: { taxType?: TaxType | null; fees?: FeeSettings; platformFeeRate?: number; workerFeeRate?: number; premium?: number },
 ): SettlementBreakdown {
   const fees = opts?.fees ?? DEFAULT_FEES
   const taxType = opts?.taxType ?? null
-  const workerRate = opts?.workerFeeRate ?? fees.worker_fee_rate
-  const premium = Math.max(0, Math.min(opts?.premium ?? 0, gross_amount)) // 할증분 (수수료 면제)
+  const platformRate =
+    opts?.platformFeeRate ?? opts?.workerFeeRate ?? fees.platform_fee_rate ?? DEFAULT_FEES.platform_fee_rate
+  const premium = Math.max(0, Math.min(opts?.premium ?? 0, gross_amount)) // 할증분 (이용료 면제)
   const commissionable = gross_amount - premium
 
-  const host_fee = Math.round(commissionable * fees.host_fee_rate)
-  const worker_fee = Math.round(commissionable * workerRate)
-  // 워커 기준액 = (수수료 부과분 − 수수료) + 할증 전액
-  const worker_subtotal = commissionable - host_fee - worker_fee + premium
+  const platform_fee = Math.round(commissionable * platformRate)
+  // 워커 기준액 = (이용료 부과분 − 이용료) + 할증 전액
+  const worker_subtotal = commissionable - platform_fee + premium
 
   const shouldWithhold = taxType === 'FREELANCER'
   const withholding_tax = shouldWithhold
@@ -276,20 +304,19 @@ export function calculateSettlement(
     : 0
 
   const worker_payout = worker_subtotal - withholding_tax
-  const platform_revenue = host_fee + worker_fee
 
   return {
     gross_amount,
-    host_fee,
-    host_fee_rate: fees.host_fee_rate,
-    worker_fee,
-    worker_fee_rate: workerRate,
+    host_fee: platform_fee,    // 호환: 전체 이용료를 host_fee 컬럼에 저장
+    host_fee_rate: platformRate,
+    worker_fee: 0,             // 모델A: 워커 수수료 폐지
+    worker_fee_rate: 0,
     worker_subtotal,
     withholding_tax,
     withholding_tax_rate: shouldWithhold ? fees.withholding_tax_rate : 0,
     worker_tax_type: taxType,
     worker_payout,
-    platform_revenue,
+    platform_revenue: platform_fee,
   }
 }
 
