@@ -78,17 +78,13 @@ export async function POST(req: Request) {
       // 정산 = 단일 소스(calculateSettlement) — 세금유형·등급요율·할증면제 일관 적용
       const s = calculateSettlement(grossAmount, { taxType, platformFeeRate, premium })
 
+      // host_fee / worker_fee_rate / withholding_tax_rate / worker_tax_type 컬럼은
+      // 20260613000000_payments_settlement_columns.sql 마이그레이션 적용 후 활성화
       const paymentRow = {
         gross_amount: s.gross_amount,
         platform_fee: s.platform_revenue,
-        host_fee: s.host_fee,
-        host_fee_rate: s.host_fee_rate,
-        worker_fee: s.worker_fee,
-        worker_fee_rate: s.worker_fee_rate,
         withholding_tax: s.withholding_tax,
-        withholding_tax_rate: s.withholding_tax_rate,
         worker_payout: s.worker_payout,
-        worker_tax_type: taxType,
       }
 
       if (!count || count === 0) {
